@@ -8,9 +8,15 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="FinTrack">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232563eb'/%3E%3Ctext x='50' y='66' font-size='55' text-anchor='middle'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232563eb'/%3E%3Crect x='28' y='38' width='44' height='30' rx='7' fill='none' stroke='white' stroke-width='5'/%3E%3Cpath d='M28 46V36a6 6 0 0 1 6-6h28' fill='none' stroke='white' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M58 53h14' stroke='white' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22FinTrack%22%2C%22short_name%22%3A%22FinTrack%22%2C%22display%22%3A%22standalone%22%2C%22start_url%22%3A%22.%22%2C%22background_color%22%3A%22%23f4f5f7%22%2C%22theme_color%22%3A%22%232563eb%22%7D">
 <title>FinTrack</title>
+<script>try{var d=document.documentElement;if(localStorage.getItem("loginDone_v1")==="true")d.classList.add("hasUser");var th=localStorage.getItem("appTheme_v1");if(th)d.setAttribute("data-theme",th);d.classList.add("booting");setTimeout(function(){d.classList.remove("booting")},2500)}catch(e){}</script>
+<script>
+function mi(n){return '<i class="mi" style="--m:var(--ic-'+n+')"></i>';}
+function noteFmt(n){n=String(n||'');var R='\u{1F501}';if(n.indexOf(R)===0){return mi('repeat')+' '+esc(n.slice(R.length).trim());}return esc(n);}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -503,7 +509,7 @@ details.setBox[open]>summary{border-bottom:1px solid var(--border);}
 .themerow{display:grid; grid-template-columns:repeat(4,1fr); gap:10px;}
 .swatch{width:auto; height:62px; border-radius:18px; position:relative; border:2px solid transparent; box-shadow:var(--sh);}
 .swatch.active{border-color:var(--text); box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--primary);}
-.swatch.active::after{content:"✓"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:20px; text-shadow:0 1px 4px rgba(0,0,0,.5);}
+.swatch.active::after{content:""; position:absolute; inset:0; margin:auto; width:22px; height:22px; background:#fff; -webkit-mask:var(--ic-check) center/contain no-repeat; mask:var(--ic-check) center/contain no-repeat; filter:drop-shadow(0 1px 3px rgba(0,0,0,.5));}
 
 .rmBtn{flex:0 0 auto;width:44px;height:100%;min-height:42px;display:inline-flex;align-items:center;justify-content:center;padding:0;cursor:pointer;
   color:var(--red);background:color-mix(in srgb,var(--red) 10%,var(--card));border:1.5px solid color-mix(in srgb,var(--red) 28%,transparent);
@@ -512,11 +518,91 @@ details.setBox[open]>summary{border-bottom:1px solid var(--border);}
 .rmBtn:active{transform:scale(.92);}
 .rmBtn.sm{width:auto;height:auto;min-height:0;padding:5px 10px;border-radius:20px;gap:5px;font-size:12px;font-weight:600;font-family:inherit;}
 .rmBtn.sm svg{width:14px;height:14px;}
+
+/* ===== Fixes: flicker / perf ===== */
+html.hasUser #loginScreen{display:none !important;}
+html.booting .wrap, html.booting .bottomnav{visibility:hidden;}
+.section.active .box{animation:none !important;}
+.tabs,.profileBar,.bottomnav,.lkBrand,.lkCard{-webkit-backdrop-filter:none !important; backdrop-filter:none !important;}
+.tabs,.profileBar,.bottomnav,.lkBrand,.lkCard{background:var(--card) !important;}
+.bottomnav{transform:translateZ(0);}
+.lockOverlay>.lkOrb{animation:none !important; filter:blur(40px);}
+.lkCard .lockBtn::after{display:none;}
+.lockBg{filter:blur(24px) saturate(1.2) !important;}
+.lockAvatarWrap::before{will-change:transform; box-shadow:none !important;}
+header.top{padding-top:10px !important;}
+/* ===== New: toast, chips, trend ===== */
+#toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);max-width:min(92vw,420px);display:flex;align-items:center;gap:12px;padding:11px 16px;border-radius:14px;background:var(--text);color:var(--bg);font-size:13px;font-weight:600;box-shadow:0 10px 28px rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:9998;}
+#toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto;}
+#toast button{border:none;background:none;color:var(--primary);font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;padding:2px 4px;}
+.chips{display:flex;gap:6px;overflow-x:auto;margin:0 0 10px;scrollbar-width:none;}
+.chip{flex:none;padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;}
+.chip.on{background:var(--grad);color:#fff;border-color:transparent;}
+#histList[data-f="in"] .txitem:not([data-g="in"]),#histList[data-f="out"] .txitem:not([data-g="out"]),#histList[data-f="loan"] .txitem:not([data-g="loan"]),#histList[data-f="sav"] .txitem:not([data-g="sav"]){display:none;}
+.trend{display:flex;gap:8px;}
+.tcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;}
+.tbars{height:90px;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:3px;}
+.tbars i{display:block;width:38%;max-width:16px;min-height:2px;border-radius:5px 5px 0 0;}
+.tcol span{font-size:11px;color:var(--muted);}
+i.ti,b.ti{background:var(--green);} i.te,b.te{background:var(--red);}
+.tleg{display:flex;gap:6px;align-items:center;font-size:11.5px;color:var(--muted);margin-top:10px;}
+.tleg b{width:9px;height:9px;border-radius:3px;display:inline-block;}
+
+/* ===== v6: smarter UI ===== */
+:root[data-theme="violet"]{--bg:#f6f4ff;--card:#fff;--text:#1d1836;--muted:#75708f;--border:#e6e1f7;--primary:#7c3aed;--primary-d:#5b21b6;--green:#16a34a;--green-bg:#dcfce7;--red:#dc2626;--red-bg:#fee2e2;--amber:#d97706;--amber-bg:#fef3c7;}
+:root[data-theme="sunset"]{--bg:#fff7f0;--card:#fff;--text:#2b1a10;--muted:#8a7565;--border:#f1dfd0;--primary:#ea580c;--primary-d:#c2410c;--green:#16a34a;--green-bg:#dcfce7;--red:#dc2626;--red-bg:#fee2e2;--amber:#d97706;--amber-bg:#fef3c7;}
+.themerow{grid-template-columns:repeat(3,1fr) !important;}
+.box{border-radius:24px;}
+.txitem{gap:12px;}
+.txitem .txleft{flex:1;min-width:0;}
+.txleft .t1,.txleft .t2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.txic{width:42px;height:42px;flex:none;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;background:color-mix(in srgb,var(--c) 15%,var(--card));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 22%,transparent);}
+.dayHd{font-size:11.5px;font-weight:800;color:var(--muted);letter-spacing:.3px;padding:14px 0 2px;}
+.dayGrp:first-child .dayHd{padding-top:2px;}
+#histList[data-f="in"] .dayGrp:not(:has(.txitem[data-g="in"])),#histList[data-f="out"] .dayGrp:not(:has(.txitem[data-g="out"])),#histList[data-f="loan"] .dayGrp:not(:has(.txitem[data-g="loan"])),#histList[data-f="sav"] .dayGrp:not(:has(.txitem[data-g="sav"])){display:none;}
+#inAmount{font-size:30px;font-weight:800;text-align:center;padding:16px 12px;letter-spacing:-.5px;}
+#calcHint{text-align:center;}
+.typebtn[data-type]{display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px;}
+.typebtn[data-type]::before{content:"";width:1.15em;height:1.15em;flex:none;background:currentColor;-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat;}
+.typebtn[data-type="deposit"]{--m:var(--ic-arrow-in);} .typebtn[data-type="expense"]{--m:var(--ic-arrow-out);} .typebtn[data-type="loan_taken"]{--m:var(--ic-loan-in);} .typebtn[data-type="loan_given"]{--m:var(--ic-loan-out);} .typebtn[data-type="loan_repay_taken"]{--m:var(--ic-undo);} .typebtn[data-type="loan_repay_given"]{--m:var(--ic-check-circle);} .typebtn[data-type="save_to_account"]{--m:var(--ic-bank);} .typebtn[data-type="use_from_account"]{--m:var(--ic-card);}
+.insight .ins{display:flex;gap:11px;align-items:flex-start;padding:9px 0;font-size:13px;line-height:1.5;border-bottom:1px solid var(--border);}
+.insight .ins:last-child{border-bottom:none;}
+.insight .ins .e{font-size:18px;flex:none;}
+.person{gap:10px;}
+.person>div:first-child{font-weight:700;}
+</style>
+<style id="proIcons">
+:root{--ic-wallet:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%223%22 y=%226%22 width=%2218%22 height=%2214%22 rx=%223%22/%3E%3Cpath d=%22M3 10V7a2 2 0 0 1 2-2h11%22/%3E%3Cpath d=%22M16 14h5%22/%3E%3C/svg%3E");--ic-arrow-in:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M17 7 7 17M17 17H7V7%22/%3E%3C/svg%3E");--ic-arrow-out:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M7 17 17 7M7 7h10v10%22/%3E%3C/svg%3E");--ic-loan-in:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M12 3v12m0 0-4-4m4 4 4-4M5 21h14%22/%3E%3C/svg%3E");--ic-loan-out:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M12 21V9m0 0-4 4m4-4 4 4M5 3h14%22/%3E%3C/svg%3E");--ic-undo:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M9 14 4 9l5-5%22/%3E%3Cpath d=%22M4 9h10a6 6 0 0 1 0 12h-3%22/%3E%3C/svg%3E");--ic-check-circle:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%229%22/%3E%3Cpath d=%22m8 12 3 3 5-6%22/%3E%3C/svg%3E");--ic-bank:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M3 10 12 4l9 6M5 10v8M9 10v8M15 10v8M19 10v8M3 20h18%22/%3E%3C/svg%3E");--ic-card:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%222.5%22 y=%225%22 width=%2219%22 height=%2214%22 rx=%222.5%22/%3E%3Cpath d=%22M2.5 10h19%22/%3E%3C/svg%3E");--ic-lock:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%224%22 y=%2211%22 width=%2216%22 height=%2210%22 rx=%222.5%22/%3E%3Cpath d=%22M8 11V8a4 4 0 0 1 8 0v3%22/%3E%3C/svg%3E");--ic-shield:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M12 3 4.5 6v6c0 4.5 3.2 7.6 7.5 9 4.3-1.4 7.5-4.5 7.5-9V6z%22/%3E%3Cpath d=%22m9 12 2 2 4-4%22/%3E%3C/svg%3E");--ic-bell:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z%22/%3E%3Cpath d=%22M10 21h4%22/%3E%3C/svg%3E");--ic-fingerprint:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M12 11v3a6 6 0 0 1-1 3%22/%3E%3Cpath d=%22M8 11a4 4 0 0 1 8 0v2a10 10 0 0 1-2 6%22/%3E%3Cpath d=%22M4 12a8 8 0 0 1 16 0v1%22/%3E%3Cpath d=%22M8 16a12 12 0 0 1-.5 3%22/%3E%3C/svg%3E");--ic-calendar:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%223.5%22 y=%225%22 width=%2217%22 height=%2215.5%22 rx=%222.5%22/%3E%3Cpath d=%22M8 3v4M16 3v4M3.5 10h17%22/%3E%3C/svg%3E");--ic-clock:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%229%22/%3E%3Cpath d=%22M12 7v5l3 2%22/%3E%3C/svg%3E");--ic-target:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%229%22/%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%225%22/%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%221%22/%3E%3C/svg%3E");--ic-flag:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M5 21V4M5 4h11l-2 4 2 4H5%22/%3E%3C/svg%3E");--ic-plus:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M12 5v14M5 12h14%22/%3E%3C/svg%3E");--ic-trash:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3%22/%3E%3C/svg%3E");--ic-printer:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M7 9V3h10v6%22/%3E%3Crect x=%224%22 y=%229%22 width=%2216%22 height=%228%22 rx=%222%22/%3E%3Cpath d=%22M7 14h10v7H7z%22/%3E%3C/svg%3E");--ic-repeat:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22m17 2 4 4-4 4%22/%3E%3Cpath d=%22M3 11V9a3 3 0 0 1 3-3h15%22/%3E%3Cpath d=%22m7 22-4-4 4-4%22/%3E%3Cpath d=%22M21 13v2a3 3 0 0 1-3 3H3%22/%3E%3C/svg%3E");--ic-x:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M6 6l12 12M18 6 6 18%22/%3E%3C/svg%3E");--ic-check:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22m5 12.5 4.5 4.5L19 7%22/%3E%3C/svg%3E");--ic-alert:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M12 4 2.5 20h19z%22/%3E%3Cpath d=%22M12 10v4M12 17.2v.1%22/%3E%3C/svg%3E");--ic-info:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%229%22/%3E%3Cpath d=%22M12 11v5M12 8v.1%22/%3E%3C/svg%3E");--ic-database:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cellipse cx=%2212%22 cy=%226%22 rx=%228%22 ry=%223%22/%3E%3Cpath d=%22M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3%22/%3E%3C/svg%3E");--ic-download:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M12 4v11m0 0-4-4m4 4 4-4M5 20h14%22/%3E%3C/svg%3E");--ic-upload:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M12 16V5m0 0-4 4m4-4 4 4M5 20h14%22/%3E%3C/svg%3E");--ic-bars:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M5 20v-9M12 20V4M19 20v-6%22/%3E%3C/svg%3E");--ic-trend:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22m3 17 6-6 4 4 8-8%22/%3E%3Cpath d=%22M15 7h6v6%22/%3E%3C/svg%3E");--ic-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%223%22 y=%224%22 width=%2218%22 height=%2216%22 rx=%222.5%22/%3E%3Ccircle cx=%229%22 cy=%2210%22 r=%221.6%22/%3E%3Cpath d=%22m21 16-5-5-9 9%22/%3E%3C/svg%3E");--ic-hash:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M5 9h14M5 15h14M10 4 8 20M16 4l-2 16%22/%3E%3C/svg%3E");--ic-key:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%228%22 cy=%2215%22 r=%224%22/%3E%3Cpath d=%22m11 12 9-9M16 7l3 3%22/%3E%3C/svg%3E");--ic-message:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M4 5h16v11H9l-5 4z%22/%3E%3C/svg%3E");--ic-send:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M21 3 10 14M21 3l-7 18-4-7-7-4z%22/%3E%3C/svg%3E");--ic-settings:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%223%22/%3E%3Cpath d=%22M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1%22/%3E%3C/svg%3E");--ic-palette:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M12 3a9 9 0 1 0 0 18c1.4 0 2-1 1.6-2-.5-1.3.3-2.5 1.7-2.5H17a4 4 0 0 0 4-4c0-5-4-9.5-9-9.5z%22/%3E%3Ccircle cx=%227.5%22 cy=%2211%22 r=%221%22/%3E%3Ccircle cx=%2210%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2215%22 cy=%227.5%22 r=%221%22/%3E%3C/svg%3E");--ic-globe:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%229%22/%3E%3Cpath d=%22M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18%22/%3E%3C/svg%3E");--ic-cloud:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M7 18a4.5 4.5 0 0 1-.5-9A6 6 0 0 1 18 10a4 4 0 0 1 0 8z%22/%3E%3C/svg%3E");--ic-eye:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z%22/%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%223%22/%3E%3C/svg%3E");--ic-bot:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%224%22 y=%228%22 width=%2216%22 height=%2211%22 rx=%223%22/%3E%3Cpath d=%22M12 4v4M9 13v1M15 13v1%22/%3E%3C/svg%3E");--ic-edit:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M4 20h4L19 9l-4-4L4 16z%22/%3E%3C/svg%3E");--ic-arrow-up-circle:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%229%22/%3E%3Cpath d=%22M12 16V8m0 0-3.5 3.5M12 8l3.5 3.5%22/%3E%3C/svg%3E");--ic-bulb:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z%22/%3E%3C/svg%3E");--ic-tag:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M3 12V4h8l10 10-8 8z%22/%3E%3Ccircle cx=%227.5%22 cy=%228.5%22 r=%221.2%22/%3E%3C/svg%3E");--ic-utensils:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M7 3v8M4 3v5a3 3 0 0 0 6 0V3M7 11v10M17 3c-2 2-3 4-3 7h3v11%22/%3E%3C/svg%3E");--ic-bus:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%224%22 y=%224%22 width=%2216%22 height=%2213%22 rx=%223%22/%3E%3Cpath d=%22M4 11h16M8 20v-3M16 20v-3%22/%3E%3C/svg%3E");--ic-home:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M3 11 12 4l9 7M5 10v10h14V10%22/%3E%3C/svg%3E");--ic-bag:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2%22/%3E%3C/svg%3E");--ic-bolt:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M13 2 4 14h7l-1 8 9-12h-7z%22/%3E%3C/svg%3E");--ic-health:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%224%22 y=%224%22 width=%2216%22 height=%2216%22 rx=%224%22/%3E%3Cpath d=%22M12 8v8M8 12h8%22/%3E%3C/svg%3E");--ic-user:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%228%22 r=%224%22/%3E%3Cpath d=%22M4 21a8 8 0 0 1 16 0%22/%3E%3C/svg%3E");--ic-sheet:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%223%22 y=%224%22 width=%2218%22 height=%2216%22 rx=%222%22/%3E%3Cpath d=%22M3 10h18M9 4v16%22/%3E%3C/svg%3E");--ic-share:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%226%22 cy=%2212%22 r=%222.5%22/%3E%3Ccircle cx=%2218%22 cy=%226%22 r=%222.5%22/%3E%3Ccircle cx=%2218%22 cy=%2218%22 r=%222.5%22/%3E%3Cpath d=%22m8.2 10.8 7.6-3.6M8.2 13.2l7.6 3.6%22/%3E%3C/svg%3E");}
+.mi{display:inline-block;width:1em;height:1em;flex:none;background:currentColor;-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat;vertical-align:-.15em;}
+[data-i18n="btn_add_short"]::before,[data-i18n="btn_rec_add"]::before,[data-i18n="btn_print_report"]::before,[data-i18n="hist_print"]::before,[data-i18n="btn_backup_download"]::before,[data-i18n="btn_restore_file"]::before,[data-i18n="btn_export_csv"]::before,[data-i18n="btn_dev_clear"]::before,[data-i18n="btn_dev_lock"]::before,[data-i18n="lock_finger_btn"]::before,[data-i18n="btn_notif_preview"]::before{content:"";display:inline-block;width:1.1em;height:1.1em;margin-inline-end:.45em;vertical-align:-.2em;background:currentColor;-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat;}
+[data-i18n="btn_add_short"]{--m:var(--ic-plus);}
+[data-i18n="btn_rec_add"]{--m:var(--ic-plus);}
+[data-i18n="btn_print_report"]{--m:var(--ic-printer);}
+[data-i18n="hist_print"]{--m:var(--ic-printer);}
+[data-i18n="btn_backup_download"]{--m:var(--ic-download);}
+[data-i18n="btn_restore_file"]{--m:var(--ic-upload);}
+[data-i18n="btn_export_csv"]{--m:var(--ic-sheet);}
+[data-i18n="btn_dev_clear"]{--m:var(--ic-trash);}
+[data-i18n="btn_dev_lock"]{--m:var(--ic-lock);}
+[data-i18n="lock_finger_btn"]{--m:var(--ic-fingerprint);}
+[data-i18n="btn_notif_preview"]{--m:var(--ic-eye);}
+.box h3[data-i18n="dash_today_heading"]::before,.box h3[data-i18n="dash_remind_heading"]::before,.box h3[data-i18n="dash_budget_heading"]::before,.box h3[data-i18n="dash_goal_heading"]::before,.box h3[data-i18n="chat_heading"]::before,.insight h3::before{width:17px;height:17px;border-radius:0;background:var(--primary);-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat;}
+.box h3[data-i18n="dash_today_heading"]{--m:var(--ic-calendar);}
+.box h3[data-i18n="dash_remind_heading"]{--m:var(--ic-clock);}
+.box h3[data-i18n="dash_budget_heading"]{--m:var(--ic-target);}
+.box h3[data-i18n="dash_goal_heading"]{--m:var(--ic-flag);}
+.box h3[data-i18n="chat_heading"]{--m:var(--ic-bot);}
+.insight h3{--m:var(--ic-bulb);}
+.loginLogo{color:var(--primary);} .lkLogo,#headerLogoEl{color:#fff;} .lkShield,.lockBadge,.notifPopupIcon,#logoPreviewEmoji{color:var(--primary);}
+.qi .mi,.txic .mi,.setIco .mi{color:var(--c);} .setIco{font-size:20px;}
+.insight .ins .e{color:var(--primary);font-size:17px;line-height:1.5;}
+.editbtn .mi,.del .mi{width:16px;height:16px;vertical-align:middle;}
+.editbtn,.del{display:inline-flex;align-items:center;}
 </style>
 </head>
 <body>
 <div class="loginScreen" id="loginScreen">
-  <div class="loginLogo" id="loginLogoEl">💰</div>
+  <div class="loginLogo" id="loginLogoEl"><i class="mi" style="--m:var(--ic-wallet)"></i></div>
   <div class="loginBrand">FinTrack</div>
   <div class="loginTag" data-i18n="login_tag">আপনার আর্থিক হিসাবের সঙ্গী</div>
   <div class="loginBox">
@@ -527,19 +613,19 @@ details.setBox[open]>summary{border-bottom:1px solid var(--border);}
 <div class="lockOverlay" id="lockOverlay">
   <div class="lockBg" id="lockBg"></div>
   <div class="lkOrb lkOrb1"></div><div class="lkOrb lkOrb2"></div>
-  <div class="lkBrand"><span class="lkLogo" id="lockLogoEl">💰</span><span class="lkBrandName">FinTrack</span><span class="lkShield">🛡️</span></div>
+  <div class="lkBrand"><span class="lkLogo" id="lockLogoEl"><i class="mi" style="--m:var(--ic-wallet)"></i></span><span class="lkBrandName">FinTrack</span><span class="lkShield"><i class="mi" style="--m:var(--ic-shield)"></i></span></div>
   <div class="lkClock"><div class="lkTime" id="lkTime">--:--</div><div class="lkDate" id="lkDate"></div></div>
   <div class="lockAvatarWrap">
-    <span id="lockAvatarEmoji">🙂</span>
+    <span id="lockAvatarEmoji">U</span>
     <img id="lockAvatarImg" alt="">
-    <div class="lockBadge">🔒</div>
+    <div class="lockBadge"><i class="mi" style="--m:var(--ic-lock)"></i></div>
   </div>
   <div class="lockGreetName" id="lockGreetName">স্বাগতম</div>
   <div class="lockUser" id="lockGreetUser" style="display:none;"></div>
   <div class="lockGreetSub" data-i18n="lock_screen_sub">চালিয়ে যেতে যাচাই করুন</div>
   <div class="lockDivider"></div>
   <div class="lkCard">
-    <button class="lockBtn" id="lockFingerBtn" style="display:none;" onclick="tryUnlock()" data-i18n="lock_finger_btn">👆 ফিঙ্গারপ্রিন্ট দিয়ে আনলক করুন</button>
+    <button class="lockBtn" id="lockFingerBtn" style="display:none;" onclick="tryUnlock()" data-i18n="lock_finger_btn">ফিঙ্গারপ্রিন্ট দিয়ে আনলক করুন</button>
     <div id="lockPinArea" style="display:none; width:100%; max-width:240px;">
       <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" id="unlockPinInput" data-i18n-ph="ph_unlock_pin" placeholder="পিন দিন" style="text-align:center; letter-spacing:8px; font-size:20px;">
       <button class="lockBtn" style="width:100%; margin-top:10px;" onclick="tryUnlockPin()" data-i18n="btn_unlock">আনলক করুন</button>
@@ -551,7 +637,7 @@ details.setBox[open]>summary{border-bottom:1px solid var(--border);}
 </div>
 <div class="notifPopupOverlay" id="notifPopupOverlay" style="display:none;">
   <div class="notifPopupCard">
-    <div class="notifPopupIcon" id="notifPopupIcon">🔔</div>
+    <div class="notifPopupIcon" id="notifPopupIcon"><i class="mi" style="--m:var(--ic-bell)"></i></div>
     <div class="notifPopupTitle" id="notifPopupTitleEl"></div>
     <div class="notifPopupMsg" id="notifPopupMsgEl"></div>
     <button class="main" style="margin-top:16px;" onclick="closeNotifPopup()" data-i18n="btn_notif_gotit">বুঝেছি</button>
@@ -559,9 +645,9 @@ details.setBox[open]>summary{border-bottom:1px solid var(--border);}
 </div>
 <div id="printArea"></div>
 <div class="wrap">
-<header class="top"><h1 onclick="handleTitleTap()" style="cursor:default; user-select:none;"><span id="headerLogoEl">💰</span> <span data-i18n="app_title">FinTrack</span></h1>
+<header class="top"><h1 onclick="handleTitleTap()" style="cursor:default; user-select:none;"><span id="headerLogoEl"><i class="mi" style="--m:var(--ic-wallet)"></i></span> <span data-i18n="app_title">FinTrack</span></h1>
   <div class="profileBar" id="homeProfile" onclick="activateTab('settings')">
-    <div class="pfAvatar"><span id="homeAvatarTxt">🙂</span><img id="homeAvatarImg" alt=""></div>
+    <div class="pfAvatar"><span id="homeAvatarTxt">U</span><img id="homeAvatarImg" alt=""></div>
     <div class="pfText"><div class="pfHello" id="homeHello"></div><div class="pfName" id="homeName"></div><div class="pfSub" id="homeSub"></div></div>
     <div class="pfGo">›</div>
   </div>
@@ -612,10 +698,10 @@ details.setBox[open]>summary{border-bottom:1px solid var(--border);}
 <!-- DASHBOARD -->
 <div class="section active" id="sec-dash">
   <div class="quick">
-    <button onclick="quickAdd('expense')"><span class="qi" style="--c:#ef4444">💸</span><span class="bn">খরচ</span><span class="en">Expense</span></button>
-    <button onclick="quickAdd('deposit')"><span class="qi" style="--c:#22c55e">💰</span><span class="bn">জমা</span><span class="en">Income</span></button>
-    <button onclick="quickAdd('loan_given')"><span class="qi" style="--c:#f59e0b">🤝</span><span class="bn">লোন</span><span class="en">Loan</span></button>
-    <button onclick="quickAdd('save_to_account')"><span class="qi" style="--c:#6366f1">🏦</span><span class="bn">সঞ্চয়</span><span class="en">Save</span></button>
+    <button onclick="quickAdd('expense')"><span class="qi" style="--c:#ef4444"><i class="mi" style="--m:var(--ic-arrow-out)"></i></span><span class="bn">খরচ</span><span class="en">Expense</span></button>
+    <button onclick="quickAdd('deposit')"><span class="qi" style="--c:#22c55e"><i class="mi" style="--m:var(--ic-arrow-in)"></i></span><span class="bn">জমা</span><span class="en">Income</span></button>
+    <button onclick="quickAdd('loan_given')"><span class="qi" style="--c:#f59e0b"><i class="mi" style="--m:var(--ic-loan-out)"></i></span><span class="bn">লোন</span><span class="en">Loan</span></button>
+    <button onclick="quickAdd('save_to_account')"><span class="qi" style="--c:#6366f1"><i class="mi" style="--m:var(--ic-bank)"></i></span><span class="bn">সঞ্চয়</span><span class="en">Save</span></button>
   </div>
   <div class="box monthBox">
     <h3><span class="bn">এই মাসের সারসংক্ষেপ</span><span class="en">This month at a glance</span><span class="mDelta" id="mDelta"></span></h3>
@@ -628,11 +714,11 @@ details.setBox[open]>summary{border-bottom:1px solid var(--border);}
     <div class="mNote" id="mNote"></div>
   </div>
   <div class="box">
-    <h3 data-i18n="dash_today_heading">📅 আজকের হিসাব</h3>
+    <h3 data-i18n="dash_today_heading">আজকের হিসাব</h3>
     <div id="todayBreak"></div>
   </div>
   <div class="box" id="remindBox" style="display:none;">
-    <h3 data-i18n="dash_remind_heading">⏰ লোনের রিমাইন্ডার</h3>
+    <h3 data-i18n="dash_remind_heading">লোনের রিমাইন্ডার</h3>
     <div id="remindList"></div>
   </div>
   <div class="box">
@@ -644,11 +730,11 @@ details.setBox[open]>summary{border-bottom:1px solid var(--border);}
     <div id="srcBreak"><div class="empty" data-i18n="empty_no_income">এখনো কোনো জমা নেই</div></div>
   </div>
   <div class="box" id="budgetBox">
-    <h3 data-i18n="dash_budget_heading">🎯 মাসিক বাজেট</h3>
+    <h3 data-i18n="dash_budget_heading">মাসিক বাজেট</h3>
     <div id="budgetBreak"><div class="empty" data-i18n="empty_no_budget">কোনো বাজেট সেট করা নেই — সেটিংসে গিয়ে সেট করুন</div></div>
   </div>
   <div class="box" id="goalBox" style="display:none;">
-    <h3 data-i18n="dash_goal_heading">🏆 সঞ্চয় লক্ষ্য</h3>
+    <h3 data-i18n="dash_goal_heading">সঞ্চয় লক্ষ্য</h3>
     <div id="goalBreak"></div>
   </div>
   <div class="box">
@@ -673,14 +759,14 @@ details.setBox[open]>summary{border-bottom:1px solid var(--border);}
     </div>
 
     <label data-i18n="lbl_amount">পরিমাণ (টাকা)</label>
-    <input type="number" id="inAmount" placeholder="0">
+    <input type="text" inputmode="decimal" id="inAmount" placeholder="0  (50+30×2)" autocomplete="off"><div id="calcHint" style="font-size:12px;color:var(--primary);font-weight:600;margin-top:4px;"></div>
 
     <div id="srcWrap" style="display:block;">
       <label data-i18n="lbl_source">আয়ের উৎস (কোথা থেকে জমা)</label>
       <select id="inSource"></select>
       <div class="row2" style="margin-top:8px;">
         <div><input type="text" id="newSrcInput" data-i18n-ph="ph_new_source" placeholder="নতুন উৎসের নাম"></div>
-        <div style="flex:0 0 auto;"><button class="typebtn" style="height:100%;padding:10px 14px;" onclick="addSource()" data-i18n="btn_add_short">➕ যোগ</button></div>
+        <div style="flex:0 0 auto;"><button class="typebtn" style="height:100%;padding:10px 14px;" onclick="addSource()" data-i18n="btn_add_short">যোগ</button></div>
         <div style="flex:0 0 auto;display:flex;"><button type="button" class="rmBtn" onclick="removeSource()" title="আয়ের উৎস মুছুন" aria-label="আয়ের উৎস মুছুন"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></div>
       </div>
     </div>
@@ -690,7 +776,7 @@ details.setBox[open]>summary{border-bottom:1px solid var(--border);}
       <select id="inCategory"></select>
       <div class="row2" style="margin-top:8px;">
         <div><input type="text" id="newCatInput" data-i18n-ph="ph_new_category" placeholder="নতুন খাতের নাম"></div>
-        <div style="flex:0 0 auto;"><button class="typebtn" style="height:100%;padding:10px 14px;" onclick="addCategory()" data-i18n="btn_add_short">➕ যোগ</button></div>
+        <div style="flex:0 0 auto;"><button class="typebtn" style="height:100%;padding:10px 14px;" onclick="addCategory()" data-i18n="btn_add_short">যোগ</button></div>
         <div style="flex:0 0 auto;display:flex;"><button type="button" class="rmBtn" onclick="removeCategory()" title="খাত মুছুন" aria-label="খাত মুছুন"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></div>
       </div>
     </div>
@@ -709,7 +795,7 @@ details.setBox[open]>summary{border-bottom:1px solid var(--border);}
       <select id="inAccount"></select>
       <div class="row2" style="margin-top:8px;">
         <div><input type="text" id="newAccInput" data-i18n-ph="ph_new_account" placeholder="নতুন একাউন্টের নাম"></div>
-        <div style="flex:0 0 auto;"><button class="typebtn" style="height:100%;padding:10px 14px;" onclick="addAccount()" data-i18n="btn_add_short">➕ যোগ</button></div>
+        <div style="flex:0 0 auto;"><button class="typebtn" style="height:100%;padding:10px 14px;" onclick="addAccount()" data-i18n="btn_add_short">যোগ</button></div>
       </div>
     </div>
 
@@ -721,7 +807,7 @@ details.setBox[open]>summary{border-bottom:1px solid var(--border);}
     <label data-i18n="lbl_note">নোট (ঐচ্ছিক)</label>
     <input type="text" id="inNote" data-i18n-ph="ph_note" placeholder="নোট লিখুন">
 
-    <div id="editModeNote" style="display:none; font-size:12.5px; color:var(--primary); margin-bottom:6px;" data-i18n="edit_mode_note">✎ আপনি একটি পুরোনো লেনদেন সম্পাদনা করছেন</div>
+    <div id="editModeNote" style="display:none; font-size:12.5px; color:var(--primary); margin-bottom:6px;" data-i18n="edit_mode_note">আপনি একটি পুরোনো লেনদেন সম্পাদনা করছেন</div>
     <button class="main" id="saveTxBtn" onclick="saveTx()" data-i18n="btn_save">সংরক্ষণ করুন</button>
     <button class="typebtn" id="cancelEditBtn" style="width:100%; margin-top:8px; display:none;" onclick="cancelEditTx()" data-i18n="btn_cancel_edit">বাতিল করুন</button>
   </div>
@@ -809,7 +895,7 @@ details.setBox[open]>summary{border-bottom:1px solid var(--border);}
       <button class="typebtn" onclick="setReportRange('week')" data-i18n="btn_week">শেষ ৭ দিন</button>
       <button class="typebtn" onclick="setReportRange('month')" data-i18n="btn_this_month">এই মাস</button>
     </div>
-    <button class="typebtn" style="width:100%; margin-top:8px;" onclick="printReport()" data-i18n="btn_print_report">🖨️ প্রিন্ট করুন</button>
+    <button class="typebtn" style="width:100%; margin-top:8px;" onclick="printReport()" data-i18n="btn_print_report">প্রিন্ট করুন</button>
   </div>
   <div id="reportBody"></div>
 </div>
@@ -822,7 +908,7 @@ details.setBox[open]>summary{border-bottom:1px solid var(--border);}
       <div style="flex:0 0 auto; align-self:flex-end;"><button class="typebtn" onclick="clearFilter()" data-i18n="hist_show_all">সব দেখুন</button></div>
     </div>
     <input type="text" id="histSearchInput" data-i18n-ph="hist_search_ph" placeholder="খুঁজুন — নাম, খাত, নোট..." style="margin-bottom:10px;">
-    <button class="typebtn" style="width:100%; margin-bottom:12px;" onclick="printMonthlyReport()" data-i18n="hist_print">🖨️ প্রিন্ট করুন</button>
+    <button class="typebtn" style="width:100%; margin-bottom:12px;" onclick="printMonthlyReport()" data-i18n="hist_print">প্রিন্ট করুন</button>
     <div id="histList"><div class="empty" data-i18n="empty_no_tx">কোনো লেনদেন নেই</div></div>
   </div>
 </div>
@@ -830,7 +916,7 @@ details.setBox[open]>summary{border-bottom:1px solid var(--border);}
 <!-- SETTINGS -->
 <div class="section" id="sec-settings">
   <div class="setHero">
-    <div class="setAv"><span id="setAvTxt">🙂</span><img id="setAvImg" alt=""></div>
+    <div class="setAv"><span id="setAvTxt">U</span><img id="setAvImg" alt=""></div>
     <div class="setInfo"><div class="setName" id="setName"></div><div class="setSub" id="setSub"></div></div>
     <div class="setVer">FinTrack</div>
   </div>
@@ -855,7 +941,7 @@ details.setBox[open]>summary{border-bottom:1px solid var(--border);}
     <p style="font-size:12.5px; color:var(--muted); margin:0 0 6px;" data-i18n="profile_note">নিচে তথ্য দিয়ে রাখুন, QR শেয়ার করার সময় বন্ধুরা এই নামে আপনাকে চিনবে।</p>
     <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
       <div id="profilePicWrap" style="width:56px; height:56px; border-radius:50%; overflow:hidden; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; background:var(--bg); flex-shrink:0;">
-        <span id="profilePicEmoji" style="font-size:26px;">🙂</span>
+        <span id="profilePicEmoji" style="font-size:26px;">U</span>
         <img id="profilePicImg" style="display:none; width:100%; height:100%; object-fit:cover;">
       </div>
       <div style="flex:1;">
@@ -873,18 +959,18 @@ details.setBox[open]>summary{border-bottom:1px solid var(--border);}
     <button class="typebtn" style="width:100%; margin-top:8px;" onclick="saveMyName()" data-i18n="btn_save">সংরক্ষণ করুন</button>
   </div>
   <div class="box">
-    <h3 data-i18n="backup_heading">💾 লোকাল ব্যাকআপ</h3>
+    <h3 data-i18n="backup_heading">লোকাল ব্যাকআপ</h3>
     <p style="font-size:12.5px; color:var(--muted); margin:0 0 8px;" data-i18n="backup_note">এই অ্যাপের কোনো সার্ভার নেই — আপনার সব হিসাব শুধু এই ফোনেই থাকে। নিয়মিত একটা ব্যাকআপ ফাইল ডাউনলোড করে রাখুন (Google Drive, ফাইল ম্যানেজার বা যেকোনো জায়গায় সংরক্ষণ করতে পারেন), অন্য ফোনে বা অ্যাপ রিসেট হলে সেই ফাইল দিয়ে সব ফিরিয়ে আনতে পারবেন।</p>
     <div class="row2">
-      <button class="typebtn" onclick="downloadBackup()" data-i18n="btn_backup_download">⬇️ ব্যাকআপ ডাউনলোড করুন</button>
-      <button class="typebtn" onclick="document.getElementById('restoreFileInput').click()" data-i18n="btn_restore_file">⬆️ ব্যাকআপ ফিরিয়ে আনুন</button>
+      <button class="typebtn" onclick="downloadBackup()" data-i18n="btn_backup_download">ব্যাকআপ ডাউনলোড করুন</button>
+      <button class="typebtn" onclick="document.getElementById('restoreFileInput').click()" data-i18n="btn_restore_file">ব্যাকআপ ফিরিয়ে আনুন</button>
     </div>
     <input type="file" id="restoreFileInput" accept="application/json" style="display:none;" onchange="restoreFromFile(this)">
-    <button class="typebtn" style="width:100%; margin-top:8px;" onclick="exportCSV()" data-i18n="btn_export_csv">📊 CSV এক্সপোর্ট করুন (Excel-এ খোলা যাবে)</button>
+    <button class="typebtn" style="width:100%; margin-top:8px;" onclick="exportCSV()" data-i18n="btn_export_csv">CSV এক্সপোর্ট করুন (Excel-এ খোলা যাবে)</button>
     <div id="backupStatusText" style="font-size:12.5px; color:var(--primary); margin-top:8px;"></div>
   </div>
   <div class="box">
-    <h3 data-i18n="settings_budget">🎯 মাসিক বাজেট</h3>
+    <h3 data-i18n="settings_budget">মাসিক বাজেট</h3>
     <p style="font-size:12.5px; color:var(--muted); margin:0 0 8px;" data-i18n="budget_note">প্রতিটা খাতের জন্য মাসিক খরচের সীমা ঠিক করুন — সীমা ছাড়িয়ে গেলে ড্যাশবোর্ডে দেখাবে। খালি রাখলে সেই খাতে কোনো সীমা থাকবে না।</p>
     <label data-i18n="lbl_daily_limit">দৈনিক খরচের সীমা (টাকা)</label>
     <input type="number" id="dailyLimitInput" placeholder="0">
@@ -892,7 +978,7 @@ details.setBox[open]>summary{border-bottom:1px solid var(--border);}
     <button class="typebtn" style="width:100%; margin-top:8px;" onclick="saveBudgets()" data-i18n="btn_save">সংরক্ষণ করুন</button>
   </div>
   <div class="box">
-    <h3 data-i18n="settings_goal">🏆 সঞ্চয় লক্ষ্য</h3>
+    <h3 data-i18n="settings_goal">সঞ্চয় লক্ষ্য</h3>
     <p style="font-size:12.5px; color:var(--muted); margin:0 0 8px;" data-i18n="goal_note">একটা সঞ্চয়ের লক্ষ্য ঠিক করুন — আপনার একাউন্টে জমানো মোট টাকার সাথে তুলনা করে ড্যাশবোর্ডে অগ্রগতি দেখাবে।</p>
     <label data-i18n="lbl_goal_name">লক্ষ্যের নাম</label>
     <input type="text" id="goalNameInput" data-i18n-ph="ph_goal_name" placeholder="যেমন: নতুন ফোন কেনা">
@@ -901,7 +987,7 @@ details.setBox[open]>summary{border-bottom:1px solid var(--border);}
     <button class="typebtn" style="width:100%; margin-top:8px;" onclick="saveGoal()" data-i18n="btn_save">সংরক্ষণ করুন</button>
   </div>
   <div class="box">
-    <h3 data-i18n="settings_recurring">🔁 নিয়মিত এন্ট্রি</h3>
+    <h3 data-i18n="settings_recurring">নিয়মিত এন্ট্রি</h3>
     <p style="font-size:12.5px; color:var(--muted); margin:0 0 8px;" data-i18n="recurring_note">বাসা ভাড়া, বেতন, বিলের মতো যা প্রতি মাসে আসে/যায় সেটা একবার সেট করুন — নির্দিষ্ট তারিখে অ্যাপ খুললেই নিজে থেকে যোগ হয়ে যাবে। (সেট করার সময় ওই মাসের তারিখ পার হয়ে গেলে, পরের মাস থেকে শুরু হবে।)</p>
     <label data-i18n="lbl_rec_type">ধরন</label>
     <select id="recType" onchange="recTypeChange()">
@@ -918,15 +1004,15 @@ details.setBox[open]>summary{border-bottom:1px solid var(--border);}
     <input type="number" id="recDay" min="1" max="31" placeholder="5">
     <label data-i18n="lbl_rec_note">নোট (যেমন: বাসা ভাড়া)</label>
     <input type="text" id="recNote">
-    <button class="typebtn" style="width:100%; margin-top:8px;" onclick="addRecurring()" data-i18n="btn_rec_add">➕ যোগ করুন</button>
+    <button class="typebtn" style="width:100%; margin-top:8px;" onclick="addRecurring()" data-i18n="btn_rec_add">যোগ করুন</button>
     <div id="recList" style="margin-top:10px;"></div>
   </div>
   <div class="box">
-    <h3 data-i18n="settings_logo">🖼️ অ্যাপ লোগো</h3>
+    <h3 data-i18n="settings_logo">অ্যাপ লোগো</h3>
     <p style="font-size:12.5px; color:var(--muted); margin:0 0 10px;" data-i18n="logo_note">চাইলে অ্যাপের ডিফল্ট লোগোর বদলে নিজের ছবি বা লোগো বসাতে পারেন। এটা লগইন স্ক্রিন ও উপরের টাইটেলে দেখাবে।</p>
     <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
       <div id="logoPreviewWrap" style="width:52px; height:52px; border-radius:14px; overflow:hidden; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; background:var(--bg); flex-shrink:0;">
-        <span id="logoPreviewEmoji" style="font-size:28px;">💰</span>
+        <span id="logoPreviewEmoji" style="font-size:28px;"><i class="mi" style="--m:var(--ic-wallet)"></i></span>
         <img id="logoPreviewImg" style="display:none; width:100%; height:100%; object-fit:cover;">
       </div>
       <div style="flex:1;">
@@ -937,14 +1023,14 @@ details.setBox[open]>summary{border-bottom:1px solid var(--border);}
     <button class="typebtn" id="logoResetBtn" style="width:100%; display:none;" onclick="resetLogo()" data-i18n="btn_reset_logo">ডিফল্ট লোগোতে ফিরে যান</button>
   </div>
   <div class="box">
-    <h3 data-i18n="lock_heading">🔒 অ্যাপ লক (ফিঙ্গারপ্রিন্ট)</h3>
+    <h3 data-i18n="lock_heading">অ্যাপ লক (ফিঙ্গারপ্রিন্ট)</h3>
     <p style="font-size:12.5px; color:var(--muted); margin:0 0 8px;" data-i18n="lock_note">চালু করলে অ্যাপ খোলার সময় আপনার ফোনের ফিঙ্গারপ্রিন্ট বা ফেস আনলক দিয়ে যাচাই করতে হবে।</p>
     <div style="font-size:13.5px; margin-bottom:10px;"><span data-i18n="lbl_status">অবস্থা:</span> <span id="lockStatusText" data-i18n="status_off">বন্ধ আছে</span></div>
     <button class="main" id="lockSetupBtn" style="margin-top:0;" onclick="setupBiometric()" data-i18n="btn_setup_finger">ফিঙ্গারপ্রিন্ট সেটআপ করুন</button>
     <button class="typebtn" id="lockDisableBtn" style="width:100%; display:none;" onclick="disableBiometric()" data-i18n="btn_disable_lock">লক বন্ধ করুন</button>
   </div>
   <div class="box">
-    <h3 data-i18n="pin_heading">🔢 পিন লক</h3>
+    <h3 data-i18n="pin_heading">পিন লক</h3>
     <p style="font-size:12.5px; color:var(--muted); margin:0 0 8px;" data-i18n="pin_note">ফিঙ্গারপ্রিন্ট না থাকলে বা কাজ না করলে বিকল্প হিসেবে ৪-৬ ডিজিটের পিন দিয়েও লক করা যাবে।</p>
     <div style="font-size:13.5px; margin-bottom:10px;"><span data-i18n="lbl_status">অবস্থা:</span> <span id="pinStatusText" data-i18n="status_off">বন্ধ আছে</span></div>
     <div id="pinSetupArea">
@@ -957,22 +1043,22 @@ details.setBox[open]>summary{border-bottom:1px solid var(--border);}
     <button class="typebtn" id="pinDisableBtn" style="width:100%; display:none;" onclick="disablePin()" data-i18n="btn_disable_pin">পিন বন্ধ করুন</button>
   </div>
   <div class="box">
-    <h3 data-i18n="contact_heading">☎️ সাহায্য / যোগাযোগ</h3>
+    <h3 data-i18n="contact_heading">সাহায্য / যোগাযোগ</h3>
     <p style="font-size:12.5px; color:var(--muted); margin:0 0 8px;" data-i18n="contact_note">অ্যাপ নিয়ে কোনো সমস্যা বা কাস্টম কাজের জন্য এডমিনের সাথে যোগাযোগ করুন:</p>
     <a class="contactbox" href="https://t.me/mehedimadbor" target="_blank" rel="noopener">
-      <span style="font-size:22px;">✈️</span>
+      <span style="font-size:22px;"><i class="mi" style="--m:var(--ic-send)"></i></span>
       <span><b>Telegram</b><br><span style="color:var(--muted);">@mehedimadbor</span></span>
     </a>
   </div>
   <div class="box" id="devModeBox" style="display:none;">
-    <h3 data-i18n="dev_heading">🛠️ ডেভেলপার মোড — নোটিফিকেশন পপআপ</h3>
+    <h3 data-i18n="dev_heading">ডেভেলপার মোড — নোটিফিকেশন পপআপ</h3>
     <p style="font-size:12.5px; color:var(--muted); margin:0 0 8px;" data-i18n="dev_note">এখান থেকে যে নোটিফিকেশন সেট করবেন সেটা অ্যাপ খোলার/লগইন-আনলকের সাথে সাথে সবাইকে দেখাবে, যতক্ষণ না আপনি এটা বন্ধ করছেন।</p>
     <div style="font-size:13.5px; margin-bottom:10px;"><span data-i18n="lbl_status">অবস্থা:</span> <span id="notifStatusText" data-i18n="status_off">বন্ধ আছে</span></div>
     <label data-i18n="lbl_notif_type">ধরন</label>
     <select id="notifTypeInput">
-      <option value="info" data-i18n="notif_type_info">ℹ️ তথ্য</option>
-      <option value="update" data-i18n="notif_type_update">🚀 আপডেট</option>
-      <option value="warning" data-i18n="notif_type_warning">⚠️ সতর্কতা</option>
+      <option value="info" data-i18n="notif_type_info">তথ্য</option>
+      <option value="update" data-i18n="notif_type_update">আপডেট</option>
+      <option value="warning" data-i18n="notif_type_warning">সতর্কতা</option>
     </select>
     <label data-i18n="lbl_notif_title">শিরোনাম</label>
     <input type="text" id="notifTitleInput" data-i18n-ph="ph_notif_title" placeholder="যেমন: নতুন আপডেট এসেছে!">
@@ -982,9 +1068,9 @@ details.setBox[open]>summary{border-bottom:1px solid var(--border);}
       <button class="main" style="margin-top:0;" onclick="enableNotifPopup()" data-i18n="btn_notif_on">চালু করুন</button>
       <button class="typebtn" onclick="disableNotifPopup()" data-i18n="btn_notif_off">বন্ধ করুন</button>
     </div>
-    <button class="typebtn" style="width:100%; margin-top:8px;" onclick="previewNotifPopup()" data-i18n="btn_notif_preview">👁️ প্রিভিউ দেখুন</button>
+    <button class="typebtn" style="width:100%; margin-top:8px;" onclick="previewNotifPopup()" data-i18n="btn_notif_preview">প্রিভিউ দেখুন</button>
     <div style="border-top:1px solid var(--border); margin:14px 0 10px;"></div>
-    <h3 style="margin:0 0 6px;" data-i18n="notice_heading">🌐 রিমোট নোটিশ (সব ইউজারের জন্য)</h3>
+    <h3 style="margin:0 0 6px;" data-i18n="notice_heading">রিমোট নোটিশ (সব ইউজারের জন্য)</h3>
     <p style="font-size:12.5px; color:var(--muted); margin:0 0 8px;" data-i18n="notice_note">একটা JSON ফাইলের লিংক দিন (যেমন GitHub-এ রাখা notice.json)। ফাইলে on:true দিলে সব ইউজার অ্যাপ খুললে সেই মেসেজ দেখবে। ফাইলটা এডিট করলেই সবার কাছে নতুন মেসেজ যাবে। স্থায়ীভাবে সব ইউজারের জন্য কাজ করাতে কোডের NOTICE_URL-এ লিংকটা বসিয়ে দিন।</p>
     <label data-i18n="lbl_notice_url">নোটিশ ফাইলের লিংক (টেস্টের জন্য)</label>
     <input type="url" id="noticeUrlInput" placeholder="https://.../notice.json">
@@ -993,17 +1079,17 @@ details.setBox[open]>summary{border-bottom:1px solid var(--border);}
       <button class="typebtn" onclick="testRemoteNotice()" data-i18n="btn_notice_test">টেস্ট করুন</button>
     </div>
     <div style="border-top:1px solid var(--border); margin:14px 0 10px;"></div>
-    <h3 style="margin:0 0 6px;" data-i18n="dev_clear_heading">🗑️ সব ডেটা মুছুন</h3>
+    <h3 style="margin:0 0 6px;" data-i18n="dev_clear_heading">সব ডেটা মুছুন</h3>
     <p style="font-size:12.5px; color:var(--muted); margin:0 0 8px;" data-i18n="dev_clear_note">এই ফোনে থাকা অ্যাপের সব ডেটা (লেনদেন, লোন, প্রোফাইল, পিন ইত্যাদি) মুছে যাবে। মুছতে হলে আপনার পিন অথবা ফিঙ্গারপ্রিন্ট লাগবে।</p>
-    <button class="typebtn" style="width:100%; color:var(--red); border-color:var(--red);" onclick="clearAllData()" data-i18n="btn_dev_clear">🗑️ সব ডেটা মুছে ফেলুন</button>
-    <button class="typebtn" style="width:100%; margin-top:8px; color:var(--red);" onclick="lockDevMode()" data-i18n="btn_dev_lock">🔒 ডেভেলপার মোড লক করুন</button>
+    <button class="typebtn" style="width:100%; color:var(--red); border-color:var(--red);" onclick="clearAllData()" data-i18n="btn_dev_clear">সব ডেটা মুছে ফেলুন</button>
+    <button class="typebtn" style="width:100%; margin-top:8px; color:var(--red);" onclick="lockDevMode()" data-i18n="btn_dev_lock">ডেভেলপার মোড লক করুন</button>
   </div>
 </div>
 
 <!-- AI CHAT -->
 <div class="section" id="sec-chat">
   <div class="box">
-    <h3 data-i18n="chat_heading">🤖 AI অ্যাসিস্ট্যান্ট</h3>
+    <h3 data-i18n="chat_heading">AI অ্যাসিস্ট্যান্ট</h3>
     <div class="chatlog" id="chatLog"></div>
     <div class="chatinputrow">
       <input type="text" id="chatInput" data-i18n-ph="ph_chat_input" placeholder="যেমন: এই মাসে কত খরচ হয়েছে?" onkeydown="if(event.key==='Enter')sendChat();">
@@ -1041,8 +1127,6 @@ details.setBox[open]>summary{border-bottom:1px solid var(--border);}
   </button>
 </nav>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.js"></script>
 <script>
 const I18N = {
   bn:{
@@ -1054,10 +1138,10 @@ const I18N = {
     type_deposit:'জমা / ডিপোজিট', type_expense:'খরচ', type_loan_taken:'লোন নিলাম', type_loan_given:'লোন দিলাম',
     type_loan_repay_taken:'লোন ফেরত দিলাম', type_loan_repay_given:'লোন ফেরত পেলাম',
     type_save_to_account:'একাউন্টে জমা রাখলাম', type_use_from_account:'একাউন্ট থেকে তুললাম',
-    lbl_amount:'পরিমাণ (টাকা)', lbl_category:'খাত', ph_new_category:'নতুন খাতের নাম', btn_add_short:'➕ যোগ',
+    lbl_amount:'পরিমাণ (টাকা)', lbl_category:'খাত', ph_new_category:'নতুন খাতের নাম', btn_add_short:'যোগ',
     lbl_person:'ব্যক্তির নাম', ph_person_example:'যেমন: রহিম', lbl_account:'একাউন্ট', ph_new_account:'নতুন একাউন্টের নাম',
     lbl_date:'তারিখ', lbl_time:'সময়', lbl_note:'নোট (ঐচ্ছিক)', ph_note:'নোট লিখুন', btn_save:'সংরক্ষণ করুন',
-    edit_mode_note:'✎ আপনি একটি পুরোনো লেনদেন সম্পাদনা করছেন', btn_cancel_edit:'বাতিল করুন', btn_update:'আপডেট করুন',
+    edit_mode_note:'আপনি একটি পুরোনো লেনদেন সম্পাদনা করছেন', btn_cancel_edit:'বাতিল করুন', btn_update:'আপডেট করুন',
     acc_total_savings:'মোট সঞ্চয় (সব একাউন্ট মিলিয়ে)', acc_balance_heading:'একাউন্ট ভিত্তিক ব্যালেন্স',
     loan_total_owe:'মোট নেওয়া লোন (দিতে হবে)', loan_total_get:'মোট পাওনা (পাবো)',
     send_money_heading:'টাকা পাঠান (বন্ধুকে)', lbl_friend_name:'বন্ধুর নাম', btn_send:'পাঠান',
@@ -1066,108 +1150,108 @@ const I18N = {
     btn_qr_show:'QR কোড দেখান', qr_gen_hint:'বন্ধুকে এই QR কোড স্ক্যান করতে বলুন',
     qr_cam_starting:'ক্যামেরা চালু হচ্ছে...', qr_point_cam:'QR কোডের দিকে ক্যামেরা ধরুন', btn_close:'বন্ধ করুন',
     loan_people_owe_me:'যাদের কাছে আমি পাবো', loan_people_i_owe:'যাদের আমি পাওনা দিবো',
-    hist_month:'মাস', hist_show_all:'সব দেখুন', hist_print:'🖨️ প্রিন্ট করুন',
+    hist_month:'মাস', hist_show_all:'সব দেখুন', hist_print:'প্রিন্ট করুন',
     settings_theme:'থিম', settings_lang:'ভাষা', settings_profile:'প্রোফাইল',
     profile_note:'নিচে তথ্য দিয়ে রাখুন, QR শেয়ার করার সময় বন্ধুরা এই নামে আপনাকে চিনবে।',
     lbl_your_name:'আপনার নাম', ph_your_name:'যেমন: করিম',
     lbl_username:'ইউজারনেম', ph_username:'যেমন: karim123',
     lbl_phone:'মোবাইল নম্বর', ph_phone:'যেমন: 01XXXXXXXXX',
     btn_change_photo:'ছবি পরিবর্তন করুন', btn_reset_photo:'ছবি সরিয়ে দিন',
-    backup_heading:'💾 লোকাল ব্যাকআপ',
+    backup_heading:'লোকাল ব্যাকআপ',
     backup_note:'এই অ্যাপের কোনো সার্ভার নেই — আপনার সব হিসাব শুধু এই ফোনেই থাকে। নিয়মিত একটা ব্যাকআপ ফাইল ডাউনলোড করে রাখুন, অন্য ফোনে বা অ্যাপ রিসেট হলে সেই ফাইল দিয়ে সব ফিরিয়ে আনতে পারবেন।',
-    btn_backup_download:'⬇️ ব্যাকআপ ডাউনলোড করুন', btn_restore_file:'⬆️ ব্যাকআপ ফিরিয়ে আনুন',
-    backup_download_done:'✅ ব্যাকআপ ফাইল ডাউনলোড হয়েছে।',
+    btn_backup_download:'ব্যাকআপ ডাউনলোড করুন', btn_restore_file:'ব্যাকআপ ফিরিয়ে আনুন',
+    backup_download_done:'ব্যাকআপ ফাইল ডাউনলোড হয়েছে।',
     backup_restore_confirm:'ব্যাকআপ থেকে ফিরিয়ে আনলে এই ডিভাইসের বর্তমান হিসাব বদলে যাবে। এগিয়ে যাবেন?',
-    backup_restore_done:'✅ সফলভাবে ফিরিয়ে আনা হয়েছে, রিলোড হচ্ছে...',
-    backup_restore_fail:'❌ ফাইলটি ঠিক নয় বা পড়া যায়নি। আবার চেষ্টা করুন।',
-    btn_export_csv:'📊 CSV এক্সপোর্ট করুন (Excel-এ খোলা যাবে)',
-    settings_budget:'🎯 মাসিক বাজেট', budget_note:'প্রতিটা খাতের জন্য মাসিক খরচের সীমা ঠিক করুন — সীমা ছাড়িয়ে গেলে ড্যাশবোর্ডে দেখাবে। খালি রাখলে সেই খাতে কোনো সীমা থাকবে না।',
-    settings_goal:'🏆 সঞ্চয় লক্ষ্য', goal_note:'একটা সঞ্চয়ের লক্ষ্য ঠিক করুন — আপনার একাউন্টে জমানো মোট টাকার সাথে তুলনা করে ড্যাশবোর্ডে অগ্রগতি দেখাবে।',
+    backup_restore_done:'সফলভাবে ফিরিয়ে আনা হয়েছে, রিলোড হচ্ছে...',
+    backup_restore_fail:'ফাইলটি ঠিক নয় বা পড়া যায়নি। আবার চেষ্টা করুন।',
+    btn_export_csv:'CSV এক্সপোর্ট করুন (Excel-এ খোলা যাবে)',
+    settings_budget:'মাসিক বাজেট', budget_note:'প্রতিটা খাতের জন্য মাসিক খরচের সীমা ঠিক করুন — সীমা ছাড়িয়ে গেলে ড্যাশবোর্ডে দেখাবে। খালি রাখলে সেই খাতে কোনো সীমা থাকবে না।',
+    settings_goal:'সঞ্চয় লক্ষ্য', goal_note:'একটা সঞ্চয়ের লক্ষ্য ঠিক করুন — আপনার একাউন্টে জমানো মোট টাকার সাথে তুলনা করে ড্যাশবোর্ডে অগ্রগতি দেখাবে।',
     lbl_goal_name:'লক্ষ্যের নাম', ph_goal_name:'যেমন: নতুন ফোন কেনা', lbl_goal_target:'লক্ষ্যের পরিমাণ (টাকা)',
-    dash_budget_heading:'🎯 মাসিক বাজেট', empty_no_budget:'কোনো বাজেট সেট করা নেই — সেটিংসে গিয়ে সেট করুন',
-    budget_this_month:'এই মাসে', budget_over_warn:'⚠️ সীমা ছাড়িয়ে গেছে',
-    dash_goal_heading:'🏆 সঞ্চয় লক্ষ্য', goal_reached:'🎉 অভিনন্দন! লক্ষ্য পূরণ হয়ে গেছে',
+    dash_budget_heading:'মাসিক বাজেট', empty_no_budget:'কোনো বাজেট সেট করা নেই — সেটিংসে গিয়ে সেট করুন',
+    budget_this_month:'এই মাসে', budget_over_warn:'সীমা ছাড়িয়ে গেছে',
+    dash_goal_heading:'সঞ্চয় লক্ষ্য', goal_reached:'অভিনন্দন! লক্ষ্য পূরণ হয়ে গেছে',
     goal_remaining:'বাকি আছে', hist_search_ph:'খুঁজুন — নাম, খাত, নোট...',
     tab_report:'রিপোর্ট', lbl_source:'আয়ের উৎস (কোথা থেকে জমা)', ph_new_source:'নতুন উৎসের নাম',
     dash_src_heading:'আয়ের উৎস অনুযায়ী জমা', empty_no_income:'এখনো কোনো জমা নেই', src_unknown:'অজানা উৎস',
-    rep_summary:'📊 সারসংক্ষেপ', rep_income:'মোট আয় (জমা)', rep_expense:'মোট খরচ', rep_loan_taken:'লোন নেওয়া', rep_loan_given:'লোন দেওয়া',
+    rep_summary:'সারসংক্ষেপ', rep_income:'মোট আয় (জমা)', rep_expense:'মোট খরচ', rep_loan_taken:'লোন নেওয়া', rep_loan_given:'লোন দেওয়া',
     rep_repaid:'লোন পরিশোধ করেছি', rep_received:'লোন ফেরত পেয়েছি', rep_saved:'একাউন্টে সঞ্চয়', rep_net:'আয় − খরচ',
-    rep_over:'⚠️ আয়ের চেয়ে বেশি খরচ হয়েছে: ', rep_under:'✅ আয়ের চেয়ে কম খরচ হয়েছে, উদ্বৃত্ত: ', rep_equal:'আয় ও খরচ সমান',
-    rep_no_income:'⚠️ এই সময়ে কোনো আয় নেই, কিন্তু খরচ হয়েছে ', rep_spent_pct:'আয়ের যত শতাংশ খরচ হয়েছে: ', rep_loan_cover:'এই সময়ে লোন নিয়েছেন ',
-    rep_income_src:'আয়ের উৎস অনুযায়ী', rep_exp_cat:'খাত অনুযায়ী খরচ', rep_insights:'📈 বিশ্লেষণ', rep_avg_daily:'দৈনিক গড় খরচ',
+    rep_over:'আয়ের চেয়ে বেশি খরচ হয়েছে: ', rep_under:'আয়ের চেয়ে কম খরচ হয়েছে, উদ্বৃত্ত: ', rep_equal:'আয় ও খরচ সমান',
+    rep_no_income:'এই সময়ে কোনো আয় নেই, কিন্তু খরচ হয়েছে ', rep_spent_pct:'আয়ের যত শতাংশ খরচ হয়েছে: ', rep_loan_cover:'এই সময়ে লোন নিয়েছেন ',
+    rep_income_src:'আয়ের উৎস অনুযায়ী', rep_exp_cat:'খাত অনুযায়ী খরচ', rep_insights:'বিশ্লেষণ', rep_avg_daily:'দৈনিক গড় খরচ',
     rep_top_day:'সবচেয়ে বেশি খরচের দিন', rep_biggest_income:'সবচেয়ে বড় আয়', rep_tx_count:'মোট লেনদেন', rep_savings_rate:'সঞ্চয়ের হার',
-    rep_top5:'🔝 সবচেয়ে বড় ৫টি খরচ', rep_vs_prev:'গত মাসের তুলনায়', rep_up:'বেড়েছে', rep_down:'কমেছে',
-    rep_budget_over:'⚠️ বাজেট ছাড়ানো খাত', rep_loan_status:'🤝 লোনের বর্তমান অবস্থা (মোট)', rep_acc_total:'একাউন্টে জমা (মোট)',
-    notice_heading:'🌐 রিমোট নোটিশ (সব ইউজারের জন্য)',
+    rep_top5:'সবচেয়ে বড় ৫টি খরচ', rep_vs_prev:'গত মাসের তুলনায়', rep_up:'বেড়েছে', rep_down:'কমেছে',
+    rep_budget_over:'বাজেট ছাড়ানো খাত', rep_loan_status:'লোনের বর্তমান অবস্থা (মোট)', rep_acc_total:'একাউন্টে জমা (মোট)',
+    notice_heading:'রিমোট নোটিশ (সব ইউজারের জন্য)',
     notice_note:'একটা JSON ফাইলের লিংক দিন (যেমন GitHub-এ রাখা notice.json)। ফাইলে on:true দিলে সব ইউজার অ্যাপ খুললে সেই মেসেজ দেখবে। ফাইলটা এডিট করলেই সবার কাছে নতুন মেসেজ যাবে। স্থায়ীভাবে সব ইউজারের জন্য কাজ করাতে কোডের NOTICE_URL-এ লিংকটা বসিয়ে দিন।',
     lbl_notice_url:'নোটিশ ফাইলের লিংক (টেস্টের জন্য)', btn_notice_save:'লিংক সেভ করুন', btn_notice_test:'টেস্ট করুন',
-    notice_saved:'✅ লিংক সেভ হয়েছে।', notice_url_empty:'আগে নোটিশ ফাইলের লিংক দিন।',
-    notice_fetch_fail:'❌ ফাইলটা আনা যায়নি — লিংক, ইন্টারনেট বা JSON ফরম্যাট ঠিক আছে কিনা দেখুন।', notice_is_off:'ফাইল পাওয়া গেছে, কিন্তু "on" এখন true নয় — তাই কেউ দেখবে না।',
-    dash_today_heading:'📅 আজকের হিসাব', today_income:'আজকের আয়', today_expense:'আজকের খরচ', week_expense:'শেষ ৭ দিনের খরচ',
-    limit_over:'⚠️ আজকের সীমা ছাড়িয়ে গেছে', limit_left:'আজ আর খরচ করতে পারবেন ', lbl_daily_limit:'দৈনিক খরচের সীমা (টাকা)',
-    lbl_due:'ফেরতের তারিখ (ঐচ্ছিক)', dash_remind_heading:'⏰ লোনের রিমাইন্ডার', rem_get:'ফেরত পাবেন', rem_owe:'ফেরত দিতে হবে',
-    rem_overdue:'দিন আগে তারিখ পার হয়েছে', rem_today:'আজই ফেরতের তারিখ', rem_soon:'দিন পরে', rem_popup_title:'⏰ লোন ফেরতের রিমাইন্ডার',
-    settings_recurring:'🔁 নিয়মিত এন্ট্রি', recurring_note:'বাসা ভাড়া, বেতন, বিলের মতো যা প্রতি মাসে আসে/যায় সেটা একবার সেট করুন — নির্দিষ্ট তারিখে অ্যাপ খুললেই নিজে থেকে যোগ হয়ে যাবে। (সেট করার সময় ওই মাসের তারিখ পার হয়ে গেলে, পরের মাস থেকে শুরু হবে।)',
+    notice_saved:'লিংক সেভ হয়েছে।', notice_url_empty:'আগে নোটিশ ফাইলের লিংক দিন।',
+    notice_fetch_fail:'ফাইলটা আনা যায়নি — লিংক, ইন্টারনেট বা JSON ফরম্যাট ঠিক আছে কিনা দেখুন।', notice_is_off:'ফাইল পাওয়া গেছে, কিন্তু "on" এখন true নয় — তাই কেউ দেখবে না।',
+    dash_today_heading:'আজকের হিসাব', today_income:'আজকের আয়', today_expense:'আজকের খরচ', week_expense:'শেষ ৭ দিনের খরচ',
+    limit_over:'আজকের সীমা ছাড়িয়ে গেছে', limit_left:'আজ আর খরচ করতে পারবেন ', lbl_daily_limit:'দৈনিক খরচের সীমা (টাকা)',
+    lbl_due:'ফেরতের তারিখ (ঐচ্ছিক)', dash_remind_heading:'লোনের রিমাইন্ডার', rem_get:'ফেরত পাবেন', rem_owe:'ফেরত দিতে হবে',
+    rem_overdue:'দিন আগে তারিখ পার হয়েছে', rem_today:'আজই ফেরতের তারিখ', rem_soon:'দিন পরে', rem_popup_title:'লোন ফেরতের রিমাইন্ডার',
+    settings_recurring:'নিয়মিত এন্ট্রি', recurring_note:'বাসা ভাড়া, বেতন, বিলের মতো যা প্রতি মাসে আসে/যায় সেটা একবার সেট করুন — নির্দিষ্ট তারিখে অ্যাপ খুললেই নিজে থেকে যোগ হয়ে যাবে। (সেট করার সময় ওই মাসের তারিখ পার হয়ে গেলে, পরের মাস থেকে শুরু হবে।)',
     lbl_rec_type:'ধরন', lbl_rec_amount:'পরিমাণ (টাকা)', lbl_rec_day:'প্রতি মাসের কত তারিখে (১–৩১)', lbl_rec_note:'নোট (যেমন: বাসা ভাড়া)',
-    btn_rec_add:'➕ যোগ করুন', rec_empty:'কোনো নিয়মিত এন্ট্রি নেই', rec_added:'✅ নিয়মিত এন্ট্রি যোগ হয়েছে।', rec_need:'সঠিক পরিমাণ দিন।',
+    btn_rec_add:'যোগ করুন', rec_empty:'কোনো নিয়মিত এন্ট্রি নেই', rec_added:'নিয়মিত এন্ট্রি যোগ হয়েছে।', rec_need:'সঠিক পরিমাণ দিন।',
     rec_every:'প্রতি মাসের', rec_day_suffix:'তারিখে',
-    btn_loan_paid:'✔ পরিশোধ', btn_loan_received:'✔ পেলাম', loan_pay_title:'লোন পরিশোধ', loan_recv_title:'টাকা ফেরত পেলাম',
+    btn_loan_paid:'পরিশোধ', btn_loan_received:'পেলাম', loan_pay_title:'লোন পরিশোধ', loan_recv_title:'টাকা ফেরত পেলাম',
     loan_remaining:'বাকি আছে:', loan_over:'বাকির চেয়ে বেশি দেওয়া যাবে না। বাকি:', loan_note_paid:'লোন পরিশোধ', loan_note_received:'লোনের টাকা ফেরত পেয়েছি',
-    dev_clear_heading:'🗑️ সব ডেটা মুছুন', dev_clear_note:'এই ফোনে থাকা অ্যাপের সব ডেটা (লেনদেন, লোন, প্রোফাইল, পিন ইত্যাদি) মুছে যাবে। মুছতে হলে আপনার পিন অথবা ফিঙ্গারপ্রিন্ট লাগবে।',
-    btn_dev_clear:'🗑️ সব ডেটা মুছে ফেলুন', dev_clear_need_lock:'ডেটা মুছতে হলে আগে সেটিংস থেকে পিন অথবা ফিঙ্গারপ্রিন্ট লক চালু করুন।',
+    dev_clear_heading:'সব ডেটা মুছুন', dev_clear_note:'এই ফোনে থাকা অ্যাপের সব ডেটা (লেনদেন, লোন, প্রোফাইল, পিন ইত্যাদি) মুছে যাবে। মুছতে হলে আপনার পিন অথবা ফিঙ্গারপ্রিন্ট লাগবে।',
+    btn_dev_clear:'সব ডেটা মুছে ফেলুন', dev_clear_need_lock:'ডেটা মুছতে হলে আগে সেটিংস থেকে পিন অথবা ফিঙ্গারপ্রিন্ট লক চালু করুন।',
     dev_clear_confirm:'সব ডেটা চিরতরে মুছে যাবে, ফেরত আনা যাবে না। নিশ্চিত?', dev_clear_pin_title:'পিন দিন', dev_clear_pin_note:'সব ডেটা মুছতে আপনার পিন দিন।',
     dev_clear_denied:'যাচাই ব্যর্থ, ডেটা মোছা হয়নি।', dev_clear_done:'সব ডেটা মুছে ফেলা হয়েছে।',
 
-    rep_range_from:'শুরুর তারিখ', rep_range_to:'শেষ তারিখ', btn_today:'আজ', btn_week:'শেষ ৭ দিন', btn_this_month:'এই মাস', btn_print_report:'🖨️ প্রিন্ট করুন',
-    dev_heading:'🛠️ ডেভেলপার মোড — নোটিফিকেশন পপআপ',
+    rep_range_from:'শুরুর তারিখ', rep_range_to:'শেষ তারিখ', btn_today:'আজ', btn_week:'শেষ ৭ দিন', btn_this_month:'এই মাস', btn_print_report:'প্রিন্ট করুন',
+    dev_heading:'ডেভেলপার মোড — নোটিফিকেশন পপআপ',
     dev_note:'এখান থেকে যে নোটিফিকেশন সেট করবেন সেটা অ্যাপ খোলার/লগইন-আনলকের সাথে সাথে সবাইকে দেখাবে, যতক্ষণ না আপনি এটা বন্ধ করছেন।',
-    dev_enter_pin:'ডেভেলপার পিন দিন:', dev_unlocked:'✅ ডেভেলপার মোড আনলক হয়েছে।', dev_wrong_pin:'❌ ভুল পিন।',
+    dev_enter_pin:'ডেভেলপার পিন দিন:', dev_unlocked:'ডেভেলপার মোড আনলক হয়েছে।', dev_wrong_pin:'ভুল পিন।',
     dev_lock_confirm:'ডেভেলপার মোড লক করলে আবার আনলক করতে পিন লাগবে। এগিয়ে যাবেন?',
     dev_need_content:'অন্তত শিরোনাম বা মেসেজ একটা লিখুন।',
-    dev_notif_on_done:'✅ নোটিফিকেশন পপআপ চালু হয়েছে — এখন থেকে অ্যাপ খোলার সাথে সাথে সবাই এটা দেখবে।',
+    dev_notif_on_done:'নোটিফিকেশন পপআপ চালু হয়েছে — এখন থেকে অ্যাপ খোলার সাথে সাথে সবাই এটা দেখবে।',
     dev_notif_off_done:'বন্ধ করা হয়েছে — আর কেউ এই নোটিফিকেশন দেখবে না।',
-    lbl_notif_type:'ধরন', notif_type_info:'ℹ️ তথ্য', notif_type_update:'🚀 আপডেট', notif_type_warning:'⚠️ সতর্কতা',
+    lbl_notif_type:'ধরন', notif_type_info:'তথ্য', notif_type_update:'আপডেট', notif_type_warning:'সতর্কতা',
     lbl_notif_title:'শিরোনাম', ph_notif_title:'যেমন: নতুন আপডেট এসেছে!',
     lbl_notif_message:'মেসেজ', ph_notif_message:'মেসেজ লিখুন...',
-    btn_notif_on:'চালু করুন', btn_notif_off:'বন্ধ করুন', btn_notif_preview:'👁️ প্রিভিউ দেখুন',
-    btn_dev_lock:'🔒 ডেভেলপার মোড লক করুন', btn_notif_gotit:'বুঝেছি',
-    settings_logo:'🖼️ অ্যাপ লোগো', logo_note:'চাইলে অ্যাপের ডিফল্ট লোগোর বদলে নিজের ছবি বা লোগো বসাতে পারেন। এটা লগইন স্ক্রিন ও উপরের টাইটেলে দেখাবে।',
+    btn_notif_on:'চালু করুন', btn_notif_off:'বন্ধ করুন', btn_notif_preview:'প্রিভিউ দেখুন',
+    btn_dev_lock:'ডেভেলপার মোড লক করুন', btn_notif_gotit:'বুঝেছি',
+    settings_logo:'অ্যাপ লোগো', logo_note:'চাইলে অ্যাপের ডিফল্ট লোগোর বদলে নিজের ছবি বা লোগো বসাতে পারেন। এটা লগইন স্ক্রিন ও উপরের টাইটেলে দেখাবে।',
     btn_change_logo:'লোগো পরিবর্তন করুন', btn_reset_logo:'ডিফল্ট লোগোতে ফিরে যান',
-    lock_heading:'🔒 অ্যাপ লক (ফিঙ্গারপ্রিন্ট)', lock_note:'চালু করলে অ্যাপ খোলার সময় আপনার ফোনের ফিঙ্গারপ্রিন্ট বা ফেস আনলক দিয়ে যাচাই করতে হবে।',
-    lbl_status:'অবস্থা:', status_on:'চালু আছে ✅', status_off:'বন্ধ আছে',
+    lock_heading:'অ্যাপ লক (ফিঙ্গারপ্রিন্ট)', lock_note:'চালু করলে অ্যাপ খোলার সময় আপনার ফোনের ফিঙ্গারপ্রিন্ট বা ফেস আনলক দিয়ে যাচাই করতে হবে।',
+    lbl_status:'অবস্থা:', status_on:'চালু আছে', status_off:'বন্ধ আছে',
     btn_setup_finger:'ফিঙ্গারপ্রিন্ট সেটআপ করুন', btn_disable_lock:'লক বন্ধ করুন',
-    pin_heading:'🔢 পিন লক', pin_note:'ফিঙ্গারপ্রিন্ট না থাকলে বা কাজ না করলে বিকল্প হিসেবে ৪-৬ ডিজিটের পিন দিয়েও লক করা যাবে।',
+    pin_heading:'পিন লক', pin_note:'ফিঙ্গারপ্রিন্ট না থাকলে বা কাজ না করলে বিকল্প হিসেবে ৪-৬ ডিজিটের পিন দিয়েও লক করা যাবে।',
     lbl_new_pin:'নতুন পিন (৪-৬ সংখ্যা)', ph_new_pin:'নতুন পিন', lbl_confirm_pin:'পিন আবার দিন', ph_confirm_pin:'পিন নিশ্চিত করুন',
     btn_set_pin:'পিন সেট করুন', btn_disable_pin:'পিন বন্ধ করুন',
-    contact_heading:'☎️ সাহায্য / যোগাযোগ', contact_note:'অ্যাপ নিয়ে কোনো সমস্যা বা কাস্টম কাজের জন্য এডমিনের সাথে যোগাযোগ করুন:',
+    contact_heading:'সাহায্য / যোগাযোগ', contact_note:'অ্যাপ নিয়ে কোনো সমস্যা বা কাস্টম কাজের জন্য এডমিনের সাথে যোগাযোগ করুন:',
     report_title:'মাসিক রিপোর্ট', report_title_all:'সম্পূর্ণ রিপোর্ট', report_total_credit:'মোট জমা',
     report_total_debit:'মোট খরচ/প্রদান', report_net:'নিট', report_transactions:'লেনদেনসমূহ', report_loan_summary:'লোনের সারসংক্ষেপ',
     lock_screen_title:'অ্যাপ লক করা আছে', lock_screen_sub:'চালিয়ে যেতে যাচাই করুন',
     lock_welcome_prefix:'স্বাগতম, ', lock_welcome_generic:'স্বাগতম!',
-    lock_finger_btn:'👆 ফিঙ্গারপ্রিন্ট দিয়ে আনলক করুন', lock_pin_toggle:'পিন দিয়ে আনলক করুন',
+    lock_finger_btn:'ফিঙ্গারপ্রিন্ট দিয়ে আনলক করুন', lock_pin_toggle:'পিন দিয়ে আনলক করুন',
     ph_unlock_pin:'পিন দিন', btn_unlock:'আনলক করুন',
-    btn_remove_short:'🗑 মুছুন', confirm_remove_cat:'এই খাতটি তালিকা থেকে মুছে ফেলতে চান? (পুরনো লেনদেন অপরিবর্তিত থাকবে)', confirm_remove_src:'এই উৎসটি তালিকা থেকে মুছে ফেলতে চান? (পুরনো লেনদেন অপরিবর্তিত থাকবে)', alert_keep_one:'অন্তত একটি অপশন রাখতে হবে', alert_saved:'সংরক্ষণ করা হয়েছে ✅', alert_enter_valid_amount:'সঠিক পরিমাণ দিন', alert_enter_person:'ব্যক্তির নাম দিন',
+    btn_remove_short:'মুছুন', confirm_remove_cat:'এই খাতটি তালিকা থেকে মুছে ফেলতে চান? (পুরনো লেনদেন অপরিবর্তিত থাকবে)', confirm_remove_src:'এই উৎসটি তালিকা থেকে মুছে ফেলতে চান? (পুরনো লেনদেন অপরিবর্তিত থাকবে)', alert_keep_one:'অন্তত একটি অপশন রাখতে হবে', alert_saved:'সংরক্ষণ করা হয়েছে', alert_enter_valid_amount:'সঠিক পরিমাণ দিন', alert_enter_person:'ব্যক্তির নাম দিন',
     alert_enter_friend_name:'বন্ধুর নাম দিন', alert_insufficient:'-এ পর্যাপ্ত টাকা নেই। বর্তমান ব্যালেন্স: ',
-    alert_sent_suffix:' পাঠানো হয়েছে ✅', alert_setup_name_first:'আগে সেটিংস ট্যাব থেকে আপনার নাম দিন',
+    alert_sent_suffix:' পাঠানো হয়েছে', alert_setup_name_first:'আগে সেটিংস ট্যাব থেকে আপনার নাম দিন',
     alert_qr_fail:'QR তৈরি করা যায়নি', qr_not_loan:'এটা লোনের QR কোড নয়, আবার চেষ্টা করুন',
     qr_scanned_review:' থেকে QR স্ক্যান হয়েছে — বিস্তারিত দেখে "সংরক্ষণ করুন" চাপুন',
     qr_cam_fail:'ক্যামেরা চালু করা যায়নি — অনুমতি দিন অথবা অন্য ব্রাউজারে চেষ্টা করুন',
-    alert_bio_unsupported:'এই ব্রাউজার/ডিভাইসে বায়োমেট্রিক সাপোর্ট নেই', alert_bio_enabled:'বায়োমেট্রিক লক চালু হয়েছে ✅',
+    alert_bio_unsupported:'এই ব্রাউজার/ডিভাইসে বায়োমেট্রিক সাপোর্ট নেই', alert_bio_enabled:'বায়োমেট্রিক লক চালু হয়েছে',
     alert_bio_setup_fail:'সেটআপ ব্যর্থ হয়েছে। আবার চেষ্টা করুন', alert_lock_disabled:'লক বন্ধ করা হয়েছে',
-    alert_pin_digits:'৪-৬ সংখ্যার পিন দিন', alert_pin_mismatch:'দুইটা পিন মিলছে না', alert_pin_set:'পিন সেট করা হয়েছে ✅',
+    alert_pin_digits:'৪-৬ সংখ্যার পিন দিন', alert_pin_mismatch:'দুইটা পিন মিলছে না', alert_pin_set:'পিন সেট করা হয়েছে',
     alert_pin_disabled:'পিন বন্ধ করা হয়েছে', alert_wrong_pin:'ভুল পিন, আবার চেষ্টা করুন', confirm_delete:'মুছে ফেলতে চান?',
     login_tag:'আপনার আর্থিক হিসাবের সঙ্গী', btn_get_started:'শুরু করুন',
     bn_home:'হোম', hero_loan:'মোট লোন', hero_save:'মোট সঞ্চয়', bn_expense:'খরচ', bn_chat:'AI চ্যাট', bn_deposit:'যোগ করুন', bn_notif:'লোন', bn_profile:'সেটিংস',
-    chat_heading:'🤖 AI অ্যাসিস্ট্যান্ট', ph_chat_input:'যেমন: এই মাসে কত খরচ হয়েছে?', btn_send_chat:'পাঠান',
+    chat_heading:'AI অ্যাসিস্ট্যান্ট', ph_chat_input:'যেমন: এই মাসে কত খরচ হয়েছে?', btn_send_chat:'পাঠান',
     chat_greet:'হ্যালো! আমি আপনার হিসাব সম্পর্কে বলতে পারি (ব্যালেন্স, খরচ, লোন, হিস্ট্রি) — সরাসরি লিখলে হিসাবও যোগ করে দিতে পারি, আবার মুছেও দিতে পারি। যেমন: "রহিমকে ৫০০ টাকা ধার দিলাম", "৩০০ টাকা খাবারে খরচ হলো", "হিস্ট্রি দেখাও", "রহিমের কাছে কত পাবো"।',
     chat_balance:'আপনার মোট ব্যালেন্স হলো ', chat_expense:'এখন পর্যন্ত মোট খরচ হয়েছে ',
     chat_owe:'আপনি মোট পাওনা দেবেন ', chat_get:'আপনি মোট পাবেন ',
     chat_top_cat:'সবচেয়ে বেশি খরচ হয়েছে এই খাতে: ', chat_no_data:'এখনো যথেষ্ট তথ্য নেই',
     chat_need_amount:'পরিমাণটা বুঝতে পারিনি — টাকার অংক দিয়ে আবার লিখুন, যেমন: "৫০০ টাকা খরচ হলো খাবারে"।',
     chat_need_person:'কার সাথে এই লেনদেন, নামটা বলুন — যেমন: "রহিমকে ৫০০ টাকা ধার দিলাম"।',
-    chat_undo_hint:'ভুল হলে লিখুন "ফিরিয়ে নাও"।', chat_undo_done:'✅ শেষ এন্ট্রিটা মুছে ফেলা হয়েছে।', chat_undo_none:'ফিরিয়ে নেওয়ার মতো কিছু নেই।',
-    chat_history_intro:'📋 সাম্প্রতিক লেনদেনগুলো:', chat_history_hint:'একটা এন্ট্রি মুছতে শুধু তার নম্বরটা লিখুন, যেমন: "২"।',
-    chat_deleted_one:'✅ এন্ট্রিটি মুছে ফেলা হয়েছে।', chat_need_valid_number:'তালিকায় থাকা একটা সঠিক নম্বর দিন।',
+    chat_undo_hint:'ভুল হলে লিখুন "ফিরিয়ে নাও"।', chat_undo_done:'শেষ এন্ট্রিটা মুছে ফেলা হয়েছে।', chat_undo_none:'ফিরিয়ে নেওয়ার মতো কিছু নেই।',
+    chat_history_intro:'সাম্প্রতিক লেনদেনগুলো:', chat_history_hint:'একটা এন্ট্রি মুছতে শুধু তার নম্বরটা লিখুন, যেমন: "২"।',
+    chat_deleted_one:'এন্ট্রিটি মুছে ফেলা হয়েছে।', chat_need_valid_number:'তালিকায় থাকা একটা সঠিক নম্বর দিন।',
     chat_owes_you_suffix:'-এর কাছে আপনি পাবেন ', chat_you_owe_suffix:'-কে আপনি পাওনা দিবেন ',
     chat_fallback:'দুঃখিত, এটা বুঝতে পারিনি। "ব্যালেন্স", "খরচ", "লোন", "খাত", "হিস্ট্রি" জিজ্ঞাসা করুন, অথবা সরাসরি লিখুন — যেমন "৫০০ টাকা জমা হলো" বা "রহিমের কাছ থেকে ২০০ টাকা ধার নিলাম"।'
   },
@@ -1180,10 +1264,10 @@ const I18N = {
     type_deposit:'Deposit', type_expense:'Expense', type_loan_taken:'Loan Taken', type_loan_given:'Loan Given',
     type_loan_repay_taken:'Loan Repaid (Taken)', type_loan_repay_given:'Loan Repaid (Given)',
     type_save_to_account:'Saved to Account', type_use_from_account:'Withdrawn from Account',
-    lbl_amount:'Amount (Taka)', lbl_category:'Category', ph_new_category:'New category name', btn_add_short:'➕ Add',
+    lbl_amount:'Amount (Taka)', lbl_category:'Category', ph_new_category:'New category name', btn_add_short:'Add',
     lbl_person:"Person's Name", ph_person_example:'e.g. Rahim', lbl_account:'Account', ph_new_account:'New account name',
     lbl_date:'Date', lbl_time:'Time', lbl_note:'Note (optional)', ph_note:'Enter note', btn_save:'Save',
-    edit_mode_note:'✎ You are editing an existing transaction', btn_cancel_edit:'Cancel', btn_update:'Update',
+    edit_mode_note:'You are editing an existing transaction', btn_cancel_edit:'Cancel', btn_update:'Update',
     acc_total_savings:'Total Savings (All Accounts)', acc_balance_heading:'Account-wise Balance',
     loan_total_owe:'Total Loan Taken (To Pay)', loan_total_get:'Total Receivable',
     send_money_heading:'Send Money (to Friend)', lbl_friend_name:"Friend's Name", btn_send:'Send',
@@ -1192,108 +1276,108 @@ const I18N = {
     btn_qr_show:'Show QR Code', qr_gen_hint:'Ask your friend to scan this QR code',
     qr_cam_starting:'Starting camera...', qr_point_cam:'Point the camera at the QR code', btn_close:'Close',
     loan_people_owe_me:'People who owe me', loan_people_i_owe:'People I owe',
-    hist_month:'Month', hist_show_all:'Show All', hist_print:'🖨️ Print',
+    hist_month:'Month', hist_show_all:'Show All', hist_print:'Print',
     settings_theme:'Theme', settings_lang:'Language', settings_profile:'Profile',
     profile_note:"Set your details below; friends will see your name when you share a QR.",
     lbl_your_name:'Your Name', ph_your_name:'e.g. Karim',
     lbl_username:'Username', ph_username:'e.g. karim123',
     lbl_phone:'Mobile Number', ph_phone:'e.g. 01XXXXXXXXX',
     btn_change_photo:'Change Photo', btn_reset_photo:'Remove Photo',
-    backup_heading:'💾 Local Backup',
+    backup_heading:'Local Backup',
     backup_note:"This app has no server — all your data stays on this phone only. Download a backup file regularly, and use it to restore everything on another phone or after a reset.",
-    btn_backup_download:'⬇️ Download Backup', btn_restore_file:'⬆️ Restore Backup',
-    backup_download_done:'✅ Backup file downloaded.',
+    btn_backup_download:'Download Backup', btn_restore_file:'Restore Backup',
+    backup_download_done:'Backup file downloaded.',
     backup_restore_confirm:'Restoring will overwrite the current data on this device. Continue?',
-    backup_restore_done:'✅ Restored successfully, reloading...',
-    backup_restore_fail:'❌ That file is invalid or unreadable. Please try again.',
-    btn_export_csv:'📊 Export CSV (opens in Excel)',
-    settings_budget:'🎯 Monthly Budget', budget_note:"Set a monthly spending limit per category — the dashboard will flag it once you go over. Leave blank for no limit.",
-    settings_goal:'🏆 Savings Goal', goal_note:"Set a savings goal — the dashboard will show your progress compared to your total saved account balance.",
+    backup_restore_done:'Restored successfully, reloading...',
+    backup_restore_fail:'That file is invalid or unreadable. Please try again.',
+    btn_export_csv:'Export CSV (opens in Excel)',
+    settings_budget:'Monthly Budget', budget_note:"Set a monthly spending limit per category — the dashboard will flag it once you go over. Leave blank for no limit.",
+    settings_goal:'Savings Goal', goal_note:"Set a savings goal — the dashboard will show your progress compared to your total saved account balance.",
     lbl_goal_name:'Goal Name', ph_goal_name:'e.g. Buy a new phone', lbl_goal_target:'Target Amount (Taka)',
-    dash_budget_heading:'🎯 Monthly Budget', empty_no_budget:'No budgets set yet — set them in Settings',
-    budget_this_month:'This month', budget_over_warn:'⚠️ Over budget',
-    dash_goal_heading:'🏆 Savings Goal', goal_reached:'🎉 Congratulations! Goal reached',
+    dash_budget_heading:'Monthly Budget', empty_no_budget:'No budgets set yet — set them in Settings',
+    budget_this_month:'This month', budget_over_warn:'Over budget',
+    dash_goal_heading:'Savings Goal', goal_reached:'Congratulations! Goal reached',
     goal_remaining:'Remaining', hist_search_ph:'Search by name, category, note...',
     tab_report:'Report', lbl_source:'Income Source (where it came from)', ph_new_source:'New source name',
     dash_src_heading:'Deposits by Source', empty_no_income:'No deposits yet', src_unknown:'Unknown source',
-    rep_summary:'📊 Summary', rep_income:'Total Income (Deposits)', rep_expense:'Total Expense', rep_loan_taken:'Loans Taken', rep_loan_given:'Loans Given',
+    rep_summary:'Summary', rep_income:'Total Income (Deposits)', rep_expense:'Total Expense', rep_loan_taken:'Loans Taken', rep_loan_given:'Loans Given',
     rep_repaid:'Loans I Repaid', rep_received:'Loans Received Back', rep_saved:'Saved to Accounts', rep_net:'Income − Expense',
-    rep_over:'⚠️ You spent more than you earned by: ', rep_under:'✅ You spent less than you earned, surplus: ', rep_equal:'Income and expense are equal',
-    rep_no_income:'⚠️ No income in this period, but expenses were ', rep_spent_pct:'Share of income spent: ', rep_loan_cover:'Loans taken in this period: ',
-    rep_income_src:'Income by Source', rep_exp_cat:'Expense by Category', rep_insights:'📈 Insights', rep_avg_daily:'Average daily expense',
+    rep_over:'You spent more than you earned by: ', rep_under:'You spent less than you earned, surplus: ', rep_equal:'Income and expense are equal',
+    rep_no_income:'No income in this period, but expenses were ', rep_spent_pct:'Share of income spent: ', rep_loan_cover:'Loans taken in this period: ',
+    rep_income_src:'Income by Source', rep_exp_cat:'Expense by Category', rep_insights:'Insights', rep_avg_daily:'Average daily expense',
     rep_top_day:'Highest spending day', rep_biggest_income:'Biggest income', rep_tx_count:'Total transactions', rep_savings_rate:'Savings rate',
-    rep_top5:'🔝 Top 5 expenses', rep_vs_prev:'vs last month', rep_up:'up', rep_down:'down',
-    rep_budget_over:'⚠️ Over-budget categories', rep_loan_status:'🤝 Current loan status (overall)', rep_acc_total:'Total in accounts',
-    notice_heading:'🌐 Remote Notice (for all users)',
+    rep_top5:'Top 5 expenses', rep_vs_prev:'vs last month', rep_up:'up', rep_down:'down',
+    rep_budget_over:'Over-budget categories', rep_loan_status:'Current loan status (overall)', rep_acc_total:'Total in accounts',
+    notice_heading:'Remote Notice (for all users)',
     notice_note:'Paste the link of a JSON file (e.g. notice.json hosted on GitHub). With on:true, every user sees that message when they open the app. Edit the file to push a new message to everyone. To make it permanent for all users, put the link into NOTICE_URL in the code.',
     lbl_notice_url:'Notice file link (for testing)', btn_notice_save:'Save Link', btn_notice_test:'Test',
-    notice_saved:'✅ Link saved.', notice_url_empty:'Please enter the notice file link first.',
-    notice_fetch_fail:'❌ Could not load the file — check the link, internet, or JSON format.', notice_is_off:'File loaded, but "on" is not true — so no one will see it.',
-    dash_today_heading:'📅 Today', today_income:"Today's income", today_expense:"Today's expense", week_expense:'Last 7 days expense',
-    limit_over:"⚠️ Daily limit exceeded", limit_left:'You can still spend today: ', lbl_daily_limit:'Daily spending limit (Taka)',
-    lbl_due:'Due date (optional)', dash_remind_heading:'⏰ Loan Reminders', rem_get:'to receive', rem_owe:'to pay back',
-    rem_overdue:'days overdue', rem_today:'due today', rem_soon:'days left', rem_popup_title:'⏰ Loan due reminder',
-    settings_recurring:'🔁 Recurring Entries', recurring_note:"Set things that repeat every month (rent, salary, bills) once — they're added automatically when you open the app on that date. (If the date has already passed this month when you set it, it starts next month.)",
+    notice_saved:'Link saved.', notice_url_empty:'Please enter the notice file link first.',
+    notice_fetch_fail:'Could not load the file — check the link, internet, or JSON format.', notice_is_off:'File loaded, but "on" is not true — so no one will see it.',
+    dash_today_heading:'Today', today_income:"Today's income", today_expense:"Today's expense", week_expense:'Last 7 days expense',
+    limit_over:"Daily limit exceeded", limit_left:'You can still spend today: ', lbl_daily_limit:'Daily spending limit (Taka)',
+    lbl_due:'Due date (optional)', dash_remind_heading:'Loan Reminders', rem_get:'to receive', rem_owe:'to pay back',
+    rem_overdue:'days overdue', rem_today:'due today', rem_soon:'days left', rem_popup_title:'Loan due reminder',
+    settings_recurring:'Recurring Entries', recurring_note:"Set things that repeat every month (rent, salary, bills) once — they're added automatically when you open the app on that date. (If the date has already passed this month when you set it, it starts next month.)",
     lbl_rec_type:'Type', lbl_rec_amount:'Amount (Taka)', lbl_rec_day:'Day of month (1–31)', lbl_rec_note:'Note (e.g. House rent)',
-    btn_rec_add:'➕ Add', rec_empty:'No recurring entries', rec_added:'✅ Recurring entry added.', rec_need:'Enter a valid amount.',
+    btn_rec_add:'Add', rec_empty:'No recurring entries', rec_added:'Recurring entry added.', rec_need:'Enter a valid amount.',
     rec_every:'every month on day', rec_day_suffix:'',
-    btn_loan_paid:'✔ Paid', btn_loan_received:'✔ Received', loan_pay_title:'Pay loan', loan_recv_title:'Money received',
+    btn_loan_paid:'Paid', btn_loan_received:'Received', loan_pay_title:'Pay loan', loan_recv_title:'Money received',
     loan_remaining:'Remaining:', loan_over:"You can't pay more than the remaining amount. Remaining:", loan_note_paid:'Loan paid', loan_note_received:'Loan money received back',
-    dev_clear_heading:'🗑️ Clear all data', dev_clear_note:'All app data on this phone (transactions, loans, profile, PIN etc.) will be erased. Your PIN or fingerprint is required.',
-    btn_dev_clear:'🗑️ Clear all data', dev_clear_need_lock:'Enable a PIN or fingerprint lock in Settings first to be able to clear data.',
+    dev_clear_heading:'Clear all data', dev_clear_note:'All app data on this phone (transactions, loans, profile, PIN etc.) will be erased. Your PIN or fingerprint is required.',
+    btn_dev_clear:'Clear all data', dev_clear_need_lock:'Enable a PIN or fingerprint lock in Settings first to be able to clear data.',
     dev_clear_confirm:'All data will be erased permanently and cannot be recovered. Sure?', dev_clear_pin_title:'Enter PIN', dev_clear_pin_note:'Enter your PIN to clear all data.',
     dev_clear_denied:'Verification failed, data not cleared.', dev_clear_done:'All data cleared.',
 
-    rep_range_from:'From date', rep_range_to:'To date', btn_today:'Today', btn_week:'Last 7 days', btn_this_month:'This month', btn_print_report:'🖨️ Print',
-    dev_heading:'🛠️ Developer Mode — Notification Popup',
+    rep_range_from:'From date', rep_range_to:'To date', btn_today:'Today', btn_week:'Last 7 days', btn_this_month:'This month', btn_print_report:'Print',
+    dev_heading:'Developer Mode — Notification Popup',
     dev_note:"Any notification you set here will show to everyone right when they open the app or unlock it, until you turn it off.",
-    dev_enter_pin:'Enter developer PIN:', dev_unlocked:'✅ Developer mode unlocked.', dev_wrong_pin:'❌ Wrong PIN.',
+    dev_enter_pin:'Enter developer PIN:', dev_unlocked:'Developer mode unlocked.', dev_wrong_pin:'Wrong PIN.',
     dev_lock_confirm:"Locking developer mode will require the PIN again to unlock it. Continue?",
     dev_need_content:'Please write at least a title or a message.',
-    dev_notif_on_done:'✅ Notification popup turned on — everyone will see it as soon as they open the app.',
+    dev_notif_on_done:'Notification popup turned on — everyone will see it as soon as they open the app.',
     dev_notif_off_done:'Turned off — no one will see this notification anymore.',
-    lbl_notif_type:'Type', notif_type_info:'ℹ️ Info', notif_type_update:'🚀 Update', notif_type_warning:'⚠️ Warning',
+    lbl_notif_type:'Type', notif_type_info:'Info', notif_type_update:'Update', notif_type_warning:'Warning',
     lbl_notif_title:'Title', ph_notif_title:'e.g. A new update is here!',
     lbl_notif_message:'Message', ph_notif_message:'Write your message...',
-    btn_notif_on:'Turn On', btn_notif_off:'Turn Off', btn_notif_preview:'👁️ Preview',
-    btn_dev_lock:'🔒 Lock Developer Mode', btn_notif_gotit:'Got it',
-    settings_logo:'🖼️ App Logo', logo_note:"Swap the app's default logo for your own image or brand mark. It'll show on the login screen and the top title.",
+    btn_notif_on:'Turn On', btn_notif_off:'Turn Off', btn_notif_preview:'Preview',
+    btn_dev_lock:'Lock Developer Mode', btn_notif_gotit:'Got it',
+    settings_logo:'App Logo', logo_note:"Swap the app's default logo for your own image or brand mark. It'll show on the login screen and the top title.",
     btn_change_logo:'Change Logo', btn_reset_logo:'Reset to Default Logo',
-    lock_heading:'🔒 App Lock (Fingerprint)', lock_note:"When enabled, you'll need to verify with your phone's fingerprint or face unlock to open the app.",
-    lbl_status:'Status:', status_on:'Enabled ✅', status_off:'Disabled',
+    lock_heading:'App Lock (Fingerprint)', lock_note:"When enabled, you'll need to verify with your phone's fingerprint or face unlock to open the app.",
+    lbl_status:'Status:', status_on:'Enabled', status_off:'Disabled',
     btn_setup_finger:'Setup Fingerprint', btn_disable_lock:'Disable Lock',
-    pin_heading:'🔢 PIN Lock', pin_note:"If fingerprint isn't available or doesn't work, you can lock with a 4-6 digit PIN instead.",
+    pin_heading:'PIN Lock', pin_note:"If fingerprint isn't available or doesn't work, you can lock with a 4-6 digit PIN instead.",
     lbl_new_pin:'New PIN (4-6 digits)', ph_new_pin:'New PIN', lbl_confirm_pin:'Confirm PIN', ph_confirm_pin:'Confirm PIN',
     btn_set_pin:'Set PIN', btn_disable_pin:'Disable PIN',
-    contact_heading:'☎️ Help / Contact', contact_note:'For any issue or custom work, contact the admin:',
+    contact_heading:'Help / Contact', contact_note:'For any issue or custom work, contact the admin:',
     report_title:'Monthly Report', report_title_all:'Full Report', report_total_credit:'Total Credit',
     report_total_debit:'Total Debit', report_net:'Net', report_transactions:'Transactions', report_loan_summary:'Loan Summary',
     lock_screen_title:'App is Locked', lock_screen_sub:'Verify to continue',
     lock_welcome_prefix:'Welcome, ', lock_welcome_generic:'Welcome!',
-    lock_finger_btn:'👆 Unlock with Fingerprint', lock_pin_toggle:'Unlock with PIN',
+    lock_finger_btn:'Unlock with Fingerprint', lock_pin_toggle:'Unlock with PIN',
     ph_unlock_pin:'Enter PIN', btn_unlock:'Unlock',
-    btn_remove_short:'🗑 Remove', confirm_remove_cat:'Remove this category from the list? (Past transactions stay unchanged)', confirm_remove_src:'Remove this source from the list? (Past transactions stay unchanged)', alert_keep_one:'At least one option must remain', alert_saved:'Saved ✅', alert_enter_valid_amount:'Enter a valid amount', alert_enter_person:"Enter the person's name",
+    btn_remove_short:'Remove', confirm_remove_cat:'Remove this category from the list? (Past transactions stay unchanged)', confirm_remove_src:'Remove this source from the list? (Past transactions stay unchanged)', alert_keep_one:'At least one option must remain', alert_saved:'Saved', alert_enter_valid_amount:'Enter a valid amount', alert_enter_person:"Enter the person's name",
     alert_enter_friend_name:"Enter the friend's name", alert_insufficient:" doesn't have enough balance. Current balance: ",
-    alert_sent_suffix:' has been sent ✅', alert_setup_name_first:'Set your name from the Settings tab first',
+    alert_sent_suffix:' has been sent', alert_setup_name_first:'Set your name from the Settings tab first',
     alert_qr_fail:'Could not generate QR', qr_not_loan:'This is not a loan QR code, try again',
     qr_scanned_review:' — QR scanned. Review details and tap Save',
     qr_cam_fail:'Could not start camera — allow permission or try another browser',
-    alert_bio_unsupported:'Biometric not supported on this browser/device', alert_bio_enabled:'Biometric lock enabled ✅',
+    alert_bio_unsupported:'Biometric not supported on this browser/device', alert_bio_enabled:'Biometric lock enabled',
     alert_bio_setup_fail:'Setup failed. Try again', alert_lock_disabled:'Lock disabled',
-    alert_pin_digits:'Enter a 4-6 digit PIN', alert_pin_mismatch:"The two PINs don't match", alert_pin_set:'PIN set ✅',
+    alert_pin_digits:'Enter a 4-6 digit PIN', alert_pin_mismatch:"The two PINs don't match", alert_pin_set:'PIN set',
     alert_pin_disabled:'PIN disabled', alert_wrong_pin:'Wrong PIN, try again', confirm_delete:'Delete this?',
     login_tag:'Your personal finance companion', btn_get_started:'Get Started',
     bn_home:'Home', hero_loan:'Total Loan', hero_save:'Total Savings', bn_expense:'Expense', bn_chat:'AI Chat', bn_deposit:'Add', bn_notif:'Loan', bn_profile:'Settings',
-    chat_heading:'🤖 AI Assistant', ph_chat_input:'e.g. How much did I spend this month?', btn_send_chat:'Send',
+    chat_heading:'AI Assistant', ph_chat_input:'e.g. How much did I spend this month?', btn_send_chat:'Send',
     chat_greet:"Hi! Ask me about your accounts (balance, expenses, loans, history) — tell me a transaction and I'll log it, or ask me to delete one. e.g. \"gave Rahim a loan of 500 taka\", \"spent 300 on food\", \"show history\", \"how much does Rahim owe me\".",
     chat_balance:'Your total balance is ', chat_expense:'Total expense so far is ',
     chat_owe:'You owe a total of ', chat_get:'You are owed a total of ',
     chat_top_cat:'Your highest spending category is: ', chat_no_data:'Not enough data yet',
     chat_need_amount:'I couldn\'t catch the amount — try again with a number, e.g. "spent 500 on food".',
     chat_need_person:"Who's this transaction with? e.g. \"gave Rahim a loan of 500\".",
-    chat_undo_hint:'If that was wrong, just say "undo".', chat_undo_done:'✅ Last entry removed.', chat_undo_none:'Nothing to undo.',
-    chat_history_intro:'📋 Recent transactions:', chat_history_hint:'To delete an entry, just type its number, e.g. "2".',
-    chat_deleted_one:'✅ Entry deleted.', chat_need_valid_number:'Please give a valid number from the list.',
+    chat_undo_hint:'If that was wrong, just say "undo".', chat_undo_done:'Last entry removed.', chat_undo_none:'Nothing to undo.',
+    chat_history_intro:'Recent transactions:', chat_history_hint:'To delete an entry, just type its number, e.g. "2".',
+    chat_deleted_one:'Entry deleted.', chat_need_valid_number:'Please give a valid number from the list.',
     chat_owes_you_suffix:' owes you ', chat_you_owe_suffix:', you owe ',
     chat_fallback:"Sorry, I didn't get that. Ask about \"balance\", \"expense\", \"loan\", \"category\" or \"history\" — or just tell me a transaction, e.g. \"deposited 500\" or \"took a loan of 200 from Rahim\"."
   }
@@ -1320,10 +1404,19 @@ function loadData(){
   if(!data.dailyLimit) data.dailyLimit = 0;
   if(!data.incomeSources || !data.incomeSources.length) data.incomeSources = [...DEFAULT_SOURCES];
   if(!data.savingsGoal) data.savingsGoal = {name:'', target:0};
+  sanitizeData();
+}
+function sanitizeData(){
+  const D=/^\d{4}-\d{2}-\d{2}$/, T=/^\d{2}:\d{2}$/, seen=new Set();
+  data.transactions = data.transactions.filter(x=>x && TYPE_META[x.type] && isFinite(+x.amount) && +x.amount>0).map(x=>{
+    x.amount=+x.amount; x.date=D.test(x.date)?x.date:todayStr(); x.time=T.test(x.time)?x.time:'00:00'; x.due=D.test(x.due)?x.due:null;
+    let id=String(x.id||'').replace(/[^\w-]/g,''); if(!id||seen.has(id)) id=Date.now()+'-'+Math.random().toString(36).slice(2,7);
+    seen.add(id); x.id=id; return x;
+  });
 }
 function saveData(){
   try{ localStorage.setItem('moneyAppData_v1', JSON.stringify(data)); }
-  catch(e){ console.error('save fail', e); }
+  catch(e){ console.error('save fail', e); if(window.toast) toast(currentLang==='bn'?'সেভ করা যায়নি — স্টোরেজ ভরে গেছে, ব্যাকআপ নিন':'Could not save — storage full, take a backup'); }
 }
 
 const TYPE_META = {
@@ -1463,7 +1556,7 @@ function appDialog(msg, opts, onYes){
   bx.style.cssText = 'background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:22px;padding:22px 18px 16px;max-width:320px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.35);font-family:inherit;text-align:center;';
   const ic = document.createElement('div');
   ic.style.cssText = 'width:52px;height:52px;margin:0 auto 12px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;background:'+(opts.confirm?'color-mix(in srgb,var(--red) 14%,var(--card))':'color-mix(in srgb,var(--amber) 18%,var(--card))')+';';
-  ic.textContent = opts.confirm ? '🗑️' : '⚠️';
+  ic.innerHTML = mi(opts.icon || (opts.confirm ? 'trash' : 'alert')); ic.style.color = opts.confirm ? 'var(--red)' : 'var(--amber)';
   const m = document.createElement('div');
   m.style.cssText = 'font-size:14px;line-height:1.6;color:var(--muted);margin-bottom:6px;';
   m.textContent = opts.confirm ? msg.split('\n\n')[0] : msg;
@@ -1486,7 +1579,7 @@ function appDialog(msg, opts, onYes){
   };
   if(opts.confirm){
     row.appendChild(mk(bn?'বাতিল':'Cancel', 'var(--bg)', 'var(--text)'));
-    row.appendChild(mk(bn?'মুছুন':'Remove', 'var(--red)', '#fff', onYes));
+    row.appendChild(mk(opts.yes||(bn?'মুছুন':'Remove'), 'var(--red)', '#fff', onYes));
   }else{
     row.appendChild(mk('OK', 'var(--primary)', '#fff'));
   }
@@ -1747,7 +1840,7 @@ function refreshBudgetInputs(){
   const wrap = document.getElementById('budgetInputs');
   wrap.innerHTML = data.categories.map((c,i)=>{
     const val = data.budgets[c] || '';
-    return `<div style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 4px;"><label style="margin:0;">${esc(c)}</label><button type="button" class="rmBtn sm" onclick="removeCategoryByName(${i})" aria-label="${t('btn_remove_short')}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>${t('btn_remove_short').replace('🗑 ','')}</button></div><input type="number" id="budgetIn_${i}" data-cat="${esc(c)}" placeholder="0" value="${val}">`;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 4px;"><label style="margin:0;">${esc(c)}</label><button type="button" class="rmBtn sm" onclick="removeCategoryByName(${i})" aria-label="${t('btn_remove_short')}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>${t('btn_remove_short').replace(/^\s+/,'')}</button></div><input type="number" id="budgetIn_${i}" data-cat="${esc(c)}" placeholder="0" value="${val}">`;
   }).join('');
 }
 function saveBudgets(){
@@ -1817,7 +1910,7 @@ function exportCSV(){
     const amt = (meta.sign>0?1:-1) * tx.amount;
     return [tx.date, tx.time, t(meta.label), (tx.category||tx.source||''), tx.person||'', tx.account||'', amt, (tx.note||'').replace(/[\r\n]+/g,' ')];
   });
-  const csvEscape = v => `"${String(v).replace(/"/g,'""')}"`;
+  const csvEscape = v => { let s=String(v); if(/^[=+\-@\t\r]/.test(s) && isNaN(Number(s))) s="'"+s; return '"'+s.replace(/"/g,'""')+'"'; };
   const csv = [header, ...rows].map(r=> r.map(csvEscape).join(',')).join('\r\n');
   const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
   const url = URL.createObjectURL(blob);
@@ -1844,15 +1937,15 @@ function txHtml(tx){
   const sub = txSubLabel(tx);
   const posneg = meta.sign>0 ? 'pos' : 'neg';
   const sign = meta.sign>0 ? '+' : '−';
-  return `<div class="txitem">
+  return `<div class="txitem" data-g="${{deposit:'in',expense:'out',save_to_account:'sav',use_from_account:'sav'}[tx.type]||'loan'}">
     <div class="txleft">
       <div class="t1">${t(meta.label)}${sub ? ' · '+esc(sub) : ''}</div>
-      <div class="t2">${tx.date} ${tx.time}${tx.note ? ' · '+esc(tx.note) : ''}${tx.due ? ' · ⏰ '+tx.due : ''}</div>
+      <div class="t2">${tx.date} ${tx.time}${tx.note ? ' · '+noteFmt(tx.note) : ''}${tx.due ? ' · '+mi('clock')+' '+tx.due : ''}</div>
     </div>
     <div style="display:flex;align-items:center;gap:6px;">
       <div class="txamt ${posneg}">${sign}${fmt(tx.amount)}</div>
-      <button class="editbtn" onclick="editTx('${tx.id}')">✎</button>
-      <button class="del" onclick="deleteTx('${tx.id}')">✕</button>
+      <button class="editbtn" onclick="editTx('${tx.id}')" aria-label="Edit">${mi('edit')}</button>
+      <button class="del" onclick="deleteTx('${tx.id}')" aria-label="Delete">${mi('x')}</button>
     </div>
   </div>`;
 }
@@ -2108,8 +2201,8 @@ function applyCustomLogo(dataUrl){
 }
 function resetLogo(){
   try{ localStorage.removeItem('customLogo_v1'); }catch(e){}
-  document.getElementById('loginLogoEl').innerHTML = '💰';
-  document.getElementById('headerLogoEl').innerHTML = '💰';
+  document.getElementById('loginLogoEl').innerHTML = mi('wallet');
+  document.getElementById('headerLogoEl').innerHTML = mi('wallet');
   document.getElementById('logoPreviewEmoji').style.display = 'inline';
   document.getElementById('logoPreviewImg').style.display = 'none';
   document.getElementById('logoResetBtn').style.display = 'none';
@@ -2194,7 +2287,7 @@ async function tryUnlock(){
     document.getElementById('lockErrorMsg').textContent = t('alert_wrong_pin');
   }
 }
-function nameInitial(n){ n=(n||'').trim(); return n ? Array.from(n)[0].toUpperCase() : '🙂'; }
+function nameInitial(n){ n=(n||'').trim(); return n ? Array.from(n)[0].toUpperCase() : 'U'; }
 function renderLockGreeting(){
   const name = getMyName();
   const uname = getMyUsername();
@@ -2219,7 +2312,7 @@ function renderHomeProfile(){
   const h = new Date().getHours();
   const hello = bn ? (h<5?'শুভ রাত্রি':h<12?'শুভ সকাল':h<16?'শুভ দুপুর':h<19?'শুভ বিকেল':'শুভ সন্ধ্যা')
                    : (h<5?'Good night':h<12?'Good morning':h<17?'Good afternoon':'Good evening');
-  document.getElementById('homeHello').textContent = hello + ' 👋';
+  document.getElementById('homeHello').textContent = hello;
   el.textContent = name || (bn ? 'আপনার নাম যোগ করুন' : 'Add your name');
   let sub = uname ? '@'+uname.replace(/^@/,'') : '';
   if(!sub){ try{ sub = new Date().toLocaleDateString(bn?'bn-BD':'en-GB',{weekday:'long', day:'numeric', month:'long'}); }catch(e){ sub=''; } }
@@ -2256,6 +2349,20 @@ async function sha256Hex(text){
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
   return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
 }
+async function pinKdf(pin, salt){
+  const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(pin), 'PBKDF2', false, ['deriveBits']);
+  const b = await crypto.subtle.deriveBits({name:'PBKDF2', salt:b64urlDecode(salt), iterations:150000, hash:'SHA-256'}, k, 256);
+  return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+async function checkPin(pin){
+  let h, sl; try{ h = localStorage.getItem('appPinHash_v1'); sl = localStorage.getItem('appPinSalt_v1'); }catch(e){ return false; }
+  if(!h) return false;
+  if(sl) return (await pinKdf(pin, sl)) === h;
+  if((await sha256Hex(pin)) !== h) return false;
+  try{ const ns = b64urlEncode(crypto.getRandomValues(new Uint8Array(16))); const nh = await pinKdf(pin, ns);
+       localStorage.setItem('appPinSalt_v1', ns); localStorage.setItem('appPinHash_v1', nh); }catch(e){}
+  return true;
+}
 function renderPinSettings(){
   let enabled = false;
   try{ enabled = localStorage.getItem('appPinEnabled_v1') === 'true'; }catch(e){}
@@ -2268,8 +2375,10 @@ async function setupPin(){
   const p2 = document.getElementById('confirmPinInput').value.trim();
   if(!/^\d{4,6}$/.test(p1)){ alert(t('alert_pin_digits')); return; }
   if(p1 !== p2){ alert(t('alert_pin_mismatch')); return; }
-  const hash = await sha256Hex(p1);
+  const salt = b64urlEncode(crypto.getRandomValues(new Uint8Array(16)));
+  const hash = await pinKdf(p1, salt);
   try{
+    localStorage.setItem('appPinSalt_v1', salt);
     localStorage.setItem('appPinHash_v1', hash);
     localStorage.setItem('appPinEnabled_v1', 'true');
   }catch(e){}
@@ -2280,7 +2389,7 @@ async function setupPin(){
 }
 function disablePin(){
   try{
-    localStorage.removeItem('appPinHash_v1');
+    localStorage.removeItem('appPinHash_v1'); localStorage.removeItem('appPinSalt_v1');
     localStorage.setItem('appPinEnabled_v1', 'false');
   }catch(e){}
   alert(t('alert_pin_disabled'));
@@ -2381,7 +2490,7 @@ async function verifyOwner(){
     const pin = await askInput({ title: t('dev_clear_pin_title'), note: t('dev_clear_pin_note'),
       type:'password', inputmode:'numeric', maxlength:6, center:true, okText: t('btn_unlock') });
     if(pin === null) return false;
-    return (await sha256Hex(pin)) === pinHash;
+    return await checkPin(pin);
   }
   return false;
 }
@@ -2392,7 +2501,7 @@ async function clearAllData(){
            || (localStorage.getItem('appPinEnabled_v1')==='true' && !!localStorage.getItem('appPinHash_v1'));
   }catch(e){}
   if(!hasLock){ alert(t('dev_clear_need_lock')); return; }
-  if(!confirm(t('dev_clear_confirm'))) return;
+  if(!(await new Promise(r=>appDialog(t('dev_clear_confirm'),{confirm:true,yes:'OK'},()=>r(true))))) return;
   const ok = await verifyOwner();
   if(!ok){ alert(t('dev_clear_denied')); return; }
   const keep = ['appLang_v1','appTheme_v1'];
@@ -2616,7 +2725,7 @@ function refreshRecurringUI(){
   if(!data.recurring.length){ box.innerHTML = `<div class="empty">${t('rec_empty')}</div>`; return; }
   box.innerHTML = data.recurring.map(r=>{
     const lbl = `${t(TYPE_META[r.type].label)} ${fmt(r.amount)} · ${esc(r.category||r.source||r.account||'')} · ${t('rec_every')} ${r.day} ${t('rec_day_suffix')}${r.note?' · '+esc(r.note):''}`;
-    return `<div class="kv"><span>${lbl}</span><button class="del" onclick="deleteRecurring('${r.id}')">✕</button></div>`;
+    return `<div class="kv"><span>${lbl}</span><button class="del" onclick="deleteRecurring('${r.id}')" aria-label="Delete">${mi('x')}</button></div>`;
   }).join('');
 }
 function addRecurring(){
@@ -2647,20 +2756,18 @@ function deleteRecurring(id){
   refreshRecurringUI();
 }
 function applyRecurring(){
-  const now = new Date();
-  const mk = todayStr().slice(0,7);
-  let changed = false;
+  const mk=todayStr().slice(0,7), dNow=+todayStr().slice(8,10); let changed=false;
   data.recurring.forEach(r=>{
-    const eff = effDay(r.day);
-    if(r.lastMonth !== mk && now.getDate() >= eff){
-      data.transactions.push({
-        id: Date.now()+'-'+Math.random().toString(36).slice(2,7),
-        type: r.type, amount: r.amount, category: r.category || null, source: r.source || null,
-        person: null, account: r.account || null, due: null,
-        note: ('🔁 ' + (r.note || '')).trim(),
-        date: mk+'-'+String(eff).padStart(2,'0'), time: '09:00'
-      });
-      r.lastMonth = mk; changed = true;
+    let [y,m]=(r.lastMonth||mk).split('-').map(Number);
+    if(r.lastMonth && ++m>12){m=1;y++;}
+    for(let n=0;n<12;n++){
+      const cur=y+'-'+String(m).padStart(2,'0'); if(cur>mk) break;
+      const eff=Math.min(r.day,new Date(y,m,0).getDate());
+      if(cur===mk && dNow<eff) break;
+      data.transactions.push({id:Date.now()+'-'+Math.random().toString(36).slice(2,7)+n, type:r.type, amount:r.amount, category:r.category||null, source:r.source||null,
+        person:null, account:r.account||null, due:null, note:('\u{1F501} '+(r.note||'')).trim(), date:cur+'-'+String(eff).padStart(2,'0'), time:'09:00'});
+      r.lastMonth=cur; changed=true;
+      if(++m>12){m=1;y++;}
     }
   });
   if(changed) saveData();
@@ -2683,7 +2790,7 @@ function printReport(){
 }
 
 // ---- Developer mode & notification popup ----
-const DEV_PIN = '8070'; // change this to your own secret code
+const DEV_PIN = '246810'; // change this to your own secret code
 let titleTapCount = 0;
 let titleTapTimer = null;
 function handleTitleTap(){
@@ -2708,8 +2815,8 @@ function promptDevMode(){
     alert(t('dev_wrong_pin'));
   }
 }
-function lockDevMode(){
-  if(!confirm(t('dev_lock_confirm'))) return;
+function lockDevMode(){ appDialog(t('dev_lock_confirm'),{confirm:true,yes:'OK'},_lockDevMode); }
+function _lockDevMode(){
   try{ localStorage.removeItem('devModeUnlocked_v1'); }catch(e){}
   document.getElementById('devModeBox').style.display = 'none';
 }
@@ -2757,9 +2864,9 @@ function previewNotifPopup(){
   const type = document.getElementById('notifTypeInput').value;
   showNotifPopup(title, msg, type);
 }
-const NOTIF_ICON_MAP = {info:'ℹ️', update:'🚀', warning:'⚠️'};
+const NOTIF_ICON_MAP = {info:'info', update:'arrow-up-circle', warning:'alert'};
 function showNotifPopup(title, msg, type){
-  document.getElementById('notifPopupIcon').textContent = NOTIF_ICON_MAP[type] || '🔔';
+  document.getElementById('notifPopupIcon').innerHTML = mi(NOTIF_ICON_MAP[type] || 'bell');
   document.getElementById('notifPopupTitleEl').textContent = title;
   document.getElementById('notifPopupMsgEl').textContent = msg;
   document.getElementById('notifPopupOverlay').style.display = 'flex';
@@ -2774,7 +2881,7 @@ function closeNotifPopup(){
 }
 // ---- Remote notice (a JSON file you host anywhere, e.g. GitHub Pages / raw / Gist) ----
 // Format: {"on":true, "id":5, "title":"...", "message":"...", "type":"info|update|warning", "always":false}
-const NOTICE_URL = 'https://raw.githubusercontent.com/mehedimadbor/FinTrack/refs/heads/main/notice.json'; // <-- put your hosted notice.json link here, e.g. 'https://raw.githubusercontent.com/you/repo/main/notice.json'
+const NOTICE_URL = ''; // <-- put your hosted notice.json link here, e.g. 'https://raw.githubusercontent.com/you/repo/main/notice.json'
 function getNoticeUrl(){
   let u = '';
   try{ u = localStorage.getItem('noticeUrl_v1') || ''; }catch(e){}
@@ -2966,7 +3073,7 @@ function parseAmountFromText(msg){
   const bnDigits = '০১২৩৪৫৬৭৮৯';
   let s = '';
   for(const ch of msg){ const i = bnDigits.indexOf(ch); s += i>=0 ? i : ch; }
-  const m = s.match(/(\d+(?:\.\d+)?)/);
+  const m = s.replace(/(\d),(?=\d)/g,'$1').match(/(\d+(?:\.\d+)?)/);
   return m ? parseFloat(m[1]) : null;
 }
 function knownPersons(){
@@ -3037,7 +3144,7 @@ function addTxFromChat(type, msg){
   saveData();
   lastChatTxId = tx.id;
   renderDash(); renderAccounts(); renderLoans(); renderHistory(); populatePersonList();
-  let resp = '✅ ' + t(meta.label) + ': ' + fmt(amount);
+  let resp = '' + t(meta.label) + ': ' + fmt(amount);
   if(category) resp += ' (' + category + ')';
   if(source) resp += ' (' + source + ')';
   if(person) resp += ' — ' + person;
@@ -3075,7 +3182,7 @@ function filterTxByText(msg){
     list = list.filter(tx=> tx.date===today);
   }else if(q.includes('গতকাল') || ql.includes('yesterday')){
     const d = new Date(today+'T00:00:00'); d.setDate(d.getDate()-1);
-    const ys = d.toISOString().slice(0,10);
+    const ys = fmtDate(d);
     list = list.filter(tx=> tx.date===ys);
   }else if(q.includes('এই মাস') || ql.includes('this month')){
     list = list.filter(tx=> tx.date.slice(0,7)===today.slice(0,7));
@@ -3342,17 +3449,17 @@ if(devUnlocked){
   setInterval(()=>{ const ov=document.getElementById('lockOverlay'); if(ov && ov.style.display==='flex') updateLockClock(); },15000);
 
   // ---- settings: accordion cards + hero ----
-  const ICONS={settings_theme:['🎨','#8b5cf6'],settings_lang:['🌐','#0ea5e9'],settings_profile:['👤','#2563eb'],backup_heading:['☁️','#14b8a6'],
-    settings_budget:['🎯','#f97316'],settings_goal:['🏆','#eab308'],settings_recurring:['🔁','#06b6d4'],settings_logo:['🖼️','#ec4899'],
-    lock_heading:['🔒','#64748b'],pin_heading:['🔑','#ef4444'],contact_heading:['💬','#22c55e'],dev_heading:['🛠️','#475569']};
+  const ICONS={settings_theme:['palette','#8b5cf6'],settings_lang:['globe','#0ea5e9'],settings_profile:['user','#2563eb'],backup_heading:['cloud','#14b8a6'],
+    settings_budget:['target','#f97316'],settings_goal:['flag','#eab308'],settings_recurring:['repeat','#06b6d4'],settings_logo:['image','#ec4899'],
+    lock_heading:['lock','#64748b'],pin_heading:['key','#ef4444'],contact_heading:['message','#22c55e'],dev_heading:['settings','#475569']};
   document.querySelectorAll('#sec-settings > .box').forEach(box=>{
     const h=box.querySelector(':scope > h3'); if(!h) return;
-    const key=h.getAttribute('data-i18n')||'', ic=ICONS[key]||['⚙️','#64748b'];
+    const key=h.getAttribute('data-i18n')||'', ic=ICONS[key]||['settings','#64748b'];
     const det=document.createElement('details'); det.className='box setBox';
     if(box.id) det.id=box.id; if(box.getAttribute('style')) det.setAttribute('style',box.getAttribute('style'));
     if(key==='settings_theme'||key==='settings_profile') det.open=true;
     const sum=document.createElement('summary');
-    const chip=document.createElement('span'); chip.className='setIco'; chip.style.setProperty('--c',ic[1]); chip.textContent=ic[0];
+    const chip=document.createElement('span'); chip.className='setIco'; chip.style.setProperty('--c',ic[1]); chip.innerHTML=mi(ic[0]);
     const chev=document.createElementNS('http://www.w3.org/2000/svg','svg'); chev.setAttribute('viewBox','0 0 24 24'); chev.setAttribute('class','setChev');
     chev.innerHTML='<path d="m9 6 6 6-6 6"/>';
     sum.appendChild(chip); sum.appendChild(h); sum.appendChild(chev);
@@ -3380,6 +3487,313 @@ if(devUnlocked){
 
   // initial
   cleanHeads(); updateHome(); updateLockClock(); syncSetHero();
+})();
+</script>
+
+<script>
+/* ===== FinTrack v4: fixes + new features ===== */
+(function(){
+  const $=id=>document.getElementById(id), bn=()=>currentLang==='bn';
+  const refreshAll=()=>{ renderDash(); renderAccounts(); renderLoans(); renderHistory(); populatePersonList(); };
+
+  // toast (also replaces blocking alert())
+  let tt;
+  window.toast=function(msg,label,fn){
+    let el=$('toast'); if(!el){ el=document.createElement('div'); el.id='toast'; document.body.appendChild(el); }
+    el.textContent=''; const s=document.createElement('span'); s.textContent=msg; el.appendChild(s);
+    if(label){ const b=document.createElement('button'); b.textContent=label; b.onclick=()=>{ el.classList.remove('on'); fn&&fn(); }; el.appendChild(b); }
+    el.classList.add('on'); clearTimeout(tt); tt=setTimeout(()=>el.classList.remove('on'), label?6000:2200+String(msg).length*45);
+  };
+  window.alert=m=>toast(String(m));
+
+  // delete with confirm dialog + Undo
+  window.deleteTx=function(id){
+    const tx=data.transactions.find(x=>x.id===id); if(!tx) return;
+    appDialog(t('confirm_delete'),{confirm:true},()=>{
+      const i=data.transactions.indexOf(tx); data.transactions.splice(i,1); saveData(); refreshAll();
+      toast(bn()?'লেনদেন মুছে গেছে':'Transaction deleted', bn()?'ফিরিয়ে আনুন':'Undo', ()=>{
+        data.transactions.splice(Math.min(i,data.transactions.length),0,tx); saveData(); refreshAll();
+      });
+    });
+  };
+
+  // safe restore: whitelist keys, validate JSON, in-app confirm
+  window.restoreFromFile=function(input){
+    const file=input.files&&input.files[0]; if(!file) return;
+    const st=$('backupStatusText'), reader=new FileReader();
+    reader.onload=e=>{
+      let p; try{ p=JSON.parse(e.target.result); if(!p||typeof p!=='object'||Array.isArray(p)) throw 0; if(p.moneyAppData_v1) JSON.parse(p.moneyAppData_v1); }
+      catch(_){ st.textContent=t('backup_restore_fail'); return; }
+      appDialog(t('backup_restore_confirm'),{confirm:true,yes:bn()?'ফিরিয়ে আনুন':'Restore',icon:'upload'},()=>{
+        BACKUP_KEYS.forEach(k=>{ if(typeof p[k]==='string'){ try{ localStorage.setItem(k,p[k]); }catch(_){} } });
+        st.textContent=t('backup_restore_done'); setTimeout(()=>location.reload(),900);
+      });
+    };
+    reader.readAsText(file); input.value='';
+  };
+
+  // PIN brute-force lockout
+  window.tryUnlockPin=async function(){
+    const err=$('lockErrorMsg'); let lock=0,fails=0,stored=null;
+    try{ lock=+localStorage.getItem('pinLockUntil_v1')||0; fails=+localStorage.getItem('pinFails_v1')||0; stored=localStorage.getItem('appPinHash_v1'); }catch(e){}
+    if(!stored) return;
+    if(Date.now()<lock){ err.textContent=(bn()?'অনেকবার ভুল হয়েছে, অপেক্ষা করুন: ':'Too many attempts, wait ')+Math.ceil((lock-Date.now())/1000)+'s'; return; }
+    if(await checkPin($('unlockPinInput').value.trim())){
+      try{ localStorage.removeItem('pinFails_v1'); localStorage.removeItem('pinLockUntil_v1'); }catch(e){}
+      err.textContent=''; $('lockOverlay').style.display='none'; $('unlockPinInput').value=''; checkNotifPopupOnLoad();
+    }else{
+      fails++; try{ localStorage.setItem('pinFails_v1',fails); if(fails>=5) localStorage.setItem('pinLockUntil_v1',Date.now()+Math.min(300,30*(fails-4))*1000); }catch(e){}
+      err.textContent=t('alert_wrong_pin'); $('unlockPinInput').value='';
+    }
+  };
+  $('unlockPinInput').addEventListener('keydown',e=>{ if(e.key==='Enter') tryUnlockPin(); });
+
+  // re-lock after 1 min in background
+  let hiddenAt=0;
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){ hiddenAt=Date.now(); return; }
+    if(hiddenAt && Date.now()-hiddenAt>60000 && $('lockOverlay').style.display!=='flex' && $('loginScreen').style.display==='none'){
+      $('lockPinArea').style.display='none'; checkLockOnLoad();
+    }
+    hiddenAt=0;
+  });
+
+  // photos/logo: shrink before saving (avoids filling localStorage)
+  function shrink(file,max,mime,cb){
+    const r=new FileReader();
+    r.onload=e=>{ const im=new Image(); im.onload=()=>{
+      const s=Math.min(1,max/Math.max(im.width,im.height)), c=document.createElement('canvas');
+      c.width=Math.round(im.width*s); c.height=Math.round(im.height*s); c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+      cb(c.toDataURL(mime,.82)); }; im.onerror=()=>toast(bn()?'ছবি পড়া যায়নি':'Could not read image'); im.src=e.target.result; };
+    r.readAsDataURL(file);
+  }
+  const keep=(k,u)=>{ try{ localStorage.setItem(k,u); }catch(e){ toast(bn()?'স্টোরেজ ভরে গেছে':'Storage full'); } };
+  window.handleProfilePicUpload=function(i){ const f=i.files&&i.files[0]; if(!f) return; shrink(f,320,'image/jpeg',u=>{ keep('myProfilePic_v1',u); applyProfilePic(u); }); i.value=''; };
+  window.handleLogoUpload=function(i){ const f=i.files&&i.files[0]; if(!f) return; shrink(f,160,'image/png',u=>{ keep('customLogo_v1',u); applyCustomLogo(u); }); i.value=''; };
+
+  // QR: lazy-load libs, guard camera, lighter scanning
+  const libs={};
+  const lib=u=>libs[u]||(libs[u]=new Promise((ok,no)=>{ const s=document.createElement('script'); s.src=u; s.onload=ok; s.onerror=()=>{ delete libs[u]; no(); }; document.head.appendChild(s); }));
+  const _gq=generateLoanQR;
+  window.generateLoanQR=async function(){ try{ await lib('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'); }catch(e){ toast(t('alert_qr_fail')); return; } _gq(); };
+  const _oq=openQRScan;
+  window.openQRScan=async function(){
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ $('qrGenPanel').style.display='none'; $('qrScanPanel').style.display='block'; $('qrScanStatus').textContent=t('qr_cam_fail'); return; }
+    try{ await lib('https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.js'); }catch(e){ toast(t('qr_cam_fail')); return; } _oq();
+  };
+  let qrTick=0;
+  window.scanQRFrame=function(){
+    const v=$('qrVideo'), c=$('qrCanvas');
+    if(v.readyState===v.HAVE_ENOUGH_DATA && ++qrTick%3===0 && window.jsQR){
+      const s=Math.min(1,480/v.videoWidth); c.width=Math.round(v.videoWidth*s); c.height=Math.round(v.videoHeight*s);
+      const x=c.getContext('2d',{willReadFrequently:true}); x.drawImage(v,0,0,c.width,c.height);
+      const im=x.getImageData(0,0,c.width,c.height), code=jsQR(im.data,im.width,im.height);
+      if(code){ handleScannedQR(code.data); return; }
+    }
+    qrScanRAF=requestAnimationFrame(scanQRFrame);
+  };
+  const _hs=handleScannedQR;
+  window.handleScannedQR=function(txt){ try{ const p=JSON.parse(txt); if(p&&p.app==='moneyapp_loan'&&!(+p.amount>0)) return _hs('x'); }catch(e){} _hs(txt); };
+
+  // history: type filter chips + debounced search
+  const hl=$('histList'), bar=document.createElement('div'); bar.className='chips';
+  [['all','সব','All'],['in','আয়','Income'],['out','খরচ','Expense'],['loan','লোন','Loan'],['sav','সঞ্চয়','Savings']].forEach(([k,b,e],i)=>{
+    const x=document.createElement('button'); x.type='button'; x.className='chip'+(i?'':' on'); x.innerHTML='<span class="bn">'+b+'</span><span class="en">'+e+'</span>';
+    x.onclick=()=>{ hl.dataset.f=k; bar.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c===x)); };
+    bar.appendChild(x);
+  });
+  hl.parentNode.insertBefore(bar,hl);
+  const hs=$('histSearchInput'); hs.removeEventListener('input',renderHistory);
+  let ht; hs.addEventListener('input',()=>{ clearTimeout(ht); ht=setTimeout(renderHistory,180); });
+
+  // dashboard: last 6 months chart
+  const rb=$('recentList').parentNode, tb=document.createElement('div'); tb.className='box';
+  tb.innerHTML='<h3><span class="bn">শেষ ৬ মাস</span><span class="en">Last 6 months</span></h3><div id="trendBody"></div>';
+  rb.parentNode.insertBefore(tb,rb);
+  function trend(){
+    const p=todayStr().split('-'); let y=+p[0], m=+p[1]; const ms=[], s={};
+    for(let i=0;i<6;i++){ ms.unshift(y+'-'+String(m).padStart(2,'0')); if(--m<1){ m=12; y--; } }
+    ms.forEach(k=>s[k]={i:0,e:0});
+    data.transactions.forEach(x=>{ const o=s[x.date.slice(0,7)]; if(!o) return; if(x.type==='deposit') o.i+=x.amount; if(isExpenseLike(x)) o.e+=x.amount; });
+    const mx=Math.max(1,...ms.map(k=>Math.max(s[k].i,s[k].e)));
+    $('trendBody').innerHTML='<div class="trend">'+ms.map(k=>`<div class="tcol"><div class="tbars"><i class="ti" style="height:${s[k].i/mx*100}%"></i><i class="te" style="height:${s[k].e/mx*100}%"></i></div><span>${k.slice(5)}</span></div>`).join('')+'</div><div class="tleg"><b class="ti"></b>'+(bn()?'আয়':'Income')+' &nbsp;<b class="te"></b>'+(bn()?'খরচ':'Expense')+'</div>';
+  }
+  const _uh=window.updateHome; let uq=0;
+  window.updateHome=function(){ if(uq) return; uq=requestAnimationFrame(()=>{ uq=0; _uh(); trend(); }); };
+
+  // report: share
+  const pb=document.querySelector('button[onclick="printReport()"]'), sb=document.createElement('button');
+  sb.className='typebtn'; sb.style.cssText='width:100%;margin-top:8px;'; sb.innerHTML='<span class="bn">'+mi('share')+' রিপোর্ট শেয়ার করুন</span><span class="en">'+mi('share')+' Share report</span>';
+  sb.onclick=async()=>{
+    const txt='FinTrack — '+($('reportMonth').value||'')+'\n\n'+$('reportBody').innerText.replace(/\n{3,}/g,'\n\n');
+    try{ if(navigator.share) await navigator.share({title:'FinTrack',text:txt}); else{ await navigator.clipboard.writeText(txt); toast(bn()?'কপি হয়েছে':'Copied'); } }catch(e){}
+  };
+  pb.after(sb);
+
+  // keep edit-mode button label on language switch; sync theme-color
+  const _al=applyLanguage; applyLanguage=function(){ _al.apply(this,arguments); if(editingTxId) $('saveTxBtn').textContent=t('btn_update'); };
+  const _at=applyTheme;
+  applyTheme=function(n){ _at(n); const m=document.querySelector('meta[name="theme-color"]'); if(m) m.content=getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()||'#2563eb'; };
+  applyTheme(document.documentElement.getAttribute('data-theme')||'');
+
+  updateHome();
+  document.documentElement.classList.remove('booting');
+})();
+</script>
+
+<script>
+/* ===== FinTrack v5: faster entry features ===== */
+(function(){
+  const $=id=>document.getElementById(id), bn=()=>currentLang==='bn';
+
+  // 1) calculator in amount field: 250+80*2
+  function calc(v){
+    v=String(v).replace(/[০-৯]/g,d=>'০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/×/g,'*').replace(/÷/g,'/').replace(/,/g,'');
+    if(!/^[\d+\-*/().\s]+$/.test(v)||!/[+\-*/]/.test(v.replace(/^\s*-/,''))) return null;
+    try{ const r=Function('"use strict";return ('+v+')')(); return isFinite(r)&&r>0?Math.round(r*100)/100:null; }catch(e){ return null; }
+  }
+  const am=$('inAmount'), hint=$('calcHint');
+  am.addEventListener('input',()=>{ const r=calc(am.value); hint.textContent=r?'= '+fmt(r):''; });
+  am.addEventListener('blur',()=>{ const r=calc(am.value); if(r){ am.value=r; hint.textContent=''; } });
+  const _st=saveTx;
+  saveTx=function(){ const r=calc(am.value); if(r) am.value=r; const o=_st.apply(this,arguments); hint.textContent=''; return o; };
+
+  // 2) copy a transaction as a new entry
+  const _th=txHtml;
+  txHtml=function(tx){ return _th(tx).replace('<button class="editbtn"','<button class="editbtn" onclick="repeatTx(\''+tx.id+'\')" title="Copy">⧉</button><button class="editbtn"'); };
+  window.repeatTx=function(id){
+    editTx(id); editingTxId=null;
+    $('editModeNote').style.display='none'; $('cancelEditBtn').style.display='none'; $('saveTxBtn').textContent=t('btn_save');
+    $('inDate').value=todayStr(); $('inTime').value=nowTime();
+    toast(bn()?'কপি হয়েছে — পরিমাণ দেখে সংরক্ষণ করুন':'Copied — check and save');
+  };
+
+  // 3) note suggestions + auto category/amount from past entries
+  const dl=document.createElement('datalist'); dl.id='noteList'; document.body.appendChild(dl); $('inNote').setAttribute('list','noteList');
+  let noteMap={};
+  function buildNotes(){
+    noteMap={};
+    [...data.transactions].sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time)).forEach(x=>{
+      const n=(x.note||'').trim(); if(!n||n.startsWith('\u{1F501}')||(x.type!=='expense'&&x.type!=='deposit')) return;
+      const k=x.type+'|'+n.toLowerCase(); if(!noteMap[k]) noteMap[k]={n,x};
+    });
+    dl.innerHTML=Object.values(noteMap).slice(0,40).map(o=>'<option value="'+esc(o.n)+'">').join('');
+  }
+  const _pp=populatePersonList; populatePersonList=function(){ _pp.apply(this,arguments); buildNotes(); };
+  $('inNote').addEventListener('change',()=>{
+    const m=noteMap[currentType+'|'+$('inNote').value.trim().toLowerCase()]; if(!m||editingTxId) return;
+    const has=(id,v)=>[...$(id).options].some(o=>o.value===v);
+    if(m.x.category&&has('inCategory',m.x.category)) $('inCategory').value=m.x.category;
+    if(m.x.source&&has('inSource',m.x.source)) $('inSource').value=m.x.source;
+    if(!am.value) am.value=m.x.amount;
+  });
+  buildNotes();
+
+  // 4) backup reminder (once a day if no backup in 7 days)
+  const _db=downloadBackup;
+  downloadBackup=function(){ _db.apply(this,arguments); try{ localStorage.setItem('lastBackup_v1',Date.now()); }catch(e){} };
+  setTimeout(()=>{
+    try{
+      if(data.transactions.length<10||$('lockOverlay').style.display==='flex'||$('loginScreen').style.display!=='none') return;
+      if(Date.now()-(+localStorage.getItem('lastBackup_v1')||0)<7*864e5||localStorage.getItem('backupNudge_v1')===todayStr()) return;
+      localStorage.setItem('backupNudge_v1',todayStr());
+      toast(bn()?'৭ দিনের বেশি ব্যাকআপ নেওয়া হয়নি':'No backup in over 7 days', bn()?'ব্যাকআপ':'Backup', downloadBackup);
+    }catch(e){}
+  },4000);
+
+  // 5) send loan reminder to friends who owe me
+  function decorate(){
+    document.querySelectorAll('#getList .person').forEach(row=>{
+      const name=row.firstElementChild.textContent, tag=row.querySelector('.tag'); if(!tag) return;
+      const b=document.createElement('button'); b.className='del'; b.innerHTML=mi('send'); b.title=bn()?'রিমাইন্ডার পাঠান':'Send reminder';
+      b.onclick=()=>{
+        const msg=bn()?`${name}, তোমার কাছে আমার ${tag.textContent} পাওনা আছে। সুবিধামতো ফেরত দিও। ধন্যবাদ।`:`Hi ${name}, a gentle reminder — you owe me ${tag.textContent}. Please return it when convenient. Thanks!`;
+        if(navigator.share) navigator.share({text:msg}).catch(()=>{}); else window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank','noopener');
+      };
+      row.lastElementChild.prepend(b);
+    });
+  }
+  const _rl=renderLoans; renderLoans=function(){ _rl.apply(this,arguments); decorate(); };
+  decorate();
+})();
+</script>
+
+<script>
+/* ===== FinTrack v6: smarter UI ===== */
+(function(){
+  const $=id=>document.getElementById(id), bn=()=>currentLang==='bn';
+
+  // icons on transactions
+  const CI=[[/খাবার|food|meal/i,'utensils','#f97316'],[/যাতায়াত|transport|travel/i,'bus','#0ea5e9'],[/বাসা|rent|ভাড়া/i,'home','#8b5cf6'],[/কেনাকাটা|shop/i,'bag','#ec4899'],[/বিল|bill/i,'bolt','#eab308'],[/স্বাস্থ্য|health|medic/i,'health','#ef4444']];
+  const TI={deposit:['arrow-in','#22c55e'],expense:['arrow-out','#ef4444'],loan_taken:['loan-in','#f59e0b'],loan_given:['loan-out','#f59e0b'],loan_repay_taken:['undo','#f59e0b'],loan_repay_given:['check-circle','#22c55e'],save_to_account:['bank','#6366f1'],use_from_account:['card','#6366f1']};
+  const _th=txHtml;
+  txHtml=function(tx){
+    let r=TI[tx.type]||['arrow-out','#64748b'];
+    if(tx.category){ const m=CI.find(c=>c[0].test(tx.category)); if(m) r=[m[1],m[2]]; }
+    return _th(tx).replace('<div class="txleft">','<span class="txic" style="--c:'+r[1]+'">'+mi(r[0])+'</span><div class="txleft">');
+  };
+
+  // history grouped by day (re-applies whenever the list is re-rendered)
+  const hl=$('histList');
+  function dayLabel(d){
+    const y=new Date(todayStr()+'T00:00:00'); y.setDate(y.getDate()-1);
+    if(d===todayStr()) return bn()?'আজ':'Today';
+    if(d===fmtDate(y)) return bn()?'গতকাল':'Yesterday';
+    return d;
+  }
+  const obs=new MutationObserver(group);
+  function group(){
+    obs.disconnect();
+    const items=[...hl.querySelectorAll(':scope > .txitem')];
+    if(items.length){
+      const frag=document.createDocumentFragment(); let cur=null,g=null;
+      items.forEach(it=>{
+        const d=(it.querySelector('.t2').textContent||'').slice(0,10);
+        if(d!==cur){ cur=d; g=document.createElement('div'); g.className='dayGrp'; const h=document.createElement('div'); h.className='dayHd'; h.textContent=dayLabel(d); g.appendChild(h); frag.appendChild(g); }
+        g.appendChild(it);
+      });
+      hl.appendChild(frag);
+    }
+    obs.observe(hl,{childList:true});
+  }
+  group();
+
+  // smart insights card
+  const ib=document.createElement('div'); ib.className='box insight';
+  ib.innerHTML='<h3><span class="bn">স্মার্ট ইনসাইট</span><span class="en">Smart insights</span></h3><div id="insBody"></div>';
+  document.querySelector('.monthBox').after(ib);
+  function insights(){
+    const today=todayStr(), key=today.slice(0,7), day=+today.slice(8,10), dim=new Date(+key.slice(0,4),+key.slice(5,7),0).getDate();
+    const sum=l=>l.reduce((a,x)=>a+x.amount,0), ex=data.transactions.filter(isExpenseLike), rows=[];
+    const spent=sum(ex.filter(x=>x.date.slice(0,7)===key));
+    if(spent>0){
+      rows.push(['trend',bn()?`এই গতিতে চললে মাস শেষে খরচ হবে প্রায় ${fmt(spent/day*dim)}`:`At this pace you'll spend about ${fmt(spent/day*dim)} by month end`]);
+      const top=Object.entries(calcByCategoryForMonth(key)).sort((a,b)=>b[1]-a[1])[0];
+      if(top) rows.push(['tag',bn()?`এই মাসে সবচেয়ে বেশি খরচ: ${esc(top[0])} (${fmt(top[1])}, ${Math.round(top[1]/spent*100)}%)`:`Top category this month: ${esc(top[0])} (${fmt(top[1])}, ${Math.round(top[1]/spent*100)}%)`]);
+    }
+    const from=new Date(today+'T00:00:00'); from.setDate(from.getDate()-30); const fs=fmtDate(from);
+    const avg=sum(ex.filter(x=>x.date>=fs&&x.date<today))/30, td=sum(ex.filter(x=>x.date===today));
+    if(avg>0&&td>0){
+      const p=Math.round((td-avg)/avg*100);
+      rows.push([p>0?'alert':'check-circle',bn()?`আজকের খরচ ${fmt(td)} — গত ৩০ দিনের দৈনিক গড়ের চেয়ে ${Math.abs(p)}% ${p>0?'বেশি':'কম'}`:`Today ${fmt(td)} — ${Math.abs(p)}% ${p>0?'above':'below'} your 30-day daily average`]);
+    }
+    if(!rows.length) rows.push(['info',bn()?'লেনদেন যোগ করলে এখানে বিশ্লেষণ দেখাবে':'Add transactions to see insights here']);
+    $('insBody').innerHTML=rows.map(r=>`<div class="ins"><span class="e">${mi(r[0])}</span><span>${r[1]}</span></div>`).join('');
+  }
+  const _uh=window.updateHome;
+  window.updateHome=function(){ _uh.apply(this,arguments); try{ insights(); }catch(e){} };
+  updateHome();
+
+  // two more themes
+  const row=$('themeRow');
+  [['violet','#f6f4ff','#7c3aed','Violet'],['sunset','#fff7f0','#ea580c','Sunset']].forEach(([n,a,b,l])=>{
+    const s=document.createElement('div'); s.className='swatch'; s.dataset.theme=n; s.title=l; s.style.background='linear-gradient(135deg,'+a+','+b+')';
+    s.addEventListener('click',()=>applyTheme(n)); row.appendChild(s);
+  });
+  applyTheme(document.documentElement.getAttribute('data-theme')||'');
+
+  // haptic tap feedback
+  document.addEventListener('click',e=>{ if(navigator.vibrate&&e.target.closest('button,.tab,.typebtn,.swatch,.chip')) navigator.vibrate(8); },{passive:true});
 })();
 </script>
 </body>
