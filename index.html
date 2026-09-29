@@ -12,6 +12,34 @@
 <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22FinTrack%22%2C%22short_name%22%3A%22FinTrack%22%2C%22display%22%3A%22standalone%22%2C%22start_url%22%3A%22.%22%2C%22background_color%22%3A%22%23f4f5f7%22%2C%22theme_color%22%3A%22%232563eb%22%7D">
 <title>FinTrack</title>
 <script>try{var d=document.documentElement;if(localStorage.getItem("loginDone_v1")==="true")d.classList.add("hasUser");var th=localStorage.getItem("appTheme_v1");if(th)d.setAttribute("data-theme",th);d.classList.add("booting");setTimeout(function(){d.classList.remove("booting")},2500)}catch(e){}</script>
+<script>try{var L=localStorage,D=document.documentElement;if(L.getItem("loginDone_v1")==="true"&&(L.getItem("appPinEnabled_v1")==="true"||(L.getItem("appLockEnabled_v1")==="true"&&L.getItem("appLockCredId_v1")&&window.PublicKeyCredential&&navigator.credentials)))D.classList.add("locked")}catch(e){}</script>
+<style id="ftLockV2">
+html.locked .lockOverlay{display:flex}
+html.locked .wrap,html.locked .bottomnav,html.locked header.top{visibility:hidden}
+html.locked .lockAvatarWrap{animation:none}
+.lockOverlay{z-index:9999}
+.pkDots{display:flex;gap:14px;justify-content:center;margin:2px 0 14px}
+.pd{width:14px;height:14px;border-radius:50%;border:2px solid var(--primary);transition:background .12s,transform .12s}
+.pd.on{background:var(--primary);transform:scale(1.15)}
+.pkPad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pk{height:56px;border-radius:18px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:22px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .08s,background .12s;padding:0}
+.pk:active{transform:scale(.92);background:color-mix(in srgb,var(--primary) 18%,var(--bg))}
+.pk.ok{background:var(--primary);color:#fff;border-color:transparent}
+.pkPad.auto .pk.ok{visibility:hidden;pointer-events:none}
+@keyframes pkShake{20%,60%{transform:translateX(-9px)}40%,80%{transform:translateX(9px)}}
+.shake{animation:pkShake .38s}
+#lkLast{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:6px}
+#lkWarn{font-size:12px;color:var(--red);font-weight:700;margin-top:6px}
+.ftRow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);font-size:14px;margin:0;color:var(--text)}
+.ftRow:last-of-type{border-bottom:0}
+.ftRow input[type=checkbox]{-webkit-appearance:none;appearance:none;width:46px;height:26px;border-radius:20px;background:var(--border);position:relative;flex:none;margin:0;padding:0;transition:background .2s}
+.ftRow input[type=checkbox]::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.ftRow input[type=checkbox]:checked{background:var(--primary)}
+.ftRow input[type=checkbox]:checked::after{transform:translateX(20px)}
+.ftRow select{width:auto;min-width:130px;padding:8px 10px;border-radius:12px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13.5px}
+.pfQuick{display:flex;gap:6px;margin-left:auto}
+.pfQuick button{width:38px;height:38px;border-radius:12px;border:1px solid var(--border);background:var(--bg);color:var(--primary);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+</style>
 <script>
 function mi(n){return '<i class="mi" style="--m:var(--ic-'+n+')"></i>';}
 function noteFmt(n){n=String(n||'');var R='\u{1F501}';if(n.indexOf(R)===0){return mi('repeat')+' '+esc(n.slice(R.length).trim());}return esc(n);}
@@ -635,6 +663,14 @@ i.ti,b.ti{background:var(--green);} i.te,b.te{background:var(--red);}
   </div>
   <div class="lkFoot"><span class="bn">FinTrack লক দিয়ে সুরক্ষিত</span><span class="en">Protected by FinTrack Lock</span></div>
 </div>
+<script>(function(){try{var g=function(k){return localStorage.getItem(k)||''},$=function(i){return document.getElementById(i)},en=g('appLang_v1')==='en',n=g('myName_v1'),u=g('myUsername_v1'),pic=g('myProfilePic_v1'),d=new Date();
+var tm=new Intl.DateTimeFormat(en?'en-US':'bn-BD',{timeZone:'Asia/Dhaka',hour:'numeric',minute:'2-digit',hour12:true}).format(d),dt=new Intl.DateTimeFormat(en?'en-GB':'bn-BD',{timeZone:'Asia/Dhaka',weekday:'long',day:'numeric',month:'long'}).format(d);
+$('lkTime').textContent=tm;$('lkDate').textContent=dt;
+$('lockGreetName').textContent=n?((en?'Welcome, ':'স্বাগতম, ')+n):(en?'Welcome!':'স্বাগতম!');
+if(u){var e=$('lockGreetUser');e.textContent='@'+u.replace(/^@/,'');e.style.display='inline-block'}
+$('lockAvatarEmoji').textContent=n?Array.from(n.trim())[0].toUpperCase():'U';
+if(pic){var im=$('lockAvatarImg');im.src=pic;im.style.display='block';$('lockAvatarEmoji').style.display='none';$('lockBg').style.backgroundImage='url("'+pic+'")'}
+}catch(e){}})();</script>
 <div class="notifPopupOverlay" id="notifPopupOverlay" style="display:none;">
   <div class="notifPopupCard">
     <div class="notifPopupIcon" id="notifPopupIcon"><i class="mi" style="--m:var(--ic-bell)"></i></div>
@@ -2790,7 +2826,6 @@ function printReport(){
 }
 
 // ---- Developer mode & notification popup ----
-const DEV_PIN = '246810'; // change this to your own secret code
 let titleTapCount = 0;
 let titleTapTimer = null;
 function handleTitleTap(){
@@ -2802,18 +2837,44 @@ function handleTitleTap(){
     promptDevMode();
   }
 }
-function promptDevMode(){
-  const pin = prompt(t('dev_enter_pin'));
-  if(pin === null) return;
-  if(pin === DEV_PIN){
-    try{ localStorage.setItem('devModeUnlocked_v1', 'true'); }catch(e){}
-    document.getElementById('devModeBox').style.display = 'block';
-    renderDevNotifStatus();
-    alert(t('dev_unlocked'));
-    activateTab('settings');
-  }else{
-    alert(t('dev_wrong_pin'));
+async function promptDevMode(){
+  const bn = currentLang==='bn';
+  const g = k=>{ try{ return localStorage.getItem(k)||''; }catch(e){ return ''; } };
+  const say = m=>{ if(window.toast) toast(m); else alert(m); };
+  const pinOn = g('appPinEnabled_v1')==='true' && !!g('appPinHash_v1');
+  const bioOn = g('appLockEnabled_v1')==='true' && !!g('appLockCredId_v1') && isBiometricSupported();
+  if(!pinOn && !bioOn){ say(bn?'ডেভেলপার অপশন খুলতে আগে সেটিংস থেকে পিন বা ফিঙ্গারপ্রিন্ট চালু করুন':'Enable a PIN or fingerprint in Settings first to open Developer options'); return; }
+  let ok = false;
+  if(bioOn){
+    try{
+      await navigator.credentials.get({ publicKey:{
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        allowCredentials:[{ id: b64urlDecode(g('appLockCredId_v1')), type:'public-key' }],
+        userVerification:'required', timeout:60000 }});
+      ok = true;
+    }catch(e){}
   }
+  if(!ok && pinOn){
+    const until = +g('pinLockUntil_v1')||0;
+    if(Date.now()<until){ say((bn?'অনেকবার ভুল হয়েছে, অপেক্ষা করুন: ':'Too many attempts, wait ')+Math.ceil((until-Date.now())/1000)+'s'); return; }
+    const pin = await askInput({ title: bn?'ডেভেলপার অপশন':'Developer options', note: bn?'খুলতে আপনার অ্যাপ পিন দিন':'Enter your app PIN to open',
+      type:'password', inputmode:'numeric', maxlength:6, center:true, okText:t('btn_unlock') });
+    if(pin===null) return;
+    if(await checkPin(pin)){ ok = true; try{ localStorage.removeItem('pinFails_v1'); localStorage.removeItem('pinLockUntil_v1'); }catch(e){} }
+    else{
+      let f = (+g('pinFails_v1')||0)+1;
+      try{ localStorage.setItem('pinFails_v1',f); if(f>=5) localStorage.setItem('pinLockUntil_v1',Date.now()+Math.min(300,30*(f-4))*1000); }catch(e){}
+    }
+  }
+  if(!ok){ say(t('dev_wrong_pin')); return; }
+  const box = document.getElementById('devModeBox');
+  box.style.display = 'block';
+  renderDevNotifStatus();
+  if(window.devOpened) window.devOpened();
+  say(t('dev_unlocked'));
+  activateTab('settings');
+  if(box.tagName==='DETAILS') box.open = true;
+  setTimeout(()=>{ try{ box.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){} },150);
 }
 function lockDevMode(){ appDialog(t('dev_lock_confirm'),{confirm:true,yes:'OK'},_lockDevMode); }
 function _lockDevMode(){
@@ -3344,7 +3405,7 @@ if(document.getElementById('loginScreen').style.display === 'none' && document.g
   checkNotifPopupOnLoad();
 }
 let devUnlocked = false;
-try{ devUnlocked = localStorage.getItem('devModeUnlocked_v1') === 'true'; }catch(e){}
+try{ localStorage.removeItem('devModeUnlocked_v1'); }catch(e){}
 if(devUnlocked){
   const dm = document.getElementById('devModeBox');
   if(dm) dm.style.display = 'block';
@@ -3552,7 +3613,7 @@ if(devUnlocked){
   let hiddenAt=0;
   document.addEventListener('visibilitychange',()=>{
     if(document.hidden){ hiddenAt=Date.now(); return; }
-    if(hiddenAt && Date.now()-hiddenAt>60000 && $('lockOverlay').style.display!=='flex' && $('loginScreen').style.display==='none'){
+    if(hiddenAt && Date.now()-hiddenAt>window.lockDelayMs() && $('lockOverlay').style.display!=='flex' && $('loginScreen').style.display==='none'){
       $('lockPinArea').style.display='none'; checkLockOnLoad();
     }
     hiddenAt=0;
@@ -3794,6 +3855,380 @@ if(devUnlocked){
 
   // haptic tap feedback
   document.addEventListener('click',e=>{ if(navigator.vibrate&&e.target.closest('button,.tab,.typebtn,.swatch,.chip')) navigator.vibrate(8); },{passive:true});
+})();
+</script>
+<script>
+/* ===== FinTrack v6: smart lock + security/preferences settings ===== */
+(function(){
+const $=id=>document.getElementById(id), bn=()=>currentLang==='bn', de=document.documentElement, ov=$('lockOverlay');
+const ls=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}};
+const st=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+const ic=n=>'<i class="mi" style="--m:var(--ic-'+n+')"></i>';
+const bl=(b,e)=>'<span class="bn">'+b+'</span><span class="en">'+e+'</span>';
+window.lockDelayMs=()=>{const v=ls('lockDelay_v1','60');return v==='never'?Infinity:(+v||0)*1000};
+if(navigator.vibrate){const _v=navigator.vibrate.bind(navigator);navigator.vibrate=p=>ls('haptic_v1','1')==='1'?_v(p):false;}
+
+/* --- PIN keypad --- */
+const pa=$('lockPinArea'), inp=$('unlockPinInput'), err=$('lockErrorMsg');
+inp.style.display='none'; const ob=pa.querySelector('button'); if(ob) ob.style.display='none';
+const dots=document.createElement('div'); dots.className='pkDots';
+const pad=document.createElement('div'); pad.className='pkPad';
+pa.insertBefore(dots,inp); pa.appendChild(pad);
+let buf='', busy=false, ct;
+const plen=()=>{const l=+ls('appPinLen_v1',0);return l>=4&&l<=6?l:0};
+const autoOn=()=>ls('autoUnlock_v1','1')==='1';
+function draw(){pad.classList.toggle('auto',autoOn()&&!!plen());const n=plen()||Math.max(4,buf.length);dots.innerHTML='';for(let i=0;i<n;i++){const d=document.createElement('span');d.className='pd'+(i<buf.length?' on':'');dots.appendChild(d)}}
+const lockedOut=()=>Date.now()<+ls('pinLockUntil_v1',0);
+function countdown(){clearInterval(ct);const tick=()=>{const s=Math.ceil((+ls('pinLockUntil_v1',0)-Date.now())/1000);if(s<=0){clearInterval(ct);err.textContent='';return}err.textContent=(bn()?'অনেকবার ভুল হয়েছে, অপেক্ষা করুন: ':'Too many attempts, wait ')+s+'s'};tick();if(lockedOut())ct=setInterval(tick,1000)}
+function wrong(){
+  pa.classList.remove('shake');void pa.offsetWidth;pa.classList.add('shake');
+  if(navigator.vibrate)navigator.vibrate([60,40,60]);
+  if(lockedOut())countdown();else{const f=+ls('pinFails_v1',0);if(f>0&&f<5)err.textContent+=' · '+(bn()?'আর '+(5-f)+'টি সুযোগ':(5-f)+' left')}
+  extra();
+}
+async function submit(){
+  if(buf.length<4||busy)return;
+  if(lockedOut()){buf='';draw();countdown();return}
+  busy=true;inp.value=buf;buf='';draw();
+  try{await window.tryUnlockPin()}catch(e){}
+  busy=false;
+  if(ov.style.display==='flex'){st('lockFailTotal_v1',(+ls('lockFailTotal_v1',0))+1);wrong()}
+}
+/* auto-unlock: known PIN length -> submit at that length; older PINs (length unknown) -> silently test from 4 digits */
+let probing=false;
+async function probe(){
+  if(probing||busy||lockedOut())return;
+  probing=true;const t=buf;let ok=false;
+  try{ok=await checkPin(t)}catch(e){}
+  probing=false;
+  if(buf===t){
+    if(ok){st('appPinLen_v1',t.length);submit()}
+    else if(t.length>=6)submit();
+  }else if(buf.length>=4&&buf.length<=6)probe();
+}
+function add(d){
+  if(busy||buf.length>=6)return;buf+=d;draw();
+  if(!autoOn())return;
+  if(plen()){if(buf.length===plen())submit();return}
+  if(buf.length>=4)probe();
+}
+function del(){buf=buf.slice(0,-1);draw()}
+['1','2','3','4','5','6','7','8','9','ok','0','del'].forEach(k=>{
+  const b=document.createElement('button');b.type='button';b.className='pk'+(k==='ok'?' ok':'');
+  b.textContent=k==='ok'?'✓':k==='del'?'⌫':k;
+  b.onclick=()=>k==='ok'?submit():k==='del'?del():add(k);pad.appendChild(b);
+});
+document.addEventListener('keydown',e=>{
+  if(ov.style.display!=='flex'||pa.style.display==='none')return;
+  if(/^\d$/.test(e.key))add(e.key);else if(e.key==='Backspace')del();else if(e.key==='Enter')submit();
+});
+const _sp=window.setupPin;
+window.setupPin=async function(){
+  const l=$('newPinInput').value.trim().length,was=ls('appPinEnabled_v1','');
+  await _sp.apply(this,arguments);
+  if(ls('appPinEnabled_v1','')==='true'&&was!=='true')st('appPinLen_v1',l);
+};
+
+/* --- extras on lock screen: last unlock + wrong-attempt warning --- */
+const ft=ov.querySelector('.lkFoot');
+const lw=document.createElement('div');lw.id='lkWarn';const ll=document.createElement('div');ll.id='lkLast';
+ft.parentNode.insertBefore(lw,ft);ft.parentNode.insertBefore(ll,ft);
+function extra(){
+  const lu=+ls('lastUnlock_v1',0),f=+ls('lockFailTotal_v1',0);
+  ll.textContent=lu?(bn()?'শেষ আনলক: ':'Last unlocked: ')+new Date(lu).toLocaleString(bn()?'bn-BD':'en-GB',{timeZone:'Asia/Dhaka',day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):'';
+  lw.textContent=f>0?(bn()?'⚠ শেষ আনলকের পর '+f+' বার ভুল পিন দেওয়া হয়েছে':'⚠ '+f+' wrong PIN attempt(s) since last unlock'):'';
+}
+
+/* --- auto fingerprint prompt --- */
+let trying=false;
+async function autoTry(){
+  if(trying||ls('lockAutoBio_v1','1')!=='1')return;
+  const f=$('lockFingerBtn');if(!f||f.style.display==='none'||ov.style.display!=='flex')return;
+  trying=true;try{await tryUnlock()}catch(e){}trying=false;
+  if(ov.style.display==='flex')err.textContent='';
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(autoTry,450)});
+
+/* --- lock now --- */
+window.lockNow=function(){
+  const p=ls('appPinEnabled_v1','')==='true',b=ls('appLockEnabled_v1','')==='true'&&ls('appLockCredId_v1','')&&isBiometricSupported();
+  if(!p&&!b){toast(bn()?'আগে সেটিংস থেকে পিন বা ফিঙ্গারপ্রিন্ট চালু করুন':'Set up a PIN or fingerprint in Settings first');return}
+  buf='';draw();pa.style.display='none';checkLockOnLoad();extra();setTimeout(autoTry,450);
+};
+
+/* --- privacy / number format (central fmt) --- */
+const _fmt=window.fmt, D2B=s=>s.replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]);
+window.fmt=function(n){
+  if(ls('hideBal_v1','0')==='1')return '৳ ••••';
+  let s;
+  if(ls('compact_v1','0')==='1'&&Math.abs(n)>=1e5){
+    const a=Math.abs(n),ng=n<0?'-':'',cut=x=>x.toFixed(2).replace(/\.?0+$/,'');
+    s=a>=1e7?ng+'৳'+cut(a/1e7)+(bn()?' কোটি':' Cr'):ng+'৳'+cut(a/1e5)+(bn()?' লাখ':' L');
+  }else s=_fmt(n);
+  return ls('digitsBn_v1','0')==='1'?D2B(s):s;
+};
+function rerender(){['renderDash','renderLoans','renderAccounts','renderHistory','updateHome'].forEach(f=>{try{window[f]&&window[f]()}catch(e){}})}
+
+/* --- backup reminder --- */
+function nudge(){
+  const d=+ls('backupRemind_v1',0);if(!d||ov.style.display==='flex')return;
+  const last=+ls('backupRemindAt_v1',0);if(!last){st('backupRemindAt_v1',Date.now());return}
+  if(Date.now()-last>d*864e5){st('backupRemindAt_v1',Date.now());toast(bn()?'ব্যাকআপ নেওয়ার সময় হয়েছে':'Time to back up your data',bn()?'ব্যাকআপ':'Backup',()=>{try{activateTab('settings')}catch(e){}})}
+}
+
+/* --- keep html.locked in sync with overlay --- */
+new MutationObserver(()=>{
+  const on=ov.style.display==='flex';de.classList.toggle('locked',on);
+  if(on){buf='';draw();extra()}else{st('lastUnlock_v1',Date.now());st('lockFailTotal_v1','0');clearInterval(ct);setTimeout(nudge,800)}
+}).observe(ov,{attributes:true,attributeFilter:['style']});
+
+/* --- settings boxes --- */
+function tog(b,e,key,def,fn){
+  const l=document.createElement('label');l.className='ftRow';l.innerHTML='<span>'+bl(b,e)+'</span><input type="checkbox">';
+  const c=l.querySelector('input');c.checked=ls(key,def)==='1';
+  c.onchange=()=>{st(key,c.checked?'1':'0');fn&&fn()};return l;
+}
+function sel(b,e,key,def,opts,fn){
+  const l=document.createElement('label');l.className='ftRow';
+  l.innerHTML='<span>'+bl(b,e)+'</span><select>'+opts.map(o=>'<option value="'+o[0]+'">'+o[1]+'</option>').join('')+'</select>';
+  const s=l.querySelector('select');s.value=ls(key,def);s.onchange=()=>{st(key,s.value);fn&&fn()};return l;
+}
+function mkBox(id,icon,color,tb,te,rows){
+  const d=document.createElement('details');d.className='box setBox';d.id=id;
+  d.innerHTML='<summary><span class="setIco" style="--c:'+color+'">'+ic(icon)+'</span><h3>'+bl(tb,te)+'</h3><svg viewBox="0 0 24 24" class="setChev"><path d="m9 6 6 6-6 6"/></svg></summary><div class="setBody"></div>';
+  const body=d.querySelector('.setBody');rows.forEach(r=>body.appendChild(r));return d;
+}
+const lb=document.createElement('button');lb.className='typebtn';lb.style.cssText='width:100%;margin-top:12px;';lb.innerHTML=ic('lock')+' '+bl('এখনই অ্যাপ লক করুন','Lock app now');lb.onclick=()=>lockNow();
+const secBox=mkBox('secPlusBox','shield','#ef4444','নিরাপত্তা ও প্রাইভেসি','Security & Privacy',[
+  sel('অটো-লক সময়','Auto-lock after','lockDelay_v1','60',[['0','তৎক্ষণাৎ · Instantly'],['30','৩০ সেকেন্ড · 30 sec'],['60','১ মিনিট · 1 min'],['300','৫ মিনিট · 5 min'],['never','কখনো না · Never']]),
+  tog('খুললেই ফিঙ্গারপ্রিন্ট চাও','Auto-prompt fingerprint','lockAutoBio_v1','1'),
+  tog('ব্যালেন্স লুকান (••••)','Hide balances (••••)','hideBal_v1','0',rerender),
+  tog('ভাইব্রেশন ফিডব্যাক','Vibration feedback','haptic_v1','1')
+]);
+secBox.querySelector('.setBody').appendChild(lb);
+const prefBox=mkBox('prefPlusBox','bolt','#f59e0b','অ্যাপ পছন্দ','App Preferences',[
+  tog('বাংলা সংখ্যা (০১২৩)','Bangla digits (০১২৩)','digitsBn_v1','0',rerender),
+  tog('বড় অংক সংক্ষেপে (লাখ/কোটি)','Short big numbers (Lakh/Cr)','compact_v1','0',rerender),
+  sel('ব্যাকআপ রিমাইন্ডার','Backup reminder','backupRemind_v1','0',[['0','বন্ধ · Off'],['7','প্রতি ৭ দিন · Every 7 days'],['30','প্রতি ৩০ দিন · Every 30 days']],()=>st('backupRemindAt_v1',Date.now()))
+]);
+const pinBox=[...document.querySelectorAll('#sec-settings details.setBox')].find(d=>d.querySelector('[data-i18n="pin_heading"]'));
+if(pinBox){pinBox.after(secBox);secBox.after(prefBox)}else{$('sec-settings').appendChild(secBox);$('sec-settings').appendChild(prefBox)}
+
+/* --- quick buttons on home profile bar --- */
+const pb=$('homeProfile');
+if(pb){
+  const q=document.createElement('div');q.className='pfQuick';q.onclick=e=>e.stopPropagation();
+  const eye=document.createElement('button');eye.type='button';eye.innerHTML=ic('eye');
+  eye.onclick=()=>{st('hideBal_v1',ls('hideBal_v1','0')==='1'?'0':'1');const c=secBox.querySelector('input');rerender();toast(ls('hideBal_v1','0')==='1'?(bn()?'ব্যালেন্স লুকানো হয়েছে':'Balances hidden'):(bn()?'ব্যালেন্স দেখানো হচ্ছে':'Balances shown'))};
+  const lk=document.createElement('button');lk.type='button';lk.innerHTML=ic('lock');lk.onclick=()=>lockNow();
+  q.appendChild(eye);q.appendChild(lk);pb.appendChild(q);
+}
+
+/* --- initial state --- */
+draw();
+de.classList.toggle('locked',ov.style.display==='flex');
+if(ov.style.display==='flex'){extra();setTimeout(autoTry,500)}
+setTimeout(()=>de.classList.toggle('locked',ov.style.display==='flex'),3000);
+if(ls('hideBal_v1','0')==='1'||ls('digitsBn_v1','0')==='1'||ls('compact_v1','0')==='1')rerender();
+setTimeout(nudge,2500);
+})();
+</script>
+<script>
+/* ===== FinTrack v7: easy-accounting helpers + developer tools ===== */
+(function(){
+const $=id=>document.getElementById(id), bn=()=>currentLang==='bn';
+const ls=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}};
+const st=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+const bl=(b,e)=>'<span class="bn">'+b+'</span><span class="en">'+e+'</span>';
+const say=(m,l,f)=>{ if(window.toast) toast(m,l,f); };
+const esc2=x=>String(x==null?'':x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const css=document.createElement('style');
+css.textContent='.qaRow{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 2px}.qaBtn{padding:7px 12px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-weight:700;cursor:pointer;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-tap-highlight-color:transparent}.qaBtn:active{transform:scale(.95)}.qaBtn.pr{color:var(--primary);border-color:color-mix(in srgb,var(--primary) 40%,var(--border))}.qaLbl{font-size:12px;color:var(--muted);margin:10px 0 0;font-weight:600}.wkGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.wkC{padding:12px;border-radius:16px;background:var(--bg);border:1px solid var(--border)}.wkC small{display:block;font-size:11.5px;color:var(--muted);font-weight:600}.wkC b{font-size:17px;display:block;margin-top:2px}.wkNote{font-size:13px;margin-top:10px;color:var(--text)}.devBar{height:8px;border-radius:8px;background:var(--border);overflow:hidden;margin:6px 0}.devBar i{display:block;height:100%;background:var(--primary);border-radius:8px}.devSub{font-size:12.5px;color:var(--muted);margin:2px 0 8px}.devLog{font-size:12.5px;color:var(--muted);line-height:1.7}';
+document.head.appendChild(css);
+
+/* ---------- Easy add: quick amounts + recent entries ---------- */
+const am=$('inAmount'), hint=$('calcHint');
+const qa=document.createElement('div'); qa.id='qaWrap'; hint.after(qa);
+function amountNow(){
+  const v=String(am.value).replace(/[০-৯]/g,d=>'০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/,/g,'');
+  if(/^[\d+\-*/().\s]+$/.test(v)&&v.trim()){ try{ const r=Function('"use strict";return ('+v+')')(); if(isFinite(r)&&r>0) return r; }catch(e){} }
+  return parseFloat(v)||0;
+}
+function fillFrom(x){
+  am.value=x.amount; am.dispatchEvent(new Event('input'));
+  const set=(id,v)=>{ const e=$(id); if(!e||v==null||v==='') return; if(e.tagName==='SELECT'&&![...e.options].some(o=>o.value===v)) return; e.value=v; e.dispatchEvent(new Event('change')); };
+  set('inNote',x.note); set('inCategory',x.category); set('inSource',x.source); set('inPerson',x.person); set('inAccount',x.account);
+}
+function qaRender(){
+  try{
+    if(ls('qaOn_v1','1')!=='1'){ qa.innerHTML=''; return; }
+    let h='<div class="qaRow">'+[10,50,100,500,1000].map(n=>'<button type="button" class="qaBtn pr" data-add="'+n+'">+'+n+'</button>').join('')+'<button type="button" class="qaBtn" data-add="0">✕</button></div>';
+    const seen=new Set(), list=[];
+    data.transactions.filter(x=>x.type===currentType).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time)).forEach(x=>{
+      const k=[x.note,x.amount,x.category,x.source,x.person,x.account].join('|'); if(seen.has(k)||list.length>=5) return; seen.add(k); list.push(x);
+    });
+    if(list.length){
+      h+='<div class="qaLbl">'+bl('সাম্প্রতিক থেকে দ্রুত যোগ (ট্যাপ করলে ফর্ম ভরে যাবে)','Quick fill from recent (tap to fill the form)')+'</div><div class="qaRow">';
+      list.forEach((x,i)=>{ h+='<button type="button" class="qaBtn" data-r="'+i+'">'+esc2(x.note||x.category||x.source||x.person||x.account||'—')+' · '+esc2(fmt(x.amount))+'</button>'; });
+      h+='</div>';
+    }
+    qa.innerHTML=h; qa._list=list;
+  }catch(e){}
+}
+qa.addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.add!==undefined){ const n=+b.dataset.add; am.value=n?String(Math.round((amountNow()+n)*100)/100):''; am.dispatchEvent(new Event('input')); }
+  else if(b.dataset.r!==undefined&&qa._list){ fillFrom(qa._list[+b.dataset.r]); }
+});
+const _sel=window.selectType; window.selectType=function(){ const r=_sel.apply(this,arguments); qaRender(); return r; };
+const _sv=window.saveTx; saveTx=function(){ const r=_sv.apply(this,arguments); setTimeout(qaRender,80); return r; };
+
+/* ---------- Dashboard: weekly comparison + insight ---------- */
+const trb=$('trendBody'), wk=document.createElement('div'); wk.className='box'; wk.id='weekBox';
+trb.parentNode.parentNode.insertBefore(wk,trb.parentNode);
+const addDays=(sx,n)=>{ const d=new Date(sx+'T00:00:00Z'); d.setUTCDate(d.getUTCDate()+n); return d.toISOString().slice(0,10); };
+function week(){
+  try{
+    if(ls('weekCard_v1','1')!=='1'){ wk.style.display='none'; return; }
+    wk.style.display='';
+    const td=todayStr(), s1=addDays(td,-6), s0=addDays(td,-13), e0=addDays(td,-7), mo=td.slice(0,7);
+    let cur=0, prev=0, mt=0; const cats={};
+    data.transactions.forEach(x=>{
+      if(!isExpenseLike(x)) return;
+      if(x.date>=s1&&x.date<=td) cur+=x.amount; else if(x.date>=s0&&x.date<=e0) prev+=x.amount;
+      if(x.date.slice(0,7)===mo){ mt+=x.amount; const c=x.category||(bn()?'অন্যান্য':'Other'); cats[c]=(cats[c]||0)+x.amount; }
+    });
+    const day=+td.slice(8), avg=mt/Math.max(1,day), top=Object.entries(cats).sort((a,b)=>b[1]-a[1])[0];
+    let d='';
+    if(prev>0){ const p=Math.round((cur-prev)/prev*100); d='<span class="mDelta '+(p>0?'up':'down')+'">'+(p>0?'▲ ':'▼ ')+Math.abs(p)+'%</span>'; }
+    let h='<h3>'+bl('সাপ্তাহিক তুলনা','Weekly comparison')+'</h3><div class="wkGrid"><div class="wkC"><small>'+bl('গত ৭ দিনের খরচ','Last 7 days spent')+'</small><b>'+fmt(cur)+' '+d+'</b></div><div class="wkC"><small>'+bl('তার আগের ৭ দিন','Previous 7 days')+'</small><b>'+fmt(prev)+'</b></div></div>';
+    if(mt>0){
+      h+='<div class="wkNote">'+bl('এই মাসে দিনে গড় খরচ ','Average per day this month ')+'<b>'+fmt(avg)+'</b></div>';
+      if(top) h+='<div class="wkNote">'+bl('সবচেয়ে বেশি খরচ: ','Top spending: ')+'<b>'+esc2(top[0])+'</b> · '+fmt(top[1])+' ('+Math.round(top[1]/mt*100)+'%)</div>';
+    }else h+='<div class="wkNote" style="color:var(--muted)">'+bl('এই মাসে এখনো কোনো খরচ নেই','No spending yet this month')+'</div>';
+    wk.innerHTML=h;
+  }catch(e){}
+}
+const _uh2=window.updateHome; window.updateHome=function(){ _uh2.apply(this,arguments); week(); };
+
+/* ---------- Developer tools (inside developer options) ---------- */
+const box=$('devModeBox'), body=box&&(box.querySelector('.setBody')||box);
+const lockBtn=body&&[...body.querySelectorAll('button')].find(b=>/lockDevMode/.test(b.getAttribute('onclick')||''));
+const dv=document.createElement('div'); dv.id='devTools';
+dv.innerHTML='<div style="border-top:1px solid var(--border);margin:14px 0 10px"></div><h3 style="margin:0 0 6px">'+bl('ডেভেলপার টুলস','Developer tools')+'</h3>'
++'<div class="devSub">'+bl('ডেটা যাচাই ও স্টোরেজ','Data health & storage')+'</div><div id="devHealth"></div>'
++'<div class="row2" style="margin-top:8px"><button type="button" class="typebtn" id="devDup">'+bl('ডুপ্লিকেট মুছুন','Remove duplicates')+'</button><button type="button" class="typebtn" id="devCopy">'+bl('ডেটা কপি (JSON)','Copy data (JSON)')+'</button></div>'
++'<button type="button" class="typebtn" id="devUnlockPin" style="width:100%;margin-top:8px">'+bl('পিন লকআউট রিসেট','Reset PIN lockout')+'</button>'
++'<div class="devSub" style="margin-top:14px">'+bl('ফিচার সুইচ','Feature switches')+'</div><div id="devSw"></div>'
++'<div class="devSub" style="margin-top:14px">'+bl('হোম কার্ড (সোয়াইপ)','Home swipe cards')+'</div><div id="devHero"></div>'
++'<div class="devSub" style="margin-top:14px">'+bl('ড্যাশবোর্ড কাস্টমাইজ','Dashboard customisation')+'</div><div id="devDash"></div>'
++'<div class="devSub" style="margin-top:14px">'+bl('নেভিগেশন ও লক স্ক্রিন','Navigation & lock screen')+'</div><div id="devNav"></div>'
++'<button type="button" class="typebtn" id="devSwReset" style="width:100%;margin-top:8px">'+bl('সব সুইচ ডিফল্টে ফিরিয়ে দিন','Reset all switches to default')+'</button>'
++'<div class="devSub" style="margin-top:14px">'+bl('ডেভেলপার অ্যাক্সেস লগ','Developer access log')+'</div><div class="devLog" id="devLog"></div>'
++'<button type="button" class="typebtn" id="devLogClr" style="width:100%;margin-top:8px">'+bl('লগ মুছুন','Clear log')+'</button>'
++'<div class="devSub" style="margin-top:12px">'+bl('নিরাপত্তার জন্য ৫ মিনিট পর বা অন্য ট্যাবে গেলে ডেভেলপার অপশন নিজে থেকে বন্ধ হয়ে যায়।','For safety, developer options close by themselves after 5 minutes or when you leave Settings.')+'</div>';
+if(lockBtn) lockBtn.before(dv); else if(body) body.appendChild(dv);
+
+function tog2(b,e,key,def,fn){ const l=document.createElement('label'); l.className='ftRow'; l.innerHTML='<span>'+bl(b,e)+'</span><input type="checkbox">'; const c=l.querySelector('input'); c.checked=ls(key,def)==='1'; c.onchange=()=>{ st(key,c.checked?'1':'0'); fn&&fn(); }; return l; }
+$('devSw').appendChild(tog2('অ্যাড পেজে কুইক বাটন ও সাম্প্রতিক এন্ট্রি','Quick buttons & recent entries on Add page','qaOn_v1','1',qaRender));
+$('devSw').appendChild(tog2('সঠিক পিন দিলে নিজে থেকে অ্যাপে ঢুকবে','Auto-unlock when PIN is correct','autoUnlock_v1','1',()=>{try{const pd=document.querySelector('.pkPad');if(pd)pd.classList.toggle('auto',ls('autoUnlock_v1','1')==='1'&&+ls('appPinLen_v1',0)>=4)}catch(e){}}));
+
+/* ---------- Dashboard customisation switches ---------- */
+const hStyle=document.createElement('style'); hStyle.id='ftSwitchCss';
+const DASH=[
+ ['quick','কুইক অ্যাকশন বাটন','Quick action buttons',()=>document.querySelector('#sec-dash .quick')],
+ ['month','এই মাসের সারসংক্ষেপ','This month at a glance',()=>document.querySelector('#sec-dash .monthBox')],
+ ['insight','স্মার্ট ইনসাইট','Smart insights',()=>document.querySelector('#sec-dash .box.insight')],
+ ['today','আজকের হিসাব','Today summary',()=>$('todayBreak')],
+ ['remind','লোনের রিমাইন্ডার','Loan reminders',()=>$('remindBox')],
+ ['cat','খাত অনুযায়ী খরচ','Spending by category',()=>$('catBreak')],
+ ['src','আয়ের উৎস অনুযায়ী জমা','Income by source',()=>$('srcBreak')],
+ ['budget','মাসিক বাজেট','Monthly budget',()=>$('budgetBox')],
+ ['goal','সঞ্চয় লক্ষ্য','Savings goals',()=>$('goalBox')],
+ ['trend','শেষ ৬ মাসের চার্ট','Last 6 months chart',()=>$('trendBody')],
+ ['recent','সাম্প্রতিক লেনদেন','Recent transactions',()=>$('recentList')]
+];
+const NAV=[
+ ['navchat','নিচের বারে AI চ্যাট বাটন','AI chat button in bottom bar','#bottomNav [data-bn="chat"]'],
+ ['navloan','নিচের বারে লোন বাটন','Loan button in bottom bar','#bottomNav [data-bn="loan"]'],
+ ['lklast','লক স্ক্রিনে "শেষ আনলক" সময়','"Last unlocked" time on lock screen','#lkLast']
+];
+const swCss=[];
+DASH.forEach(d=>{ const el=d[3](); const bx=el&&(el.closest('.box')||el); if(bx){ bx.setAttribute('data-ftd',d[0]); swCss.push('html.ftOff-'+d[0]+' [data-ftd="'+d[0]+'"]{display:none!important}'); } });
+NAV.forEach(n=>swCss.push('html.ftOff-'+n[0]+' '+n[3]+'{display:none!important}'));
+hStyle.textContent=swCss.join('\n'); document.head.appendChild(hStyle);
+const swKey=k=>'dash_'+k+'_v1';
+function applyDash(){
+  const de2=document.documentElement;
+  DASH.forEach(d=>de2.classList.toggle('ftOff-'+d[0],ls(swKey(d[0]),'1')==='0'));
+  NAV.forEach(n=>de2.classList.toggle('ftOff-'+n[0],ls(swKey(n[0]),'1')==='0'));
+}
+DASH.forEach(d=>$('devDash').appendChild(tog2(d[1],d[2],swKey(d[0]),'1',applyDash)));
+$('devDash').appendChild(tog2('সাপ্তাহিক তুলনা কার্ড','Weekly comparison card','weekCard_v1','1',week));
+NAV.forEach(n=>$('devNav').appendChild(tog2(n[1],n[2],swKey(n[0]),'1',applyDash)));
+
+/* ---------- Home swipe cards: each card can be switched on/off ---------- */
+const HERO=[['bal','মোট ব্যালেন্স','Total balance','.hc-bal'],['exp','মোট খরচ','Total expense','.hc-exp'],['loan','মোট লোন','Total loan','.hc-loan'],['save','মোট সঞ্চয়','Total savings','.hc-save']];
+const heroEl=$('hero'), heroTr=$('heroTrack'), heroDt=$('heroDots');
+const hstep=()=>{ const c=[...heroTr.children].find(x=>x.style.display!=='none'); return c?c.offsetWidth+10:1; };
+function applyHero(){
+  const vis=[];
+  HERO.forEach(h=>{ const c=heroTr.querySelector(h[3]); if(!c) return; const off=ls('dash_hero_'+h[0]+'_v1','1')==='0'; c.style.display=off?'none':''; if(!off) vis.push(c); });
+  heroEl.style.display=vis.length?'':'none';
+  heroDt.innerHTML='';
+  vis.forEach((c,k)=>{ const i=document.createElement('i'); if(!k) i.className='on'; i.onclick=()=>heroTr.scrollTo({left:k*hstep(),behavior:'smooth'}); heroDt.appendChild(i); });
+  heroDt.style.display=vis.length>1?'':'none';
+  heroTr.scrollLeft=0;
+}
+heroTr.addEventListener('scroll',()=>requestAnimationFrame(()=>{ const d=[...heroDt.children]; if(!d.length) return; let i=Math.round(heroTr.scrollLeft/hstep()); i=Math.max(0,Math.min(d.length-1,i)); d.forEach((x,k)=>x.classList.toggle('on',k===i)); }),{passive:true});
+HERO.forEach(h=>$('devHero').appendChild(tog2(h[1]+' কার্ড',h[2]+' card','dash_hero_'+h[0]+'_v1','1',applyHero)));
+
+$('devSwReset').onclick=()=>{
+  appDialog(bn()?'সব ফিচার সুইচ ডিফল্টে (সব চালু) ফিরে যাবে। এগোবেন?':'All feature switches will go back to default (everything on). Continue?',{confirm:true,yes:'OK'},()=>{
+    const keys=['qaOn_v1','weekCard_v1','autoUnlock_v1'].concat(DASH.map(d=>swKey(d[0])),NAV.map(n=>swKey(n[0])),HERO.map(h=>'dash_hero_'+h[0]+'_v1'));
+    keys.forEach(k=>st(k,'1'));
+    ['devSw','devHero','devDash','devNav'].forEach(id=>$(id).querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=true));
+    applyDash(); applyHero(); qaRender(); week();
+    say(bn()?'সব সুইচ ডিফল্টে ফিরেছে':'Switches reset');
+  });
+};
+applyDash(); applyHero();
+
+const dupKey=x=>[x.type,x.amount,x.date,x.time,x.note,x.person,x.category,x.account,x.source].join('|');
+function dupCount(){ const s=new Set(); let n=0; data.transactions.forEach(x=>{ const k=dupKey(x); if(s.has(k)) n++; else s.add(k); }); return n; }
+function health(){
+  let chars=0; try{ Object.keys(localStorage).forEach(k=>{ chars+=k.length+(localStorage.getItem(k)||'').length; }); }catch(e){}
+  const kb=Math.round(chars/1024), pct=Math.min(100,Math.round(chars/5e6*100));
+  $('devHealth').innerHTML='<div class="ftRow" style="padding:6px 0"><span>'+bl('মোট লেনদেন','Transactions')+'</span><b>'+data.transactions.length+'</b></div>'
+   +'<div class="ftRow" style="padding:6px 0"><span>'+bl('সম্ভাব্য ডুপ্লিকেট','Possible duplicates')+'</span><b>'+dupCount()+'</b></div>'
+   +'<div class="ftRow" style="padding:6px 0"><span>'+bl('স্টোরেজ ব্যবহার (আনুমানিক)','Storage used (approx.)')+'</span><b>'+kb+' KB · '+pct+'%</b></div><div class="devBar"><i style="width:'+pct+'%"></i></div>'
+   +(pct>=80?'<div style="font-size:12.5px;color:var(--red);font-weight:700">'+bl('স্টোরেজ প্রায় ভরে গেছে — ব্যাকআপ নিয়ে ছবি ছোট করুন','Storage almost full — take a backup')+'</div>':'');
+}
+function rerender2(){ ['renderDash','renderLoans','renderAccounts','renderHistory','updateHome'].forEach(f=>{ try{ window[f]&&window[f](); }catch(e){} }); }
+$('devDup').onclick=()=>{
+  const n=dupCount(); if(!n){ say(bn()?'কোনো ডুপ্লিকেট নেই':'No duplicates found'); return; }
+  appDialog((bn()?n+'টি ডুপ্লিকেট লেনদেন মুছে ফেলা হবে (একই ধরন, পরিমাণ, তারিখ, সময় ও নোট)। এগোবেন?':n+' duplicate transaction(s) with identical type, amount, date, time and note will be removed. Continue?'),{confirm:true,yes:'OK'},()=>{
+    const s=new Set(); data.transactions=data.transactions.filter(x=>{ const k=dupKey(x); if(s.has(k)) return false; s.add(k); return true; });
+    saveData(); rerender2(); health(); say(bn()?n+'টি ডুপ্লিকেট মুছেছে':n+' duplicate(s) removed');
+  });
+};
+$('devCopy').onclick=async()=>{ try{ await navigator.clipboard.writeText(localStorage.getItem('moneyAppData_v1')||'{}'); say(bn()?'ডেটা কপি হয়েছে':'Data copied'); }catch(e){ say(bn()?'কপি করা যায়নি':'Could not copy'); } };
+$('devUnlockPin').onclick=()=>{ try{ localStorage.removeItem('pinFails_v1'); localStorage.removeItem('pinLockUntil_v1'); localStorage.setItem('lockFailTotal_v1','0'); }catch(e){} say(bn()?'পিন লকআউট রিসেট হয়েছে':'PIN lockout reset'); };
+function logShow(){
+  let a=[]; try{ a=JSON.parse(ls('devLog_v1','[]'))||[]; }catch(e){}
+  $('devLog').innerHTML=a.length?a.slice(-5).reverse().map(t=>new Date(t).toLocaleString(bn()?'bn-BD':'en-GB',{timeZone:'Asia/Dhaka',day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})).join('<br>'):bl('কোনো রেকর্ড নেই','No records');
+}
+$('devLogClr').onclick=()=>{ st('devLog_v1','[]'); logShow(); };
+let devTimer;
+function hideDev(){ if(box&&box.style.display!=='none'){ box.style.display='none'; } clearTimeout(devTimer); }
+window.devOpened=function(){
+  let a=[]; try{ a=JSON.parse(ls('devLog_v1','[]'))||[]; }catch(e){} a.push(Date.now()); st('devLog_v1',JSON.stringify(a.slice(-20)));
+  health(); logShow(); clearTimeout(devTimer); devTimer=setTimeout(hideDev,5*60*1000);
+};
+const _at2=window.activateTab; window.activateTab=function(n){ if(n!=='settings') hideDev(); return _at2.apply(this,arguments); };
+const _ld=window._lockDevMode; window._lockDevMode=function(){ clearTimeout(devTimer); return _ld.apply(this,arguments); };
+
+qaRender(); week();
 })();
 </script>
 </body>
