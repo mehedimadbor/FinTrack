@@ -2730,6 +2730,7 @@ function renderReminders(){
   ).join('');
 }
 function showLoanReminderPopup(){
+  try{ if(localStorage.getItem('rmPopup_v1')!=='0') return false; }catch(e){}
   const list = calcLoanReminders().filter(r=>r.days <= 1);
   if(!list.length) return false;
   let seen = '';
@@ -3768,6 +3769,7 @@ if(devUnlocked){
       const name=row.firstElementChild.textContent, tag=row.querySelector('.tag'); if(!tag) return;
       const b=document.createElement('button'); b.className='del'; b.innerHTML=mi('send'); b.title=bn()?'রিমাইন্ডার পাঠান':'Send reminder';
       b.onclick=()=>{
+        if(window.openLoanSend){ window.openLoanSend(name,tag.textContent); return; }
         const msg=bn()?`${name}, তোমার কাছে আমার ${tag.textContent} পাওনা আছে। সুবিধামতো ফেরত দিও। ধন্যবাদ।`:`Hi ${name}, a gentle reminder — you owe me ${tag.textContent}. Please return it when convenient. Thanks!`;
         if(navigator.share) navigator.share({text:msg}).catch(()=>{}); else window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank','noopener');
       };
@@ -4034,6 +4036,430 @@ setTimeout(nudge,2500);
 })();
 </script>
 <script>
+/* ===== FinTrack v8: popup reminders (bill / loan / anything) ===== */
+(function(){
+const $=id=>document.getElementById(id), bn=()=>currentLang==='bn';
+const ls=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}};
+const st=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+const bl=(b,e)=>'<span class="bn">'+b+'</span><span class="en">'+e+'</span>';
+const L=(b,e)=>bn()?b:e;
+const dg=s=>ls('digitsBn_v1','0')==='1'?String(s).replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]):String(s);
+const say=(m,l,f)=>{ if(window.toast) toast(m,l,f); };
+const R=()=>{ if(!data) return []; if(!Array.isArray(data.reminders)) data.reminders=[]; return data.reminders; };
+const KIND={bill:['card','#ef4444','বিল','Bill'],loan:['loan-out','#f59e0b','লোন','Loan'],other:['bell','#6366f1','অন্যান্য','Other']};
+const REP={none:['একবার','Once'],daily:['প্রতিদিন','Daily'],weekly:['প্রতি সপ্তাহে','Weekly'],monthly:['প্রতি মাসে','Monthly']};
+const SUG={bill:[['বিদ্যুৎ বিল','Electricity bill'],['গ্যাস বিল','Gas bill'],['ইন্টারনেট বিল','Internet bill'],['বাসা ভাড়া','House rent']],loan:[['লোন ফেরত দিতে হবে','Repay loan'],['লোন ফেরত নিতে হবে','Collect loan money']],other:[]};
+const addD=(s,n)=>{const d=new Date(s+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)};
+const addM=s=>{const y=+s.slice(0,4),m=+s.slice(5,7),day=+s.slice(8),last=new Date(Date.UTC(y,m+1,0)).getUTCDate();return new Date(Date.UTC(y,m,Math.min(day,last))).toISOString().slice(0,10)};
+const step=(s,rep)=>rep==='daily'?addD(s,1):rep==='weekly'?addD(s,7):addM(s);
+const diff=(a,b)=>Math.round((Date.parse(a+'T00:00:00Z')-Date.parse(b+'T00:00:00Z'))/864e5);
+const fT=t=>{ if(!t) return ''; const p=t.split(':').map(Number), h=p[0]; return dg((h%12||12)+':'+String(p[1]).padStart(2,'0')+' '+(h>=12?'PM':'AM')); };
+function dLbl(d){
+  const t=todayStr(); if(d===t) return L('আজ','Today'); if(d===addD(t,1)) return L('আগামীকাল','Tomorrow');
+  if(d<t){ const n=diff(t,d); return L(dg(n)+' দিন দেরি',n+'d overdue'); }
+  return new Date(d+'T12:00:00Z').toLocaleDateString(bn()?'bn-BD':'en-GB',{timeZone:'UTC',day:'numeric',month:'short'});
+}
+function nowLbl(){
+  const d=new Date(), lo=bn()?'bn-BD':'en-GB';
+  return d.toLocaleDateString(lo,{timeZone:'Asia/Dhaka',weekday:'long',day:'numeric',month:'long',year:'numeric'})+' · '+d.toLocaleTimeString(lo,{timeZone:'Asia/Dhaka',hour:'numeric',minute:'2-digit',hour12:true});
+}
+const sub=r=>{ const a=[dLbl(r.date)]; if(r.time) a.push(fT(r.time)); const k=KIND[r.kind]||KIND.other; a.push(L(k[2],k[3])); if(r.repeat&&r.repeat!=='none') a.push(L(REP[r.repeat][0],REP[r.repeat][1])); return a.join(' · '); };
+const cmp=(a,b)=>(a.date+(a.time||'00:00')).localeCompare(b.date+(b.time||'00:00'));
+const key=r=>r.id+'|'+r.date+'|'+(r.time||'')+'|'+(r.snz||0);
+const alerted=new Set();
+function markAll(){ const td=todayStr(), nt=nowTime(); R().forEach(r=>{ if(!r.done&&r.time&&(r.date<td||(r.date===td&&r.time<=nt))) alerted.add(key(r)); }); }
+
+/* ---------- css ---------- */
+const css=document.createElement('style');
+css.textContent='.rmOv{position:fixed;inset:0;z-index:71;background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:18px}'
++'.rmOv.form{z-index:90}.rmCard{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:24px;width:100%;max-width:370px;max-height:86vh;display:flex;flex-direction:column;padding:20px 16px 16px;box-shadow:0 20px 50px rgba(0,0,0,.35);animation:ftPop .25s ease both}'
++'.rmHd{text-align:center;margin-bottom:10px}.rmHd .ico{width:52px;height:52px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--primary);background:color-mix(in srgb,var(--primary) 14%,var(--card))}'
++'.rmHd h4{margin:0;font-size:17px}.rmHd small{display:block;margin-top:4px;font-size:12.5px;color:var(--muted);font-weight:600}'
++'.rmBody{overflow-y:auto;margin:0 -4px;padding:0 4px;flex:1}.rmSec{font-size:12px;font-weight:700;color:var(--muted);margin:12px 0 6px}'
++'.rmRow{display:flex;align-items:center;gap:10px;padding:10px;border-radius:16px;background:var(--bg);border:1px solid var(--border);margin-bottom:8px}'
++'.rmChip{width:36px;height:36px;border-radius:12px;flex:none;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--c);background:color-mix(in srgb,var(--c) 16%,transparent)}.rmChip .mi{color:var(--c)}'
++'.rmTx{flex:1;min-width:0}.rmTx b{display:block;font-size:14px;word-break:break-word}.rmTx small{display:block;font-size:12px;color:var(--muted);margin-top:2px}.rmTx small.late{color:var(--red);font-weight:700}'
++'.rmAct{display:flex;gap:6px}.rmAct button,.rmMini{width:36px;height:36px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent}'
++'.rmAct button:active,.rmMini:active{transform:scale(.92)}.rmAct button[data-a=done]{color:var(--green)}.rmMini.del{color:var(--red)}'
++'.rmRow.done{opacity:.5}.rmRow.done .rmTx b{text-decoration:line-through}.rmEmpty{font-size:13px;color:var(--muted);text-align:center;padding:12px 0}'
++'.rmKinds{display:flex;gap:8px}.rmKinds button{flex:1;padding:10px 4px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-weight:700;font-size:13px;cursor:pointer}.rmKinds button.on{border-color:var(--primary);color:var(--primary);background:color-mix(in srgb,var(--primary) 12%,var(--bg))}'
++'.rmSug{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.rmSug button{padding:6px 11px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12.5px;font-weight:600;cursor:pointer}'
++'.rmDashH{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}.rmDashH h3{margin:0}.rmMore{font-size:12px;color:var(--muted);text-align:center;margin-top:2px}';
+document.head.appendChild(css);
+const css2=document.createElement('style');
+css2.textContent='.pfBadge{position:absolute;top:-6px;right:-7px;min-width:22px;height:22px;padding:0 5px;border-radius:11px;border:2.5px solid var(--card);background:var(--red);color:#fff;font-family:inherit;font-size:11px;font-weight:800;line-height:1;align-items:center;justify-content:center;z-index:4;cursor:pointer;animation:rmPulse 2.2s infinite}@keyframes rmPulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--red) 55%,transparent)}70%,100%{box-shadow:0 0 0 8px transparent}}.lockPfBadge{top:2px;right:2px;min-width:32px;height:32px;border-radius:16px;font-size:15px;border-color:var(--bg);cursor:default;pointer-events:none;z-index:5}';
+document.head.appendChild(css2);
+/* badge on the profile picture: how many reminders / tasks are still pending today */
+const bdg=document.createElement('button'); bdg.type='button'; bdg.className='pfBadge'; bdg.style.display='none';
+const av=document.querySelector('#homeProfile .pfAvatar'); if(av) av.appendChild(bdg);
+/* same badge on the lock screen avatar (display only) */
+const lbdg=document.createElement('div'); lbdg.className='pfBadge lockPfBadge'; lbdg.style.display='none';
+const lav=document.querySelector('#lockOverlay .lockAvatarWrap'); if(lav) lav.appendChild(lbdg);
+const lkOv=$('lockOverlay'); if(lkOv) new MutationObserver(()=>updBadge()).observe(lkOv,{attributes:true,attributeFilter:['style']});
+bdg.addEventListener('click',e=>{ e.stopPropagation(); showRm('manual'); });
+function pendingN(){ const td=todayStr(); let n=R().filter(r=>!r.done&&r.date<=td).length; try{ n+=calcLoanReminders().filter(x=>x.days<=0).length; }catch(e){} return n; }
+function updBadge(){
+  try{ const n=pendingN(), tx=n>9?dg(9)+'+':dg(n); bdg.style.display=n?'flex':'none'; bdg.textContent=tx; lbdg.style.display=n?'flex':'none'; lbdg.textContent=tx;
+    bdg.setAttribute('aria-label',L('আজ '+dg(n)+'টি কাজ বাকি',n+' task(s) pending today')); }catch(e){}
+}
+
+/* ---------- popup on app open ---------- */
+let pend=false, clk=null;
+function collect(){
+  const td=todayStr(), tm=addD(td,1), now=Date.now(), tomOn=ls('rmTomorrow_v1','1')==='1', A=R().filter(r=>!r.done);
+  let loans=[]; try{ loans=calcLoanReminders().filter(x=>x.days<=(tomOn?1:0)); }catch(e){}
+  return {cur:A.filter(r=>r.date<=td&&(!r.snz||r.snz<=now)).sort(cmp), tom:tomOn?A.filter(r=>r.date===tm).sort(cmp):[], loans};
+}
+function rowH(r,acts){
+  const k=KIND[r.kind]||KIND.other;
+  return '<div class="rmRow" data-id="'+r.id+'"><span class="rmChip" style="--c:'+k[1]+'">'+mi(k[0])+'</span><div class="rmTx"><b>'+esc(r.title)+'</b><small class="'+(r.date<todayStr()?'late':'')+'">'+sub(r)+'</small></div>'
+   +(acts?'<div class="rmAct"><button type="button" data-a="done" aria-label="done">'+mi('check')+'</button><button type="button" data-a="snz" aria-label="snooze">'+mi('clock')+'</button></div>':'')+'</div>';
+}
+function loanH(x){
+  const g=x.dir==='get';
+  return '<div class="rmRow"><span class="rmChip" style="--c:'+(g?'#22c55e':'#f59e0b')+'">'+mi(g?'loan-in':'loan-out')+'</span><div class="rmTx"><b>'+esc(x.person)+' — '+fmt(x.amount)+'</b><small class="'+(x.days<0?'late':'')+'">'+(g?t('rem_get'):t('rem_owe'))+' · '+whenText(x.days)+'</small></div></div>';
+}
+function closeRm(){
+  const o=$('rmPop'); if(o) o.remove(); clearInterval(clk);
+  if(pend){ pend=false; try{ origCheck(); }catch(e){} }
+}
+function paintRm(){
+  const o=$('rmPop'); if(!o) return;
+  const c=collect(); if(!c.cur.length&&!c.tom.length&&!c.loans.length){ closeRm(); return; }
+  let h='';
+  if(c.cur.length) h+='<div class="rmSec">'+L('আজ ও বাকি','Today & pending')+'</div>'+c.cur.map(r=>rowH(r,true)).join('');
+  if(c.loans.length) h+='<div class="rmSec">'+L('লোনের হিসাব','Loans')+'</div>'+c.loans.map(loanH).join('');
+  if(c.tom.length) h+='<div class="rmSec">'+L('আগামীকাল','Tomorrow')+'</div>'+c.tom.map(r=>rowH(r,false)).join('');
+  o.querySelector('.rmBody').innerHTML=h;
+}
+function showRm(reason){
+  if($('rmPop')) return true;
+  if(reason!=='manual'&&ls('rmPopup_v1','1')!=='1') return false;
+  if(reason==='open'&&ls('rmFreq_v1','every')==='daily'&&ls('rmDay_v1','')===todayStr()) return false;
+  const c=collect(); if(!c.cur.length&&!c.tom.length&&!c.loans.length) return false;
+  st('rmDay_v1',todayStr()); if(c.loans.length) st('loanRemindShown_v1',todayStr());
+  const o=document.createElement('div'); o.id='rmPop'; o.className='rmOv';
+  o.innerHTML='<div class="rmCard"><div class="rmHd"><div class="ico">'+mi('bell')+'</div><h4>'+L('আজকের রিমাইন্ডার','Today\u2019s reminders')+'</h4><small id="rmNow">'+nowLbl()+'</small></div><div class="rmBody"></div>'
+   +'<div class="row2" style="margin-top:12px"><button type="button" class="typebtn" data-a="manage">'+L('ম্যানেজ','Manage')+'</button><button type="button" class="main" style="margin-top:0" data-a="ok">'+L('বুঝেছি','Got it')+'</button></div></div>';
+  document.body.appendChild(o); paintRm(); markAll();
+  clearInterval(clk); clk=setInterval(()=>{ const e=$('rmNow'); if(e) e.textContent=nowLbl(); },20000);
+  if(reason==='timer'&&navigator.vibrate) navigator.vibrate([180,90,180]);
+  o.addEventListener('click',e=>{
+    const b=e.target.closest('button'); if(!b) return; const a=b.dataset.a, row=b.closest('.rmRow'), id=row&&row.dataset.id;
+    if(a==='ok') closeRm();
+    else if(a==='manage'){ pend=false; closeRm(); try{ activateTab('settings'); }catch(_){} const bx=$('rmBox'); if(bx){ bx.open=true; setTimeout(()=>bx.scrollIntoView({behavior:'smooth',block:'start'}),120); } }
+    else if(a==='done'&&id){ doneR(id); paintRm(); }
+    else if(a==='snz'&&id){ const r=R().find(x=>x.id===id); if(r){ r.snz=Date.now()+36e5; saveData(); refresh(); say(L('১ ঘণ্টা পরে আবার মনে করাব','Will remind you again in 1 hour')); } paintRm(); }
+  });
+  return true;
+}
+function doneR(id){
+  const r=R().find(x=>x.id===id); if(!r) return;
+  if(r.repeat&&r.repeat!=='none'){ const td=todayStr(); let d=r.date; do{ d=step(d,r.repeat); }while(d<=td); r.date=d; r.snz=0; }
+  else r.done=true;
+  saveData(); refresh(); say(L('সম্পন্ন হিসেবে চিহ্নিত','Marked as done'));
+}
+
+/* ---------- add / edit form ---------- */
+function openForm(id){
+  if($('rmForm')) return;
+  const r=id?R().find(x=>x.id===id):null;
+  const s={title:r?r.title:'',kind:r?r.kind:'bill',date:r?r.date:todayStr(),time:r?r.time:'09:00',repeat:r?(r.repeat||'none'):'none'};
+  const o=document.createElement('div'); o.id='rmForm'; o.className='rmOv form';
+  o.innerHTML='<div class="rmCard" style="overflow-y:auto"><h4 style="margin:0 0 4px;font-size:17px;text-align:center">'+(r?L('রিমাইন্ডার এডিট','Edit reminder'):L('নতুন রিমাইন্ডার','New reminder'))+'</h4>'
+   +'<label>'+L('কিসের রিমাইন্ডার?','What is it for?')+'</label><div class="rmKinds"></div>'
+   +'<label>'+L('শিরোনাম','Title')+'</label><input type="text" id="rmfT" maxlength="80" autocomplete="off" placeholder="'+L('যেমন: বিদ্যুৎ বিল দিতে হবে','e.g. Pay electricity bill')+'"><div class="rmSug"></div>'
+   +'<div class="row2"><div><label>'+L('তারিখ','Date')+'</label><input type="date" id="rmfD"></div><div><label>'+L('সময়','Time')+'</label><input type="time" id="rmfM"></div></div>'
+   +'<label>'+L('পুনরাবৃত্তি','Repeat')+'</label><select id="rmfR">'+Object.keys(REP).map(k=>'<option value="'+k+'">'+REP[k][0]+' · '+REP[k][1]+'</option>').join('')+'</select>'
+   +'<div class="row2" style="margin-top:14px"><button type="button" class="typebtn" data-a="cancel">'+L('বাতিল','Cancel')+'</button><button type="button" class="main" style="margin-top:0" data-a="save">'+L('সেভ করুন','Save')+'</button></div></div>';
+  document.body.appendChild(o);
+  const T=$('rmfT'); T.value=s.title; $('rmfD').value=s.date; $('rmfM').value=s.time; $('rmfR').value=s.repeat;
+  const kb=o.querySelector('.rmKinds'), sg=o.querySelector('.rmSug');
+  function paintK(){
+    kb.innerHTML=Object.keys(KIND).map(k=>'<button type="button" data-k="'+k+'" class="'+(s.kind===k?'on':'')+'">'+L(KIND[k][2],KIND[k][3])+'</button>').join('');
+    sg.innerHTML=SUG[s.kind].map((x,i)=>'<button type="button" data-s="'+i+'">'+L(x[0],x[1])+'</button>').join('');
+  }
+  paintK();
+  o.addEventListener('click',e=>{
+    if(e.target===o){ o.remove(); return; }
+    const b=e.target.closest('button'); if(!b) return;
+    if(b.dataset.k){ s.kind=b.dataset.k; paintK(); }
+    else if(b.dataset.s!==undefined){ const x=SUG[s.kind][+b.dataset.s]; T.value=L(x[0],x[1]); }
+    else if(b.dataset.a==='cancel') o.remove();
+    else if(b.dataset.a==='save'){
+      const title=T.value.trim(), d=$('rmfD').value, tm=$('rmfM').value;
+      if(!title){ T.focus(); say(L('শিরোনাম লিখুন','Enter a title')); return; }
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(d)){ say(L('তারিখ বেছে নিন','Pick a date')); return; }
+      const rep=$('rmfR').value;
+      if(r){ Object.assign(r,{title:title,kind:s.kind,date:d,time:tm,repeat:rep,done:false,snz:0}); }
+      else R().push({id:Date.now()+'-'+Math.random().toString(36).slice(2,6),title:title,kind:s.kind,date:d,time:tm,repeat:rep,done:false,snz:0});
+      saveData(); markAll(); refresh(); o.remove(); say(L('রিমাইন্ডার সেভ হয়েছে','Reminder saved'));
+    }
+  });
+}
+
+/* ---------- settings box ---------- */
+function tg(b,e,k,def,fn){
+  const l=document.createElement('label'); l.className='ftRow'; l.innerHTML='<span>'+bl(b,e)+'</span><input type="checkbox">';
+  const c=l.querySelector('input'); c.checked=ls(k,def)==='1'; c.onchange=()=>{ st(k,c.checked?'1':'0'); fn&&fn(); }; return l;
+}
+const box=document.createElement('details'); box.className='box setBox'; box.id='rmBox';
+box.innerHTML='<summary><span class="setIco" style="--c:#8b5cf6">'+mi('bell')+'</span><h3>'+bl('রিমাইন্ডার','Reminders')+'</h3><svg viewBox="0 0 24 24" class="setChev"><path d="m9 6 6 6-6 6"/></svg></summary><div class="setBody"></div>';
+const bd=box.querySelector('.setBody');
+bd.appendChild(tg('অ্যাপ খুললে রিমাইন্ডার পপআপ','Reminder popup when app opens','rmPopup_v1','1'));
+bd.appendChild(tg('আগামীকালেরগুলোও দেখাও','Also show tomorrow\u2019s','rmTomorrow_v1','1'));
+const fr=document.createElement('label'); fr.className='ftRow';
+fr.innerHTML='<span>'+bl('কতবার দেখাবে','How often')+'</span><select><option value="every">'+L('প্রতিবার খুললে','Every time · প্রতিবার')+'</option><option value="daily">'+L('দিনে একবার','Once a day · দিনে একবার')+'</option></select>';
+const fs=fr.querySelector('select'); fs.value=ls('rmFreq_v1','every'); fs.onchange=()=>st('rmFreq_v1',fs.value); bd.appendChild(fr);
+const addB=document.createElement('button'); addB.type='button'; addB.className='main'; addB.style.marginTop='12px';
+addB.innerHTML=mi('plus')+' '+bl('নতুন রিমাইন্ডার','New reminder'); addB.onclick=()=>openForm(); bd.appendChild(addB);
+const lst=document.createElement('div'); lst.id='rmListEl'; lst.style.marginTop='12px'; bd.appendChild(lst);
+const pref=$('prefPlusBox'); if(pref) pref.after(box); else $('sec-settings').appendChild(box);
+
+/* ---------- dashboard card ---------- */
+const dbox=document.createElement('div'); dbox.className='box'; dbox.id='rmDashBox';
+const rb=$('remindBox'); if(rb) rb.after(dbox); else $('sec-dash').appendChild(dbox);
+
+function refresh(){
+  try{
+    const a=R().slice().sort((x,y)=>(x.done-y.done)||cmp(x,y));
+    lst.innerHTML=a.length?a.map(r=>{
+      const k=KIND[r.kind]||KIND.other;
+      return '<div class="rmRow'+(r.done?' done':'')+'" data-id="'+r.id+'"><span class="rmChip" style="--c:'+k[1]+'">'+mi(r.done?'check-circle':k[0])+'</span><div class="rmTx" data-a="edit" style="cursor:pointer"><b>'+esc(r.title)+'</b><small class="'+(!r.done&&r.date<todayStr()?'late':'')+'">'+(r.done?L('সম্পন্ন','Done'):sub(r))+'</small></div><div class="rmAct"><button type="button" class="rmMini del" data-a="del" aria-label="delete">'+mi('trash')+'</button></div></div>';
+    }).join(''):'<div class="rmEmpty">'+L('এখনো কোনো রিমাইন্ডার নেই','No reminders yet')+'</div>';
+    const td=todayStr(), lim=addD(td,7), up=R().filter(r=>!r.done&&r.date<=lim).sort(cmp);
+    updBadge();
+    dbox.innerHTML='<div class="rmDashH"><h3>'+L('রিমাইন্ডার','Reminders')+'</h3><button type="button" class="rmMini" data-a="add" aria-label="add">'+mi('plus')+'</button></div>'
+      +(up.length?up.slice(0,4).map(r=>{ const k=KIND[r.kind]||KIND.other; return '<div class="rmRow" data-id="'+r.id+'"><span class="rmChip" style="--c:'+k[1]+'">'+mi(k[0])+'</span><div class="rmTx" data-a="edit" style="cursor:pointer"><b>'+esc(r.title)+'</b><small class="'+(r.date<td?'late':'')+'">'+sub(r)+'</small></div><div class="rmAct"><button type="button" data-a="done" aria-label="done">'+mi('check')+'</button></div></div>'; }).join('')+(up.length>4?'<div class="rmMore">+'+dg(up.length-4)+' '+L('আরও','more')+'</div>':''):'<div class="rmEmpty">'+L('আগামী ৭ দিনে কোনো রিমাইন্ডার নেই','No reminders in the next 7 days')+'</div>');
+  }catch(e){}
+}
+function onClick(e){
+  const b=e.target.closest('[data-a]'); if(!b) return; const a=b.dataset.a, row=b.closest('.rmRow'), id=row&&row.dataset.id;
+  if(a==='add') openForm();
+  else if(a==='edit'&&id) openForm(id);
+  else if(a==='done'&&id) doneR(id);
+  else if(a==='del'&&id){ const r=R().find(x=>x.id===id); if(!r) return;
+    appDialog(L('এই রিমাইন্ডার মুছে ফেলা হবে','This reminder will be deleted')+'\n\n'+r.title,{confirm:true,yes:'OK'},()=>{ data.reminders=R().filter(x=>x.id!==id); saveData(); refresh(); }); }
+}
+lst.addEventListener('click',onClick); dbox.addEventListener('click',onClick);
+
+const _uh=window.updateHome; window.updateHome=function(){ const r=_uh.apply(this,arguments); refresh(); return r; };
+
+/* ---------- hook into app-open popup + live timer ---------- */
+const origCheck=window.checkNotifPopupOnLoad;
+window.checkNotifPopupOnLoad=function(){
+  let shown=false; try{ shown=showRm('open'); }catch(e){}
+  if(shown){ pend=true; return; }
+  return origCheck.apply(this,arguments);
+};
+function tick(){
+  updBadge();
+  try{
+    if(document.hidden||!data||$('rmPop')||$('rmForm')||$('appDlg')) return;
+    const lk=$('lockOverlay'); if(lk&&lk.style.display==='flex') return;
+    const np=$('notifPopupOverlay'); if(np&&np.style.display==='flex') return;
+    if(ls('rmPopup_v1','1')!=='1') return;
+    const td=todayStr(), nt=nowTime(), now=Date.now();
+    if(R().some(r=>!r.done&&r.time&&(r.date<td||(r.date===td&&r.time<=nt))&&(!r.snz||r.snz<=now)&&!alerted.has(key(r)))) showRm('timer');
+  }catch(e){}
+}
+setInterval(tick,30000);
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) setTimeout(tick,800); });
+
+/* first load without lock: the app-open check already ran before this script, so show ours now */
+refresh();
+setTimeout(()=>{
+  try{
+    const lk=$('lockOverlay'), lg=$('loginScreen');
+    if((!lk||lk.style.display!=='flex')&&(!lg||lg.style.display==='none')){ if(showRm('open')) pend=false; }
+    markAll();
+  }catch(e){}
+},400);
+})();
+</script>
+<script>
+/* ===== FinTrack v8b: payment details + "send payment request" (SMS is the default) ===== */
+(function(){
+const $=id=>document.getElementById(id), bn=()=>currentLang==='bn';
+const ls=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}};
+const st=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+const bl=(b,e)=>'<span class="bn">'+b+'</span><span class="en">'+e+'</span>';
+const L=(b,e)=>bn()?b:e;
+const say=(m,l,f)=>{ if(window.toast) toast(m,l,f); };
+const PM=()=>{ if(!data) return []; if(!Array.isArray(data.payMethods)) data.payMethods=[]; return data.payMethods; };
+const DEF=()=>(data&&data.payDefault)||'';
+const changed=()=>document.dispatchEvent(new Event('payChanged'));
+const PH=()=>{ if(!data) return {}; if(!data.personPhones||typeof data.personPhones!=='object') data.personPhones={}; return data.personPhones; };
+const TYPES={bkash:['বিকাশ','bKash','#e2136e','mfs'],nagad:['নগদ','Nagad','#f97316','mfs'],rocket:['রকেট','Rocket','#8b1d8f','mfs'],upay:['উপায়','Upay','#ca8a04','mfs'],tap:['ট্যাপ','Tap','#0ea5e9','mfs'],bank:['ব্যাংক একাউন্ট','Bank account','#2563eb','bank'],other:['অন্যান্য','Other','#6b7280','other']};
+const KINDS={personal:['পার্সোনাল','Personal'],agent:['এজেন্ট','Agent'],merchant:['মার্চেন্ট','Merchant']};
+const tl=m=>{ const T=TYPES[m.type]||TYPES.other; return m.type==='other'&&m.name?m.name:L(T[0],T[1]); };
+function line(m){
+  const T=TYPES[m.type]||TYPES.other;
+  if(T[3]==='bank') return '• '+L('ব্যাংক','Bank')+': '+(m.bank||'')+(m.holder?', '+L('নাম','Name')+': '+m.holder:'')+', '+L('একাউন্ট নং','A/C no.')+': '+m.num+(m.branch?', '+L('শাখা','Branch')+': '+m.branch:'');
+  if(T[3]==='other') return '• '+tl(m)+': '+m.num;
+  return '• '+tl(m)+(m.kind&&KINDS[m.kind]?' ('+L(KINDS[m.kind][0],KINDS[m.kind][1])+')':'')+': '+m.num;
+}
+const subOf=m=>{ const T=TYPES[m.type]||TYPES.other; return T[3]==='bank'?((m.bank||'')+' · '+m.num):(m.num+(m.kind&&KINDS[m.kind]?' · '+L(KINDS[m.kind][0],KINDS[m.kind][1]):'')); };
+
+const css=document.createElement('style');
+css.textContent='.rmSug button.on{border-color:var(--primary);color:var(--primary);background:color-mix(in srgb,var(--primary) 12%,var(--bg))}.rmSug button.on::before{content:"\\2713  "}.payTa{width:100%;min-height:150px;resize:vertical;font-family:inherit;font-size:13.5px;line-height:1.55}.payHint{font-size:12px;color:var(--muted);margin-top:6px}.rmSug button.ed{border-style:dashed;border-color:var(--amber);color:var(--amber)}';
+document.head.appendChild(css);
+
+/* ---------- add / edit a payment method ---------- */
+function openPay(id){
+  if($('payForm')) return;
+  const m=id?PM().find(x=>x.id===id):null;
+  const s={type:m?m.type:'bkash',kind:m&&m.kind?m.kind:'personal',num:m?m.num:'',bank:m&&m.bank||'',holder:m&&m.holder||'',branch:m&&m.branch||'',name:m&&m.name||''};
+  const o=document.createElement('div'); o.id='payForm'; o.className='rmOv form';
+  o.innerHTML='<div class="rmCard" style="overflow-y:auto"><h4 style="margin:0 0 4px;font-size:17px;text-align:center">'+(m?L('পেমেন্ট মাধ্যম এডিট','Edit payment method'):L('নতুন পেমেন্ট মাধ্যম','New payment method'))+'</h4>'
+   +'<label>'+L('ধরন','Type')+'</label><select id="pfT">'+Object.keys(TYPES).map(k=>'<option value="'+k+'">'+TYPES[k][0]+' · '+TYPES[k][1]+'</option>').join('')+'</select>'
+   +'<div id="pfF"></div>'
+   +'<div class="row2" style="margin-top:14px"><button type="button" class="typebtn" data-a="cancel">'+L('বাতিল','Cancel')+'</button><button type="button" class="main" style="margin-top:0" data-a="save">'+L('সেভ করুন','Save')+'</button></div></div>';
+  document.body.appendChild(o);
+  const sel=$('pfT'); sel.value=s.type;
+  const val=id=>{ const e=$(id); return e?e.value.trim():''; };
+  function sync(){ s.num=val('pfN')||s.num; if($('pfN')) s.num=val('pfN'); if($('pfK')) s.kind=$('pfK').value; if($('pfB')) s.bank=val('pfB'); if($('pfH')) s.holder=val('pfH'); if($('pfR')) s.branch=val('pfR'); if($('pfO')) s.name=val('pfO'); }
+  function fields(){
+    const k=(TYPES[s.type]||TYPES.other)[3]; let h='';
+    if(k==='mfs') h+='<label>'+L('মোবাইল নম্বর','Mobile number')+'</label><input type="tel" inputmode="tel" id="pfN" placeholder="01XXXXXXXXX" autocomplete="off">'
+      +'<label>'+L('একাউন্টের ধরন','Account kind')+'</label><select id="pfK">'+Object.keys(KINDS).map(x=>'<option value="'+x+'">'+KINDS[x][0]+' · '+KINDS[x][1]+'</option>').join('')+'</select>';
+    else if(k==='bank') h+='<label>'+L('ব্যাংকের নাম','Bank name')+'</label><input type="text" id="pfB" autocomplete="off">'
+      +'<label>'+L('একাউন্ট হোল্ডারের নাম','Account holder name')+'</label><input type="text" id="pfH" autocomplete="off">'
+      +'<label>'+L('একাউন্ট নম্বর','Account number')+'</label><input type="text" inputmode="numeric" id="pfN" autocomplete="off">'
+      +'<label>'+L('শাখা (ঐচ্ছিক)','Branch (optional)')+'</label><input type="text" id="pfR" autocomplete="off">';
+    else h+='<label>'+L('নাম','Name')+'</label><input type="text" id="pfO" autocomplete="off" placeholder="'+L('যেমন: ইসলামী ব্যাংক এমক্যাশ','e.g. mCash')+'">'
+      +'<label>'+L('নম্বর / বিবরণ','Number / details')+'</label><input type="text" id="pfN" autocomplete="off">';
+    $('pfF').innerHTML=h;
+    if($('pfN')) $('pfN').value=s.num; if($('pfK')) $('pfK').value=s.kind; if($('pfB')) $('pfB').value=s.bank; if($('pfH')) $('pfH').value=s.holder; if($('pfR')) $('pfR').value=s.branch; if($('pfO')) $('pfO').value=s.name;
+  }
+  fields();
+  sel.onchange=()=>{ sync(); s.type=sel.value; fields(); };
+  o.addEventListener('click',e=>{
+    if(e.target===o){ o.remove(); return; }
+    const b=e.target.closest('button'); if(!b) return;
+    if(b.dataset.a==='cancel') o.remove();
+    else if(b.dataset.a==='save'){
+      sync(); s.type=sel.value; const k=(TYPES[s.type]||TYPES.other)[3];
+      if(k==='bank'&&!s.bank){ say(L('ব্যাংকের নাম লিখুন','Enter the bank name')); return; }
+      if(!s.num||s.num.length<3){ say(L('নম্বর লিখুন','Enter the number')); return; }
+      if(k==='mfs'&&!/^[0-9+\-\s]{6,}$/.test(s.num)){ say(L('সঠিক মোবাইল নম্বর দিন','Enter a valid mobile number')); return; }
+      const rec={type:s.type,num:s.num,on:m?m.on!==false:true};
+      if(k==='mfs') rec.kind=s.kind; if(k==='bank'){ rec.bank=s.bank; rec.holder=s.holder; rec.branch=s.branch; } if(k==='other') rec.name=s.name;
+      if(m){ const i=PM().indexOf(m); data.payMethods[i]=Object.assign({id:m.id},rec); }
+      else PM().push(Object.assign({id:Date.now()+'-'+Math.random().toString(36).slice(2,6)},rec));
+      saveData(); paint(); changed(); o.remove(); say(L('পেমেন্ট মাধ্যম সেভ হয়েছে','Payment method saved'));
+    }
+  });
+}
+
+/* ---------- settings box ---------- */
+function tg(b,e,k,def){
+  const l=document.createElement('label'); l.className='ftRow'; l.innerHTML='<span>'+bl(b,e)+'</span><input type="checkbox">';
+  const c=l.querySelector('input'); c.checked=ls(k,def)==='1'; c.onchange=()=>st(k,c.checked?'1':'0'); return l;
+}
+const box=document.createElement('details'); box.className='box setBox'; box.id='payBox';
+box.innerHTML='<summary><span class="setIco" style="--c:#e2136e">'+mi('wallet')+'</span><h3>'+bl('পেমেন্ট ডিটেইলস ও মেসেজ','Payment details & messages')+'</h3><svg viewBox="0 0 24 24" class="setChev"><path d="m9 6 6 6-6 6"/></svg></summary><div class="setBody"></div>';
+const bd=box.querySelector('.setBody');
+const via=document.createElement('label'); via.className='ftRow';
+via.innerHTML='<span>'+bl('ডিফল্ট পাঠানোর মাধ্যম','Default way to send')+'</span><select><option value="sms">SMS</option><option value="wa">WhatsApp</option><option value="share">'+L('অন্য অ্যাপ','Other app')+'</option><option value="copy">'+L('কপি','Copy')+'</option></select>';
+const vs=via.querySelector('select'); vs.value=ls('sendVia_v1','sms'); vs.onchange=()=>st('sendVia_v1',vs.value); bd.appendChild(via);
+bd.appendChild(tg('মেসেজে পেমেন্ট ডিটেইলস যোগ করো','Include payment details in message','sendPay_v1','1'));
+const note=document.createElement('div'); note.className='payHint'; note.innerHTML=bl('যাদের কাছে টাকা পাবেন, তাদের লোন লিস্টের ➤ বাটনে চাপলে এই তথ্যসহ মেসেজ পাঠানো যাবে। ☆ চেপে একটিকে প্রধান করলে মেসেজে সেটাই আগে থেকে বাছা থাকবে।','Tap the ➤ button on a person in your loan list to send a message with these details. Tap ☆ to make one method primary — it will be pre-selected in messages.'); bd.appendChild(note);
+const add=document.createElement('button'); add.type='button'; add.className='main'; add.style.marginTop='12px'; add.innerHTML=mi('plus')+' '+bl('পেমেন্ট মাধ্যম যোগ করুন','Add payment method'); add.onclick=()=>openPay(); bd.appendChild(add);
+const lst=document.createElement('div'); lst.style.marginTop='12px'; bd.appendChild(lst);
+const anchor=$('rmBox')||$('prefPlusBox'); if(anchor) anchor.after(box); else $('sec-settings').appendChild(box);
+
+function paint(){
+  lst.innerHTML=PM().length?PM().map(m=>{
+    const T=TYPES[m.type]||TYPES.other;
+    return '<div class="rmRow'+(m.on===false?' done':'')+'" data-id="'+m.id+'"><span class="rmChip" style="--c:'+T[2]+'">'+mi(T[3]==='bank'?'bank':'wallet')+'</span><div class="rmTx" data-a="edit" style="cursor:pointer"><b>'+esc(tl(m))+'</b><small>'+(DEF()===m.id?'★ '+L('প্রধান','Primary')+' · ':'')+esc(subOf(m))+'</small></div>'
+     +'<div class="rmAct"><button type="button" class="rmMini" data-a="star" aria-label="primary" style="color:'+(DEF()===m.id?'var(--amber)':'var(--muted)')+'">'+(DEF()===m.id?'★':'☆')+'</button><label class="ftRow" style="padding:0;border:0;margin:0"><input type="checkbox" data-a="on"'+(m.on===false?'':' checked')+'></label><button type="button" class="rmMini del" data-a="del" aria-label="delete">'+mi('trash')+'</button></div></div>';
+  }).join(''):'<div class="rmEmpty">'+L('এখনো কোনো পেমেন্ট মাধ্যম যোগ করা হয়নি','No payment methods yet')+'</div>';
+}
+lst.addEventListener('click',e=>{
+  const b=e.target.closest('[data-a]'); if(!b) return; const row=b.closest('.rmRow'), id=row&&row.dataset.id;
+  if(b.dataset.a==='edit'&&id) openPay(id);
+  else if(b.dataset.a==='star'&&id){ data.payDefault=DEF()===id?'':id; saveData(); paint(); changed(); say(DEF()?L('প্রধান পেমেন্ট মাধ্যম সেট হয়েছে','Primary method set'):L('প্রধান মাধ্যম সরানো হয়েছে','Primary method cleared')); }
+  else if(b.dataset.a==='del'&&id){ const m=PM().find(x=>x.id===id); if(!m) return;
+    appDialog(L('এই পেমেন্ট মাধ্যম মুছে ফেলা হবে','This payment method will be deleted')+'\n\n'+tl(m),{confirm:true,yes:'OK'},()=>{ data.payMethods=PM().filter(x=>x.id!==id); if(DEF()===id) data.payDefault=''; saveData(); paint(); changed(); }); }
+});
+lst.addEventListener('change',e=>{
+  const c=e.target.closest('input[data-a=on]'); if(!c) return; const row=c.closest('.rmRow'), m=PM().find(x=>x.id===row.dataset.id);
+  if(m){ m.on=c.checked; saveData(); row.classList.toggle('done',!c.checked); changed(); }
+});
+paint();
+const _uh=window.updateHome; window.updateHome=function(){ const r=_uh.apply(this,arguments); try{ paint(); }catch(e){} return r; };
+
+/* ---------- send sheet (from the loan list) ---------- */
+window.openLoanSend=function(name,amt){
+  if($('sendSheet')) return;
+  let methods=PM().filter(m=>m.on!==false), editMode=false, known=new Set(methods.map(m=>m.id));
+  const pick=new Set(); if(ls('sendPay_v1','1')==='1'){ const d=methods.find(m=>m.id===DEF()); (d?[d]:methods).forEach(m=>pick.add(m.id)); }
+  let ch=ls('sendVia_v1','sms'); if(!/^(sms|wa|share|copy)$/.test(ch)) ch='sms';
+  const dues=data.transactions.filter(x=>x.type==='loan_given'&&x.person===name&&x.due).map(x=>x.due).sort(), due=dues.length?dues[dues.length-1]:'';
+  let me=''; try{ me=(getMyName()||'').trim(); }catch(e){}
+  function build(){
+    const dt=due?new Date(due+'T12:00:00Z').toLocaleDateString(bn()?'bn-BD':'en-GB',{timeZone:'UTC',day:'numeric',month:'long'}):'';
+    let m=L(name+', আপনার কাছে আমার '+amt+' পাওনা আছে'+(dt?' (ফেরতের তারিখ: '+dt+')':'')+'। সুবিধামতো ফেরত দিলে ভালো হয়।',
+            'Hi '+name+', a gentle reminder that you owe me '+amt+(dt?' (due '+dt+')':'')+'. Please return it when convenient.');
+    const ls2=methods.filter(x=>pick.has(x.id));
+    if(ls2.length) m+='\n\n'+L('নিচের যেকোনো মাধ্যমে পাঠাতে পারেন:','You can pay via any of these:')+'\n'+ls2.map(line).join('\n')+'\n\n'+L('পাঠানোর পর জানাবেন।','Please let me know once sent.');
+    m+='\n'+L('ধন্যবাদ।','Thank you.')+(me?' — '+me:'');
+    return m;
+  }
+  const o=document.createElement('div'); o.id='sendSheet'; o.className='rmOv form';
+  o.innerHTML='<div class="rmCard" style="overflow-y:auto"><h4 style="margin:0;font-size:17px;text-align:center">'+L('টাকা ফেরতের মেসেজ','Payment request')+'</h4><div style="text-align:center;font-size:12.5px;color:var(--muted);font-weight:600;margin:4px 0 2px">'+esc(name)+' · '+esc(amt)+'</div>'
+   +'<label>'+L('ফোন নম্বর (SMS / WhatsApp এর জন্য, ঐচ্ছিক)','Phone number (for SMS / WhatsApp, optional)')+'</label><input type="tel" inputmode="tel" id="ssP" placeholder="01XXXXXXXXX" autocomplete="off">'
+   +'<label>'+L('কীভাবে পাঠাবেন','Send via')+'</label><div class="rmKinds" id="ssC"></div>'
+   +'<label>'+L('পেমেন্ট মাধ্যম','Payment methods')+'</label><div class="rmSug" id="ssM" style="margin-top:0"></div>'
+   +'<label>'+L('মেসেজ (এডিট করা যাবে)','Message (editable)')+'</label><textarea id="ssT" class="payTa"></textarea>'
+   +'<div class="row2" style="margin-top:12px"><button type="button" class="typebtn" data-a="cancel">'+L('বাতিল','Cancel')+'</button><button type="button" class="main" style="margin-top:0" data-a="send">'+L('পাঠান','Send')+'</button></div></div>';
+  document.body.appendChild(o);
+  const ph=$('ssP'), ta=$('ssT'); ph.value=PH()[name]||''; ta.value=build();
+  const CH=[['sms','SMS'],['wa','WhatsApp'],['share',L('অন্য অ্যাপ','Other app')],['copy',L('কপি','Copy')]];
+  function paintC(){ $('ssC').innerHTML=CH.map(c=>'<button type="button" data-c="'+c[0]+'" class="'+(ch===c[0]?'on':'')+'">'+c[1]+'</button>').join(''); }
+  function paintM(){
+    const chips=methods.map(m=>'<button type="button" data-m="'+m.id+'" class="'+(editMode?'ed':(pick.has(m.id)?'on':''))+'">'+(DEF()===m.id?'★ ':'')+esc(tl(m))+'</button>').join('');
+    $('ssM').innerHTML=chips+(methods.length?'<button type="button" data-a="editm" class="'+(editMode?'ed':'')+'">✎ '+L('পরিবর্তন','Change')+'</button>':'')+'<button type="button" data-a="addpay">+ '+L('নতুন','New')+'</button>'+(editMode?'<div class="payHint" style="flex-basis:100%">'+L('যেটা বদলাতে চান তাতে ট্যাপ করুন','Tap a method to edit it')+'</div>':'');
+  }
+  paintC(); paintM();
+  const onChg=()=>{
+    if(!document.body.contains(o)){ document.removeEventListener('payChanged',onChg); return; }
+    methods=PM().filter(m=>m.on!==false); const ids=new Set(methods.map(m=>m.id));
+    [...pick].forEach(id=>{ if(!ids.has(id)) pick.delete(id); });
+    methods.forEach(m=>{ if(!known.has(m.id)) pick.add(m.id); });
+    known=ids; paintM(); ta.value=build();
+  };
+  document.addEventListener('payChanged',onChg);
+  o.addEventListener('click',async e=>{
+    if(e.target===o){ o.remove(); return; }
+    const b=e.target.closest('button'); if(!b) return;
+    if(b.dataset.c){ ch=b.dataset.c; paintC(); }
+    else if(b.dataset.m){ if(editMode){ openPay(b.dataset.m); return; } pick.has(b.dataset.m)?pick.delete(b.dataset.m):pick.add(b.dataset.m); paintM(); ta.value=build(); }
+    else if(b.dataset.a==='editm'){ editMode=!editMode; paintM(); }
+    else if(b.dataset.a==='cancel') o.remove();
+    else if(b.dataset.a==='addpay'){ openPay(); }
+    else if(b.dataset.a==='send'){
+      const msg=ta.value.trim(), p=ph.value.trim(); if(!msg) return;
+      if(p){ PH()[name]=p; saveData(); }
+      if(ch==='sms'){
+        const ios=/iPad|iPhone|iPod/.test(navigator.userAgent), num=p.replace(/[^\d+]/g,'');
+        o.remove(); window.location.href='sms:'+num+(ios?'&':'?')+'body='+encodeURIComponent(msg);
+      }else if(ch==='wa'){
+        let d=p.replace(/\D/g,''); if(d.startsWith('00')) d=d.slice(2); else if(d.startsWith('0')) d='880'+d.slice(1);
+        o.remove(); window.open('https://wa.me/'+d+'?text='+encodeURIComponent(msg),'_blank','noopener');
+      }else if(ch==='share'&&navigator.share){
+        o.remove(); navigator.share({text:msg}).catch(()=>{});
+      }else{
+        try{ await navigator.clipboard.writeText(msg); say(L('মেসেজ কপি হয়েছে','Message copied')); o.remove(); }
+        catch(err){ ta.select(); say(L('কপি করা যায়নি, মেসেজটি সিলেক্ট করা আছে','Could not copy — text is selected')); }
+      }
+    }
+  });
+};
+})();
+</script>
+<script>
 /* ===== FinTrack v7: easy-accounting helpers + developer tools ===== */
 (function(){
 const $=id=>document.getElementById(id), bn=()=>currentLang==='bn';
@@ -4131,6 +4557,7 @@ if(lockBtn) lockBtn.before(dv); else if(body) body.appendChild(dv);
 
 function tog2(b,e,key,def,fn){ const l=document.createElement('label'); l.className='ftRow'; l.innerHTML='<span>'+bl(b,e)+'</span><input type="checkbox">'; const c=l.querySelector('input'); c.checked=ls(key,def)==='1'; c.onchange=()=>{ st(key,c.checked?'1':'0'); fn&&fn(); }; return l; }
 $('devSw').appendChild(tog2('অ্যাড পেজে কুইক বাটন ও সাম্প্রতিক এন্ট্রি','Quick buttons & recent entries on Add page','qaOn_v1','1',qaRender));
+$('devSw').appendChild(tog2('অ্যাপ খুললে রিমাইন্ডার পপআপ','Reminder popup when app opens','rmPopup_v1','1'));
 $('devSw').appendChild(tog2('সঠিক পিন দিলে নিজে থেকে অ্যাপে ঢুকবে','Auto-unlock when PIN is correct','autoUnlock_v1','1',()=>{try{const pd=document.querySelector('.pkPad');if(pd)pd.classList.toggle('auto',ls('autoUnlock_v1','1')==='1'&&+ls('appPinLen_v1',0)>=4)}catch(e){}}));
 
 /* ---------- Dashboard customisation switches ---------- */
@@ -4146,12 +4573,14 @@ const DASH=[
  ['budget','মাসিক বাজেট','Monthly budget',()=>$('budgetBox')],
  ['goal','সঞ্চয় লক্ষ্য','Savings goals',()=>$('goalBox')],
  ['trend','শেষ ৬ মাসের চার্ট','Last 6 months chart',()=>$('trendBody')],
- ['recent','সাম্প্রতিক লেনদেন','Recent transactions',()=>$('recentList')]
+ ['recent','সাম্প্রতিক লেনদেন','Recent transactions',()=>$('recentList')],
+ ['rm','রিমাইন্ডার কার্ড','Reminders card',()=>$('rmDashBox')]
 ];
 const NAV=[
  ['navchat','নিচের বারে AI চ্যাট বাটন','AI chat button in bottom bar','#bottomNav [data-bn="chat"]'],
  ['navloan','নিচের বারে লোন বাটন','Loan button in bottom bar','#bottomNav [data-bn="loan"]'],
- ['lklast','লক স্ক্রিনে "শেষ আনলক" সময়','"Last unlocked" time on lock screen','#lkLast']
+ ['lklast','লক স্ক্রিনে "শেষ আনলক" সময়','"Last unlocked" time on lock screen','#lkLast'],
+ ['rmbadge','প্রোফাইলে রিমাইন্ডার ব্যাজ','Reminder badge on profile','.pfBadge']
 ];
 const swCss=[];
 DASH.forEach(d=>{ const el=d[3](); const bx=el&&(el.closest('.box')||el); if(bx){ bx.setAttribute('data-ftd',d[0]); swCss.push('html.ftOff-'+d[0]+' [data-ftd="'+d[0]+'"]{display:none!important}'); } });
@@ -4185,7 +4614,7 @@ HERO.forEach(h=>$('devHero').appendChild(tog2(h[1]+' কার্ড',h[2]+' car
 
 $('devSwReset').onclick=()=>{
   appDialog(bn()?'সব ফিচার সুইচ ডিফল্টে (সব চালু) ফিরে যাবে। এগোবেন?':'All feature switches will go back to default (everything on). Continue?',{confirm:true,yes:'OK'},()=>{
-    const keys=['qaOn_v1','weekCard_v1','autoUnlock_v1'].concat(DASH.map(d=>swKey(d[0])),NAV.map(n=>swKey(n[0])),HERO.map(h=>'dash_hero_'+h[0]+'_v1'));
+    const keys=['qaOn_v1','weekCard_v1','autoUnlock_v1','rmPopup_v1'].concat(DASH.map(d=>swKey(d[0])),NAV.map(n=>swKey(n[0])),HERO.map(h=>'dash_hero_'+h[0]+'_v1'));
     keys.forEach(k=>st(k,'1'));
     ['devSw','devHero','devDash','devNav'].forEach(id=>$(id).querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=true));
     applyDash(); applyHero(); qaRender(); week();
