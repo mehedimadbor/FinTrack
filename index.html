@@ -740,11 +740,11 @@ if(pic){var im=$('lockAvatarImg');im.src=pic;im.style.display='block';$('lockAva
 /* ===== Real happy-users counter (Firebase Realtime Database REST) =====
    Put your DB url below, e.g. 'https://YOUR-PROJECT-default-rtdb.firebaseio.com'  (no trailing slash)
    Empty = counter is off and the chip stays hidden. */
-var HAPPY_COUNTER_URL = '';
+var HAPPY_COUNTER_URL = 'https://fintrack-cde62-default-rtdb.asia-southeast1.firebasedatabase.app';
 /* ===== Firebase (used by the user counter AND Cloud sync) =====
    apiKey: Firebase console > Project settings > General > Web API Key
    dbUrl : your Realtime Database url, e.g. 'https://YOUR-PROJECT-default-rtdb.firebaseio.com' (no trailing slash) */
-var FT_FIREBASE = { apiKey: '', dbUrl: '' };
+var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'https://fintrack-cde62-default-rtdb.asia-southeast1.firebasedatabase.app' };
 (function(){
   var box=document.getElementById('lkHappy'); if(!box) return;
   var b=document.getElementById('lkHappyBn'), e=document.getElementById('lkHappyEn');
