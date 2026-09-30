@@ -773,6 +773,10 @@ if(pic){var im=$('lockAvatarImg');im.src=pic;im.style.display='block';$('lockAva
     <h3 data-i18n="dash_goal_heading">সঞ্চয় লক্ষ্য</h3>
     <div id="goalBreak"></div>
   </div>
+  <div class="box" id="spBox" style="display:none;">
+    <h3 id="spTitle">সঞ্চয় পরিকল্পনা</h3>
+    <div id="spBody"></div>
+  </div>
   <div class="box">
     <h3 data-i18n="dash_recent_heading">সাম্প্রতিক লেনদেন</h3>
     <div id="recentList"><div class="empty" data-i18n="empty_no_tx">কোনো লেনদেন নেই</div></div>
@@ -1021,6 +1025,14 @@ if(pic){var im=$('lockAvatarImg');im.src=pic;im.style.display='block';$('lockAva
     <label data-i18n="lbl_goal_target">লক্ষ্যের পরিমাণ (টাকা)</label>
     <input type="number" id="goalTargetInput" placeholder="0">
     <button class="typebtn" style="width:100%; margin-top:8px;" onclick="saveGoal()" data-i18n="btn_save">সংরক্ষণ করুন</button>
+  </div>
+  <div class="box" id="spSetBox">
+    <h3 id="spSetTitle">সঞ্চয় পরিকল্পনা</h3>
+    <div id="spSetBody"></div>
+  </div>
+  <div class="box" id="wgSetBox">
+    <h3 id="wgSetTitle">উইজেট</h3>
+    <div id="wgSetBody"></div>
   </div>
   <div class="box">
     <h3 data-i18n="settings_recurring">নিয়মিত এন্ট্রি</h3>
@@ -2943,7 +2955,7 @@ function closeNotifPopup(){
 }
 // ---- Remote notice (a JSON file you host anywhere, e.g. GitHub Pages / raw / Gist) ----
 // Format: {"on":true, "id":5, "title":"...", "message":"...", "type":"info|update|warning", "always":false}
-const NOTICE_URL = 'https://raw.githubusercontent.com/mehedimadbor/FinTrack/refs/heads/main/notice.json'; // <-- put your hosted notice.json link here, e.g. 'https://raw.githubusercontent.com/you/repo/main/notice.json'
+const NOTICE_URL = ''; // <-- put your hosted notice.json link here, e.g. 'https://raw.githubusercontent.com/you/repo/main/notice.json'
 function getNoticeUrl(){
   let u = '';
   try{ u = localStorage.getItem('noticeUrl_v1') || ''; }catch(e){}
@@ -4572,6 +4584,7 @@ const DASH=[
  ['src','আয়ের উৎস অনুযায়ী জমা','Income by source',()=>$('srcBreak')],
  ['budget','মাসিক বাজেট','Monthly budget',()=>$('budgetBox')],
  ['goal','সঞ্চয় লক্ষ্য','Savings goals',()=>$('goalBox')],
+ ['sp','সঞ্চয় পরিকল্পনা (দৈনিক সীমা)','Savings planner (daily limit)',()=>$('spBox')],
  ['trend','শেষ ৬ মাসের চার্ট','Last 6 months chart',()=>$('trendBody')],
  ['recent','সাম্প্রতিক লেনদেন','Recent transactions',()=>$('recentList')],
  ['rm','রিমাইন্ডার কার্ড','Reminders card',()=>$('rmDashBox')]
@@ -4658,6 +4671,315 @@ const _at2=window.activateTab; window.activateTab=function(n){ if(n!=='settings'
 const _ld=window._lockDevMode; window._lockDevMode=function(){ clearTimeout(devTimer); return _ld.apply(this,arguments); };
 
 qaRender(); week();
+})();
+</script>
+<script>
+/* ===== FinTrack: Savings planner (monthly savings -> daily spending limit) ===== */
+(function(){
+const $=id=>document.getElementById(id), bn=()=>currentLang==='bn';
+const L=(b,e)=>bn()?b:e;
+const DEF=()=>({inc:'actual',custom:0,target:0,ex:[]});
+let draft=Object.assign(DEF(),JSON.parse(JSON.stringify(data.savePlan||{})));
+
+function monthIncome(ym){
+  return data.transactions.filter(x=>x.type==='deposit'&&x.date.slice(0,7)===ym).reduce((s,x)=>s+x.amount,0);
+}
+function spCalc(p){
+  if(!p||!(+p.target>0)) return null;
+  const today=todayStr(), ym=today.slice(0,7), P=today.split('-').map(Number);
+  const dim=new Date(P[0],P[1],0).getDate(), left=dim-P[2]+1;
+  const inc = p.inc==='custom' ? (+p.custom||0) : monthIncome(ym);
+  const ex=(p.ex||[]).filter(c=>data.categories.includes(c));
+  const map=calcByCategoryForMonth(ym);
+  let reserved=0; const exRows=[];
+  ex.forEach(c=>{ const v=Math.max(map[c]||0, +(data.budgets||{})[c]||0); reserved+=v; exRows.push([c,v]); });
+  let spentOther=0; Object.keys(map).forEach(c=>{ if(!ex.includes(c)) spentOther+=map[c]; });
+  const todaySpent=data.transactions.filter(x=>isExpenseLike(x)&&x.date===today&&!ex.includes(x.category)).reduce((s,x)=>s+x.amount,0);
+  const target=+p.target;
+  const avail=inc-target-reserved;               // মাসের মোট খরচযোগ্য (মাসিক বাজেট)
+  const remain=avail-spentOther;                 // মাসে এখনো বাকি
+  const fixedDaily=avail/dim;                    // ফিক্সড দৈনিক গড়
+  const before=spentOther-todaySpent;            // আজকের আগে পর্যন্ত খরচ
+  const todayLimit=(avail-before)/left;          // আজকের সীমা (আগের দিনের খরচ অনুযায়ী সমন্বয়)
+  const tomorrowLimit = left>1 ? (avail-spentOther)/(left-1) : null; // আজকের খরচ ধরে আগামীকালের সীমা
+  return {inc,target,reserved,exRows,avail,spentOther,todaySpent,remain,dim,left,fixedDaily,todayLimit,tomorrowLimit,
+    todayLeft:todayLimit-todaySpent, over:todaySpent>Math.max(0,todayLimit)+0.5, monthOver:remain<0};
+}
+function tile(l,v,c){return `<div style="background:color-mix(in srgb,var(--primary) 8%,transparent);border-radius:12px;padding:9px 11px;min-width:0;"><div style="font-size:11.5px;color:var(--muted);">${l}</div><div style="font-size:15px;font-weight:700;${c?'color:'+c:''}">${v}</div></div>`;}
+function row(l,v,c){return `<div style="display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:5px 0;border-top:1px solid var(--border);"><span style="color:var(--muted);">${l}</span><b style="${c?'color:'+c:''}">${v}</b></div>`;}
+function warnBox(t){return `<div style="background:color-mix(in srgb,#ef4444 12%,transparent);border:1px solid #ef4444;color:#ef4444;border-radius:12px;padding:9px 11px;font-size:12.5px;line-height:1.55;margin:0 0 10px;">⚠ ${t}</div>`;}
+function spHtml(p){
+  const r=spCalc(p);
+  if(!r) return `<div class="empty">${L('মাসিক সঞ্চয়ের পরিমাণ দিন — তাহলে দৈনিক কত টাকা খরচ করতে পারবেন তা দেখাবে।','Enter a monthly savings amount to see how much you can spend per day.')}</div>`;
+  const red='#ef4444';
+  if(r.inc<=0) return `<div class="empty">${L('এ মাসে এখনো কোনো আয় যোগ হয়নি। আয় যোগ করুন, অথবা সেটিংসে "নিজে আয় দিন" বেছে নিন।','No income added this month yet. Add income, or choose "Custom income" in settings.')}</div>`;
+  if(r.avail<0) return `<div class="empty" style="color:${red};">${L('আয়ের তুলনায় সঞ্চয় ও বাদ দেওয়া খাত বেশি — খরচের জন্য কিছু থাকে না। সঞ্চয়ের পরিমাণ কমান।','Savings plus excluded categories exceed your income — nothing left to spend. Lower your savings amount.')}<br>${L('ঘাটতি','Shortfall')}: ${fmt(-r.avail)}</div>`;
+  const lim=Math.max(0,r.todayLimit);
+  const pct=lim>0?Math.min(100,Math.round(r.todaySpent/lim*100)):(r.todaySpent>0?100:0);
+  const bc=r.over?'over':(pct>=80?'warn':'');
+  const mpct=Math.min(100,Math.round(r.spentOther/r.avail*100));
+  const mbc=r.monthOver?'over':(mpct>=80?'warn':'');
+  let h='';
+  if(r.monthOver) h+=warnBox(L(`এ মাসের খরচযোগ্য বাজেট ${fmt(r.spentOther-r.avail)} ছাড়িয়ে গেছে — সঞ্চয় লক্ষ্য পূরণ হবে না।`,`You are ${fmt(r.spentOther-r.avail)} over this month's budget — the savings target will be missed.`));
+  else if(r.over) h+=warnBox(L(`আজ সীমার চেয়ে ${fmt(r.todaySpent-lim)} বেশি খরচ হয়েছে।`,`You are ${fmt(r.todaySpent-lim)} over today's limit.`)+(r.tomorrowLimit!==null?' '+L(`তাই আগামীকাল থেকে দৈনিক সীমা ${fmt(Math.max(0,r.tomorrowLimit))} করে দেওয়া হয়েছে (আজ ছিল ${fmt(lim)})।`,`Daily limit from tomorrow is adjusted to ${fmt(Math.max(0,r.tomorrowLimit))} (today it was ${fmt(lim)}).`):''));
+  h+=`<div style="text-align:center;margin:2px 0 10px;"><div style="font-size:12.5px;color:var(--muted);">${L('আজ খরচ করতে পারবেন','You can spend today')}</div><div style="font-size:28px;font-weight:800;color:${r.todayLimit<0?red:'var(--primary)'}">${fmt(lim)}</div></div>
+  <div class="barbg"><div class="barfg ${bc}" style="width:${pct}%"></div></div>
+  <div style="font-size:12.5px;margin:6px 0 12px;text-align:center;${r.over?'color:'+red:''}">${L('আজ খরচ','Spent today')}: ${fmt(r.todaySpent)} — ${r.over?L('সীমা ছাড়িয়েছে','over limit')+' '+fmt(r.todaySpent-lim):L('আজ বাকি','left today')+' '+fmt(Math.max(0,r.todayLeft))}</div>`;
+  if(r.tomorrowLimit!==null){
+    const d=r.tomorrowLimit-lim, up=d>=0;
+    h+=`<div style="background:color-mix(in srgb,var(--primary) 8%,transparent);border-radius:12px;padding:9px 11px;margin-bottom:10px;text-align:center;"><div style="font-size:12px;color:var(--muted);">${L('আগামীকাল থেকে দৈনিক সীমা (আজকের খরচ ধরে)','Daily limit from tomorrow (after today\'s spending)')}</div><div style="font-size:19px;font-weight:800;color:${r.tomorrowLimit<0?red:'var(--primary)'}">${fmt(Math.max(0,r.tomorrowLimit))}</div><div style="font-size:11.5px;color:${up?'var(--primary)':red};">${up?'▲':'▼'} ${L('আজের সীমার চেয়ে','vs today')} ${fmt(Math.abs(d))} ${up?L('বেশি','more'):L('কম','less')}</div></div>`;
+  }
+  h+=`<div style="font-size:12.5px;font-weight:700;margin:4px 0 6px;">${L('মাসিক বাজেট','Monthly budget')}</div>
+  <div class="barbg"><div class="barfg ${mbc}" style="width:${mpct}%"></div></div>
+  <div style="font-size:12.5px;margin:6px 0 10px;text-align:center;${r.monthOver?'color:'+red:''}">${fmt(r.spentOther)} / ${fmt(r.avail)} (${mpct}%) — ${r.monthOver?L('অতিরিক্ত','over')+' '+fmt(-r.remain):L('বাকি','left')+' '+fmt(r.remain)}</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+    ${tile(L('মোট আয়','Total income'),fmt(r.inc))}${tile(L('সঞ্চয় লক্ষ্য','Savings target'),fmt(r.target),'var(--primary)')}
+    ${tile(L('বাদ দেওয়া খাত','Excluded'),fmt(r.reserved))}${tile(L('মাসিক খরচযোগ্য','Monthly spendable'),fmt(r.avail))}
+  </div>`;
+  h+=row(L('ফিক্সড দৈনিক গড় (সারা মাস)','Fixed daily average (whole month)'),fmt(r.fixedDaily));
+  h+=row(L('মাসের বাকি দিন (আজসহ)','Days left (incl. today)'),String(r.left));
+  if(r.exRows.length) h+=`<div style="font-size:11.5px;color:var(--muted);margin-top:8px;">${L('বাদ দেওয়া','Excluded')}: ${r.exRows.map(x=>esc(x[0])+' '+fmt(x[1])).join(' • ')}</div>`;
+  h+=`<div style="font-size:11.5px;color:var(--muted);margin-top:6px;">${L('হিসাব: আয় − সঞ্চয় − বাদ দেওয়া খাত = মাসিক খরচযোগ্য। বাকি টাকা বাকি দিন দিয়ে ভাগ হয়ে প্রতিদিনের সীমা ঠিক হয়।','Income − savings − excluded categories = monthly spendable. What remains is divided by the days left to set each day\'s limit.')}</div>`;
+  return h;
+}
+window.spCalc=spCalc;
+function renderSP(){
+  const box=$('spBox'); if(!box) return;
+  const p=data.savePlan;
+  $('spTitle').textContent=L('সঞ্চয় পরিকল্পনা','Savings Planner');
+  if(!p||!(+p.target>0)){ box.style.display='none'; return; }
+  box.style.display='block';
+  $('spBody').innerHTML=spHtml(p);
+}
+function prev(){ const e=$('spPrev'); if(e) e.innerHTML=spHtml(draft); }
+function baseIncome(){ return draft.inc==='custom'?(+draft.custom||0):monthIncome(todayStr().slice(0,7)); }
+function renderSet(){
+  const box=$('spSetBody'); if(!box) return;
+  $('spSetTitle').textContent=L('সঞ্চয় পরিকল্পনা (দৈনিক খরচ সীমা)','Savings Planner (daily limit)');
+  const ch=(on,fn,txt)=>`<button type="button" class="chip${on?' on':''}" onclick="${fn}">${txt}</button>`;
+  box.innerHTML=`<p style="font-size:12.5px;color:var(--muted);margin:0 0 8px;">${L('মাসে কত সঞ্চয় করতে চান দিন। মোট আয় থেকে সঞ্চয় ও নির্বাচিত খাতের খরচ (বা বাজেট, যেটা বেশি) বাদ দিয়ে যা থাকবে তার ভিত্তিতে দৈনিক ও মাসিক বাজেট ড্যাশবোর্ডে দেখাবে। সীমা ছাড়ালে সতর্কতা আসবে এবং পরের দিনের সীমা নিজে থেকে ঠিক হয়ে যাবে।','Set how much you want to save monthly. Savings and the selected categories (their spending or budget, whichever is higher) are deducted from income, and the dashboard shows your daily and monthly budget from the rest. You get a warning when you cross the limit, and the limit for the next day adjusts automatically.')}</p>
+  <label>${L('আয়ের ভিত্তি','Income basis')}</label>
+  <div class="chips" style="flex-wrap:wrap;">${ch(draft.inc==='actual',"spInc('actual')",L('এ মাসের আসল আয়','This month\'s income'))}${ch(draft.inc==='custom',"spInc('custom')",L('নিজে আয় দিন','Custom income'))}</div>
+  ${draft.inc==='custom'?`<label>${L('মাসিক আয় (টাকা)','Monthly income (Taka)')}</label><input type="number" id="spCustom" placeholder="0" value="${draft.custom||''}" oninput="spIn()">`:`<div style="font-size:12.5px;color:var(--muted);margin:0 0 6px;">${L('এ মাসের আয়','Income this month')}: <b>${fmt(monthIncome(todayStr().slice(0,7)))}</b></div>`}
+  <label>${L('মাসিক সঞ্চয় (টাকা)','Monthly savings (Taka)')}</label>
+  <input type="number" id="spTarget" placeholder="0" value="${draft.target||''}" oninput="spIn()">
+  <div class="chips" style="margin-top:6px;flex-wrap:wrap;">${[10,20,30,50].map(n=>ch(false,`spPct(${n})`,L('আয়ের '+n+'%',n+'% of income'))).join('')}</div>
+  <label>${L('বাদ দেওয়ার খাত (যেমন বাসা ভাড়া, বিল)','Categories to exclude (e.g. rent, bills)')}</label>
+  <div class="chips" style="flex-wrap:wrap;">${data.categories.map((c,i)=>ch(draft.ex.includes(c),`spCat(${i})`,esc(c))).join('')}</div>
+  <div id="spPrev" style="margin-top:10px;"></div>
+  <button class="typebtn" style="width:100%;margin-top:10px;" onclick="spSave()">${L('সংরক্ষণ করুন','Save')}</button>
+  <button class="typebtn" style="width:100%;margin-top:6px;background:transparent;color:var(--muted);border:1px solid var(--border);" onclick="spClear()">${L('পরিকল্পনা বন্ধ করুন','Turn off plan')}</button>`;
+  prev();
+}
+window.spInc=m=>{ draft.inc=m; renderSet(); };
+window.spIn=()=>{ const c=$('spCustom'); if(c) draft.custom=parseFloat(c.value)||0; draft.target=parseFloat($('spTarget').value)||0; prev(); };
+window.spPct=n=>{ const b=baseIncome(); if(b<=0){ alert(L('আগে আয় যোগ করুন বা নিজে আয় দিন।','Add income first or enter a custom income.')); return; } draft.target=Math.round(b*n/100); renderSet(); };
+window.spCat=i=>{ const c=data.categories[i], k=draft.ex.indexOf(c); if(k>=0) draft.ex.splice(k,1); else draft.ex.push(c); const t=$('spTarget'), cu=$('spCustom'); if(t) draft.target=parseFloat(t.value)||0; if(cu) draft.custom=parseFloat(cu.value)||0; renderSet(); };
+window.spSave=()=>{ window.spIn(); data.savePlan=JSON.parse(JSON.stringify(draft)); saveData(); renderSP(); alert(t('alert_saved')); };
+window.spClear=()=>{ draft=DEF(); data.savePlan=DEF(); saveData(); renderSP(); renderSet(); };
+
+const _rd=window.renderDash;
+window.renderDash=function(){ const r=_rd.apply(this,arguments); try{ renderSP(); renderSet(); }catch(e){ console.error(e); } return r; };
+
+/* warn when spending crosses today's limit or the monthly budget */
+let _lastSpent=null, _lastMonthOver=null;
+function spSnapshot(){ const r=spCalc(data.savePlan); return r&&r.inc>0&&r.avail>=0?r:null; }
+function spCheck(){
+  const r=spSnapshot();
+  if(!r){ _lastSpent=null; _lastMonthOver=null; return; }
+  const key=todayStr();
+  if(_lastSpent&&_lastSpent.k===key&&r.todaySpent>_lastSpent.v){
+    const lim=Math.max(0,r.todayLimit);
+    if(r.monthOver&&!_lastMonthOver){
+      appDialog(L(`সতর্কতা! এ মাসের খরচযোগ্য বাজেট ${fmt(r.spentOther-r.avail)} ছাড়িয়ে গেছে। এভাবে চললে সঞ্চয় লক্ষ্য পূরণ হবে না।`,`Warning! You are ${fmt(r.spentOther-r.avail)} over this month's spendable budget. The savings target will be missed.`),{});
+    }else if(r.over&&!(_lastSpent.over)){
+      appDialog(L(`সতর্কতা! আজকের সীমা ${fmt(lim)} — আজ খরচ হয়েছে ${fmt(r.todaySpent)}, অর্থাৎ ${fmt(r.todaySpent-lim)} বেশি।`,`Warning! Today's limit is ${fmt(lim)} — you have spent ${fmt(r.todaySpent)}, which is ${fmt(r.todaySpent-lim)} over.`)+(r.tomorrowLimit!==null?'\n'+L(`আগামীকাল থেকে দৈনিক সীমা হবে ${fmt(Math.max(0,r.tomorrowLimit))}।`,`From tomorrow the daily limit becomes ${fmt(Math.max(0,r.tomorrowLimit))}.`):''),{});
+    }else if(r.over){
+      toast(L(`আজ সীমার চেয়ে ${fmt(r.todaySpent-lim)} বেশি খরচ হয়ে গেছে`,`Over today's limit by ${fmt(r.todaySpent-lim)}`));
+    }
+  }
+  _lastSpent={k:key,v:r.todaySpent,over:r.over}; _lastMonthOver=r.monthOver;
+}
+const _sd=window.saveData;
+/* keep the planner's category list in sync when categories are added / removed */
+let _catSig=JSON.stringify(data.categories);
+function spSyncCats(){
+  const sig=JSON.stringify(data.categories); if(sig===_catSig) return; _catSig=sig;
+  const keep=c=>data.categories.includes(c); let ch=false;
+  const tg=$('spTarget'), cu=$('spCustom');
+  if(tg) draft.target=parseFloat(tg.value)||0;
+  if(cu) draft.custom=parseFloat(cu.value)||0;
+  draft.ex=(draft.ex||[]).filter(keep);
+  if(data.savePlan&&Array.isArray(data.savePlan.ex)){ const n=data.savePlan.ex.filter(keep); if(n.length!==data.savePlan.ex.length){ data.savePlan.ex=n; ch=true; } }
+  renderSet(); renderSP();
+  if(ch) _sd.call(window);
+}
+window.saveData=function(){ const x=_sd.apply(this,arguments); try{ spSyncCats(); spCheck(); }catch(e){ console.error(e); } return x; };
+try{ spCheck(); }catch(e){}
+renderSP(); renderSet();
+})();
+</script>
+<script>
+/* ===== FinTrack: Widget (home-screen style quick view: today's plan + quick expense) ===== */
+(function(){
+const $=id=>document.getElementById(id), bn=()=>currentLang==='bn', L=(b,e)=>bn()?b:e;
+const KEY='wgCfg_v1';
+const DEFC={on:false,start:false,limit:true,spent:true,tomorrow:true,month:true,add:true,size:'m',color:'app',amts:'10,50,100,500',cat:''};
+function load(){ try{ return Object.assign({},DEFC,JSON.parse(localStorage.getItem(KEY)||'{}')); }catch(e){ return Object.assign({},DEFC); } }
+let cfg=load();
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(cfg)); }catch(e){} }
+
+const st=document.createElement('style');
+st.textContent=`
+#wgOv{position:fixed;inset:0;z-index:9000;background:var(--bg);color:var(--text);display:none;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(env(safe-area-inset-top,0px) + 14px) 14px calc(env(safe-area-inset-bottom,0px) + 22px);--wg:var(--primary);font-family:inherit}
+#wgOv.on{display:block}
+#wgOv.c-blue{--wg:#2563eb}#wgOv.c-green{--wg:#16a34a}#wgOv.c-purple{--wg:#7c3aed}#wgOv.c-orange{--wg:#f97316}
+#wgOv.c-dark{--bg:#0f172a;--card:#1e293b;--text:#e2e8f0;--muted:#94a3b8;--border:#334155;--wg:#38bdf8}
+.wgIn{max-width:520px;margin:0 auto}
+.wgTop{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.wgBrand{font-size:18px;font-weight:800;color:var(--wg)}
+.wgDate{font-size:12px;color:var(--muted)}
+.wgBtns{display:flex;gap:8px}
+.wgBtns button{width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:16px;cursor:pointer;font-family:inherit}
+.wgCard{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px;margin-bottom:10px;text-align:center}
+.wgLbl{font-size:12.5px;color:var(--muted);margin-bottom:4px}
+.wgBig{font-size:34px;font-weight:800;color:var(--wg);line-height:1.2}
+.wgMid{font-size:22px;font-weight:800;color:var(--wg)}
+.wgSub{font-size:12.5px;margin-top:6px}
+.wgBar{height:9px;border-radius:9px;background:var(--border);overflow:hidden;margin:8px 0 0}
+.wgBar i{display:block;height:100%;border-radius:9px;background:var(--wg)}
+.wgBar i.warn{background:#f59e0b}.wgBar i.over{background:#ef4444}
+.wgWarn{background:color-mix(in srgb,#ef4444 12%,transparent);border:1px solid #ef4444;color:#ef4444;border-radius:14px;padding:10px 12px;font-size:12.5px;line-height:1.55;margin-bottom:10px;text-align:left}
+.wgChips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:6px 0 8px}
+.wgChips button{padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.wgCard input,.wgCard select{width:100%;box-sizing:border-box;margin:0 0 8px;padding:11px 12px;border-radius:12px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:15px;font-family:inherit}
+.wgRow2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.wgAdd{width:100%;padding:13px;border:0;border-radius:14px;background:var(--wg);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+.wgGo{margin-top:8px;padding:9px 16px;border:0;border-radius:20px;background:var(--wg);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+#wgOv.sz-s .wgBig{font-size:26px}#wgOv.sz-s .wgCard{padding:10px}#wgOv.sz-s .wgMid{font-size:18px}
+#wgOv.sz-l .wgBig{font-size:46px}#wgOv.sz-l .wgCard{padding:20px}#wgOv.sz-l .wgMid{font-size:28px}
+.wgSw{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 10px}
+.wgSw button{width:34px;height:34px;border-radius:50%;border:3px solid transparent;cursor:pointer;padding:0}
+.wgSw button.on{border-color:var(--text)}
+`;
+document.head.appendChild(st);
+
+const ov=document.createElement('div'); ov.id='wgOv'; document.body.appendChild(ov);
+const isOpen=()=>ov.classList.contains('on');
+const red='#ef4444';
+const COLORS=[['app',null],['blue','#2563eb'],['green','#16a34a'],['purple','#7c3aed'],['orange','#f97316'],['dark','#0f172a']];
+
+function amts(){ return String(cfg.amts||'').split(/[,\s،]+/).map(Number).filter(n=>n>0&&isFinite(n)).slice(0,6); }
+function curCat(){ return data.categories.includes(cfg.cat)?cfg.cat:data.categories[0]; }
+function applyOv(){ ov.className=(isOpen()?'on ':'')+'c-'+cfg.color+' sz-'+cfg.size; }
+
+function renderWidget(){
+  applyOv();
+  const dt=new Date().toLocaleDateString(bn()?'bn-BD':'en-GB',{weekday:'long',day:'numeric',month:'long',timeZone:'Asia/Dhaka'});
+  const r=window.spCalc?window.spCalc(data.savePlan):null;
+  const ok=r&&r.inc>0&&r.avail>=0;
+  const wantPlan=cfg.limit||cfg.spent||cfg.tomorrow||cfg.month;
+  let h=`<div class="wgIn"><div class="wgTop"><div><div class="wgBrand">FinTrack</div><div class="wgDate">${esc(dt)}</div></div><div class="wgBtns"><button type="button" onclick="wgCustomise()" aria-label="customise">⚙</button><button type="button" onclick="closeWidget()" aria-label="close">✕</button></div></div>`;
+  if(wantPlan){
+    if(!ok){
+      let msg;
+      if(!r) msg=L('সঞ্চয় পরিকল্পনা এখনো সেট করা হয়নি।','Savings planner is not set up yet.');
+      else if(r.inc<=0) msg=L('এ মাসে এখনো কোনো আয় যোগ হয়নি।','No income added this month yet.');
+      else msg=L('আয়ের তুলনায় সঞ্চয় ও বাদ দেওয়া খাত বেশি।','Savings plus excluded categories exceed income.');
+      h+=`<div class="wgCard"><div class="wgLbl">${L('আজকের সঞ্চয় পরিকল্পনা','Today\'s savings plan')}</div><div class="wgSub">${msg}</div><button class="wgGo" type="button" onclick="wgPlan()">${L('পরিকল্পনা ঠিক করুন','Set up plan')}</button></div>`;
+    }else{
+      const lim=Math.max(0,r.todayLimit);
+      const pct=lim>0?Math.min(100,Math.round(r.todaySpent/lim*100)):(r.todaySpent>0?100:0);
+      const bc=r.over?'over':(pct>=80?'warn':'');
+      const mpct=Math.min(100,Math.round(r.spentOther/r.avail*100));
+      const mbc=r.monthOver?'over':(mpct>=80?'warn':'');
+      if(r.monthOver) h+=`<div class="wgWarn">⚠ ${L(`এ মাসের বাজেট ${fmt(r.spentOther-r.avail)} ছাড়িয়ে গেছে — সঞ্চয় লক্ষ্য পূরণ হবে না।`,`Over this month's budget by ${fmt(r.spentOther-r.avail)} — savings target at risk.`)}</div>`;
+      else if(r.over) h+=`<div class="wgWarn">⚠ ${L(`আজ সীমার চেয়ে ${fmt(r.todaySpent-lim)} বেশি খরচ হয়েছে।`,`Over today's limit by ${fmt(r.todaySpent-lim)}.`)}</div>`;
+      if(cfg.limit) h+=`<div class="wgCard"><div class="wgLbl">${L('আজ খরচ করতে পারবেন','You can spend today')}</div><div class="wgBig" style="${r.todayLimit<0?'color:'+red:''}">${fmt(lim)}</div></div>`;
+      if(cfg.spent) h+=`<div class="wgCard"><div class="wgLbl">${L('আজ খরচ','Spent today')}</div><div class="wgMid" style="${r.over?'color:'+red:''}">${fmt(r.todaySpent)}</div><div class="wgBar"><i class="${bc}" style="width:${pct}%"></i></div><div class="wgSub" style="${r.over?'color:'+red:''}">${r.over?L('সীমা ছাড়িয়েছে','Over limit')+' '+fmt(r.todaySpent-lim):L('আজ বাকি','Left today')+' '+fmt(Math.max(0,r.todayLeft))}</div></div>`;
+      if(cfg.tomorrow&&r.tomorrowLimit!==null){
+        const d=r.tomorrowLimit-lim, up=d>=0;
+        h+=`<div class="wgCard"><div class="wgLbl">${L('আগামীকাল থেকে দৈনিক সীমা','Daily limit from tomorrow')}</div><div class="wgMid" style="${r.tomorrowLimit<0?'color:'+red:''}">${fmt(Math.max(0,r.tomorrowLimit))}</div><div class="wgSub" style="color:${up?'var(--wg)':red}">${up?'▲':'▼'} ${L('আজের চেয়ে','vs today')} ${fmt(Math.abs(d))} ${up?L('বেশি','more'):L('কম','less')}</div></div>`;
+      }
+      if(cfg.month) h+=`<div class="wgCard"><div class="wgLbl">${L('মাসিক বাজেট','Monthly budget')}</div><div class="wgMid" style="${r.monthOver?'color:'+red:''}">${fmt(r.spentOther)} / ${fmt(r.avail)}</div><div class="wgBar"><i class="${mbc}" style="width:${mpct}%"></i></div><div class="wgSub" style="${r.monthOver?'color:'+red:''}">${r.monthOver?L('অতিরিক্ত','Over')+' '+fmt(-r.remain):L('বাকি','Left')+' '+fmt(r.remain)} • ${L('বাকি দিন','days left')} ${r.left}</div></div>`;
+    }
+  }
+  if(cfg.add){
+    h+=`<div class="wgCard"><div class="wgLbl">${L('খরচ যোগ করুন','Add expense')}</div>
+    <div class="wgChips">${amts().map(n=>`<button type="button" onclick="wgAmt(${n})">+${n}</button>`).join('')}<button type="button" onclick="wgAmt(0)">${L('মুছুন','Clear')}</button></div>
+    <div class="wgRow2"><input type="number" inputmode="decimal" id="wgAmt" placeholder="${L('টাকা','Amount')}"><select id="wgCat">${data.categories.map(c=>`<option value="${esc(c)}"${c===curCat()?' selected':''}>${esc(c)}</option>`).join('')}</select></div>
+    <input type="text" id="wgNote" placeholder="${L('নোট (ঐচ্ছিক)','Note (optional)')}">
+    <button class="wgAdd" type="button" onclick="wgAddExp()">${L('খরচ যোগ করুন','Add expense')}</button></div>`;
+  }
+  h+=`<button class="wgGo" style="display:block;margin:6px auto 0;background:transparent;color:var(--muted);border:1px solid var(--border)" type="button" onclick="closeWidget()">${L('পুরো অ্যাপ খুলুন','Open full app')}</button></div>`;
+  ov.innerHTML=h;
+}
+
+window.openWidget=function(){ renderWidget(); ov.classList.add('on'); applyOv(); try{ history.replaceState(null,'',location.pathname+location.search+'#widget'); }catch(e){} };
+window.closeWidget=function(){ ov.classList.remove('on'); applyOv(); try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} };
+function goSettings(id){ closeWidget(); try{ activateTab('settings'); }catch(e){} setTimeout(()=>{ const b=$(id); if(b) b.scrollIntoView({behavior:'smooth',block:'start'}); },200); }
+window.wgCustomise=()=>goSettings('wgSetBox');
+window.wgPlan=()=>goSettings('spSetBox');
+window.wgAmt=n=>{ const i=$('wgAmt'); if(!i) return; i.value=n===0?'':String((parseFloat(i.value)||0)+n); };
+window.wgAddExp=function(){
+  const amount=parseFloat($('wgAmt').value);
+  if(!(amount>0)){ toast(L('সঠিক টাকার পরিমাণ দিন','Enter a valid amount')); return; }
+  const cat=$('wgCat').value||data.categories[0];
+  const tx={id:Date.now()+'-'+Math.random().toString(36).slice(2,7),type:'expense',amount,category:cat,source:null,person:null,account:null,note:($('wgNote').value||'').trim(),date:todayStr(),time:nowTime()};
+  data.transactions.push(tx); cfg.cat=cat; save(); saveData();
+  const refresh=()=>{ ['renderDash','renderAccounts','renderHistory'].forEach(f=>{ try{ window[f](); }catch(e){} }); };
+  refresh(); renderWidget();
+  toast(L(`খরচ যোগ হয়েছে: ${fmt(amount)} (${cat})`,`Expense added: ${fmt(amount)} (${cat})`),L('আনডু','Undo'),()=>{
+    data.transactions=data.transactions.filter(x=>x.id!==tx.id); saveData(); refresh(); if(isOpen()) renderWidget();
+  });
+};
+
+/* ---- settings UI ---- */
+function tg(txt,key,sub){ return `<label class="ftRow"><span>${txt}</span><input type="checkbox" ${cfg[key]?'checked':''} onchange="wgSet('${key}',this.checked)"></label>`; }
+function renderWSet(){
+  const box=$('wgSetBody'); if(!box) return;
+  const ae=document.activeElement; if(ae&&box.contains(ae)&&ae.tagName==='INPUT'&&ae.type!=='checkbox') return;
+  $('wgSetTitle').textContent=L('উইজেট (হোম স্ক্রিন)','Widget (home screen)');
+  let h=`<p style="font-size:12.5px;color:var(--muted);margin:0 0 6px;">${L('উইজেট চালু করলে একটা ছোট কুইক-ভিউ পেজ পাবেন — যেখানে আজকের সঞ্চয় পরিকল্পনা দেখা যাবে এবং সরাসরি খরচ যোগ করা যাবে। কী কী দেখাবে তা নিজে বেছে নিন।','Turn the widget on to get a small quick-view page showing today\'s savings plan with a quick add-expense option. Choose what it shows.')}</p>`;
+  h+=tg(L('উইজেট চালু করুন','Enable widget'),'on');
+  if(cfg.on){
+    h+=tg(L('অ্যাপ খুললে সরাসরি উইজেট দেখাও','Open the widget first when the app starts'),'start');
+    h+=`<div style="font-size:12.5px;font-weight:700;margin:12px 0 2px;">${L('উইজেটে যা দেখাবে','Show in widget')}</div>`;
+    h+=tg(L('আজকের সঞ্চয় পরিকল্পনা — আজ কত খরচ করা যাবে','Today\'s limit — how much you can spend'),'limit');
+    h+=tg(L('আজ খরচ ও আজ বাকি','Spent today & left today'),'spent');
+    h+=tg(L('আগামীকাল থেকে দৈনিক সীমা','Daily limit from tomorrow'),'tomorrow');
+    h+=tg(L('মাসিক বাজেট','Monthly budget'),'month');
+    h+=tg(L('খরচ যোগ করার অপশন','Add-expense option'),'add');
+    h+=`<label style="margin-top:12px;">${L('আকার','Size')}</label><div class="chips" style="flex-wrap:wrap;">${[['s','ছোট','Small'],['m','মাঝারি','Medium'],['l','বড়','Large']].map(x=>`<button type="button" class="chip${cfg.size===x[0]?' on':''}" onclick="wgSet('size','${x[0]}')">${L(x[1],x[2])}</button>`).join('')}</div>`;
+    h+=`<label>${L('রং','Color')}</label><div class="wgSw">${COLORS.map(c=>`<button type="button" class="${cfg.color===c[0]?'on':''}" style="background:${c[1]||'var(--primary)'}" onclick="wgSet('color','${c[0]}')" aria-label="${c[0]}"></button>`).join('')}</div>`;
+    if(cfg.add){
+      h+=`<label>${L('কুইক অ্যামাউন্ট বাটন (কমা দিয়ে লিখুন)','Quick amount buttons (comma separated)')}</label><input type="text" inputmode="decimal" value="${esc(cfg.amts)}" placeholder="10,50,100,500" oninput="wgTxt(this.value)">`;
+      h+=`<label>${L('ডিফল্ট খাত','Default category')}</label><select onchange="wgSet('cat',this.value)">${data.categories.map(c=>`<option value="${esc(c)}"${c===curCat()?' selected':''}>${esc(c)}</option>`).join('')}</select>`;
+    }
+    h+=`<button class="typebtn" style="width:100%;margin-top:12px;" onclick="openWidget()">${L('উইজেট খুলুন','Open widget')}</button>`;
+    h+=`<button class="typebtn" style="width:100%;margin-top:6px;background:transparent;color:var(--primary);border:1px solid var(--primary);" onclick="wgInstall()">${L('হোম স্ক্রিনে আইকন যোগ করুন','Add icon to home screen')}</button>`;
+    h+=`<p style="font-size:11.5px;color:var(--muted);margin:10px 0 0;">${L('নোট: এটা ওয়েব অ্যাপ, তাই ফোনের নিজস্ব উইজেট প্যানেলে বসানো যায় না। তবে উইজেট পেজটি আলাদা আইকন হিসেবে হোম স্ক্রিনে রাখা যায়, আইকন চাপলেই সরাসরি এটি খুলবে।','Note: this is a web app, so it cannot be placed in the phone\'s own widget panel. The widget page can be pinned to the home screen as a separate icon that opens it directly.')}</p>`;
+  }
+  box.innerHTML=h;
+}
+window.wgSet=function(k,v){ cfg[k]=v; save(); renderWSet(); if(isOpen()) renderWidget(); };
+window.wgTxt=function(v){ cfg.amts=v; save(); if(isOpen()) renderWidget(); };
+window.wgInstall=function(){
+  openWidget();
+  setTimeout(()=>appDialog(L('উইজেট পেজ খোলা হয়েছে। এখন ব্রাউজারের মেনু (⋮ অথবা শেয়ার বাটন) থেকে "হোম স্ক্রিনে যোগ করুন / Add to Home screen" চাপুন। তাহলে হোম স্ক্রিনে আলাদা আইকন তৈরি হবে, যা চাপলেই সরাসরি এই উইজেট খুলবে।','The widget page is open. Now use the browser menu (⋮ or the share button) and tap "Add to Home screen". A separate icon will be created that opens this widget directly.'),{}),250);
+};
+
+/* keep in sync: language, renderDash, category changes */
+const _al=window.applyLanguage;
+if(_al) window.applyLanguage=function(){ const r=_al.apply(this,arguments); try{ renderWSet(); if(isOpen()) renderWidget(); }catch(e){} return r; };
+const _rd3=window.renderDash;
+window.renderDash=function(){ const r=_rd3.apply(this,arguments); try{ renderWSet(); }catch(e){} return r; };
+let _cs=JSON.stringify(data.categories);
+const _sd3=window.saveData;
+window.saveData=function(){ const x=_sd3.apply(this,arguments); try{ const sg=JSON.stringify(data.categories); if(sg!==_cs){ _cs=sg; renderWSet(); if(isOpen()&&!$('wgAmt')?.value) renderWidget(); } }catch(e){} return x; };
+
+renderWSet();
+if(cfg.on&&(cfg.start||location.hash==='#widget')) openWidget();
 })();
 </script>
 </body>
