@@ -219,6 +219,29 @@ details.gsetup summary::-webkit-details-marker{display:none;}
 .loginTag{font-size:13px; color:rgba(255,255,255,0.85); margin-top:-8px;}
 .loginBox{width:100%; max-width:280px; margin-top:10px;}
 .loginBox input{background:#fff; color:#111; border:none;}
+/* ===== Smart login card ===== */
+.loginScreen{overflow-y:auto; justify-content:safe center; padding-top:calc(24px + env(safe-area-inset-top,0px)); padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));}
+.loginBox{max-width:330px; padding:16px; border-radius:26px; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.28); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); box-shadow:0 20px 50px -18px rgba(0,0,0,.45); text-align:left;}
+.loginBox input{border-radius:14px; padding:13px 14px;}
+.loginBox #loginNameInput,.loginBox #lgEmail{margin-top:0;}
+.loginBox #loginNameInput{margin-bottom:8px;}
+.lgTabs{display:flex; gap:4px; padding:4px; border-radius:16px; background:rgba(0,0,0,.18); margin-bottom:12px;}
+.lgTab{flex:1; padding:9px 6px; border:none; border-radius:12px; background:transparent; color:#fff; font-weight:700; font-size:13.5px; cursor:pointer; transition:background .2s,color .2s;}
+.lgTab.on{background:#fff; color:var(--primary-d); box-shadow:0 4px 12px rgba(0,0,0,.18);}
+.lgPw{position:relative; margin-top:8px;}
+.lgPw input{padding-right:70px; margin:0;}
+.lgEye{position:absolute; right:6px; top:50%; transform:translateY(-50%); border:none; background:transparent; color:#555; font-size:12px; font-weight:700; padding:8px; cursor:pointer;}
+.lgOr{display:flex; align-items:center; gap:10px; color:rgba(255,255,255,.9); font-size:12px; margin:14px 0 2px;}
+.lgOr::before,.lgOr::after{content:""; flex:1; height:1px; background:rgba(255,255,255,.35);}
+.lgGuest{width:100%; margin-top:10px; padding:12px; border-radius:14px; border:1.5px solid rgba(255,255,255,.75); background:transparent; color:#fff; font-size:14.5px; font-weight:700; cursor:pointer;}
+.lgGuest:active{background:rgba(255,255,255,.15);}
+.lgNote{font-size:11.5px; color:rgba(255,255,255,.88); margin-top:8px; text-align:center; line-height:1.45;}
+/* login inputs: always white box + dark text (fixes black box on focus / dark theme / autofill) */
+.loginScreen .loginBox input,.loginScreen .loginBox input:focus,.loginScreen .loginBox input:active{background:#fff !important; color:#111 !important; -webkit-text-fill-color:#111 !important; caret-color:#111 !important; border:1.5px solid transparent !important; box-shadow:none !important;}
+.loginScreen .loginBox input:focus{border-color:var(--primary-d) !important; box-shadow:0 0 0 4px rgba(255,255,255,.35) !important;}
+.loginScreen .loginBox input::placeholder{color:#8a8f98 !important; -webkit-text-fill-color:#8a8f98 !important; opacity:1;}
+.loginScreen .loginBox input:-webkit-autofill,.loginScreen .loginBox input:-webkit-autofill:focus{-webkit-box-shadow:0 0 0 1000px #fff inset !important; -webkit-text-fill-color:#111 !important; caret-color:#111 !important;}
+.loginScreen .loginBox .lgEye{color:#555 !important; background:transparent !important;}
 .lgLink{font-size:12.5px; color:#fff; opacity:.92; margin-top:12px; cursor:pointer; text-decoration:underline;}
 .lgStatus{font-size:12.5px; color:#fff; font-weight:600; margin-top:10px; min-height:0; padding:0 4px; word-break:break-word;}
 .lgStatus:empty{display:none;}
@@ -652,17 +675,23 @@ i.ti,b.ti{background:var(--green);} i.te,b.te{background:var(--red);}
   <div class="loginBrand">FinTrack</div>
   <div class="loginTag" data-i18n="login_tag">আপনার আর্থিক হিসাবের সঙ্গী</div>
   <div class="loginBox">
+    <div class="lgTabs" id="lgTabs" style="display:none;">
+      <button class="lgTab on" id="lgTabUp" onclick="ftCloud.loginMode('up')"><span class="bn">নতুন অ্যাকাউন্ট</span><span class="en">Create account</span></button>
+      <button class="lgTab" id="lgTabIn" onclick="ftCloud.loginMode('in')"><span class="bn">লগইন</span><span class="en">Log in</span></button>
+    </div>
     <input type="text" id="loginNameInput" data-i18n-ph="ph_your_name" placeholder="যেমন: করিম">
     <div id="loginCloud" style="display:none;">
       <input type="email" id="lgEmail" placeholder="Email / ইমেইল" autocomplete="email">
-      <input type="password" id="lgPass" placeholder="Password / পাসওয়ার্ড (6+)" autocomplete="current-password">
-      <button class="loginBtn" id="lgBtn" onclick="ftCloud.loginSubmit()"><span class="bn">লগইন করুন</span><span class="en">Log in</span></button>
-      <div class="lgLink" id="lgToggle" onclick="ftCloud.loginMode()"><span class="bn">নতুন? অ্যাকাউন্ট খুলুন</span><span class="en">New here? Create an account</span></div>
-      <div class="lgLink" style="margin-top:6px;" onclick="ftCloud.loginReset()"><span class="bn">পাসওয়ার্ড ভুলে গেছেন?</span><span class="en">Forgot password?</span></div>
+      <div class="lgPw"><input type="password" id="lgPass" placeholder="Password / পাসওয়ার্ড (6+)" autocomplete="new-password"><button type="button" class="lgEye" id="lgEye" onclick="ftCloud.loginEye()"><span class="bn">দেখান</span><span class="en">Show</span></button></div>
+      <button class="loginBtn" id="lgBtn" onclick="ftCloud.loginSubmit()"><span class="bn">অ্যাকাউন্ট খুলুন</span><span class="en">Create account</span></button>
+      <div class="lgLink" id="lgForgot" style="display:none;" onclick="ftCloud.loginReset()"><span class="bn">পাসওয়ার্ড ভুলে গেছেন?</span><span class="en">Forgot password?</span></div>
       <div class="lgStatus" id="lgStatus"></div>
+      <div class="lgOr"><span class="bn">অথবা</span><span class="en">or</span></div>
+      <button class="lgGuest" onclick="ftCloud.loginGuest()"><span class="bn">গেস্ট হিসেবে চালিয়ে যান</span><span class="en">Continue as guest</span></button>
+      <div class="lgNote"><span class="bn">গেস্ট হিসেবে ডেটা শুধু এই ফোনে থাকবে। পরে Settings থেকে অ্যাকাউন্ট খুলে ক্লাউডে ব্যাকআপ রাখতে পারবেন।</span><span class="en">As a guest, your data stays on this phone only. You can create an account later in Settings to back it up.</span></div>
     </div>
     <div id="loginPlain">
-  <button class="loginBtn" onclick="loginContinue()" data-i18n="btn_get_started">শুরু করুন</button>
+      <button class="loginBtn" onclick="loginContinue()" data-i18n="btn_get_started">শুরু করুন</button>
     </div>
   </div>
 </div>
@@ -711,11 +740,11 @@ if(pic){var im=$('lockAvatarImg');im.src=pic;im.style.display='block';$('lockAva
 /* ===== Real happy-users counter (Firebase Realtime Database REST) =====
    Put your DB url below, e.g. 'https://YOUR-PROJECT-default-rtdb.firebaseio.com'  (no trailing slash)
    Empty = counter is off and the chip stays hidden. */
-var HAPPY_COUNTER_URL = 'https://console.firebase.google.com/u/0/project/fintrack-cde62/database/fintrack-cde62-default-rtdb/data/~2F?fb_gclid=Cj0KCQjw5vLVBhCiARIsAD56SFKWOl0nIl-g2Fm6J_UbUNcB1S6QMQ8AKrgGyrLz_KoI7DE4OH423FwaAv8bEALw_wcB&fb_utm_campaign=Cloud-SS-DR-Firebase-FY26-global-gsem-1713590&fb_utm_content=text-ad&fb_utm_medium=cpc&fb_utm_source=google&fb_utm_term=KW_firebase';
+var HAPPY_COUNTER_URL = '';
 /* ===== Firebase (used by the user counter AND Cloud sync) =====
    apiKey: Firebase console > Project settings > General > Web API Key
    dbUrl : your Realtime Database url, e.g. 'https://YOUR-PROJECT-default-rtdb.firebaseio.com' (no trailing slash) */
-var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'https://fintrack-cde62-default-rtdb.asia-southeast1.firebasedatabase.app' };
+var FT_FIREBASE = { apiKey: '', dbUrl: '' };
 (function(){
   var box=document.getElementById('lkHappy'); if(!box) return;
   var b=document.getElementById('lkHappyBn'), e=document.getElementById('lkHappyEn');
@@ -854,8 +883,8 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
       busy=true; try{ await firstSync(); } finally{ busy=false; }
     }catch(e){ status(errMsg(e),true); }
   }
-  /* ---- login screen: email login is required (when Firebase is set up) ---- */
-  var lgMode='in';
+  /* ---- login screen: create account (name+email+password) / log in / guest ---- */
+  var lgMode='up', EM=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   function lgStatus(m,bad){ var e=$('lgStatus'); if(!e) return; e.textContent=m||''; e.className='lgStatus'+(bad?' bad':''); }
   async function loginAuth(kind,em,pw){
     var j=await authReq(kind==='up'?'signUp':'signInWithPassword',{email:em,password:pw,returnSecureToken:true});
@@ -867,8 +896,11 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     return 'new';
   }
   async function loginSubmit(){
-    var em=($('lgEmail').value||'').trim(), pw=$('lgPass').value||'';
-    if(!em||!pw){ lgStatus(tx('ইমেইল ও পাসওয়ার্ড দিন','Enter your email and password'),true); return; }
+    var up=lgMode==='up', nm=($('loginNameInput').value||'').trim(), em=($('lgEmail').value||'').trim(), pw=$('lgPass').value||'';
+    if(up&&!nm){ lgStatus(tx('আপনার নাম লিখুন','Enter your name'),true); return; }
+    if(!EM.test(em)){ lgStatus(tx('সঠিক ইমেইল দিন','Enter a valid email'),true); return; }
+    if(!pw){ lgStatus(tx('পাসওয়ার্ড দিন','Enter your password'),true); return; }
+    if(up&&pw.length<6){ lgStatus(tx('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের দিন','Password must be at least 6 characters'),true); return; }
     var b=$('lgBtn'); b.disabled=true; lgStatus(tx('অপেক্ষা করুন…','Please wait…'));
     try{
       var res=await loginAuth(lgMode,em,pw);
@@ -878,19 +910,28 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     if(typeof loginContinue==='function') loginContinue();
     setTimeout(function(){ ui(); sync(); },1200);
   }
-  function loginMode(){
-    lgMode=lgMode==='in'?'up':'in';
-    $('lgBtn').innerHTML=lgMode==='in'?'<span class="bn">লগইন করুন</span><span class="en">Log in</span>':'<span class="bn">অ্যাকাউন্ট খুলুন</span><span class="en">Create account</span>';
-    $('lgToggle').innerHTML=lgMode==='in'?'<span class="bn">নতুন? অ্যাকাউন্ট খুলুন</span><span class="en">New here? Create an account</span>':'<span class="bn">আগে থেকেই অ্যাকাউন্ট আছে? লগইন করুন</span><span class="en">Already have an account? Log in</span>';
+  function loginGuest(){ if(typeof loginContinue==='function') loginContinue(); }
+  function loginMode(m){
+    lgMode=(m==='in')?'in':'up'; var up=lgMode==='up';
+    $('lgTabUp').classList.toggle('on',up); $('lgTabIn').classList.toggle('on',!up);
+    $('loginNameInput').style.display=up?'':'none';
+    $('lgForgot').style.display=up?'none':'';
+    $('lgPass').setAttribute('autocomplete',up?'new-password':'current-password');
+    $('lgBtn').innerHTML=up?'<span class="bn">অ্যাকাউন্ট খুলুন</span><span class="en">Create account</span>':'<span class="bn">লগইন করুন</span><span class="en">Log in</span>';
     lgStatus('');
+  }
+  function loginEye(){
+    var i=$('lgPass'), show=i.type==='password'; i.type=show?'text':'password';
+    $('lgEye').innerHTML=show?'<span class="bn">লুকান</span><span class="en">Hide</span>':'<span class="bn">দেখান</span><span class="en">Show</span>';
   }
   async function loginReset(){
     var em=($('lgEmail').value||'').trim(); if(!em){ lgStatus(tx('আগে ইমেইল লিখুন','Enter your email first'),true); return; }
     try{ await authReq('sendOobCode',{requestType:'PASSWORD_RESET',email:em}); lgStatus(tx('পাসওয়ার্ড রিসেট লিংক ইমেইলে পাঠানো হয়েছে','Password reset link sent to your email')); }catch(e){ lgStatus(errMsg(e),true); }
   }
-  if(ok()){ var _c=$('loginCloud'), _p=$('loginPlain'); if(_c) _c.style.display=''; if(_p) _p.style.display='none'; }
+  if(ok()){ var _c=$('loginCloud'), _p=$('loginPlain'), _t=$('lgTabs'); if(_c) _c.style.display=''; if(_t) _t.style.display=''; if(_p) _p.style.display='none'; loginMode('up');
+    var _pw=$('lgPass'); if(_pw) _pw.addEventListener('keydown',function(e){ if(e.key==='Enter') loginSubmit(); }); }
   window.ftCloud={
-    loginSubmit:loginSubmit, loginMode:loginMode, loginReset:loginReset,
+    loginSubmit:loginSubmit, loginMode:loginMode, loginReset:loginReset, loginGuest:loginGuest, loginEye:loginEye,
     signIn:function(){ enter('in'); }, signUp:function(){ enter('up'); },
     reset:async function(){ if(!ok()) return ui(); var em=($('csEmail').value||'').trim(); if(!em){ status(tx('আগে ইমেইল লিখুন','Enter your email first'),true); return; }
       try{ await authReq('sendOobCode',{requestType:'PASSWORD_RESET',email:em}); status(tx('পাসওয়ার্ড রিসেট লিংক ইমেইলে পাঠানো হয়েছে','Password reset link sent to your email')); }catch(e){ status(errMsg(e),true); } },
