@@ -219,6 +219,11 @@ details.gsetup summary::-webkit-details-marker{display:none;}
 .loginTag{font-size:13px; color:rgba(255,255,255,0.85); margin-top:-8px;}
 .loginBox{width:100%; max-width:280px; margin-top:10px;}
 .loginBox input{background:#fff; color:#111; border:none;}
+.lgLink{font-size:12.5px; color:#fff; opacity:.92; margin-top:12px; cursor:pointer; text-decoration:underline;}
+.lgStatus{font-size:12.5px; color:#fff; font-weight:600; margin-top:10px; min-height:0; padding:0 4px; word-break:break-word;}
+.lgStatus:empty{display:none;}
+.lgStatus.bad{background:rgba(0,0,0,.28); border-radius:10px; padding:7px 10px;}
+.loginBox #lgPass,.loginBox #lgEmail{margin-top:8px;}
 .loginBtn{width:100%; margin-top:12px; padding:13px; border:none; border-radius:12px; background:#fff; color:var(--primary-d); font-size:15px; font-weight:700; cursor:pointer;}
 /* Bottom mobile nav — floating pill with raised center action */
 .bottomnav{
@@ -648,7 +653,17 @@ i.ti,b.ti{background:var(--green);} i.te,b.te{background:var(--red);}
   <div class="loginTag" data-i18n="login_tag">আপনার আর্থিক হিসাবের সঙ্গী</div>
   <div class="loginBox">
     <input type="text" id="loginNameInput" data-i18n-ph="ph_your_name" placeholder="যেমন: করিম">
-    <button class="loginBtn" onclick="loginContinue()" data-i18n="btn_get_started">শুরু করুন</button>
+    <div id="loginCloud" style="display:none;">
+      <input type="email" id="lgEmail" placeholder="Email / ইমেইল" autocomplete="email">
+      <input type="password" id="lgPass" placeholder="Password / পাসওয়ার্ড (6+)" autocomplete="current-password">
+      <button class="loginBtn" id="lgBtn" onclick="ftCloud.loginSubmit()"><span class="bn">লগইন করুন</span><span class="en">Log in</span></button>
+      <div class="lgLink" id="lgToggle" onclick="ftCloud.loginMode()"><span class="bn">নতুন? অ্যাকাউন্ট খুলুন</span><span class="en">New here? Create an account</span></div>
+      <div class="lgLink" style="margin-top:6px;" onclick="ftCloud.loginReset()"><span class="bn">পাসওয়ার্ড ভুলে গেছেন?</span><span class="en">Forgot password?</span></div>
+      <div class="lgStatus" id="lgStatus"></div>
+    </div>
+    <div id="loginPlain">
+  <button class="loginBtn" onclick="loginContinue()" data-i18n="btn_get_started">শুরু করুন</button>
+    </div>
   </div>
 </div>
 <div class="lockOverlay" id="lockOverlay">
@@ -696,12 +711,16 @@ if(pic){var im=$('lockAvatarImg');im.src=pic;im.style.display='block';$('lockAva
 /* ===== Real happy-users counter (Firebase Realtime Database REST) =====
    Put your DB url below, e.g. 'https://YOUR-PROJECT-default-rtdb.firebaseio.com'  (no trailing slash)
    Empty = counter is off and the chip stays hidden. */
-var HAPPY_COUNTER_URL = 'https://fintrack-cde62-default-rtdb.asia-southeast1.firebasedatabase.app';
+var HAPPY_COUNTER_URL = '';
+/* ===== Firebase (used by the user counter AND Cloud sync) =====
+   apiKey: Firebase console > Project settings > General > Web API Key
+   dbUrl : your Realtime Database url, e.g. 'https://YOUR-PROJECT-default-rtdb.firebaseio.com' (no trailing slash) */
+var FT_FIREBASE = { apiKey: '', dbUrl: '' };
 (function(){
   var box=document.getElementById('lkHappy'); if(!box) return;
   var b=document.getElementById('lkHappyBn'), e=document.getElementById('lkHappyEn');
   var fb=new Intl.NumberFormat('bn-BD'), fe=new Intl.NumberFormat('en-US'), KEY='happyCount_v1', shown=-1;
-  function base(){ return String(HAPPY_COUNTER_URL||'').replace(/\/+$/,''); }
+  function base(){ return String(HAPPY_COUNTER_URL||FT_FIREBASE.dbUrl||'').replace(/\/+$/,''); }
   function set(v){ b.textContent=fb.format(v)+'+'; e.textContent=fe.format(v)+'+'; }
   function show(n, animate){
     n=Math.floor(+n); if(!(n>0)){ return; }
@@ -729,6 +748,162 @@ var HAPPY_COUNTER_URL = 'https://fintrack-cde62-default-rtdb.asia-southeast1.fir
   var cached=0; try{ cached=+localStorage.getItem(KEY)||0; }catch(x){}
   if(cached>0) show(cached,true);
   if(base()) window.ftCountUser();
+})();
+</script>
+<script>
+/* ===== Cloud sync: full app data <-> Firebase (Auth email/password + Realtime DB, REST only) ===== */
+(function(){
+  var CFG=window.FT_FIREBASE||{}, LS=localStorage;
+  var ST='ftSync_v1', BASE='ftSyncBase_v1', DIRTY='ftSyncDirty_v1', AUTO='ftSyncAuto_v1', LAST='ftSyncLast_v1';
+  var bnL=function(){return document.documentElement.lang!=='en'}, tx=function(b,e){return bnL()?b:e};
+  var $=function(i){return document.getElementById(i)};
+  var _set=Storage.prototype.setItem, _rem=Storage.prototype.removeItem;
+  var applying=false, busy=false, timer=0, idTok='', idExp=0;
+  var SKIP=/^(appPin|appLock|pinFails|pinLockUntil|lockFailTotal|lastUnlock|lockAutoBio|lockDelay|autoUnlock|loginDone|ftSync|userCounted|happyCount|noticeSeenId|noticeUrl|devLog|backupNudge|backupRemind|lastBackup)/;
+  function syncKey(k){ return typeof k==='string' && /^[A-Za-z0-9_-]+_v1$/.test(k) && !SKIP.test(k); }
+  function ok(){ return !!(CFG.apiKey&&CFG.dbUrl); }
+  function ses(){ try{return JSON.parse(LS.getItem(ST)||'null')}catch(e){return null} }
+  function setSes(o){ if(o) _set.call(LS,ST,JSON.stringify(o)); else _rem.call(LS,ST); }
+  function auto(){ return LS.getItem(AUTO)!=='0'; }
+  function status(m,bad){ var e=$('csStatus'); if(!e) return; e.textContent=m||''; e.style.color=bad?'var(--red)':'var(--primary)'; }
+  function timeStr(){ var t=+LS.getItem(LAST)||0; return t?new Date(t).toLocaleString(bnL()?'bn-BD':'en-GB',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):''; }
+  function doneMsg(){ var t=timeStr(); status(tx('সিঙ্ক হয়েছে','Synced')+(t?' · '+t:'')); }
+  function ui(){
+    var s=ses(), o=$('csOut'), i=$('csIn'); if(!o||!i) return;
+    o.style.display=s?'none':''; i.style.display=s?'':'none';
+    if(s){ $('csWho').textContent=s.email||''; $('csAuto').checked=auto(); }
+    if(!ok()) status(tx('ক্লাউড সিঙ্ক এখনো সেট-আপ হয়নি (ডেভেলপারকে FT_FIREBASE এ apiKey ও dbUrl দিতে হবে)।','Cloud sync is not set up yet (developer must fill apiKey and dbUrl in FT_FIREBASE).'),true);
+  }
+  function errMsg(e){
+    var m=String((e&&e.message)||e||'');
+    if(/EMAIL_EXISTS/.test(m)) return tx('এই ইমেইলে আগেই অ্যাকাউন্ট আছে, লগইন করুন','This email already has an account, please sign in');
+    if(/INVALID_LOGIN|INVALID_PASSWORD|EMAIL_NOT_FOUND|INVALID_EMAIL|MISSING_PASSWORD/.test(m)) return tx('ইমেইল বা পাসওয়ার্ড ঠিক নয়','Wrong email or password');
+    if(/WEAK_PASSWORD/.test(m)) return tx('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের দিন','Password must be at least 6 characters');
+    if(/TOO_MANY/.test(m)) return tx('অনেকবার চেষ্টা হয়েছে, কিছুক্ষণ পর আবার চেষ্টা করুন','Too many attempts, try again later');
+    if(/OPERATION_NOT_ALLOWED/.test(m)) return tx('Firebase এ Email/Password লগইন চালু করা নেই','Email/Password sign-in is not enabled in Firebase');
+    if(/Permission|401|403/.test(m)) return tx('ডাটাবেস রুলস অনুমতি দিচ্ছে না','Database rules denied access');
+    if(/abort|Failed to fetch|NetworkError/i.test(m)) return tx('ইন্টারনেট সংযোগ নেই','No internet connection');
+    return tx('সমস্যা হয়েছে: ','Error: ')+m;
+  }
+  async function call(url,opt){ var c=new AbortController(), t=setTimeout(function(){c.abort()},15000); try{ opt=opt||{}; opt.signal=c.signal; return await fetch(url,opt); } finally{ clearTimeout(t); } }
+  async function authReq(ep,body){
+    var r=await call('https://identitytoolkit.googleapis.com/v1/accounts:'+ep+'?key='+encodeURIComponent(CFG.apiKey),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    var j=await r.json(); if(!r.ok) throw new Error((j.error&&j.error.message)||('HTTP '+r.status)); return j;
+  }
+  async function token(){
+    var s=ses(); if(!s) throw new Error('NO_SESSION');
+    if(idTok&&Date.now()<idExp-60000) return idTok;
+    var r=await call('https://securetoken.googleapis.com/v1/token?key='+encodeURIComponent(CFG.apiKey),{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'grant_type=refresh_token&refresh_token='+encodeURIComponent(s.rt)});
+    var j=await r.json(); if(!r.ok) throw new Error((j.error&&j.error.message)||('HTTP '+r.status));
+    idTok=j.id_token; idExp=Date.now()+(+j.expires_in||3600)*1000; if(j.refresh_token&&j.refresh_token!==s.rt){ s.rt=j.refresh_token; setSes(s); } return idTok;
+  }
+  async function dbUrl(path){ return String(CFG.dbUrl).replace(/\/+$/,'')+'/users/'+ses().uid+'/'+path+'.json?auth='+encodeURIComponent(await token()); }
+  async function dbGet(path){ var r=await call(await dbUrl(path)+'&t='+Date.now(),{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }
+  function snapshot(){ var o={}; for(var i=0;i<LS.length;i++){ var k=LS.key(i); if(syncKey(k)) o[k]=LS.getItem(k); } return o; }
+  async function push(){
+    var ts=Date.now(), r=await call(await dbUrl('backup'),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:snapshot(),updatedAt:ts})});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    _set.call(LS,BASE,String(ts)); _set.call(LS,DIRTY,'0'); _set.call(LS,LAST,String(Date.now()));
+  }
+  function applyRemote(rem){
+    var d=rem&&rem.data; if(!d||typeof d!=='object') return false;
+    applying=true;
+    try{
+      var del=[]; for(var i=0;i<LS.length;i++){ var k=LS.key(i); if(syncKey(k)&&!(k in d)) del.push(k); }
+      del.forEach(function(k){ _rem.call(LS,k); });
+      Object.keys(d).forEach(function(k){ if(syncKey(k)&&typeof d[k]==='string') _set.call(LS,k,d[k]); });
+      _set.call(LS,'loginDone_v1','true');
+      _set.call(LS,BASE,String(rem.updatedAt||0)); _set.call(LS,DIRTY,'0'); _set.call(LS,LAST,String(Date.now()));
+    } finally{ applying=false; }
+    setTimeout(function(){ location.reload(); },400); return true;
+  }
+  async function sync(manual){
+    if(busy||!ses()||!ok()) return; busy=true;
+    try{
+      status(tx('সিঙ্ক হচ্ছে…','Syncing…'));
+      var ru=await dbGet('backup/updatedAt'), base=+LS.getItem(BASE)||0, dirty=LS.getItem(DIRTY)==='1';
+      if(ru===null||typeof ru!=='number'){ await push(); }
+      else if(ru===base){ if(dirty) await push(); }
+      else if(!dirty){ var full=await dbGet('backup'); if(applyRemote(full)) return; }
+      else if(confirm(tx('এই ফোন ও ক্লাউড—দুই জায়গাতেই নতুন পরিবর্তন আছে।\nOK = ক্লাউডের ডেটা নেবেন\nCancel = এই ফোনের ডেটা রাখবেন (ক্লাউডের ডেটা বদলে যাবে)','Both this phone and the cloud have new changes.\nOK = take the cloud data\nCancel = keep this phone\'s data (replaces the cloud copy)'))){ var f2=await dbGet('backup'); if(applyRemote(f2)) return; }
+      else { await push(); }
+      doneMsg();
+    }catch(e){ status(errMsg(e),true); }
+    finally{ busy=false; }
+  }
+  async function firstSync(){
+    var rem=await dbGet('backup');
+    if(!rem||!rem.data){ await push(); doneMsg(); return; }
+    var hasLocal=!!LS.getItem('moneyAppData_v1');
+    if(!hasLocal||confirm(tx('ক্লাউডে আপনার ডেটা পাওয়া গেছে। এই ফোনের ডেটা বদলে ক্লাউডের ডেটা নেবেন?\nOK = ক্লাউডের ডেটা নেবেন\nCancel = এই ফোনের ডেটা ক্লাউডে আপলোড হবে','Cloud data found. Replace this phone\'s data with it?\nOK = use the cloud data\nCancel = upload this phone\'s data to the cloud'))){ if(applyRemote(rem)) return; }
+    await push(); doneMsg();
+  }
+  function schedule(){ clearTimeout(timer); timer=setTimeout(function(){ if(navigator.onLine&&auto()) sync(); },5000); }
+  function onChange(k){ if(applying||!syncKey(k)||!ses()) return; _set.call(LS,DIRTY,'1'); if(auto()) schedule(); }
+  Storage.prototype.setItem=function(k){ var r=_set.apply(this,arguments); if(this===LS){ try{onChange(k)}catch(e){} } return r; };
+  Storage.prototype.removeItem=function(k){ var r=_rem.apply(this,arguments); if(this===LS){ try{onChange(k)}catch(e){} } return r; };
+  async function enter(kind){
+    if(!ok()){ ui(); return; }
+    var em=($('csEmail').value||'').trim(), pw=$('csPass').value||'';
+    if(!em||!pw){ status(tx('ইমেইল ও পাসওয়ার্ড দিন','Enter email and password'),true); return; }
+    status(tx('অপেক্ষা করুন…','Please wait…'));
+    try{
+      var j=await authReq(kind==='up'?'signUp':'signInWithPassword',{email:em,password:pw,returnSecureToken:true});
+      idTok=j.idToken; idExp=Date.now()+(+j.expiresIn||3600)*1000;
+      setSes({uid:j.localId,rt:j.refreshToken,email:j.email||em}); $('csPass').value=''; ui();
+      busy=true; try{ await firstSync(); } finally{ busy=false; }
+    }catch(e){ status(errMsg(e),true); }
+  }
+  /* ---- login screen: email login is required (when Firebase is set up) ---- */
+  var lgMode='in';
+  function lgStatus(m,bad){ var e=$('lgStatus'); if(!e) return; e.textContent=m||''; e.className='lgStatus'+(bad?' bad':''); }
+  async function loginAuth(kind,em,pw){
+    var j=await authReq(kind==='up'?'signUp':'signInWithPassword',{email:em,password:pw,returnSecureToken:true});
+    idTok=j.idToken; idExp=Date.now()+(+j.expiresIn||3600)*1000;
+    setSes({uid:j.localId,rt:j.refreshToken,email:j.email||em});
+    var rem=null;
+    try{ rem=await dbGet('backup'); }catch(e){ setSes(null); idTok=''; throw e; }
+    if(rem&&rem.data&&applyRemote(rem)) return 'restored';
+    return 'new';
+  }
+  async function loginSubmit(){
+    var em=($('lgEmail').value||'').trim(), pw=$('lgPass').value||'';
+    if(!em||!pw){ lgStatus(tx('ইমেইল ও পাসওয়ার্ড দিন','Enter your email and password'),true); return; }
+    var b=$('lgBtn'); b.disabled=true; lgStatus(tx('অপেক্ষা করুন…','Please wait…'));
+    try{
+      var res=await loginAuth(lgMode,em,pw);
+      if(res==='restored'){ lgStatus(tx('আপনার ডেটা ফিরিয়ে আনা হচ্ছে…','Restoring your data…')); return; }
+    }catch(e){ lgStatus(errMsg(e),true); b.disabled=false; return; }
+    b.disabled=false; $('lgPass').value='';
+    if(typeof loginContinue==='function') loginContinue();
+    setTimeout(function(){ ui(); sync(); },1200);
+  }
+  function loginMode(){
+    lgMode=lgMode==='in'?'up':'in';
+    $('lgBtn').innerHTML=lgMode==='in'?'<span class="bn">লগইন করুন</span><span class="en">Log in</span>':'<span class="bn">অ্যাকাউন্ট খুলুন</span><span class="en">Create account</span>';
+    $('lgToggle').innerHTML=lgMode==='in'?'<span class="bn">নতুন? অ্যাকাউন্ট খুলুন</span><span class="en">New here? Create an account</span>':'<span class="bn">আগে থেকেই অ্যাকাউন্ট আছে? লগইন করুন</span><span class="en">Already have an account? Log in</span>';
+    lgStatus('');
+  }
+  async function loginReset(){
+    var em=($('lgEmail').value||'').trim(); if(!em){ lgStatus(tx('আগে ইমেইল লিখুন','Enter your email first'),true); return; }
+    try{ await authReq('sendOobCode',{requestType:'PASSWORD_RESET',email:em}); lgStatus(tx('পাসওয়ার্ড রিসেট লিংক ইমেইলে পাঠানো হয়েছে','Password reset link sent to your email')); }catch(e){ lgStatus(errMsg(e),true); }
+  }
+  if(ok()){ var _c=$('loginCloud'), _p=$('loginPlain'); if(_c) _c.style.display=''; if(_p) _p.style.display='none'; }
+  window.ftCloud={
+    loginSubmit:loginSubmit, loginMode:loginMode, loginReset:loginReset,
+    signIn:function(){ enter('in'); }, signUp:function(){ enter('up'); },
+    reset:async function(){ if(!ok()) return ui(); var em=($('csEmail').value||'').trim(); if(!em){ status(tx('আগে ইমেইল লিখুন','Enter your email first'),true); return; }
+      try{ await authReq('sendOobCode',{requestType:'PASSWORD_RESET',email:em}); status(tx('পাসওয়ার্ড রিসেট লিংক ইমেইলে পাঠানো হয়েছে','Password reset link sent to your email')); }catch(e){ status(errMsg(e),true); } },
+    syncNow:function(){ sync(true); },
+    setAuto:function(v){ _set.call(LS,AUTO,v?'1':'0'); if(v) schedule(); },
+    signOut:function(){ if(!confirm(tx('লগআউট করবেন? এই ফোনের ডেটা মুছবে না।','Sign out? Data on this phone stays.'))) return; setSes(null); _rem.call(LS,BASE); _rem.call(LS,DIRTY); idTok=''; ui(); status(tx('লগআউট হয়েছে','Signed out')); },
+    wipe:async function(){ if(!confirm(tx('ক্লাউড থেকে আপনার সব ডেটা মুছে যাবে। এই ফোনের ডেটা থাকবে। নিশ্চিত?','This deletes all your data from the cloud. Data on this phone stays. Sure?'))) return;
+      try{ var r=await call(await dbUrl('backup'),{method:'DELETE'}); if(!r.ok) throw new Error('HTTP '+r.status); _rem.call(LS,BASE); _set.call(LS,DIRTY,'1'); status(tx('ক্লাউড ডেটা মুছে ফেলা হয়েছে','Cloud data deleted')); }catch(e){ status(errMsg(e),true); } }
+  };
+  function init(){ ui(); if(ses()&&ok()){ doneMsg(); setTimeout(function(){ if(auto()) sync(); },1500); } }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+  window.addEventListener('online',function(){ if(ses()&&auto()) sync(); });
+  var lastVis=0; document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible'&&ses()&&auto()&&Date.now()-lastVis>60000){ lastVis=Date.now(); sync(); } });
 })();
 </script>
 <div class="notifPopupOverlay" id="notifPopupOverlay" style="display:none;">
@@ -1078,6 +1253,29 @@ var HAPPY_COUNTER_URL = 'https://fintrack-cde62-default-rtdb.asia-southeast1.fir
     <input type="file" id="restoreFileInput" accept="application/json" style="display:none;" onchange="restoreFromFile(this)">
     <button class="typebtn" style="width:100%; margin-top:8px;" onclick="exportCSV()" data-i18n="btn_export_csv">CSV এক্সপোর্ট করুন (Excel-এ খোলা যাবে)</button>
     <div id="backupStatusText" style="font-size:12.5px; color:var(--primary); margin-top:8px;"></div>
+  </div>
+  <div class="box" id="cloudSyncBox">
+    <h3><span class="bn">ক্লাউড সিঙ্ক</span><span class="en">Cloud sync</span></h3>
+    <p style="font-size:12.5px; color:var(--muted); margin:0 0 8px;"><span class="bn">লগইন করলে আপনার সব ডেটা আপনার অ্যাকাউন্টে ক্লাউডে সেভ থাকবে, নতুন ফোনেও ফিরে পাবেন। PIN ও ফিঙ্গারপ্রিন্ট আপলোড হয় না।</span><span class="en">Sign in to keep all your data in the cloud under your account and get it back on a new phone. Your PIN and fingerprint are never uploaded.</span></p>
+    <div id="csOut">
+      <input type="email" id="csEmail" placeholder="Email / ইমেইল" autocomplete="email">
+      <input type="password" id="csPass" placeholder="Password / পাসওয়ার্ড (6+)" autocomplete="current-password" style="margin-top:8px;">
+      <div class="row2" style="margin-top:8px;">
+        <button class="typebtn" onclick="ftCloud.signIn()"><span class="bn">লগইন</span><span class="en">Sign in</span></button>
+        <button class="typebtn" onclick="ftCloud.signUp()"><span class="bn">নতুন অ্যাকাউন্ট</span><span class="en">Create account</span></button>
+      </div>
+      <div style="font-size:12.5px; color:var(--primary); margin-top:10px; cursor:pointer; text-align:center;" onclick="ftCloud.reset()"><span class="bn">পাসওয়ার্ড ভুলে গেছেন?</span><span class="en">Forgot password?</span></div>
+    </div>
+    <div id="csIn" style="display:none;">
+      <div style="font-size:13px; font-weight:700; word-break:break-all;" id="csWho"></div>
+      <label style="display:flex; align-items:center; gap:8px; margin:10px 0 0; font-size:13.5px; color:var(--text);"><input type="checkbox" id="csAuto" onchange="ftCloud.setAuto(this.checked)" style="width:auto; margin:0;"><span class="bn">অটো সিঙ্ক (পরিবর্তন হলেই সেভ)</span><span class="en">Auto sync (save on every change)</span></label>
+      <div class="row2" style="margin-top:10px;">
+        <button class="typebtn" onclick="ftCloud.syncNow()"><span class="bn">এখনই সিঙ্ক</span><span class="en">Sync now</span></button>
+        <button class="typebtn" onclick="ftCloud.signOut()"><span class="bn">লগআউট</span><span class="en">Sign out</span></button>
+      </div>
+      <button class="typebtn" style="width:100%; margin-top:8px; color:var(--red);" onclick="ftCloud.wipe()"><span class="bn">ক্লাউড ডেটা মুছুন</span><span class="en">Delete cloud data</span></button>
+    </div>
+    <div id="csStatus" style="font-size:12.5px; color:var(--primary); margin-top:8px;"></div>
   </div>
   <div class="box">
     <h3 data-i18n="settings_budget">মাসিক বাজেট</h3>
