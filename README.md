@@ -185,24 +185,6 @@ No complex backend is required for the core local functionality.
 
 ---
 
-🚀 Getting Started
-
-1. Clone the repository
-
-git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
-
-2. Open the project
-
-index.html
-
-Open "index.html" in a modern web browser.
-
-3. Start managing your finances
-
-Add your income, expenses, loans and savings and start using the dashboard.
-
----
-
 🌍 GitHub Pages
 
 FinTrack can be hosted easily using GitHub Pages.
@@ -215,19 +197,7 @@ Steps
 4. Select the appropriate branch.
 5. Select the root folder.
 6. Save the settings.
-7. GitHub will generate your live website URL.
-
----
-
-📂 Project Structure
-
-FinTrack/
-│
-├── index.html
-└── README.md
-
-The current application is primarily contained within "index.html".
-
+7. GitHub will generate your live website URL
 ---
 
 💾 Data Storage
@@ -245,21 +215,6 @@ This means financial information can be stored locally in the user's browser wit
 FinTrack is designed with a privacy-focused approach.
 
 Financial information used by the core application is handled on the user's device through browser storage. Features that depend on external services may have their own data-handling requirements.
-
----
-
-📸 Screenshots
-
-Add screenshots of your application here:
-
-![Dashboard](screenshots/dashboard.png)
-
-![Transactions](screenshots/transactions.png)
-
-![Reports](screenshots/reports.png)
-
-![Settings](screenshots/settings.png)
-
 ---
 
 🗺️ Roadmap
@@ -275,32 +230,9 @@ Potential future improvements:
 - [ ] More advanced AI financial insights
 - [ ] PWA support
 - [ ] Offline-first improvements
-- [ ] More languages
-
----
-
-🤝 Contributing
-
-Contributions, suggestions and improvements are welcome.
-
-If you want to contribute:
-
-1. Fork the repository.
-2. Create a new branch.
-3. Make your changes.
-4. Commit your changes.
-5. Push the branch.
-6. Create a Pull Request.
-
----
+- [ ] More language 
 
 📄 License
-
-Add your preferred open-source license here.
-
-Example:
-
-MIT License
 
 ---
 
