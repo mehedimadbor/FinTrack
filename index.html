@@ -512,6 +512,19 @@ h1 [data-i18n="app_title"]{background:var(--grad); -webkit-background-clip:text;
 #lockErrorMsg{min-height:0;}
 #lockErrorMsg:empty{display:none;}
 .lkFoot{margin-top:auto; padding-top:16px; font-size:11.5px; color:var(--muted); font-weight:600; opacity:.85;}
+/* ===== Happy users chip (lock screen) ===== */
+.lkHappy{display:flex; align-items:center; gap:10px; margin-top:14px; padding:7px 16px 7px 8px; border-radius:30px; background:color-mix(in srgb,var(--card) 70%,transparent); border:1px solid var(--border); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); animation:ftPop .6s .15s ease both;}
+.lkHappy .lkAv{display:flex;}
+.lkHappy .lkAv em{font-style:normal; width:26px; height:26px; margin-left:-8px; border-radius:50%; border:2px solid var(--bg); display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px;}
+.lkHappy .lkAv em:first-child{margin-left:0;}
+.lkHappy .lkAv em:nth-child(1){background:linear-gradient(135deg,#f59e0b,#ef4444);}
+.lkHappy .lkAv em:nth-child(2){background:linear-gradient(135deg,#10b981,#06b6d4);}
+.lkHappy .lkAv em:nth-child(3){background:linear-gradient(135deg,#6366f1,#ec4899);}
+.lkHappy .lkAv em:nth-child(4){background:var(--grad);}
+.lkHappy .lkTxt{display:flex; flex-direction:column; line-height:1.2; text-align:left;}
+.lkHappy .lkTxt b{font-size:14px; font-weight:800; font-variant-numeric:tabular-nums;}
+.lkHappy .lkTxt span{font-size:11.5px; color:var(--muted); font-weight:600;}
+.lkHappy .lkHeart{color:#10b981; font-size:15px;}
 
 /* ===== Settings ===== */
 .setHero{display:flex; align-items:center; gap:14px; padding:18px; margin-bottom:12px; border-radius:26px; color:#fff; background:var(--grad); box-shadow:0 16px 30px -12px color-mix(in srgb,var(--primary) 65%,transparent); position:relative; overflow:hidden;}
@@ -661,6 +674,14 @@ i.ti,b.ti{background:var(--green);} i.te,b.te{background:var(--red);}
     <div id="lockPinToggle" style="display:none; font-size:13px; color:var(--primary); cursor:pointer; text-decoration:underline;" onclick="togglePinArea()" data-i18n="lock_pin_toggle">পিন দিয়ে আনলক করুন</div>
     <div style="font-size:12px; color:var(--red);" id="lockErrorMsg"></div>
   </div>
+  <div class="lkHappy" id="lkHappy" style="display:none;">
+    <div class="lkAv"><em><i class="mi" style="--m:var(--ic-user)"></i></em><em><i class="mi" style="--m:var(--ic-user)"></i></em><em><i class="mi" style="--m:var(--ic-user)"></i></em><em><i class="mi" style="--m:var(--ic-user)"></i></em></div>
+    <div class="lkTxt">
+      <b><span class="bn" id="lkHappyBn"></span><span class="en" id="lkHappyEn"></span></b>
+      <span><span class="bn">সুখী ব্যবহারকারী</span><span class="en">Happy Users</span></span>
+    </div>
+    <span class="lkHeart"><i class="mi" style="--m:var(--ic-check-circle)"></i></span>
+  </div>
   <div class="lkFoot"><span class="bn">FinTrack লক দিয়ে সুরক্ষিত</span><span class="en">Protected by FinTrack Lock</span></div>
 </div>
 <script>(function(){try{var g=function(k){return localStorage.getItem(k)||''},$=function(i){return document.getElementById(i)},en=g('appLang_v1')==='en',n=g('myName_v1'),u=g('myUsername_v1'),pic=g('myProfilePic_v1'),d=new Date();
@@ -671,6 +692,45 @@ if(u){var e=$('lockGreetUser');e.textContent='@'+u.replace(/^@/,'');e.style.disp
 $('lockAvatarEmoji').textContent=n?Array.from(n.trim())[0].toUpperCase():'U';
 if(pic){var im=$('lockAvatarImg');im.src=pic;im.style.display='block';$('lockAvatarEmoji').style.display='none';$('lockBg').style.backgroundImage='url("'+pic+'")'}
 }catch(e){}})();</script>
+<script>
+/* ===== Real happy-users counter (Firebase Realtime Database REST) =====
+   Put your DB url below, e.g. 'https://YOUR-PROJECT-default-rtdb.firebaseio.com'  (no trailing slash)
+   Empty = counter is off and the chip stays hidden. */
+var HAPPY_COUNTER_URL = '';
+(function(){
+  var box=document.getElementById('lkHappy'); if(!box) return;
+  var b=document.getElementById('lkHappyBn'), e=document.getElementById('lkHappyEn');
+  var fb=new Intl.NumberFormat('bn-BD'), fe=new Intl.NumberFormat('en-US'), KEY='happyCount_v1', shown=-1;
+  function base(){ return String(HAPPY_COUNTER_URL||'').replace(/\/+$/,''); }
+  function set(v){ b.textContent=fb.format(v)+'+'; e.textContent=fe.format(v)+'+'; }
+  function show(n, animate){
+    n=Math.floor(+n); if(!(n>0)){ return; }
+    box.style.display='flex';
+    if(!animate || shown===n){ set(n); shown=n; return; }
+    var from=Math.max(0,shown<0?0:shown), t0=null, D=1100;
+    (function step(ts){ if(t0===null) t0=ts; var p=Math.min(1,(ts-t0)/D); set(Math.round(from+(n-from)*(1-Math.pow(1-p,3)))); if(p<1) requestAnimationFrame(step); else shown=n; })(performance.now());
+  }
+  function tmo(ms){ var c=new AbortController(); setTimeout(function(){c.abort()},ms); return c.signal; }
+  async function fetchCount(){
+    if(!base()) return;
+    try{ var r=await fetch(base()+'/stats/users.json?t='+Date.now(),{cache:'no-store',signal:tmo(7000)}); if(!r.ok) return;
+      var n=await r.json(); if(typeof n==='number'&&n>0){ try{localStorage.setItem(KEY,String(n))}catch(x){} show(n,true); } }catch(x){}
+  }
+  /* count this device once (on first login), then refresh the number */
+  window.ftCountUser=async function(){
+    if(!base()) return;
+    var done=false; try{ done=localStorage.getItem('userCounted_v1')==='1'; }catch(x){}
+    if(!done && localStorage.getItem('loginDone_v1')==='true'){
+      try{ var r=await fetch(base()+'/stats/users.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({'.sv':{increment:1}}),signal:tmo(8000)});
+        if(r.ok){ try{localStorage.setItem('userCounted_v1','1')}catch(x){} } }catch(x){}
+    }
+    fetchCount();
+  };
+  var cached=0; try{ cached=+localStorage.getItem(KEY)||0; }catch(x){}
+  if(cached>0) show(cached,true);
+  if(base()) window.ftCountUser();
+})();
+</script>
 <div class="notifPopupOverlay" id="notifPopupOverlay" style="display:none;">
   <div class="notifPopupCard">
     <div class="notifPopupIcon" id="notifPopupIcon"><i class="mi" style="--m:var(--ic-bell)"></i></div>
@@ -3002,7 +3062,7 @@ function closeNotifPopup(){
 }
 // ---- Remote notice (a JSON file you host anywhere, e.g. GitHub Pages / raw / Gist) ----
 // Format: {"on":true, "id":5, "title":"...", "message":"...", "type":"info|update|warning", "always":false}
-const NOTICE_URL = 'https://raw.githubusercontent.com/mehedimadbor/FinTrack/refs/heads/main/notice.json'; // <-- put your hosted notice.json link here, e.g. 'https://raw.githubusercontent.com/you/repo/main/notice.json'
+const NOTICE_URL = ''; // <-- put your hosted notice.json link here, e.g. 'https://raw.githubusercontent.com/you/repo/main/notice.json'
 function getNoticeUrl(){
   let u = '';
   try{ u = localStorage.getItem('noticeUrl_v1') || ''; }catch(e){}
@@ -3180,6 +3240,8 @@ function loginContinue(){
   checkLockOnLoad();
   if(document.getElementById('lockOverlay').style.display !== 'flex') checkNotifPopupOnLoad();
 }
+
+(function(){ const _lc=loginContinue; loginContinue=function(){ _lc.apply(this,arguments); try{ window.ftCountUser&&window.ftCountUser(); }catch(e){} }; })();
 
 // ---- AI Chat assistant (fully local, rule-based, can log transactions) ----
 let chatMessages = [];
@@ -4640,6 +4702,7 @@ const DASH=[
 const NAV=[
  ['navtx','নিচের বারে লেনদেন বাটন','Transactions button in bottom bar','#bottomNav [data-bn="tx"]'],
  ['navchat','নিচের বারে AI চ্যাট বাটন','AI chat button in bottom bar','#bottomNav [data-bn="chat"]'],
+ ['lkhappy','লক স্ক্রিনে সুখী ব্যবহারকারী সংখ্যা','Happy users count on lock screen','#lkHappy'],
  ['lklast','লক স্ক্রিনে "শেষ আনলক" সময়','"Last unlocked" time on lock screen','#lkLast'],
  ['rmbadge','প্রোফাইলে রিমাইন্ডার ব্যাজ','Reminder badge on profile','.pfBadge']
 ];
