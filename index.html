@@ -3351,7 +3351,7 @@ function closeNotifPopup(){
 }
 // ---- Remote notice (a JSON file you host anywhere, e.g. GitHub Pages / raw / Gist) ----
 // Format: {"on":true, "id":5, "title":"...", "message":"...", "type":"info|update|warning", "always":false}
-const NOTICE_URL = ''; // <-- put your hosted notice.json link here, e.g. 'https://raw.githubusercontent.com/you/repo/main/notice.json'
+const NOTICE_URL = 'https://raw.githubusercontent.com/mehedimadbor/FinTrack/refs/heads/main/notice.json'; // <-- put your hosted notice.json link here, e.g. 'https://raw.githubusercontent.com/you/repo/main/notice.json'
 function getNoticeUrl(){
   let u = '';
   try{ u = localStorage.getItem('noticeUrl_v1') || ''; }catch(e){}
