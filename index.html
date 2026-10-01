@@ -1664,7 +1664,7 @@ const I18N = {
     lbl_rec_type:'ধরন', lbl_rec_amount:'পরিমাণ (টাকা)', lbl_rec_day:'প্রতি মাসের কত তারিখে (১–৩১)', lbl_rec_note:'নোট (যেমন: বাসা ভাড়া)',
     btn_rec_add:'যোগ করুন', rec_empty:'কোনো নিয়মিত এন্ট্রি নেই', rec_added:'নিয়মিত এন্ট্রি যোগ হয়েছে।', rec_need:'সঠিক পরিমাণ দিন।',
     rec_every:'প্রতি মাসের', rec_day_suffix:'তারিখে',
-    btn_loan_paid:'পরিশোধ', btn_loan_received:'পেলাম', loan_pay_title:'লোন পরিশোধ', loan_recv_title:'টাকা ফেরত পেলাম',
+    btn_loan_paid:'পরিশোধ', btn_loan_req:'অনুরোধে', btn_loan_received:'পেলাম', loan_pay_title:'লোন পরিশোধ', loan_recv_title:'টাকা ফেরত পেলাম',
     loan_remaining:'বাকি আছে:', loan_over:'বাকির চেয়ে বেশি দেওয়া যাবে না। বাকি:', loan_note_paid:'লোন পরিশোধ', loan_note_received:'লোনের টাকা ফেরত পেয়েছি',
     dev_clear_heading:'সব ডেটা মুছুন', dev_clear_note:'এই ফোনে থাকা অ্যাপের সব ডেটা (লেনদেন, লোন, প্রোফাইল, পিন ইত্যাদি) মুছে যাবে। মুছতে হলে আপনার পিন অথবা ফিঙ্গারপ্রিন্ট লাগবে।',
     btn_dev_clear:'সব ডেটা মুছে ফেলুন', dev_clear_need_lock:'ডেটা মুছতে হলে আগে সেটিংস থেকে পিন অথবা ফিঙ্গারপ্রিন্ট লক চালু করুন।',
@@ -1790,7 +1790,7 @@ const I18N = {
     lbl_rec_type:'Type', lbl_rec_amount:'Amount (Taka)', lbl_rec_day:'Day of month (1–31)', lbl_rec_note:'Note (e.g. House rent)',
     btn_rec_add:'Add', rec_empty:'No recurring entries', rec_added:'Recurring entry added.', rec_need:'Enter a valid amount.',
     rec_every:'every month on day', rec_day_suffix:'',
-    btn_loan_paid:'Paid', btn_loan_received:'Received', loan_pay_title:'Pay loan', loan_recv_title:'Money received',
+    btn_loan_paid:'Paid', btn_loan_req:'Via request', btn_loan_received:'Received', loan_pay_title:'Pay loan', loan_recv_title:'Money received',
     loan_remaining:'Remaining:', loan_over:"You can't pay more than the remaining amount. Remaining:", loan_note_paid:'Loan paid', loan_note_received:'Loan money received back',
     dev_clear_heading:'Clear all data', dev_clear_note:'All app data on this phone (transactions, loans, profile, PIN etc.) will be erased. Your PIN or fingerprint is required.',
     btn_dev_clear:'Clear all data', dev_clear_need_lock:'Enable a PIN or fingerprint lock in Settings first to be able to clear data.',
@@ -2435,7 +2435,7 @@ function renderLoans(){
     `<div class="person"><div>${esc(p)}</div><div style="display:flex;align-items:center;"><span class="tag get">${fmt(Math.abs(v))}</span><button class="typebtn loanPayBtn" onclick="payLoan('get','${encodeURIComponent(p)}')">${t('btn_loan_received')}</button></div></div>`
   ).join('') : `<div class="empty">${t('empty_no_one')}</div>`;
   oweList.innerHTML = oweEntries.length ? oweEntries.map(([p,v])=>
-    `<div class="person"><div>${esc(p)}</div><div style="display:flex;align-items:center;"><span class="tag owe">${fmt(Math.abs(v))}</span><button class="typebtn loanPayBtn" onclick="payLoan('owe','${encodeURIComponent(p)}')">${t('btn_loan_paid')}</button></div></div>`
+    `<div class="person"><div>${esc(p)}</div><div style="display:flex;align-items:center;"><span class="tag owe">${fmt(Math.abs(v))}</span><button class="typebtn loanPayBtn" onclick="payLoan('owe','${encodeURIComponent(p)}')">${t('btn_loan_paid')}</button><button class="typebtn loanPayBtn loanReqBtn" onclick="window.ftReqOpen&&ftReqOpen('${encodeURIComponent(p)}')">${t('btn_loan_req')}</button></div></div>`
   ).join('') : `<div class="empty">${t('empty_no_one')}</div>`;
 }
 
@@ -5931,6 +5931,12 @@ run(); setTimeout(run,700); setTimeout(run,2200);
 #rqBox .setChev{width:26px;height:26px;padding:5px;border-radius:50%;background:color-mix(in srgb,var(--muted) 13%,transparent);}
 #rqBox[open]>summary .setChev{background:color-mix(in srgb,var(--primary) 16%,transparent);stroke:var(--primary);}
 #rqBox .setBody{padding:12px 14px 16px;}
+.rqLb{display:block;font-size:11.5px;font-weight:700;color:var(--muted);margin:4px 2px 4px}
+.rqHint:empty{display:none}
+#rqRem{font-weight:700;color:var(--primary);margin:-2px 2px 8px}
+#rqBox .rqItem .rqIn{margin:2px 0 0}
+.loanPayBtn.loanReqBtn{background:transparent;color:var(--primary);border:1.5px solid var(--primary);box-shadow:none}
+.person>div:last-child{flex-wrap:wrap;justify-content:flex-end;row-gap:6px}
 .tab{position:relative;}
 .tab.rqHas::after{content:"";position:absolute;top:5px;right:6px;width:9px;height:9px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 2px var(--card),0 0 0 0 rgba(239,68,68,.7);animation:rqBlink 1.1s ease-in-out infinite;pointer-events:none}
 @keyframes rqBlink{0%,100%{opacity:1;transform:scale(1);box-shadow:0 0 0 2px var(--card),0 0 0 0 rgba(239,68,68,.65)}50%{opacity:.25;transform:scale(.8);box-shadow:0 0 0 2px var(--card),0 0 0 6px rgba(239,68,68,0)}}
@@ -5940,15 +5946,20 @@ run(); setTimeout(run,700); setTimeout(run,2200);
 </style>
 
 <script>
-/* ===== Money requests: loan / repay requests between users (Firebase REST) ===== */
+/* ===== Money requests: loan / repay requests between users (Firebase REST), wired into the Loan tab ===== */
 (function(){
 if(!window.ftCloud||!ftCloud._raw) return;
 var R=function(){return ftCloud._raw();}, $=function(i){return document.getElementById(i);};
 var bnL=function(){return document.documentElement.lang!=='en';}, tx=function(b,e){return bnL()?b:e;};
 var bl=function(b,e){return '<span class="bn">'+b+'</span><span class="en">'+e+'</span>';};
-var SENT='ftReqSent_v1', kind='loan', busy=false, inbox=[];
+var SENT='ftReqSent_v1', LINK='ftReqLink_v1', kind='loan', busy=false, syncing=false, inbox=[], sig='', edits={}, announced={}, needPop=false;
+function low(v){ return String(v||'').trim().toLowerCase(); }
 function getSent(){ try{return JSON.parse(localStorage.getItem(SENT)||'[]');}catch(e){return [];} }
 function setSent(a){ try{localStorage.setItem(SENT,JSON.stringify(a.slice(-60)));}catch(e){} }
+function getLink(){ try{return JSON.parse(localStorage.getItem(LINK)||'{}')||{};}catch(e){return {};} }
+function saveLink(uid,name,email,un){ if(!uid||!name) return; var m=getLink(); m[uid]={name:name,email:email||'',un:un||''}; try{localStorage.setItem(LINK,JSON.stringify(m));}catch(e){} }
+function linkName(uid){ var m=getLink(); return (m[uid]&&m[uid].name)||''; }
+function linkByName(n){ n=low(n); if(!n) return null; var m=getLink(); for(var k in m){ if(low(m[k].name)===n) return m[k]; } return null; }
 function ek(v){ return String(v||'').trim().toLowerCase().replace(/\./g,',').replace(/[#$\[\]\/%]/g,'_'); }
 function E(v){ return typeof esc==='function'?esc(v):String(v).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
 function F(n){ try{return fmt(n);}catch(e){return '৳'+n;} }
@@ -5972,30 +5983,53 @@ async function find(q){
   var rec=q.indexOf('@')>0 ? await db('directory/'+ek(q)) : await db('usernames/'+ek(q.replace(/^@/,'')));
   return rec&&rec.uid?rec:null;
 }
-function addTx(type,amount,person,note){
+/* ---- loan ledger helpers (read the same data the Loan tab uses) ---- */
+function maps(){ try{ return calcLoans(); }catch(e){ return {getMap:{},oweMap:{}}; } }
+function pos(map,name){ var n=low(name); if(!n) return ''; var ks=Object.keys(map); for(var i=0;i<ks.length;i++){ if(low(ks[i])===n&&Math.round(map[ks[i]])>0) return ks[i]; } return ''; }
+function anyName(name){ var m=maps(), n=low(name), ks=Object.keys(m.getMap).concat(Object.keys(m.oweMap)); for(var i=0;i<ks.length;i++){ if(low(ks[i])===n) return ks[i]; } return ''; }
+function pendingRepay(name){ var n=low(name), sum=0; getSent().forEach(function(x){ if(x.status==='pending'&&x.kind==='repay'&&low(x.person||x.toName)===n) sum+=(+x.amount||0); }); return sum; }
+function remainOwe(name){ var m=maps(), k=pos(m.oweMap,name); return k?{key:k,rem:Math.round(m.oweMap[k])-pendingRepay(k)}:null; }
+function opts(a){ return a.map(function(n){ return '<option value="'+E(n)+'">'; }).join(''); }
+function fillLists(){
+  var m=maps(), gk=Object.keys(m.getMap), ok=Object.keys(m.oweMap);
+  var g=gk.filter(function(k){return Math.round(m.getMap[k])>0;}), o=ok.filter(function(k){return Math.round(m.oweMap[k])>0;});
+  var all=gk.concat(ok).filter(function(v,i,a){return a.indexOf(v)===i;});
+  [['rqPplAll',all],['rqPplGet',g],['rqPplOwe',o]].forEach(function(p){ var d=$(p[0]); if(d) d.innerHTML=opts(p[1]); });
+}
+function addTx(type,amount,person,note,due){
   if(typeof data==='undefined'||!data||!data.transactions) return;
-  data.transactions.push({id:Date.now()+'-'+Math.random().toString(36).slice(2,7),type:type,amount:amount,category:null,source:null,due:null,person:person||'?',account:null,note:note||'',date:todayStr(),time:nowTime()});
+  data.transactions.push({id:Date.now()+'-'+Math.random().toString(36).slice(2,7),type:type,amount:amount,category:null,source:null,due:due||null,person:person||'?',account:null,note:note||'',date:todayStr(),time:nowTime()});
   saveData();
   ['renderDash','renderAccounts','renderLoans','renderHistory','populatePersonList','updateHome'].forEach(function(f){ try{ if(typeof window[f]==='function') window[f](); }catch(e){} });
 }
-function setDot(){
-  var t=document.querySelector('.tab[data-tab="loan"]'); if(t) t.classList.toggle('rqHas',inbox.length>0);
-}
+function setDot(){ var t=document.querySelector('.tab[data-tab="loan"]'); if(t) t.classList.toggle('rqHas',inbox.length>0); }
 function setPill(){
-  setDot(); var p=$('rqPill'); if(!p) return; var n=inbox.length; p.style.display=n?'':'none'; p.textContent=n; 
+  setDot(); var p=$('rqPill'); if(!p) return; var n=inbox.length; p.textContent=n;
   p.style.cssText=n?'display:inline-flex;min-width:22px;height:22px;padding:0 6px;border-radius:20px;background:#ef4444;color:#fff;font-size:11.5px;font-weight:800;align-items:center;justify-content:center;flex:none;max-width:none':'display:none';
 }
 function kindTxt(k,name,amt){
   return k==='repay' ? tx(name+' বলছেন তিনি আপনার ধার '+F(amt)+' শোধ করেছেন', name+' says they repaid you '+F(amt))
                      : tx(name+' বলছেন তিনি আপনাকে '+F(amt)+' ধার দিয়েছেন', name+' says they lent you '+F(amt));
 }
-function renderInbox(){
-  var el=$('rqInbox'); if(!el) return;
+function defName(it){
+  var l=linkName(it.fromUid); if(l) return l;
+  var m=maps(), nm=it.fromName||it.fromEmail||'';
+  if(it.kind==='repay'){ var k=pos(m.getMap,nm)||pos(m.getMap,it.fromEmail); if(k) return k; }
+  else{ var a=anyName(nm); if(a) return a; }
+  return nm;
+}
+function renderInbox(force){
+  var el=$('rqInbox'); if(!el) return; fillLists();
+  var s=inbox.map(function(x){return x.id;}).join('|')+'|'+(bnL()?'b':'e');
+  if(!force&&s===sig&&el.children.length) return; sig=s;
   if(!inbox.length){ el.innerHTML='<div class="rqEmpty">'+tx('কোনো নতুন অনুরোধ নেই','No new requests')+'</div>'; return; }
   el.innerHTML=inbox.map(function(it){
-    var nm=E(it.fromName||it.fromEmail||'?');
+    var nm=E(it.fromName||it.fromEmail||'?'), dv=edits[it.id]!==undefined?edits[it.id]:defName(it);
+    var lst=it.kind==='repay'?'rqPplGet':'rqPplAll';
     return '<div class="rqItem"><div class="rqTop"><span>'+F(it.amount)+'</span><span class="rqSt p">'+tx('অপেক্ষমাণ','Pending')+'</span></div>'
-      +'<div class="rqSm">'+kindTxt(it.kind,nm,it.amount)+(it.note?'<br>“'+E(it.note)+'”':'')+'<br>'+E(it.fromEmail||'')+'</div>'
+      +'<div class="rqSm">'+kindTxt(it.kind,nm,it.amount)+(it.due?'<br>'+tx('ফেরতের তারিখ: ','Due: ')+E(it.due):'')+(it.note?'<br>“'+E(it.note)+'”':'')+'<br>'+E(it.fromEmail||'')+'</div>'
+      +'<label class="rqLb">'+tx(it.kind==='repay'?'কার পাওনা কমবে (আপনার তালিকার নাম)':'আপনার লোন তালিকায় যে নামে থাকবে','Name in your loan list')+'</label>'
+      +'<input class="rqIn" data-nm="'+E(it.id)+'" list="'+lst+'" value="'+E(dv)+'">'
       +'<div class="rqAct"><button class="rqY" data-rq="y" data-id="'+E(it.id)+'">'+tx('গ্রহণ করুন','Accept')+'</button><button class="rqN" data-rq="n" data-id="'+E(it.id)+'">'+tx('বাতিল','Decline')+'</button></div></div>';
   }).join('');
 }
@@ -6003,9 +6037,9 @@ function renderSent(){
   var el=$('rqSent'); if(!el) return; var a=getSent().slice().reverse();
   if(!a.length){ el.innerHTML='<div class="rqEmpty">'+tx('এখনো কোনো অনুরোধ পাঠাননি','No requests sent yet')+'</div>'; return; }
   el.innerHTML=a.slice(0,15).map(function(it){
-    var c=it.status==='accepted'?'a':(it.status==='declined'||it.status==='cancelled')?'d':'p', t=it.status==='accepted'?tx('গ্রহণ করেছে','Accepted'):it.status==='declined'?tx('প্রত্যাখ্যান করেছে','Declined'):it.status==='cancelled'?tx('বাতিল করা হয়েছে','Cancelled'):tx('অপেক্ষমাণ','Pending');
-    return '<div class="rqItem"><div class="rqTop"><span>'+F(it.amount)+' → '+E(it.toName)+'</span><span class="rqSt '+c+'">'+t+'</span></div>'
-      +'<div class="rqSm">'+(it.kind==='repay'?tx('শোধের নোটিশ','Repayment notice'):tx('ধার দেওয়া','Loan given'))+(it.note?' · “'+E(it.note)+'”':'')+'</div>'
+    var c=it.status==='accepted'?'a':(it.status==='declined'||it.status==='cancelled')?'d':'p', t2=it.status==='accepted'?tx('গ্রহণ করেছে','Accepted'):it.status==='declined'?tx('প্রত্যাখ্যান করেছে','Declined'):it.status==='cancelled'?tx('বাতিল করা হয়েছে','Cancelled'):tx('অপেক্ষমাণ','Pending');
+    return '<div class="rqItem"><div class="rqTop"><span>'+F(it.amount)+' → '+E(it.person||it.toName)+'</span><span class="rqSt '+c+'">'+t2+'</span></div>'
+      +'<div class="rqSm">'+(it.kind==='repay'?tx('শোধের নোটিশ','Repayment notice'):tx('ধার দেওয়া','Loan given'))+(it.due?' · '+tx('ফেরত: ','Due: ')+E(it.due):'')+(it.note?' · “'+E(it.note)+'”':'')+'</div>'
       +(it.status==='pending'?'<div class="rqAct"><button class="rqN rqCancel" data-cancel="'+E(it.rid)+'">'+tx('অনুরোধ বাতিল করুন','Cancel request')+'</button></div>':'')+'</div>';
   }).join('');
 }
@@ -6015,30 +6049,49 @@ async function loadInbox(){
     var m=await db('requests/'+s.uid)||{};
     inbox=Object.keys(m).map(function(k){ return Object.assign({id:k},m[k]); }).filter(function(x){ return x&&x.status==='pending'; }).sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
     renderInbox(); setPill();
-  }catch(e){ var el=$('rqInbox'); if(el) el.innerHTML='<div class="rqEmpty">'+E(R().errMsg(e))+'</div>'; }
+    if(inbox.some(function(x){ return !announced[x.id]; })) needPop=true;
+  }catch(e){ sig=''; var el=$('rqInbox'); if(el) el.innerHTML='<div class="rqEmpty">'+E(R().errMsg(e))+'</div>'; }
 }
+/* sender side: when the other person accepted, the entry is added to my loan list automatically */
 async function refreshSent(){
-  var arr=getSent(), ch=false;
-  for(var i=0;i<arr.length;i++){
-    var it=arr[i]; if(it.status!=='pending') continue;
-    try{
-      var st=await db('requests/'+it.toUid+'/'+it.rid+'/status');
-      if(st===null){ it.status='cancelled'; ch=true; }
-      else if(st==='accepted'||st==='declined'){
-        it.status=st; ch=true;
-        if(st==='accepted'&&!it.applied){ it.applied=1; addTx(it.kind==='repay'?'loan_repay_taken':'loan_given',it.amount,it.toName,it.note); }
-      }
-    }catch(e){}
-  }
-  if(ch) setSent(arr); renderSent();
+  if(syncing) return; syncing=true;
+  try{
+    var arr=getSent(), ch=false, did=false;
+    for(var i=0;i<arr.length;i++){
+      var it=arr[i]; if(it.status!=='pending') continue;
+      try{
+        var st=await db('requests/'+it.toUid+'/'+it.rid+'/status');
+        if(st===null){ it.status='cancelled'; ch=true; }
+        else if(st==='accepted'||st==='declined'){
+          it.status=st; ch=true;
+          if(st==='accepted'&&!it.applied){ it.applied=1; setSent(arr); addTx(it.kind==='repay'?'loan_repay_taken':'loan_given',it.amount,it.person||it.toName,it.note,it.kind==='repay'?null:it.due); did=true; }
+        }
+      }catch(e){}
+    }
+    if(ch) setSent(arr); renderSent();
+    if(did) msg(tx('অনুরোধ গ্রহণ হয়েছে, আপনার লোন তালিকায় এন্ট্রি যোগ হয়েছে','Request accepted, entry added to your loans'));
+  }finally{ syncing=false; }
 }
+/* receiver side: accepting adds the entry (or reduces the balance for a repayment) automatically */
 async function act(id,yes){
-  var it=inbox.filter(function(x){return x.id===id;})[0], s=R().ses(); if(!it||!s||busy) return; busy=true;
+  var it=inbox.filter(function(x){return x.id===id;})[0], s=R().ses(); if(!it||!s||busy) return;
+  var nm='';
+  if(yes){
+    var inp=document.querySelector('#rqInbox [data-nm="'+id+'"]'); nm=((inp&&inp.value)||'').trim()||defName(it);
+    if(it.kind==='repay'){
+      var m=maps(), key=pos(m.getMap,nm);
+      if(!key){ msg(tx('এই নামে আপনার “পাবো” তালিকায় কেউ নেই। তালিকা থেকে সঠিক নাম বেছে নিন, অথবা বাতিল করুন','Nobody with this name owes you in your list. Pick the right name from the list, or decline'),true); return; }
+      var rem=Math.round(m.getMap[key]);
+      if(+it.amount>rem){ msg(tx('শোধের পরিমাণ বাকির চেয়ে বেশি। বাকি আছে ','Repayment is more than what is left. Remaining ')+F(rem),true); return; }
+      nm=key;
+    }
+  }
+  busy=true;
   try{
     await db('requests/'+s.uid+'/'+id,{method:'PATCH',headers:J,body:JSON.stringify({status:yes?'accepted':'declined',respondedAt:Date.now()})});
-    if(yes) addTx(it.kind==='repay'?'loan_repay_given':'loan_taken',+it.amount,it.fromName||it.fromEmail,it.note);
-    inbox=inbox.filter(function(x){return x.id!==id;}); renderInbox(); setPill();
-    msg(yes?tx('গ্রহণ করা হয়েছে, লোন ট্যাবে এন্ট্রি যোগ হয়েছে','Accepted, entry added to your loans'):tx('অনুরোধ বাতিল করা হয়েছে','Request declined'));
+    if(yes){ addTx(it.kind==='repay'?'loan_repay_given':'loan_taken',+it.amount,nm,it.note,it.kind==='repay'?null:it.due); saveLink(it.fromUid,nm,it.fromEmail,''); }
+    inbox=inbox.filter(function(x){return x.id!==id;}); delete edits[id]; renderInbox(); setPill();
+    msg(yes?(it.kind==='repay'?tx('গ্রহণ করা হয়েছে, বাকি নিজে থেকে কমে গেছে','Accepted, the balance was reduced automatically'):tx('গ্রহণ করা হয়েছে, লোন তালিকায় এন্ট্রি যোগ হয়েছে','Accepted, entry added to your loans')):tx('অনুরোধ বাতিল করা হয়েছে','Request declined'));
   }catch(e){ msg(R().errMsg(e),true); }
   busy=false;
 }
@@ -6051,14 +6104,14 @@ async function cancelReq(rid){
     if(st==='accepted'||st==='declined'){ msg(tx('অপর পক্ষ ইতিমধ্যে সাড়া দিয়েছে, তাই বাতিল করা গেল না','They already responded, so it can not be cancelled'),true); again=true; }
     else{
       if(st!==null) await db('requests/'+it.toUid+'/'+rid,{method:'DELETE'});
-      it.status='cancelled'; setSent(arr); renderSent(); msg(tx('অনুরোধ বাতিল করা হয়েছে','Request cancelled'));
+      it.status='cancelled'; setSent(arr); renderSent(); updateRem(); msg(tx('অনুরোধ বাতিল করা হয়েছে','Request cancelled'));
     }
   }catch(e){ msg(R().errMsg(e),true); }
   busy=false; if(again) refreshSent();
 }
 async function send(){
   if(busy) return; var s=R().ses(); if(!s) return;
-  var q=$('rqTo').value.trim(), amt=parseFloat($('rqAmt').value), note=$('rqNote').value.trim();
+  var q=$('rqTo').value.trim(), nm0=$('rqPer').value.trim(), amt=parseFloat($('rqAmt').value), note=$('rqNote').value.trim(), due=(kind==='loan'&&$('rqDue').value)||null;
   if(!q){ msg(tx('ইমেইল বা ইউজারনেম লিখুন','Enter an email or username'),true); return; }
   if(!amt||amt<=0){ msg(tx('সঠিক পরিমাণ লিখুন','Enter a valid amount'),true); return; }
   busy=true; var b=$('rqSend'); if(b) b.disabled=true; msg(tx('পাঠানো হচ্ছে…','Sending…'));
@@ -6068,62 +6121,141 @@ async function send(){
     if(!to){ msg(tx('এই ইমেইল/ইউজারনেমে কোনো FinTrack ইউজার পাওয়া যায়নি','No FinTrack user found with that email/username'),true); }
     else if(to.uid===s.uid){ msg(tx('নিজেকে অনুরোধ পাঠানো যাবে না','You cannot send a request to yourself'),true); }
     else{
+      var nm=nm0||linkName(to.uid)||'';
+      if(kind==='repay'){
+        var r=remainOwe(nm);
+        if(!r){ msg(tx('“দিতে হবে” তালিকা থেকে যাকে শোধ করছেন তার নাম বেছে নিন','Pick who you are repaying from your “I owe” list'),true); busy=false; if(b) b.disabled=false; return; }
+        if(amt>r.rem){ msg(tx('বাকির চেয়ে বেশি শোধ দেখানো যাবে না। বাকি আছে ','You can not repay more than what is left. Remaining ')+F(Math.max(r.rem,0)),true); busy=false; if(b) b.disabled=false; return; }
+        nm=r.key;
+      }else{ nm=anyName(nm)||nm||to.name||q; }
       var me=localStorage.getItem('myName_v1')||String(s.email).split('@')[0];
       var body={fromUid:s.uid,fromName:me,fromEmail:s.email,kind:kind,amount:amt,note:note,date:todayStr(),status:'pending',ts:Date.now()};
-      var r=await db('requests/'+to.uid,{method:'POST',headers:J,body:JSON.stringify(body)});
-      var arr=getSent(); arr.push({rid:r.name,toUid:to.uid,toName:to.name||q,kind:kind,amount:amt,note:note,status:'pending',applied:0,ts:body.ts}); setSent(arr);
-      $('rqTo').value=''; $('rqAmt').value=''; $('rqNote').value='';
-      msg(tx('অনুরোধ পাঠানো হয়েছে। অপর পক্ষ গ্রহণ করলে আপনার হিসাবে এন্ট্রি যোগ হবে।','Request sent. Your entry is added once they accept.')); renderSent();
+      if(due) body.due=due;
+      var rs=await db('requests/'+to.uid,{method:'POST',headers:J,body:JSON.stringify(body)});
+      var arr=getSent(); arr.push({rid:rs.name,toUid:to.uid,toName:nm,person:nm,kind:kind,amount:amt,note:note,due:due,status:'pending',applied:0,ts:body.ts}); setSent(arr);
+      saveLink(to.uid,nm,to.email||'',to.username||'');
+      $('rqTo').value=''; $('rqPer').value=''; $('rqAmt').value=''; $('rqNote').value=''; $('rqDue').value=''; updateRem();
+      msg(tx('অনুরোধ পাঠানো হয়েছে। অপর পক্ষ গ্রহণ করলেই আপনার লোন তালিকায় নিজে থেকে এন্ট্রি হবে।','Request sent. Once they accept, your loan list updates automatically.')); renderSent();
     }
   }catch(e){ msg(R().errMsg(e),true); }
   busy=false; if(b) b.disabled=false;
 }
-function setKind(k){ kind=k; var a=$('rqK1'),b=$('rqK2'); if(a) a.classList.toggle('on',k==='loan'); if(b) b.classList.toggle('on',k==='repay'); }
+function updateRem(){
+  var el=$('rqRem'); if(!el) return; el.textContent='';
+  if(kind!=='repay') return;
+  var nm=$('rqPer').value.trim();
+  if(!nm){ el.textContent=tx('যাকে শোধ করছেন তার নাম আপনার “দিতে হবে” তালিকা থেকে বেছে নিন','Pick who you are repaying from your “I owe” list'); return; }
+  var r=remainOwe(nm);
+  el.textContent=r?tx('বাকি আছে ','Remaining ')+F(Math.max(r.rem,0))+(pendingRepay(r.key)?tx(' (অপেক্ষমাণ অনুরোধ বাদে)',' (after pending requests)'):''):tx('এই নামে কোনো বাকি নেই','No balance under this name');
+}
+function onPick(){
+  var nm=$('rqPer').value.trim(), l=linkByName(nm), to=$('rqTo');
+  if(l&&to&&!to.value.trim()) to.value=l.un?('@'+l.un):(l.email||'');
+  if(kind==='repay'){ var r=remainOwe(nm), a=$('rqAmt'); if(r&&r.rem>0&&a&&!a.value) a.value=r.rem; }
+  updateRem();
+}
+function setKind(k){
+  kind=k; var a=$('rqK1'),b=$('rqK2'); if(a) a.classList.toggle('on',k==='loan'); if(b) b.classList.toggle('on',k==='repay');
+  var d=$('rqDueW'); if(d) d.style.display=k==='loan'?'':'none';
+  var p=$('rqPer'); if(p) p.setAttribute('list',k==='repay'?'rqPplOwe':'rqPplAll');
+  fillLists(); updateRem();
+}
 function gate(){
   var r=R(), okc=r.ok()&&r.ses(); var g=$('rqGate'), m=$('rqMain'); if(!g||!m) return false;
   g.style.display=okc?'none':''; m.style.display=okc?'':'none'; return !!okc;
 }
+function mode(m){
+  var q=$('rqPaneQ'), e=$('rqPaneE'); if(q) q.style.display=m==='q'?'':'none'; if(e) e.style.display=m==='e'?'':'none';
+  var a=$('rqM1'), b=$('rqM2'); if(a) a.classList.toggle('on',m==='q'); if(b) b.classList.toggle('on',m==='e');
+  if(m==='e'){ try{ closeQRScan(); }catch(x){} fillLists(); if(gate()){ register().catch(function(){}); loadInbox(); refreshSent(); } renderSent(); }
+}
+/* used by the "Via request" button in the Loan list */
+window.ftReqOpen=function(enc){
+  var name; try{ name=decodeURIComponent(enc||''); }catch(e){ name=enc||''; }
+  var box=$('rqBox'); if(!box) return;
+  box.open=true; mode('e'); setKind('repay');
+  $('rqPer').value=name; $('rqAmt').value=''; $('rqTo').value=''; onPick();
+  try{ box.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){}
+};
+/* ---- popup shown when the app opens (and when a new request arrives): who sent a request and how much ---- */
+function shown(id){ var el=$(id); return !!el&&getComputedStyle(el).display!=='none'; }
+function blocked(){
+  if(document.hidden||$('rqPop')||$('rmPop')||$('rmForm')||$('appDlg')) return true;
+  if(shown('lockOverlay')||shown('loginScreen')||shown('notifPopupOverlay')) return true;
+  var a=document.activeElement; if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return true;
+  return false;
+}
+function closePop(){ var o=$('rqPop'); if(o) o.remove(); }
+function showReqPop(){
+  if(!inbox.length){ needPop=false; return; }
+  var list=inbox.slice(), top=list.slice(0,5), more=list.length-top.length;
+  list.forEach(function(x){ announced[x.id]=1; }); needPop=false;
+  var rows=top.map(function(it){
+    var rp=it.kind==='repay', nm=E(it.fromName||it.fromEmail||'?');
+    return '<div class="rmRow"><span class="rmChip" style="--c:'+(rp?'#22c55e':'#f59e0b')+'">'+(typeof mi==='function'?mi(rp?'undo':'loan-in'):'')+'</span>'
+      +'<div class="rmTx"><b>'+nm+' — '+F(it.amount)+'</b><small>'+(rp?tx('ধার শোধ করেছেন','Repaid you'):tx('আপনাকে ধার দিয়েছেন','Lent you'))+(it.due?' · '+tx('ফেরত: ','Due: ')+E(it.due):'')+(it.note?' · “'+E(it.note)+'”':'')+'</small></div></div>';
+  }).join('');
+  var o=document.createElement('div'); o.id='rqPop'; o.className='rmOv';
+  o.innerHTML='<div class="rmCard"><div class="rmHd"><div class="ico">'+(typeof mi==='function'?mi('bell'):'')+'</div><h4>'+tx('নতুন টাকার অনুরোধ','New money requests')+'</h4><small>'+tx(list.length+' টি অনুরোধ অপেক্ষায় আছে',list.length+' pending request'+(list.length>1?'s':''))+'</small></div>'
+    +'<div class="rmBody">'+rows+(more>0?'<div class="rqEmpty">'+tx('আরও '+more+' টি আছে','+ '+more+' more')+'</div>':'')+'</div>'
+    +'<div class="row2" style="margin-top:12px;display:grid;grid-template-columns:1fr 2fr;gap:8px"><button type="button" class="typebtn" data-a="later">'+tx('পরে','Later')+'</button><button type="button" class="main" style="margin-top:0" data-a="view">'+tx('দেখুন','View')+'</button></div></div>';
+  document.body.appendChild(o);
+  o.addEventListener('click',function(e){
+    if(e.target===o){ closePop(); return; }
+    var b=e.target.closest('button'); if(!b) return; var a=b.getAttribute('data-a');
+    if(a==='later') closePop();
+    else if(a==='view'){
+      closePop(); try{ activateTab('loan'); }catch(x){}
+      var box=$('rqBox'); if(box){ box.open=true; mode('e'); setTimeout(function(){ try{ box.scrollIntoView({behavior:'smooth',block:'start'}); }catch(x){} },150); }
+    }
+  });
+  if(navigator.vibrate){ try{ navigator.vibrate([120,70,120]); }catch(x){} }
+}
+setInterval(function(){ try{ if(needPop&&inbox.length&&!blocked()) showReqPop(); else if(!inbox.length) needPop=false; }catch(e){} },2500);
 function build(){
   if($('rqBox')) return; var sec=$('sec-loan'); if(!sec) return;
   var box=document.createElement('details'); box.className='box setBox'; box.id='rqBox'; box.dataset.pro='1';
-  box.innerHTML='<summary><span class="setIco" style="--c:#0ea5e9">'+(typeof mi==='function'?mi('send'):'')+'</span><div class="setTt"><h3>'+bl('টাকার অনুরোধ','Request money')+'</h3><small class="setSub">'+bl('QR বা ইমেইল/ইউজারনেমে লোন দিন ও নিন','Give & take loans via QR or email/username')+'</small></div><span class="setPill" id="rqPill" style="display:none"></span><svg viewBox="0 0 24 24" class="setChev"><path d="m9 6 6 6-6 6"/></svg></summary>'
-  +'<div class="setBody">'
-  +'<div class="rqSeg"><button type="button" id="rqM1" class="on">'+bl('QR কোড','QR code')+'</button><button type="button" id="rqM2">'+bl('ইমেইল/ইউজারনেম','Email / username')+'</button></div>'
-  +'<div id="rqPaneQ"></div>'
-  +'<div id="rqPaneE" style="display:none">'
-  +'<div id="rqGate"><p class="rqHint">'+bl('অনুরোধ পাঠাতে ও পেতে অ্যাকাউন্টে লগইন করা থাকতে হবে। গেস্ট মোডে এই ফিচার চলে না।','You need to be logged in to send or receive requests. This is not available in guest mode.')+'</p></div>'
-  +'<div id="rqMain" style="display:none">'
-  +'<p class="rqHint">'+bl('এখানে আসল টাকা যায় না। বিকাশ/নগদ/ব্যাংকে টাকা পাঠিয়ে এখানে জানান, অপর পক্ষ গ্রহণ করলে দুজনের হিসাবে এন্ট্রি হয়ে যাবে।','No real money moves here. Pay via bKash/Nagad/bank, then notify here. Once accepted, both ledgers update.')+'</p>'
-  +'<div class="rqSeg"><button type="button" id="rqK1" class="on">'+bl('ধার দিয়েছি','I lent')+'</button><button type="button" id="rqK2">'+bl('ধার শোধ করেছি','I repaid')+'</button></div>'
-  +'<input class="rqIn" id="rqTo" type="text" autocapitalize="none" autocomplete="off" placeholder="'+tx('ইমেইল বা @ইউজারনেম','Email or @username')+'">'
-  +'<input class="rqIn" id="rqAmt" type="number" inputmode="decimal" placeholder="'+tx('পরিমাণ (৳)','Amount (৳)')+'">'
-  +'<input class="rqIn" id="rqNote" type="text" placeholder="'+tx('নোট (ঐচ্ছিক)','Note (optional)')+'">'
-  +'<button type="button" class="typebtn" id="rqSend" style="width:100%">'+bl('অনুরোধ পাঠান','Send request')+'</button>'
-  +'<div class="rqMsg" id="rqMsg"></div>'
-  +'<div class="rqH"><span>'+bl('আমার ইনবক্স','My inbox')+'</span><button type="button" id="rqRef">'+bl('রিফ্রেশ','Refresh')+'</button></div><div id="rqInbox"></div>'
-  +'<div class="rqH"><span>'+bl('পাঠানো অনুরোধ','Sent requests')+'</span></div><div id="rqSent"></div>'
-  +'</div></div></div>';
+  box.innerHTML=[
+  '<summary><span class="setIco" style="--c:#0ea5e9">'+(typeof mi==='function'?mi('send'):'')+'</span><div class="setTt"><h3>'+bl('টাকার অনুরোধ','Request money')+'</h3><small class="setSub">'+bl('QR বা ইমেইল/ইউজারনেমে লোন দিন, নিন ও শোধ করুন','Give, take & repay loans via QR or email/username')+'</small></div><span class="setPill" id="rqPill" style="display:none"></span><svg viewBox="0 0 24 24" class="setChev"><path d="m9 6 6 6-6 6"/></svg></summary>',
+  '<div class="setBody">',
+  '<div class="rqSeg"><button type="button" id="rqM1" class="on">'+bl('QR কোড','QR code')+'</button><button type="button" id="rqM2">'+bl('ইমেইল/ইউজারনেম','Email / username')+'</button></div>',
+  '<div id="rqPaneQ"></div>',
+  '<div id="rqPaneE" style="display:none">',
+  '<datalist id="rqPplAll"></datalist><datalist id="rqPplGet"></datalist><datalist id="rqPplOwe"></datalist>',
+  '<div id="rqGate"><p class="rqHint">'+bl('অনুরোধ পাঠাতে ও পেতে অ্যাকাউন্টে লগইন করা থাকতে হবে। গেস্ট মোডে এই ফিচার চলে না।','You need to be logged in to send or receive requests. This is not available in guest mode.')+'</p></div>',
+  '<div id="rqMain" style="display:none">',
+  '<p class="rqHint">'+bl('এখানে আসল টাকা যায় না। বিকাশ/নগদ/ব্যাংকে টাকা পাঠিয়ে এখানে জানান। অপর পক্ষ গ্রহণ করলে দুজনের লোন তালিকায় নিজে থেকেই এন্ট্রি হবে, আর শোধের অনুরোধ গ্রহণ করলে বাকি নিজে থেকে কমে যাবে (আলাদা করে পরিশোধ দিতে হবে না)।','No real money moves here. Pay via bKash/Nagad/bank, then notify here. Once they accept, both loan lists update automatically, and an accepted repayment reduces the balance by itself (no separate payment step).')+'</p>',
+  '<div class="rqSeg"><button type="button" id="rqK1" class="on">'+bl('ধার দিয়েছি','I lent')+'</button><button type="button" id="rqK2">'+bl('ধার শোধ করেছি','I repaid')+'</button></div>',
+  '<input class="rqIn" id="rqTo" type="text" autocapitalize="none" autocomplete="off" placeholder="'+tx('ইমেইল বা @ইউজারনেম','Email or @username')+'">',
+  '<label class="rqLb">'+bl('লোন তালিকায় যে নামে থাকবে','Name in your loan list')+'</label>',
+  '<input class="rqIn" id="rqPer" type="text" autocomplete="off" list="rqPplAll" placeholder="'+tx('নাম (ঐচ্ছিক, না দিলে তার প্রোফাইলের নাম)','Name (optional, defaults to their profile name)')+'">',
+  '<input class="rqIn" id="rqAmt" type="number" inputmode="decimal" placeholder="'+tx('পরিমাণ (৳)','Amount (৳)')+'">',
+  '<div class="rqHint" id="rqRem"></div>',
+  '<div id="rqDueW"><label class="rqLb">'+bl('ফেরতের তারিখ (ঐচ্ছিক)','Due date (optional)')+'</label><input class="rqIn" id="rqDue" type="date"></div>',
+  '<input class="rqIn" id="rqNote" type="text" placeholder="'+tx('নোট (ঐচ্ছিক)','Note (optional)')+'">',
+  '<button type="button" class="typebtn" id="rqSend" style="width:100%">'+bl('অনুরোধ পাঠান','Send request')+'</button>',
+  '<div class="rqMsg" id="rqMsg"></div>',
+  '<div class="rqH"><span>'+bl('আমার ইনবক্স','My inbox')+'</span><button type="button" id="rqRef">'+bl('রিফ্রেশ','Refresh')+'</button></div><div id="rqInbox"></div>',
+  '<div class="rqH"><span>'+bl('পাঠানো অনুরোধ','Sent requests')+'</span></div><div id="rqSent"></div>',
+  '</div></div></div>'].join('');
   var anchor=$('getList'); anchor=anchor&&anchor.closest('.box');
   if(anchor) sec.insertBefore(box,anchor); else sec.appendChild(box);
-  /* move the loan QR (create / scan) into this box so the QR works as the Request-money QR */
   var qb=$('qrBox'), slot=$('rqPaneQ');
   if(qb&&slot){ while(qb.firstElementChild){ var c=qb.firstElementChild; if(c.tagName==='H3'){ qb.removeChild(c); continue; } slot.appendChild(c); } qb.remove(); }
-  function mode(m){
-    var q=$('rqPaneQ'), e=$('rqPaneE'); if(q) q.style.display=m==='q'?'':'none'; if(e) e.style.display=m==='e'?'':'none';
-    $('rqM1').classList.toggle('on',m==='q'); $('rqM2').classList.toggle('on',m==='e');
-    if(m==='e'){ try{ closeQRScan(); }catch(x){} if(gate()){ register().catch(function(){}); loadInbox(); refreshSent(); } renderSent(); }
-  }
   $('rqM1').onclick=function(){mode('q');}; $('rqM2').onclick=function(){mode('e');};
   $('rqK1').onclick=function(){setKind('loan');}; $('rqK2').onclick=function(){setKind('repay');};
   $('rqSend').onclick=send; $('rqRef').onclick=function(){ loadInbox(); refreshSent(); };
+  $('rqPer').addEventListener('input',onPick); $('rqPer').addEventListener('change',onPick);
+  $('rqAmt').addEventListener('input',updateRem);
+  box.addEventListener('input',function(e){ var n=e.target.getAttribute&&e.target.getAttribute('data-nm'); if(n) edits[n]=e.target.value; });
   box.addEventListener('click',function(e){ var c=e.target.closest('[data-cancel]'); if(c){ cancelReq(c.getAttribute('data-cancel')); return; } var b=e.target.closest('[data-rq]'); if(b) act(b.getAttribute('data-id'),b.getAttribute('data-rq')==='y'); });
-  box.addEventListener('toggle',function(){ if(!box.open){ try{ closeQRScan(); }catch(x){} return; } if($('rqPaneE').style.display!=='none'&&gate()){ register().catch(function(){}); loadInbox(); refreshSent(); } renderSent(); });
-  gate(); renderSent(); renderInbox();
-  if(gate()){ register().catch(function(){}); loadInbox(); }
+  box.addEventListener('toggle',function(){ if(!box.open){ try{ closeQRScan(); }catch(x){} return; } fillLists(); if($('rqPaneE').style.display!=='none'&&gate()){ register().catch(function(){}); loadInbox(); refreshSent(); } renderSent(); });
+  setKind('loan'); fillLists(); gate(); renderSent(); renderInbox(true);
+  if(gate()){ register().catch(function(){}); loadInbox(); refreshSent(); }
 }
 try{ build(); }catch(e){ console.warn('requests',e); }
-setTimeout(function(){ try{ build(); if(gate()) loadInbox(); }catch(e){} },2800);
-function poll(){ try{ var r=R(); if(r.ok()&&r.ses()&&!document.hidden) loadInbox(); }catch(e){} }
+setTimeout(function(){ try{ build(); if(gate()){ loadInbox(); refreshSent(); } }catch(e){} },2800);
+function poll(){ try{ var r=R(); if(r.ok()&&r.ses()&&!document.hidden){ loadInbox(); refreshSent(); } }catch(e){} }
 setInterval(poll,20000);
 document.addEventListener('visibilitychange',function(){ if(!document.hidden) poll(); });
 window.addEventListener('focus',poll);
