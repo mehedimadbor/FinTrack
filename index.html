@@ -670,7 +670,46 @@ i.ti,b.ti{background:var(--green);} i.te,b.te{background:var(--red);}
 .box h3[data-i18n="dash_goal_heading"]{--m:var(--ic-flag);}
 .box h3[data-i18n="chat_heading"]{--m:var(--ic-bot);}
 .insight h3{--m:var(--ic-bulb);}
-.loginLogo{color:var(--primary);} .lkLogo,#headerLogoEl{color:#fff;} .lkShield,.lockBadge,.notifPopupIcon,#logoPreviewEmoji{color:var(--primary);}
+.loginLogo{color:var(--primary);}
+/* ===== Pro login v2 (stable layout, no jumping) ===== */
+.loginScreen{justify-content:flex-start !important; gap:0 !important; padding:calc(34px + env(safe-area-inset-top,0px)) 20px calc(24px + env(safe-area-inset-bottom,0px)) !important; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; background:radial-gradient(80% 42% at 85% -5%,rgba(255,255,255,.22),transparent 62%),radial-gradient(70% 40% at 0% 100%,rgba(0,0,0,.18),transparent 70%),var(--grad) !important;}
+.loginScreen .loginLogo{width:66px; height:66px; flex:none; font-size:32px; border-radius:20px; background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.38); color:#fff !important; display:flex; align-items:center; justify-content:center; box-shadow:0 12px 30px -10px rgba(0,0,0,.45);}
+.loginScreen .loginLogo img{width:100%; height:100%; border-radius:20px; object-fit:cover;}
+.loginScreen .loginBrand{margin-top:14px; font-size:27px; letter-spacing:.3px; flex:none;}
+.loginScreen .loginTag{margin-top:4px; font-size:13.5px; flex:none;}
+.loginScreen .loginBox{flex:none; width:100%; max-width:360px; margin-top:24px; padding:16px 16px 18px; border-radius:24px; background:#fff !important; border:0 !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; box-shadow:0 28px 60px -22px rgba(0,0,0,.55); text-align:left; color:#101828;}
+.loginScreen .lgTabs{background:#eef1f6; margin-bottom:16px;}
+.loginScreen .lgTab{color:#667085;}
+.loginScreen .lgTab.on{background:#fff; color:var(--primary-d); box-shadow:0 2px 8px rgba(16,24,40,.14);}
+#lgUpOnly{text-align:center;}
+.loginScreen .lgAv{width:76px; height:76px; margin:0 auto 6px; background:#f4f6fa; border:2px dashed #c3c9d6; color:#98a2b3;}
+.loginScreen .lgAv.has{border:2px solid var(--primary);}
+.loginScreen .lgAvPlus{background:var(--grad,var(--primary)); color:#fff; border:2px solid #fff; width:26px; height:26px; right:-3px; bottom:-3px; font-size:17px; box-shadow:0 4px 10px rgba(16,24,40,.25);}
+.loginScreen .lgAvLbl{color:#667085; margin-bottom:12px; font-size:12.5px;}
+.loginScreen .lgAvRm{color:var(--red,#d92d20); margin-bottom:10px;}
+.loginScreen .loginBox input.lgIn{width:100%; height:50px; box-sizing:border-box; margin:0 0 10px !important; padding:0 14px 0 44px !important; font-size:15px !important; font-weight:500 !important; text-align:left !important; border-radius:14px !important; background-color:#f4f6fa !important; background-repeat:no-repeat !important; background-position:14px center !important; background-size:20px !important; border:1.5px solid #e3e7ef !important; color:#101828 !important; -webkit-text-fill-color:#101828 !important; transition:none;}
+.loginScreen .loginBox input.lgInName{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2398a2b3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E") !important;}
+.loginScreen .loginBox input.lgInMail{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2398a2b3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='2'/%3E%3Cpath d='m3 7 9 6 9-6'/%3E%3C/svg%3E") !important;}
+.loginScreen .loginBox input.lgInPass{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2398a2b3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='11' width='16' height='10' rx='2'/%3E%3Cpath d='M8 11V7a4 4 0 0 1 8 0v4'/%3E%3C/svg%3E") !important;}
+.loginScreen .loginBox input.lgIn:focus{background-color:#fff !important; border-color:var(--primary) !important; box-shadow:0 0 0 4px color-mix(in srgb,var(--primary) 16%,transparent) !important;}
+.loginScreen .loginBox input.lgIn::placeholder{color:#98a2b3 !important; -webkit-text-fill-color:#98a2b3 !important;}
+.loginScreen .loginBox input.lgIn:-webkit-autofill,.loginScreen .loginBox input.lgIn:-webkit-autofill:focus{-webkit-box-shadow:0 0 0 1000px #f4f6fa inset !important; -webkit-text-fill-color:#101828 !important;}
+.loginScreen .lgPw{margin:0 0 10px;}
+.loginScreen .lgPw input.lgIn{margin:0 !important; padding-right:76px !important;}
+.loginScreen .lgEye{color:var(--primary) !important; right:6px; font-size:12.5px; font-weight:700;}
+.loginScreen .lgLink{text-align:right; color:var(--primary); opacity:1; text-decoration:none; font-weight:600; margin:0 2px 8px; font-size:12.5px;}
+.loginScreen .lgStatus{color:#344054; margin:0 0 8px; font-size:12.5px;}
+.loginScreen .lgStatus.bad{background:#fef3f2; color:#b42318; border-radius:10px;}
+.loginScreen .loginBox .loginBtn{height:50px; padding:0; margin-top:4px; border-radius:14px; background:var(--grad,var(--primary)) !important; color:#fff !important; font-size:15.5px; font-weight:800; display:flex; align-items:center; justify-content:center; box-shadow:0 12px 24px -10px color-mix(in srgb,var(--primary) 70%,transparent);}
+.loginScreen .loginBox .loginBtn:active{transform:scale(.985);} .loginScreen .loginBox .loginBtn:disabled{opacity:.65;}
+.loginScreen .lgOr{color:#98a2b3; margin:16px 0 2px;}
+.loginScreen .lgOr::before,.loginScreen .lgOr::after{background:#e4e7ee;}
+.loginScreen .lgGuest{height:48px; border:1.5px solid #dfe3ec; background:#fff; color:#344054; border-radius:14px; font-size:14.5px; font-weight:700; margin-top:10px; padding:0;}
+.loginScreen .lgGuest:active{background:#f4f6fa;}
+.loginScreen .lgNote{color:#667085; font-size:11.5px; margin-top:10px;}
+.lgFoot{flex:none; margin-top:16px; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; color:rgba(255,255,255,.88);}
+.lgFoot .mi{font-size:14px;}
+ .lkLogo,#headerLogoEl{color:#fff;} .lkShield,.lockBadge,.notifPopupIcon,#logoPreviewEmoji{color:var(--primary);}
 .qi .mi,.txic .mi,.setIco .mi{color:var(--c);} .setIco{font-size:20px;}
 .insight .ins .e{color:var(--primary);font-size:17px;line-height:1.5;}
 .editbtn .mi,.del .mi{width:16px;height:16px;vertical-align:middle;}
@@ -683,33 +722,36 @@ i.ti,b.ti{background:var(--green);} i.te,b.te{background:var(--red);}
   <div class="loginBrand">FinTrack</div>
   <div class="loginTag" data-i18n="login_tag">আপনার আর্থিক হিসাবের সঙ্গী</div>
   <div class="loginBox">
-    <div class="lgTabs" id="lgTabs" style="display:none;">
-      <button class="lgTab on" id="lgTabUp" onclick="ftCloud.loginMode('up')"><span class="bn">নতুন অ্যাকাউন্ট</span><span class="en">Create account</span></button>
-      <button class="lgTab" id="lgTabIn" onclick="ftCloud.loginMode('in')"><span class="bn">লগইন</span><span class="en">Log in</span></button>
+    <div class="lgTabs" id="lgTabs">
+      <button type="button" class="lgTab on" id="lgTabUp" onclick="ftCloud.loginMode('up')"><span class="bn">নতুন অ্যাকাউন্ট</span><span class="en">Sign up</span></button>
+      <button type="button" class="lgTab" id="lgTabIn" onclick="ftCloud.loginMode('in')"><span class="bn">লগইন</span><span class="en">Log in</span></button>
     </div>
-    <div class="lgAv" id="lgAv" onclick="document.getElementById('lgPicInput').click()">
-      <img class="lgAvImg" id="lgAvImg" alt="">
-      <span class="lgAvIco"><i class="mi" style="--m:var(--ic-user)"></i></span>
-      <span class="lgAvPlus">+</span>
+    <div id="lgUpOnly">
+      <div class="lgAv" id="lgAv" onclick="document.getElementById('lgPicInput').click()">
+        <img class="lgAvImg" id="lgAvImg" alt="">
+        <span class="lgAvIco"><i class="mi" style="--m:var(--ic-user)"></i></span>
+        <span class="lgAvPlus">+</span>
+      </div>
+      <input type="file" id="lgPicInput" accept="image/*" style="display:none;" onchange="loginPicPick(this)">
+      <div class="lgAvLbl" id="lgAvLbl"><span class="bn">প্রোফাইল ছবি (ঐচ্ছিক)</span><span class="en">Profile photo (optional)</span></div>
+      <button type="button" class="lgAvRm" id="lgAvRm" onclick="loginPicRemove()"><span class="bn">ছবি সরান</span><span class="en">Remove photo</span></button>
+      <input type="text" class="lgIn lgInName" id="loginNameInput" data-i18n-ph="lg_ph_name" placeholder="আপনার নাম" autocomplete="name">
     </div>
-    <input type="file" id="lgPicInput" accept="image/*" style="display:none;" onchange="loginPicPick(this)">
-    <div class="lgAvLbl" id="lgAvLbl"><span class="bn">প্রোফাইল ছবি যোগ করুন (ঐচ্ছিক)</span><span class="en">Add profile photo (optional)</span></div>
-    <button type="button" class="lgAvRm" id="lgAvRm" onclick="loginPicRemove()"><span class="bn">ছবি সরান</span><span class="en">Remove photo</span></button>
-    <input type="text" id="loginNameInput" data-i18n-ph="ph_your_name" placeholder="যেমন: করিম">
-    <div id="loginCloud" style="display:none;">
-      <input type="email" id="lgEmail" placeholder="Email / ইমেইল" autocomplete="email">
-      <div class="lgPw"><input type="password" id="lgPass" placeholder="Password / পাসওয়ার্ড (6+)" autocomplete="new-password"><button type="button" class="lgEye" id="lgEye" onclick="ftCloud.loginEye()"><span class="bn">দেখান</span><span class="en">Show</span></button></div>
-      <button class="loginBtn" id="lgBtn" onclick="ftCloud.loginSubmit()"><span class="bn">অ্যাকাউন্ট খুলুন</span><span class="en">Create account</span></button>
+    <div id="loginCloud">
+      <input type="email" class="lgIn lgInMail" id="lgEmail" data-i18n-ph="lg_ph_email" placeholder="ইমেইল ঠিকানা" autocomplete="email">
+      <div class="lgPw"><input type="password" class="lgIn lgInPass" id="lgPass" data-i18n-ph="lg_ph_pass" placeholder="পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)" autocomplete="new-password"><button type="button" class="lgEye" id="lgEye" onclick="ftCloud.loginEye()"><span class="bn">দেখান</span><span class="en">Show</span></button></div>
       <div class="lgLink" id="lgForgot" style="display:none;" onclick="ftCloud.loginReset()"><span class="bn">পাসওয়ার্ড ভুলে গেছেন?</span><span class="en">Forgot password?</span></div>
       <div class="lgStatus" id="lgStatus"></div>
+      <button class="loginBtn" id="lgBtn" onclick="ftCloud.loginSubmit()"><span class="bn">অ্যাকাউন্ট খুলুন</span><span class="en">Create account</span></button>
       <div class="lgOr"><span class="bn">অথবা</span><span class="en">or</span></div>
       <button class="lgGuest" onclick="ftCloud.loginGuest()"><span class="bn">গেস্ট হিসেবে চালিয়ে যান</span><span class="en">Continue as guest</span></button>
-      <div class="lgNote"><span class="bn">গেস্ট হিসেবে ডেটা শুধু এই ফোনে থাকবে। পরে Settings থেকে অ্যাকাউন্ট খুলে ক্লাউডে ব্যাকআপ রাখতে পারবেন।</span><span class="en">As a guest, your data stays on this phone only. You can create an account later in Settings to back it up.</span></div>
+      <div class="lgNote"><span class="bn">গেস্ট হিসেবে ডেটা শুধু এই ফোনে থাকবে। পরে Settings থেকে অ্যাকাউন্ট খুলে ক্লাউডে ব্যাকআপ রাখতে পারবেন।</span><span class="en">As a guest, your data stays on this phone only. You can create an account later in Settings to back it up to the cloud.</span></div>
     </div>
-    <div id="loginPlain">
+    <div id="loginPlain" style="display:none;">
       <button class="loginBtn" onclick="loginContinue()" data-i18n="btn_get_started">শুরু করুন</button>
     </div>
   </div>
+  <div class="lgFoot"><i class="mi" style="--m:var(--ic-shield)"></i><span class="bn">আপনার ডেটা নিরাপদে সংরক্ষিত থাকে</span><span class="en">Your data is stored securely</span></div>
 </div>
 <div class="lockOverlay" id="lockOverlay">
   <div class="lockBg" id="lockBg"></div>
@@ -933,7 +975,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   function loginMode(m){
     lgMode=(m==='in')?'in':'up'; var up=lgMode==='up';
     $('lgTabUp').classList.toggle('on',up); $('lgTabIn').classList.toggle('on',!up);
-    $('loginNameInput').style.display=up?'':'none';
+    var _u=$('lgUpOnly'); if(_u) _u.style.display=up?'':'none';
     $('lgForgot').style.display=up?'none':'';
     $('lgPass').setAttribute('autocomplete',up?'new-password':'current-password');
     $('lgBtn').innerHTML=up?'<span class="bn">অ্যাকাউন্ট খুলুন</span><span class="en">Create account</span>':'<span class="bn">লগইন করুন</span><span class="en">Log in</span>';
@@ -947,9 +989,12 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     var em=($('lgEmail').value||'').trim(); if(!em){ lgStatus(tx('আগে ইমেইল লিখুন','Enter your email first'),true); return; }
     try{ await authReq('sendOobCode',{requestType:'PASSWORD_RESET',email:em}); lgStatus(tx('পাসওয়ার্ড রিসেট লিংক ইমেইলে পাঠানো হয়েছে','Password reset link sent to your email')); }catch(e){ lgStatus(errMsg(e),true); }
   }
-  if(ok()){ var _c=$('loginCloud'), _p=$('loginPlain'), _t=$('lgTabs'); if(_c) _c.style.display=''; if(_t) _t.style.display=''; if(_p) _p.style.display='none'; loginMode('up');
-    var _pw=$('lgPass'); if(_pw) _pw.addEventListener('keydown',function(e){ if(e.key==='Enter') loginSubmit(); }); }
+  (function(){ var _c=$('loginCloud'), _p=$('loginPlain'), _t=$('lgTabs');
+    if(ok()){ loginMode('up'); var _pw=$('lgPass'); if(_pw) _pw.addEventListener('keydown',function(e){ if(e.key==='Enter') loginSubmit(); }); }
+    else{ if(_c) _c.style.display='none'; if(_t) _t.style.display='none'; if(_p) _p.style.display=''; }
+  })();
   window.ftCloud={
+    _raw:function(){ return {ses:ses,token:token,call:call,CFG:CFG,ok:ok,errMsg:errMsg}; },
     loginSubmit:loginSubmit, loginMode:loginMode, loginReset:loginReset, loginGuest:loginGuest, loginEye:loginEye,
     signIn:function(){ enter('in'); }, signUp:function(){ enter('up'); },
     reset:async function(){ if(!ok()) return ui(); var em=($('csEmail').value||'').trim(); if(!em){ status(tx('আগে ইমেইল লিখুন','Enter your email first'),true); return; }
@@ -1587,7 +1632,7 @@ const I18N = {
     hist_month:'মাস', hist_show_all:'সব দেখুন', hist_print:'প্রিন্ট করুন',
     settings_theme:'থিম', settings_lang:'ভাষা', settings_profile:'প্রোফাইল',
     profile_note:'নিচে তথ্য দিয়ে রাখুন, QR শেয়ার করার সময় বন্ধুরা এই নামে আপনাকে চিনবে।',
-    lbl_your_name:'আপনার নাম', ph_your_name:'যেমন: করিম',
+    lbl_your_name:'আপনার নাম', ph_your_name:'যেমন: করিম', lg_ph_name:'আপনার নাম', lg_ph_email:'ইমেইল ঠিকানা', lg_ph_pass:'পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)',
     lbl_username:'ইউজারনেম', ph_username:'যেমন: karim123',
     lbl_phone:'মোবাইল নম্বর', ph_phone:'যেমন: 01XXXXXXXXX',
     btn_change_photo:'ছবি পরিবর্তন করুন', btn_reset_photo:'ছবি সরিয়ে দিন',
@@ -1713,7 +1758,7 @@ const I18N = {
     hist_month:'Month', hist_show_all:'Show All', hist_print:'Print',
     settings_theme:'Theme', settings_lang:'Language', settings_profile:'Profile',
     profile_note:"Set your details below; friends will see your name when you share a QR.",
-    lbl_your_name:'Your Name', ph_your_name:'e.g. Karim',
+    lbl_your_name:'Your Name', ph_your_name:'e.g. Karim', lg_ph_name:'Your full name', lg_ph_email:'Email address', lg_ph_pass:'Password (min 6 characters)',
     lbl_username:'Username', ph_username:'e.g. karim123',
     lbl_phone:'Mobile Number', ph_phone:'e.g. 01XXXXXXXXX',
     btn_change_photo:'Change Photo', btn_reset_photo:'Remove Photo',
@@ -5781,6 +5826,303 @@ sec.querySelectorAll('[data-k]').forEach(el=>{const c=cfg();el.value=c[el.datase
 const _a=window.activateTab;window.activateTab=function(n){const r=_a.apply(this,arguments);if(n==='zakat')render();return r};
 const _l=window.applyLanguage;if(_l)window.applyLanguage=function(){const r=_l.apply(this,arguments);try{render()}catch(e){}return r};
 applyFeat();render();
+})();
+</script>
+
+<style id="ftSetPro">
+/* ===== Settings Pro: groups, richer cards, theme gallery ===== */
+.setGroup{display:flex;align-items:center;gap:10px;margin:22px 4px 10px;font-size:11.5px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);}
+.setGroup::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--grad,var(--primary));box-shadow:0 0 0 4px color-mix(in srgb,var(--primary) 16%,transparent);flex:none;}
+.setGroup::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent);}
+.setGroup:first-of-type{margin-top:14px;}
+#sec-settings details.setBox{border:1px solid var(--border);border-radius:22px;margin-bottom:10px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 22px -14px rgba(16,24,40,.22);transition:box-shadow .25s,border-color .25s;}
+#sec-settings details.setBox[open]{border-color:color-mix(in srgb,var(--primary) 38%,var(--border));box-shadow:0 14px 30px -16px color-mix(in srgb,var(--primary) 45%,transparent);}
+#sec-settings details.setBox>summary{padding:13px 14px;gap:12px;transition:background .2s;}
+#sec-settings details.setBox>summary:active{background:color-mix(in srgb,var(--primary) 6%,transparent);}
+#sec-settings details.setBox[open]>summary{background:linear-gradient(180deg,color-mix(in srgb,var(--primary) 7%,transparent),transparent);}
+.setTt{flex:1;min-width:0;}
+.setTt h3{font-size:15px;font-weight:800;line-height:1.25;}
+.setSub{display:block;margin-top:2px;font-size:11.5px;line-height:1.35;color:var(--muted);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#sec-settings .setIco{width:44px;height:44px;border-radius:15px;background:linear-gradient(145deg,color-mix(in srgb,var(--c) 26%,transparent),color-mix(in srgb,var(--c) 8%,transparent));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 28%,transparent),0 6px 14px -8px var(--c);}
+#sec-settings .setChev{width:26px;height:26px;padding:5px;border-radius:50%;background:color-mix(in srgb,var(--muted) 13%,transparent);stroke:var(--muted);}
+#sec-settings details.setBox[open]>summary .setChev{background:color-mix(in srgb,var(--primary) 16%,transparent);stroke:var(--primary);}
+.setPill{flex:none;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;background:color-mix(in srgb,var(--primary) 13%,transparent);color:var(--primary);max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#sec-settings .setBody{padding:12px 14px 16px;}
+#sec-settings .setBody input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]),#sec-settings .setBody select,#sec-settings .setBody textarea{border-radius:12px;border:1.5px solid var(--border);padding:11px 13px;transition:border-color .2s,box-shadow .2s;}
+#sec-settings .setBody input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]):focus,#sec-settings .setBody select:focus,#sec-settings .setBody textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px color-mix(in srgb,var(--primary) 14%,transparent);}
+#sec-settings .setBody .typebtn{border-radius:13px;font-weight:700;border:1.5px solid color-mix(in srgb,var(--primary) 30%,var(--border));transition:transform .12s,background .2s;}
+#sec-settings .setBody .typebtn:active{transform:scale(.98);}
+#sec-settings .setBody .langbtn{border-radius:14px;padding:13px;font-weight:700;border:1.5px solid var(--border);}
+#sec-settings .setBody .langbtn.sel{box-shadow:0 10px 20px -10px color-mix(in srgb,var(--primary) 70%,transparent);}
+#sec-settings .setBody p{line-height:1.5;}
+/* theme gallery */
+#themeRow{display:none !important;}
+.thWrap{display:block;}
+.thGroup{display:flex;align-items:center;gap:8px;margin:4px 2px 10px;font-size:12px;font-weight:800;color:var(--text);}
+.thGroup i{font-style:normal;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:color-mix(in srgb,var(--muted) 15%,transparent);color:var(--muted);}
+.thGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+.thGrid .swatch{height:78px;border-radius:18px;overflow:hidden;border:2px solid transparent;box-shadow:0 8px 18px -10px rgba(16,24,40,.45);transition:transform .15s,box-shadow .2s;}
+.thGrid .swatch::before{content:attr(title);position:absolute;left:0;right:0;bottom:0;padding:16px 6px 6px;text-align:center;font-size:10.5px;font-weight:800;letter-spacing:.2px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.55);background:linear-gradient(transparent,rgba(0,0,0,.5));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.thGrid .swatch.active{border-color:#fff;box-shadow:0 0 0 2.5px var(--primary),0 12px 22px -10px color-mix(in srgb,var(--primary) 70%,transparent);transform:translateY(-1px);}
+.thGrid .swatch.active::after{inset:auto;top:7px;right:7px;margin:0;width:20px;height:20px;}
+#swCustomBox{margin-top:4px;padding-top:14px;border-top:1px dashed var(--border);}
+</style>
+
+<script>
+/* ===== Settings Pro script (idempotent) ===== */
+(function(){
+const RX=[
+ [/থিম|theme/i,'অ্যাপের রঙ ও স্টাইল বেছে নিন','Pick your app colors & style','ব্যক্তিগতকরণ','Personalise'],
+ [/ভাষা|language/i,'বাংলা বা English বেছে নিন','Switch between Bangla and English'],
+ [/প্রোফাইল|profile/i,'নাম, ছবি ও ব্যক্তিগত তথ্য','Name, photo & personal info'],
+ [/লোকাল ব্যাকআপ|local\s*backup/i,'এই ফোনে ডেটা ব্যাকআপ ও রিস্টোর','Back up & restore on this device','অ্যাকাউন্ট ও ডেটা','Account & data'],
+ [/লগআউট|log\s*out|logout/i,'এই অ্যাকাউন্ট থেকে বের হন','Sign out of this account'],
+ [/ক্লাউড|cloud/i,'ডেটা নিরাপদে ক্লাউডে সিঙ্ক রাখুন','Keep your data synced to the cloud'],
+ [/মাসিক বাজেট|monthly\s*budget/i,'খাত অনুযায়ী খরচের সীমা ঠিক করুন','Set spending limits by category','অর্থ ও পরিকল্পনা','Money & planning'],
+ [/সঞ্চয় লক্ষ্য|savings?\s*goal/i,'লক্ষ্য ঠিক করে সঞ্চয় ট্র্যাক করুন','Set a goal and track progress'],
+ [/সঞ্চয় পরিকল্পনা|savings?\s*plan/i,'দৈনিক খরচের সীমা হিসাব করুন','Work out your daily spending limit'],
+ [/উইজেট|widget/i,'হোম স্ক্রিনে কুইক অ্যাড ও প্ল্যান','Quick add & daily plan widget'],
+ [/নিয়মিত এন্ট্রি|recurring/i,'প্রতি মাসের লেনদেন অটো যোগ হবে','Auto-add repeating transactions'],
+ [/অ্যাপ লোগো|app\s*logo/i,'অ্যাপের লোগো নিজের মতো করুন','Customise the app logo','অ্যাপ ও নিরাপত্তা','App & security'],
+ [/অ্যাপ লক|app\s*lock/i,'ফিঙ্গারপ্রিন্টে অ্যাপ সুরক্ষিত রাখুন','Protect the app with biometrics'],
+ [/পিন লক|\bpin\b/i,'পিন দিয়ে অ্যাপ লক করুন','Lock the app with a PIN'],
+ [/নিরাপত্তা ও প্রাইভেসি|security\s*&\s*privacy/i,'লক ও গোপনীয়তার বাড়তি অপশন','Extra lock & privacy options'],
+ [/অ্যাপ পছন্দ|app\s*preferences/i,'অ্যাপ কেমন আচরণ করবে ঠিক করুন','Tune how the app behaves'],
+ [/রিমাইন্ডার|reminders/i,'বিল, লোন ও কাজের অনুস্মারক','Bills, loans & task reminders'],
+ [/পেমেন্ট ডিটেইলস|payment\s*details/i,'বিকাশ, ব্যাংক ও পেমেন্ট মেসেজ','MFS, bank & payment messages'],
+ [/সাহায্য|help|contact/i,'যোগাযোগ ও সহায়তা','Contact & support','সহায়তা ও ডেভেলপার','Support & developer'],
+ [/ডেভেলপার|developer/i,'উন্নত অপশন (লক করা)','Advanced options (locked)']
+];
+const bl=(b,e)=>'<span class="bn">'+b+'</span><span class="en">'+e+'</span>';
+function lum(str){ var m=/rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(str||''); if(!m) return .6; return (.299*m[1]+.587*m[2]+.114*m[3])/255; }
+function themes(){
+  var row=document.getElementById('themeRow'); if(!row) return;
+  var box=row.parentNode; if(!box || document.getElementById('thWrap')) { pill(); return; }
+  var sw=[].slice.call(row.querySelectorAll('.swatch')); if(!sw.length) return;
+  var L=[],D=[]; sw.forEach(function(s){ (lum(s.style.background)<.4?D:L).push(s); });
+  var wrap=document.createElement('div'); wrap.id='thWrap'; wrap.className='thWrap';
+  function grp(b,e,arr){ if(!arr.length) return; var h=document.createElement('div'); h.className='thGroup'; h.innerHTML=bl(b,e)+'<i>'+arr.length+'</i>'; var g=document.createElement('div'); g.className='thGrid'; arr.forEach(function(s){ g.appendChild(s); }); wrap.appendChild(h); wrap.appendChild(g); }
+  grp('হালকা থিম','Light themes',L); grp('ডার্ক থিম','Dark themes',D);
+  row.after(wrap);
+  document.addEventListener('click',function(e){ if(e.target.closest('.swatch')) setTimeout(pill,30); });
+  pill();
+}
+function pill(){
+  var det=document.querySelector('#sec-settings details.setBox[data-pro="theme"]'); if(!det) return;
+  var sum=det.querySelector(':scope > summary'), chev=sum.querySelector('.setChev'), pl=sum.querySelector('.setPill');
+  if(!pl){ pl=document.createElement('span'); pl.className='setPill'; sum.insertBefore(pl,chev); }
+  var a=document.querySelector('.swatch.active'); pl.textContent=a?(a.title||'Classic'):'Classic';
+}
+function decorate(){
+  var dets=[].slice.call(document.querySelectorAll('#sec-settings details.setBox'));
+  var used={};
+  dets.forEach(function(det){
+    if(det.dataset.pro) return;
+    var sum=det.querySelector(':scope > summary'); var h=sum&&sum.querySelector('h3'); if(!h) return;
+    var t=h.textContent, hit=null, idx=-1;
+    for(var i=0;i<RX.length;i++){ if(!used[i] && RX[i][0].test(t)){ hit=RX[i]; idx=i; break; } }
+    det.dataset.pro=(idx===0?'theme':'1');
+    if(!hit) return; used[idx]=1;
+    if(idx===5){ var ch=sum.querySelector('.setIco'); if(ch){ ch.style.setProperty('--c','#0ea5e9'); var mm=ch.querySelector('.mi'); if(mm) mm.style.setProperty('--m','var(--ic-cloud)'); } }
+    var tt=document.createElement('div'); tt.className='setTt';
+    h.parentNode.insertBefore(tt,h); tt.appendChild(h);
+    var sub=document.createElement('small'); sub.className='setSub'; sub.innerHTML=bl(hit[1],hit[2]); tt.appendChild(sub);
+    if(hit[3]){ var g=document.createElement('div'); g.className='setGroup'; g.innerHTML=bl(hit[3],hit[4]); det.parentNode.insertBefore(g,det); }
+  });
+  themes();
+}
+function run(){ try{ decorate(); }catch(e){ console.warn('settings pro',e); } }
+run(); setTimeout(run,700); setTimeout(run,2200);
+})();
+</script>
+
+<style id="ftReqCss">
+.rqSeg{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:4px;border-radius:14px;background:color-mix(in srgb,var(--muted) 14%,transparent);margin-bottom:10px}
+.rqSeg button{border:0;border-radius:11px;padding:10px 6px;font-weight:700;font-size:12.5px;background:transparent;color:var(--muted);cursor:pointer;font-family:inherit}
+.rqSeg button.on{background:var(--card);color:var(--primary);box-shadow:0 2px 8px rgba(16,24,40,.14)}
+#rqBox .rqIn{display:block;width:100%;box-sizing:border-box;margin:0 0 8px}
+.rqHint{font-size:12px;color:var(--muted);line-height:1.5;margin:0 0 10px}
+.rqMsg{font-size:12.5px;font-weight:600;margin:8px 2px 0;word-break:break-word}.rqMsg:empty{display:none}.rqMsg.bad{color:var(--red,#d92d20)}
+.rqH{display:flex;justify-content:space-between;align-items:center;margin:16px 0 8px;font-size:13px;font-weight:800}
+.rqH button{border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:20px;padding:5px 12px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit}
+.rqItem{border:1px solid var(--border);border-radius:14px;padding:11px 12px;margin-bottom:8px;background:var(--card)}
+.rqTop{display:flex;justify-content:space-between;gap:8px;align-items:center;font-weight:800;font-size:14px}
+.rqSm{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.45}
+.rqAct{display:flex;gap:8px;margin-top:10px}
+.rqAct button{flex:1;border-radius:11px;padding:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit}
+.rqY{background:var(--primary);color:#fff;border:0}.rqN{background:transparent;color:var(--text);border:1.5px solid var(--border)}
+.rqSt{font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.rqSt.p{background:#fef3c7;color:#92400e}.rqSt.a{background:#dcfce7;color:#166534}.rqSt.d{background:#fee2e2;color:#991b1b}
+.rqEmpty{font-size:12.5px;color:var(--muted);text-align:center;padding:10px 0}
+</style>
+
+<script>
+/* ===== Money requests: loan / repay requests between users (Firebase REST) ===== */
+(function(){
+if(!window.ftCloud||!ftCloud._raw) return;
+var R=function(){return ftCloud._raw();}, $=function(i){return document.getElementById(i);};
+var bnL=function(){return document.documentElement.lang!=='en';}, tx=function(b,e){return bnL()?b:e;};
+var bl=function(b,e){return '<span class="bn">'+b+'</span><span class="en">'+e+'</span>';};
+var SENT='ftReqSent_v1', kind='loan', busy=false, inbox=[];
+function getSent(){ try{return JSON.parse(localStorage.getItem(SENT)||'[]');}catch(e){return [];} }
+function setSent(a){ try{localStorage.setItem(SENT,JSON.stringify(a.slice(-60)));}catch(e){} }
+function ek(v){ return String(v||'').trim().toLowerCase().replace(/\./g,',').replace(/[#$\[\]\/%]/g,'_'); }
+function E(v){ return typeof esc==='function'?esc(v):String(v).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function F(n){ try{return fmt(n);}catch(e){return '৳'+n;} }
+async function db(path,opt){
+  var r=R(), base=String(r.CFG.dbUrl).replace(/\/+$/,''), tk=await r.token();
+  var res=await r.call(base+'/'+path+'.json?auth='+encodeURIComponent(tk),opt);
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  return res.json();
+}
+var J={'Content-Type':'application/json'};
+function msg(m,bad){ var e=$('rqMsg'); if(!e) return; e.textContent=m||''; e.className='rqMsg'+(bad?' bad':''); }
+async function register(){
+  var s=R().ses(); if(!s||!s.email) return;
+  var un=(localStorage.getItem('myUsername_v1')||'').trim();
+  var rec={uid:s.uid,name:localStorage.getItem('myName_v1')||'',username:un,email:String(s.email).toLowerCase()};
+  await db('directory/'+ek(s.email),{method:'PUT',headers:J,body:JSON.stringify(rec)});
+  if(un){ try{ await db('usernames/'+ek(un),{method:'PUT',headers:J,body:JSON.stringify(rec)}); }catch(e){} }
+}
+async function find(q){
+  q=String(q||'').trim(); if(!q) return null;
+  var rec=q.indexOf('@')>0 ? await db('directory/'+ek(q)) : await db('usernames/'+ek(q.replace(/^@/,'')));
+  return rec&&rec.uid?rec:null;
+}
+function addTx(type,amount,person,note){
+  if(typeof data==='undefined'||!data||!data.transactions) return;
+  data.transactions.push({id:Date.now()+'-'+Math.random().toString(36).slice(2,7),type:type,amount:amount,category:null,source:null,due:null,person:person||'?',account:null,note:note||'',date:todayStr(),time:nowTime()});
+  saveData();
+  ['renderDash','renderAccounts','renderLoans','renderHistory','populatePersonList','updateHome'].forEach(function(f){ try{ if(typeof window[f]==='function') window[f](); }catch(e){} });
+}
+function setPill(){
+  var p=$('rqPill'); if(!p) return; var n=inbox.length; p.style.display=n?'':'none'; p.textContent=n; 
+  p.style.cssText=n?'display:inline-flex;min-width:22px;height:22px;padding:0 6px;border-radius:20px;background:#ef4444;color:#fff;font-size:11.5px;font-weight:800;align-items:center;justify-content:center;flex:none;max-width:none':'display:none';
+}
+function kindTxt(k,name,amt){
+  return k==='repay' ? tx(name+' বলছেন তিনি আপনার ধার '+F(amt)+' শোধ করেছেন', name+' says they repaid you '+F(amt))
+                     : tx(name+' বলছেন তিনি আপনাকে '+F(amt)+' ধার দিয়েছেন', name+' says they lent you '+F(amt));
+}
+function renderInbox(){
+  var el=$('rqInbox'); if(!el) return;
+  if(!inbox.length){ el.innerHTML='<div class="rqEmpty">'+tx('কোনো নতুন অনুরোধ নেই','No new requests')+'</div>'; return; }
+  el.innerHTML=inbox.map(function(it){
+    var nm=E(it.fromName||it.fromEmail||'?');
+    return '<div class="rqItem"><div class="rqTop"><span>'+F(it.amount)+'</span><span class="rqSt p">'+tx('অপেক্ষমাণ','Pending')+'</span></div>'
+      +'<div class="rqSm">'+kindTxt(it.kind,nm,it.amount)+(it.note?'<br>“'+E(it.note)+'”':'')+'<br>'+E(it.fromEmail||'')+'</div>'
+      +'<div class="rqAct"><button class="rqY" data-rq="y" data-id="'+E(it.id)+'">'+tx('গ্রহণ করুন','Accept')+'</button><button class="rqN" data-rq="n" data-id="'+E(it.id)+'">'+tx('বাতিল','Decline')+'</button></div></div>';
+  }).join('');
+}
+function renderSent(){
+  var el=$('rqSent'); if(!el) return; var a=getSent().slice().reverse();
+  if(!a.length){ el.innerHTML='<div class="rqEmpty">'+tx('এখনো কোনো অনুরোধ পাঠাননি','No requests sent yet')+'</div>'; return; }
+  el.innerHTML=a.slice(0,15).map(function(it){
+    var c=it.status==='accepted'?'a':(it.status==='declined'||it.status==='cancelled')?'d':'p', t=it.status==='accepted'?tx('গ্রহণ করেছে','Accepted'):it.status==='declined'?tx('প্রত্যাখ্যান করেছে','Declined'):it.status==='cancelled'?tx('বাতিল করা হয়েছে','Cancelled'):tx('অপেক্ষমাণ','Pending');
+    return '<div class="rqItem"><div class="rqTop"><span>'+F(it.amount)+' → '+E(it.toName)+'</span><span class="rqSt '+c+'">'+t+'</span></div>'
+      +'<div class="rqSm">'+(it.kind==='repay'?tx('শোধের নোটিশ','Repayment notice'):tx('ধার দেওয়া','Loan given'))+(it.note?' · “'+E(it.note)+'”':'')+'</div>'
+      +(it.status==='pending'?'<div class="rqAct"><button class="rqN rqCancel" data-cancel="'+E(it.rid)+'">'+tx('অনুরোধ বাতিল করুন','Cancel request')+'</button></div>':'')+'</div>';
+  }).join('');
+}
+async function loadInbox(){
+  var s=R().ses(); if(!s) return;
+  try{
+    var m=await db('requests/'+s.uid)||{};
+    inbox=Object.keys(m).map(function(k){ return Object.assign({id:k},m[k]); }).filter(function(x){ return x&&x.status==='pending'; }).sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+    renderInbox(); setPill();
+  }catch(e){ var el=$('rqInbox'); if(el) el.innerHTML='<div class="rqEmpty">'+E(R().errMsg(e))+'</div>'; }
+}
+async function refreshSent(){
+  var arr=getSent(), ch=false;
+  for(var i=0;i<arr.length;i++){
+    var it=arr[i]; if(it.status!=='pending') continue;
+    try{
+      var st=await db('requests/'+it.toUid+'/'+it.rid+'/status');
+      if(st===null){ it.status='cancelled'; ch=true; }
+      else if(st==='accepted'||st==='declined'){
+        it.status=st; ch=true;
+        if(st==='accepted'&&!it.applied){ it.applied=1; addTx(it.kind==='repay'?'loan_repay_taken':'loan_given',it.amount,it.toName,it.note); }
+      }
+    }catch(e){}
+  }
+  if(ch) setSent(arr); renderSent();
+}
+async function act(id,yes){
+  var it=inbox.filter(function(x){return x.id===id;})[0], s=R().ses(); if(!it||!s||busy) return; busy=true;
+  try{
+    await db('requests/'+s.uid+'/'+id,{method:'PATCH',headers:J,body:JSON.stringify({status:yes?'accepted':'declined',respondedAt:Date.now()})});
+    if(yes) addTx(it.kind==='repay'?'loan_repay_given':'loan_taken',+it.amount,it.fromName||it.fromEmail,it.note);
+    inbox=inbox.filter(function(x){return x.id!==id;}); renderInbox(); setPill();
+    msg(yes?tx('গ্রহণ করা হয়েছে, লোন ট্যাবে এন্ট্রি যোগ হয়েছে','Accepted, entry added to your loans'):tx('অনুরোধ বাতিল করা হয়েছে','Request declined'));
+  }catch(e){ msg(R().errMsg(e),true); }
+  busy=false;
+}
+async function cancelReq(rid){
+  var arr=getSent(), it=arr.filter(function(x){return x.rid===rid;})[0]; if(!it||busy) return;
+  if(!confirm(tx('এই অনুরোধটি বাতিল করবেন?','Cancel this request?'))) return;
+  busy=true; var again=false;
+  try{
+    var st=await db('requests/'+it.toUid+'/'+rid+'/status');
+    if(st==='accepted'||st==='declined'){ msg(tx('অপর পক্ষ ইতিমধ্যে সাড়া দিয়েছে, তাই বাতিল করা গেল না','They already responded, so it can not be cancelled'),true); again=true; }
+    else{
+      if(st!==null) await db('requests/'+it.toUid+'/'+rid,{method:'DELETE'});
+      it.status='cancelled'; setSent(arr); renderSent(); msg(tx('অনুরোধ বাতিল করা হয়েছে','Request cancelled'));
+    }
+  }catch(e){ msg(R().errMsg(e),true); }
+  busy=false; if(again) refreshSent();
+}
+async function send(){
+  if(busy) return; var s=R().ses(); if(!s) return;
+  var q=$('rqTo').value.trim(), amt=parseFloat($('rqAmt').value), note=$('rqNote').value.trim();
+  if(!q){ msg(tx('ইমেইল বা ইউজারনেম লিখুন','Enter an email or username'),true); return; }
+  if(!amt||amt<=0){ msg(tx('সঠিক পরিমাণ লিখুন','Enter a valid amount'),true); return; }
+  busy=true; var b=$('rqSend'); if(b) b.disabled=true; msg(tx('পাঠানো হচ্ছে…','Sending…'));
+  try{
+    try{ await register(); }catch(e){}
+    var to=await find(q);
+    if(!to){ msg(tx('এই ইমেইল/ইউজারনেমে কোনো FinTrack ইউজার পাওয়া যায়নি','No FinTrack user found with that email/username'),true); }
+    else if(to.uid===s.uid){ msg(tx('নিজেকে অনুরোধ পাঠানো যাবে না','You cannot send a request to yourself'),true); }
+    else{
+      var me=localStorage.getItem('myName_v1')||String(s.email).split('@')[0];
+      var body={fromUid:s.uid,fromName:me,fromEmail:s.email,kind:kind,amount:amt,note:note,date:todayStr(),status:'pending',ts:Date.now()};
+      var r=await db('requests/'+to.uid,{method:'POST',headers:J,body:JSON.stringify(body)});
+      var arr=getSent(); arr.push({rid:r.name,toUid:to.uid,toName:to.name||q,kind:kind,amount:amt,note:note,status:'pending',applied:0,ts:body.ts}); setSent(arr);
+      $('rqTo').value=''; $('rqAmt').value=''; $('rqNote').value='';
+      msg(tx('অনুরোধ পাঠানো হয়েছে। অপর পক্ষ গ্রহণ করলে আপনার হিসাবে এন্ট্রি যোগ হবে।','Request sent. Your entry is added once they accept.')); renderSent();
+    }
+  }catch(e){ msg(R().errMsg(e),true); }
+  busy=false; if(b) b.disabled=false;
+}
+function setKind(k){ kind=k; var a=$('rqK1'),b=$('rqK2'); if(a) a.classList.toggle('on',k==='loan'); if(b) b.classList.toggle('on',k==='repay'); }
+function gate(){
+  var r=R(), okc=r.ok()&&r.ses(); var g=$('rqGate'), m=$('rqMain'); if(!g||!m) return false;
+  g.style.display=okc?'none':''; m.style.display=okc?'':'none'; return !!okc;
+}
+function build(){
+  if($('rqBox')) return; var ref=$('cloudSyncBox'), sec=$('sec-settings'); if(!sec) return;
+  var box=document.createElement('details'); box.className='box setBox'; box.id='rqBox'; box.dataset.pro='1';
+  box.innerHTML='<summary><span class="setIco" style="--c:#0ea5e9">'+(typeof mi==='function'?mi('bank'):'')+'</span><div class="setTt"><h3>'+bl('টাকার অনুরোধ','Money requests')+'</h3><small class="setSub">'+bl('ইমেইল/ইউজারনেমে ধার ও শোধের অনুরোধ','Loan & repay requests by email/username')+'</small></div><span class="setPill" id="rqPill" style="display:none"></span><svg viewBox="0 0 24 24" class="setChev"><path d="m9 6 6 6-6 6"/></svg></summary>'
+  +'<div class="setBody">'
+  +'<div id="rqGate"><p class="rqHint">'+bl('অনুরোধ পাঠাতে ও পেতে অ্যাকাউন্টে লগইন করা থাকতে হবে। গেস্ট মোডে এই ফিচার চলে না।','You need to be logged in to send or receive requests. This is not available in guest mode.')+'</p></div>'
+  +'<div id="rqMain" style="display:none">'
+  +'<p class="rqHint">'+bl('এখানে আসল টাকা যায় না। বিকাশ/নগদ/ব্যাংকে টাকা পাঠিয়ে এখানে জানান, অপর পক্ষ গ্রহণ করলে দুজনের হিসাবে এন্ট্রি হয়ে যাবে।','No real money moves here. Pay via bKash/Nagad/bank, then notify here. Once accepted, both ledgers update.')+'</p>'
+  +'<div class="rqSeg"><button type="button" id="rqK1" class="on">'+bl('ধার দিয়েছি','I lent')+'</button><button type="button" id="rqK2">'+bl('ধার শোধ করেছি','I repaid')+'</button></div>'
+  +'<input class="rqIn" id="rqTo" type="text" autocapitalize="none" autocomplete="off" placeholder="'+tx('ইমেইল বা @ইউজারনেম','Email or @username')+'">'
+  +'<input class="rqIn" id="rqAmt" type="number" inputmode="decimal" placeholder="'+tx('পরিমাণ (৳)','Amount (৳)')+'">'
+  +'<input class="rqIn" id="rqNote" type="text" placeholder="'+tx('নোট (ঐচ্ছিক)','Note (optional)')+'">'
+  +'<button type="button" class="typebtn" id="rqSend" style="width:100%">'+bl('অনুরোধ পাঠান','Send request')+'</button>'
+  +'<div class="rqMsg" id="rqMsg"></div>'
+  +'<div class="rqH"><span>'+bl('আমার ইনবক্স','My inbox')+'</span><button type="button" id="rqRef">'+bl('রিফ্রেশ','Refresh')+'</button></div><div id="rqInbox"></div>'
+  +'<div class="rqH"><span>'+bl('পাঠানো অনুরোধ','Sent requests')+'</span></div><div id="rqSent"></div>'
+  +'</div></div>';
+  if(ref) ref.after(box); else sec.appendChild(box);
+  $('rqK1').onclick=function(){setKind('loan');}; $('rqK2').onclick=function(){setKind('repay');};
+  $('rqSend').onclick=send; $('rqRef').onclick=function(){ loadInbox(); refreshSent(); };
+  box.addEventListener('click',function(e){ var c=e.target.closest('[data-cancel]'); if(c){ cancelReq(c.getAttribute('data-cancel')); return; } var b=e.target.closest('[data-rq]'); if(b) act(b.getAttribute('data-id'),b.getAttribute('data-rq')==='y'); });
+  box.addEventListener('toggle',function(){ if(!box.open) return; if(gate()){ register().catch(function(){}); loadInbox(); refreshSent(); } renderSent(); });
+  gate(); renderSent(); renderInbox();
+}
+try{ build(); }catch(e){ console.warn('requests',e); }
+setTimeout(function(){ try{ build(); if(gate()) loadInbox(); }catch(e){} },2800);
 })();
 </script>
 </body>
