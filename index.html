@@ -6191,8 +6191,30 @@ run(); setTimeout(run,700); setTimeout(run,2200);
 #rqBox .setBody input:not([type=checkbox]):not([type=radio]),#rqBox .setBody select{border-radius:12px;border:1.5px solid var(--border);padding:11px 13px;box-sizing:border-box;}
 </style>
 
+<style id="ftReqCss2">
+#sec-loan>.cards{display:none!important}
+.rqHero{border-radius:26px;padding:18px 18px 16px;margin-bottom:12px;color:var(--text);border:1px solid var(--border);background:linear-gradient(145deg,color-mix(in srgb,var(--primary) 20%,var(--card)),var(--card));box-shadow:var(--sh)}
+.rqHero small{font-size:12.5px;color:var(--muted);font-weight:600;display:block}
+.rqHero>b{display:block;font-size:34px;font-weight:900;margin:6px 0 12px}.rqHero>b.neg{color:var(--red)}.rqHero>b.pos{color:var(--green)}
+.rqBar{display:flex;height:9px;border-radius:9px;overflow:hidden;background:color-mix(in srgb,var(--muted) 18%,transparent);margin-bottom:12px}.rqBar i{display:block;height:100%}#rqBarG{background:var(--green)}#rqBarR{background:var(--red)}
+.rqHF{display:flex;justify-content:space-between}.rqHF b{font-size:17px;font-weight:800}
+.rqTop2{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:4px;border-radius:20px;border:1px solid var(--border);background:var(--card);margin-bottom:12px}
+.rqSub{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+.rqTop2 button,.rqSub button,.rqChips button,.rqQ button{font:inherit;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center;gap:6px}
+.rqTop2 button{border:0;background:transparent;border-radius:16px;padding:13px 6px;font-weight:800;font-size:14.5px;color:var(--muted)}
+.rqTop2 button.on{background:var(--grad);color:#fff;box-shadow:0 6px 16px color-mix(in srgb,var(--primary) 35%,transparent)}
+.rqSub button{border:1px solid var(--border);background:var(--card);border-radius:16px;padding:12px 4px;font-weight:700;font-size:13px}
+.rqSub button.on,.rqChips button.on{border-color:var(--primary);color:var(--primary);background:color-mix(in srgb,var(--primary) 13%,var(--card))}
+.rqChips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.rqChips button{border:1px solid var(--border);background:var(--card);border-radius:15px;padding:12px 4px;font-weight:700;font-size:13px}
+.rqBdg{font-style:normal;min-width:20px;height:20px;padding:0 6px;border-radius:20px;background:#ef4444;color:#fff;font-size:11px;font-weight:800;align-items:center;justify-content:center}
+.rqCard{border:1px solid var(--border);border-radius:24px;padding:14px;background:var(--card);box-shadow:var(--sh)}
+.rqCard .rqIn{display:block;width:100%;box-sizing:border-box;margin:0 0 10px;border-radius:16px;border:1px solid var(--border);padding:14px 15px;font-size:15px;font-family:inherit}
+.rqQ{display:flex;gap:8px;flex-wrap:wrap;margin:-2px 0 12px}.rqQ button{border:1px solid var(--border);background:transparent;border-radius:20px;padding:9px 16px;font-weight:700;font-size:13px}
+.rqGo{width:100%;border:0;border-radius:18px;padding:15px;font:inherit;font-weight:800;font-size:15px;color:#fff;background:var(--grad);cursor:pointer;box-shadow:0 8px 20px color-mix(in srgb,var(--primary) 35%,transparent)}.rqGo:disabled{opacity:.6}
+</style>
 <script>
-/* ===== Money requests: loan / repay requests between users (Firebase REST), wired into the Loan tab ===== */
+/* ===== Money requests: loan / repay / ask requests between users (Firebase REST), wired into the Loan tab ===== */
 (function(){
 if(!window.ftCloud||!ftCloud._raw) return;
 var R=function(){return ftCloud._raw();}, $=function(i){return document.getElementById(i);};
@@ -6250,11 +6272,12 @@ function addTx(type,amount,person,note,due){
 }
 function setDot(){ var t=document.querySelector('.tab[data-tab="loan"]'); if(t) t.classList.toggle('rqHas',inbox.length>0); }
 function setPill(){
-  setDot(); var p=$('rqPill'); if(!p) return; var n=inbox.length; p.textContent=n;
-  p.style.cssText=n?'display:inline-flex;min-width:22px;height:22px;padding:0 6px;border-radius:20px;background:#ef4444;color:#fff;font-size:11.5px;font-weight:800;align-items:center;justify-content:center;flex:none;max-width:none':'display:none';
+  setDot(); var n=inbox.length;
+  ['rqTopN','rqS2n'].forEach(function(i){ var p=$(i); if(!p) return; p.textContent=n; p.style.display=n?'inline-flex':'none'; });
 }
 function kindTxt(k,name,amt){
   return k==='repay' ? tx(name+' বলছেন তিনি আপনার ধার '+F(amt)+' শোধ করেছেন', name+' says they repaid you '+F(amt))
+                     : k==='ask' ? tx(name+' আপনার কাছে '+F(amt)+' ধার চাইছেন', name+' is asking you for a loan of '+F(amt))
                      : tx(name+' বলছেন তিনি আপনাকে '+F(amt)+' ধার দিয়েছেন', name+' says they lent you '+F(amt));
 }
 function defName(it){
@@ -6273,7 +6296,7 @@ function renderInbox(force){
     var nm=E(it.fromName||it.fromEmail||'?'), dv=edits[it.id]!==undefined?edits[it.id]:defName(it);
     var lst=it.kind==='repay'?'rqPplGet':'rqPplAll';
     return '<div class="rqItem"><div class="rqTop"><span>'+F(it.amount)+'</span><span class="rqSt p">'+tx('অপেক্ষমাণ','Pending')+'</span></div>'
-      +'<div class="rqSm">'+kindTxt(it.kind,nm,it.amount)+(it.due?'<br>'+tx('ফেরতের তারিখ: ','Due: ')+E(it.due):'')+(it.note?'<br>“'+E(it.note)+'”':'')+'<br>'+E(it.fromEmail||'')+'</div>'
+      +'<div class="rqSm">'+kindTxt(it.kind,nm,it.amount)+(it.due?'<br>'+tx('ফেরতের তারিখ: ','Due: ')+E(it.due):'')+(it.method?'<br>'+tx('মাধ্যম: ','Method: ')+E(it.method)+(it.payTo?' ('+E(it.payTo)+')':''):'')+(it.note?'<br>“'+E(it.note)+'”':'')+'<br>'+E(it.fromEmail||'')+'</div>'
       +'<label class="rqLb">'+tx(it.kind==='repay'?'কার পাওনা কমবে (আপনার তালিকার নাম)':'আপনার লোন তালিকায় যে নামে থাকবে','Name in your loan list')+'</label>'
       +'<input class="rqIn" data-nm="'+E(it.id)+'" list="'+lst+'" value="'+E(dv)+'">'
       +'<div class="rqAct"><button class="rqY" data-rq="y" data-id="'+E(it.id)+'">'+tx('গ্রহণ করুন','Accept')+'</button><button class="rqN" data-rq="n" data-id="'+E(it.id)+'">'+tx('বাতিল','Decline')+'</button></div></div>';
@@ -6285,7 +6308,7 @@ function renderSent(){
   el.innerHTML=a.slice(0,15).map(function(it){
     var c=it.status==='accepted'?'a':(it.status==='declined'||it.status==='cancelled')?'d':'p', t2=it.status==='accepted'?tx('গ্রহণ করেছে','Accepted'):it.status==='declined'?tx('প্রত্যাখ্যান করেছে','Declined'):it.status==='cancelled'?tx('বাতিল করা হয়েছে','Cancelled'):tx('অপেক্ষমাণ','Pending');
     return '<div class="rqItem"><div class="rqTop"><span>'+F(it.amount)+' → '+E(it.person||it.toName)+'</span><span class="rqSt '+c+'">'+t2+'</span></div>'
-      +'<div class="rqSm">'+(it.kind==='repay'?tx('শোধের নোটিশ','Repayment notice'):tx('ধার দেওয়া','Loan given'))+(it.due?' · '+tx('ফেরত: ','Due: ')+E(it.due):'')+(it.note?' · “'+E(it.note)+'”':'')+'</div>'
+      +'<div class="rqSm">'+(it.kind==='repay'?tx('শোধের নোটিশ','Repayment notice'):it.kind==='ask'?tx('টাকা চেয়েছি','Money asked'):tx('ধার দেওয়া','Loan given'))+(it.method?' · '+E(it.method):'')+(it.due?' · '+tx('ফেরত: ','Due: ')+E(it.due):'')+(it.note?' · “'+E(it.note)+'”':'')+'</div>'
       +(it.status==='pending'?'<div class="rqAct"><button class="rqN rqCancel" data-cancel="'+E(it.rid)+'">'+tx('অনুরোধ বাতিল করুন','Cancel request')+'</button></div>':'')+'</div>';
   }).join('');
 }
@@ -6310,7 +6333,7 @@ async function refreshSent(){
         if(st===null){ it.status='cancelled'; ch=true; }
         else if(st==='accepted'||st==='declined'){
           it.status=st; ch=true;
-          if(st==='accepted'&&!it.applied){ it.applied=1; setSent(arr); addTx(it.kind==='repay'?'loan_repay_taken':'loan_given',it.amount,it.person||it.toName,it.note,it.kind==='repay'?null:it.due); did=true; }
+          if(st==='accepted'&&!it.applied){ it.applied=1; setSent(arr); addTx(it.kind==='repay'?'loan_repay_taken':it.kind==='ask'?'loan_taken':'loan_given',it.amount,it.person||it.toName,it.note,it.kind==='repay'?null:it.due); did=true; }
         }
       }catch(e){}
     }
@@ -6335,7 +6358,7 @@ async function act(id,yes){
   busy=true;
   try{
     await db('requests/'+s.uid+'/'+id,{method:'PATCH',headers:J,body:JSON.stringify({status:yes?'accepted':'declined',respondedAt:Date.now()})});
-    if(yes){ addTx(it.kind==='repay'?'loan_repay_given':'loan_taken',+it.amount,nm,it.note,it.kind==='repay'?null:it.due); saveLink(it.fromUid,nm,it.fromEmail,''); }
+    if(yes){ addTx(it.kind==='repay'?'loan_repay_given':it.kind==='ask'?'loan_given':'loan_taken',+it.amount,nm,it.note,it.kind==='repay'?null:it.due); saveLink(it.fromUid,nm,it.fromEmail,''); }
     inbox=inbox.filter(function(x){return x.id!==id;}); delete edits[id]; renderInbox(); setPill();
     msg(yes?(it.kind==='repay'?tx('গ্রহণ করা হয়েছে, বাকি নিজে থেকে কমে গেছে','Accepted, the balance was reduced automatically'):tx('গ্রহণ করা হয়েছে, লোন তালিকায় এন্ট্রি যোগ হয়েছে','Accepted, entry added to your loans')):tx('অনুরোধ বাতিল করা হয়েছে','Request declined'));
   }catch(e){ msg(R().errMsg(e),true); }
@@ -6357,7 +6380,7 @@ async function cancelReq(rid){
 }
 async function send(){
   if(busy) return; var s=R().ses(); if(!s) return;
-  var q=$('rqTo').value.trim(), nm0=$('rqPer').value.trim(), amt=parseFloat($('rqAmt').value), note=$('rqNote').value.trim(), due=(kind==='loan'&&$('rqDue').value)||null;
+  var q=$('rqTo').value.trim(), nm0=$('rqPer').value.trim(), amt=parseFloat($('rqAmt').value), note=$('rqNote').value.trim(), due=(kind!=='repay'&&$('rqDue').value)||null;
   if(!q){ msg(tx('ইমেইল বা ইউজারনেম লিখুন','Enter an email or username'),true); return; }
   if(!amt||amt<=0){ msg(tx('সঠিক পরিমাণ লিখুন','Enter a valid amount'),true); return; }
   busy=true; var b=$('rqSend'); if(b) b.disabled=true; msg(tx('পাঠানো হচ্ছে…','Sending…'));
@@ -6377,10 +6400,11 @@ async function send(){
       var me=localStorage.getItem('myName_v1')||String(s.email).split('@')[0];
       var body={fromUid:s.uid,fromName:me,fromEmail:s.email,kind:kind,amount:amt,note:note,date:todayStr(),status:'pending',ts:Date.now()};
       if(due) body.due=due;
+      var mt=methodInfo(); if(mt.label){ body.method=mt.label; if(kind==='ask'&&mt.payTo) body.payTo=mt.payTo; }
       var rs=await db('requests/'+to.uid,{method:'POST',headers:J,body:JSON.stringify(body)});
       var arr=getSent(); arr.push({rid:rs.name,toUid:to.uid,toName:nm,person:nm,kind:kind,amount:amt,note:note,due:due,status:'pending',applied:0,ts:body.ts}); setSent(arr);
       saveLink(to.uid,nm,to.email||'',to.username||'');
-      $('rqTo').value=''; $('rqPer').value=''; $('rqAmt').value=''; $('rqNote').value=''; $('rqDue').value=''; updateRem();
+      $('rqTo').value=''; $('rqPer').value=''; $('rqAmt').value=''; $('rqNote').value=''; $('rqDue').value=''; updateRem(); heroUp();
       msg(tx('অনুরোধ পাঠানো হয়েছে। অপর পক্ষ গ্রহণ করলেই আপনার লোন তালিকায় নিজে থেকে এন্ট্রি হবে।','Request sent. Once they accept, your loan list updates automatically.')); renderSent();
     }
   }catch(e){ msg(R().errMsg(e),true); }
@@ -6401,25 +6425,52 @@ function onPick(){
   updateRem();
 }
 function setKind(k){
-  kind=k; var a=$('rqK1'),b=$('rqK2'); if(a) a.classList.toggle('on',k==='loan'); if(b) b.classList.toggle('on',k==='repay');
-  var d=$('rqDueW'); if(d) d.style.display=k==='loan'?'':'none';
+  kind=k; ['rqK1:loan','rqK2:repay','rqK3:ask'].forEach(function(x){ var a=x.split(':'), b=$(a[0]); if(b) b.classList.toggle('on',k===a[1]); });
+  var d=$('rqDueW'); if(d) d.style.display=k==='repay'?'none':'';
   var p=$('rqPer'); if(p) p.setAttribute('list',k==='repay'?'rqPplOwe':'rqPplAll');
+  var l=$('rqMethLb'); if(l) l.innerHTML=k==='ask'?bl('যে মাধ্যমে টাকা পেতে চান','Receive money via'):bl('পাঠানোর মাধ্যম','Payment method');
   fillLists(); updateRem();
 }
+function methods(){
+  var pm=[]; try{ pm=(data&&data.payMethods)||[]; }catch(e){}
+  var T={bkash:['বিকাশ','bKash'],nagad:['নগদ','Nagad'],rocket:['রকেট','Rocket'],upay:['উপায়','Upay'],tap:['ট্যাপ','Tap'],bank:['ব্যাংক','Bank'],cash:['হাতে নগদ','Cash in hand']}, out=[], seen={};
+  pm.forEach(function(m){ var t=T[m.type]; seen[m.type]=1; out.push({v:'pm:'+m.id,label:(m.type==='other'&&m.name)?m.name:(t?tx(t[0],t[1]):tx('অন্যান্য','Other')),payTo:m.type==='bank'?((m.bank||'')+' '+(m.num||'')).trim():(m.num||'')}); });
+  ['bkash','nagad','rocket','upay','bank','cash'].forEach(function(k){ if(!seen[k]) out.push({v:'std:'+k,label:tx(T[k][0],T[k][1]),payTo:''}); });
+  return out;
+}
+function methodInfo(){ var s=$('rqMeth'); if(!s) return {}; return methods().filter(function(x){return x.v===s.value;})[0]||{}; }
+function fillMeth(){ var s=$('rqMeth'); if(!s) return; var c=s.value; s.innerHTML=methods().map(function(x){ return '<option value="'+E(x.v)+'">'+E(x.label)+(x.payTo?' · '+E(x.payTo):'')+'</option>'; }).join(''); if(c) s.value=c; }
+function heroUp(){
+  var m=maps(), g=0, o=0; Object.keys(m.getMap).forEach(function(k){ g+=Math.max(0,Math.round(m.getMap[k])); }); Object.keys(m.oweMap).forEach(function(k){ o+=Math.max(0,Math.round(m.oweMap[k])); });
+  var net=g-o, n=$('rqNet'); if(!n) return;
+  n.textContent=(net<0?'−':'')+F(Math.abs(net)); n.className=net<0?'neg':'pos';
+  $('rqGet').textContent=F(g); $('rqOwe').textContent=F(o);
+  var t=g+o||1; $('rqBarG').style.width=(g/t*100)+'%'; $('rqBarR').style.width=(o/t*100)+'%';
+}
+function top(t){
+  var a=$('rqT1'), b=$('rqT2'), l=$('rqLoans'), r=$('rqBox'); if(!a||!r) return;
+  a.classList.toggle('on',t==='loan'); b.classList.toggle('on',t==='req');
+  l.style.display=t==='loan'?'':'none'; r.style.display=t==='req'?'':'none';
+  if(t==='req'){ mode('send'); } else { try{ closeQRScan(); }catch(x){} }
+}
 function gate(){
-  var r=R(), okc=r.ok()&&r.ses(); var g=$('rqGate'), m=$('rqMain'); if(!g||!m) return false;
-  g.style.display=okc?'none':''; m.style.display=okc?'':'none'; return !!okc;
+  var r=R(), okc=!!(r.ok()&&r.ses()); var g=$('rqGate'), m=$('rqMain'); if(!g||!m) return false;
+  var qr=$('rqPQr')&&$('rqPQr').style.display!=='none';
+  g.style.display=(okc||qr)?'none':''; m.style.display=okc?'':'none'; return okc;
 }
 function mode(m){
-  var q=$('rqPaneQ'), e=$('rqPaneE'); if(q) q.style.display=m==='q'?'':'none'; if(e) e.style.display=m==='e'?'':'none';
-  var a=$('rqM1'), b=$('rqM2'); if(a) a.classList.toggle('on',m==='q'); if(b) b.classList.toggle('on',m==='e');
-  if(m==='e'){ try{ closeQRScan(); }catch(x){} fillLists(); if(gate()){ register().catch(function(){}); loadInbox(); refreshSent(); } renderSent(); }
+  m=({e:'send',q:'qr'})[m]||m; var ids={send:'rqPSend',in:'rqPIn',sent:'rqPSent',qr:'rqPQr'}, bt={send:'rqS1',in:'rqS2',sent:'rqS3',qr:'rqS4'};
+  Object.keys(ids).forEach(function(k){ var e=$(ids[k]), b=$(bt[k]); if(e) e.style.display=k===m?'':'none'; if(b) b.classList.toggle('on',k===m); });
+  if(m!=='qr'){ try{ closeQRScan(); }catch(x){} }
+  var ok=gate(); fillLists(); fillMeth();
+  if(ok&&m!=='qr'){ register().catch(function(){}); loadInbox(); refreshSent(); }
+  if(m==='in') renderInbox(true); if(m==='sent') renderSent();
 }
 /* used by the "Via request" button in the Loan list */
 window.ftReqOpen=function(enc){
   var name; try{ name=decodeURIComponent(enc||''); }catch(e){ name=enc||''; }
   var box=$('rqBox'); if(!box) return;
-  box.open=true; mode('e'); setKind('repay');
+  top('req'); mode('send'); setKind('repay');
   $('rqPer').value=name; $('rqAmt').value=''; $('rqTo').value=''; onPick();
   try{ box.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){}
 };
@@ -6452,7 +6503,7 @@ function showReqPop(){
     if(a==='later') closePop();
     else if(a==='view'){
       closePop(); try{ activateTab('loan'); }catch(x){}
-      var box=$('rqBox'); if(box){ box.open=true; mode('e'); setTimeout(function(){ try{ box.scrollIntoView({behavior:'smooth',block:'start'}); }catch(x){} },150); }
+      var box=$('rqBox'); if(box){ top('req'); mode('in'); setTimeout(function(){ try{ box.scrollIntoView({behavior:'smooth',block:'start'}); }catch(x){} },150); }
     }
   });
   if(navigator.vibrate){ try{ navigator.vibrate([120,70,120]); }catch(x){} }
@@ -6460,43 +6511,49 @@ function showReqPop(){
 setInterval(function(){ try{ if(needPop&&inbox.length&&!blocked()) showReqPop(); else if(!inbox.length) needPop=false; }catch(e){} },2500);
 function build(){
   if($('rqBox')) return; var sec=$('sec-loan'); if(!sec) return;
-  var box=document.createElement('details'); box.className='box setBox'; box.id='rqBox'; box.dataset.pro='1';
+  var hero=document.createElement('div'); hero.className='rqHero';
+  hero.innerHTML='<small>'+bl('আপনার নিট অবস্থান','Your net position')+'</small><b id="rqNet">৳0</b><div class="rqBar"><i id="rqBarG"></i><i id="rqBarR"></i></div><div class="rqHF"><span><small>'+bl('পাবো','To receive')+'</small><b id="rqGet">৳0</b></span><span style="text-align:right"><small>'+bl('দেবো','To pay')+'</small><b id="rqOwe">৳0</b></span></div>';
+  var tp=document.createElement('div'); tp.className='rqTop2';
+  tp.innerHTML='<button type="button" id="rqT1" class="on">'+bl('লোন','Loans')+'</button><button type="button" id="rqT2">'+bl('টাকার অনুরোধ','Money requests')+'<em class="rqBdg" id="rqTopN" style="display:none"></em></button>';
+  var box=document.createElement('div'); box.id='rqBox'; box.style.display='none';
   box.innerHTML=[
-  '<summary><span class="setIco" style="--c:#0ea5e9">'+(typeof mi==='function'?mi('send'):'')+'</span><div class="setTt"><h3>'+bl('টাকার অনুরোধ','Request money')+'</h3><small class="setSub">'+bl('QR বা ইমেইল/ইউজারনেমে লোন দিন, নিন ও শোধ করুন','Give, take & repay loans via QR or email/username')+'</small></div><span class="setPill" id="rqPill" style="display:none"></span><svg viewBox="0 0 24 24" class="setChev"><path d="m9 6 6 6-6 6"/></svg></summary>',
-  '<div class="setBody">',
-  '<div class="rqSeg"><button type="button" id="rqM1" class="on">'+bl('QR কোড','QR code')+'</button><button type="button" id="rqM2">'+bl('ইমেইল/ইউজারনেম','Email / username')+'</button></div>',
-  '<div id="rqPaneQ"></div>',
-  '<div id="rqPaneE" style="display:none">',
+  '<div class="rqSub"><button type="button" id="rqS1" class="on">'+bl('পাঠান','Send')+'</button><button type="button" id="rqS2">'+bl('ইনবক্স','Inbox')+'<em class="rqBdg" id="rqS2n" style="display:none"></em></button><button type="button" id="rqS3">'+bl('পাঠানো','Sent')+'</button><button type="button" id="rqS4">'+bl('আমার QR','My QR')+'</button></div>',
   '<datalist id="rqPplAll"></datalist><datalist id="rqPplGet"></datalist><datalist id="rqPplOwe"></datalist>',
-  '<div id="rqGate"><p class="rqHint">'+bl('অনুরোধ পাঠাতে ও পেতে অ্যাকাউন্টে লগইন করা থাকতে হবে। গেস্ট মোডে এই ফিচার চলে না।','You need to be logged in to send or receive requests. This is not available in guest mode.')+'</p></div>',
-  '<div id="rqMain" style="display:none">',
-  '<p class="rqHint">'+bl('এখানে আসল টাকা যায় না। বিকাশ/নগদ/ব্যাংকে টাকা পাঠিয়ে এখানে জানান। অপর পক্ষ গ্রহণ করলে দুজনের লোন তালিকায় নিজে থেকেই এন্ট্রি হবে, আর শোধের অনুরোধ গ্রহণ করলে বাকি নিজে থেকে কমে যাবে (আলাদা করে পরিশোধ দিতে হবে না)।','No real money moves here. Pay via bKash/Nagad/bank, then notify here. Once they accept, both loan lists update automatically, and an accepted repayment reduces the balance by itself (no separate payment step).')+'</p>',
-  '<div class="rqSeg"><button type="button" id="rqK1" class="on">'+bl('ধার দিয়েছি','I lent')+'</button><button type="button" id="rqK2">'+bl('ধার শোধ করেছি','I repaid')+'</button></div>',
-  '<input class="rqIn" id="rqTo" type="text" autocapitalize="none" autocomplete="off" placeholder="'+tx('ইমেইল বা @ইউজারনেম','Email or @username')+'">',
-  '<label class="rqLb">'+bl('লোন তালিকায় যে নামে থাকবে','Name in your loan list')+'</label>',
-  '<input class="rqIn" id="rqPer" type="text" autocomplete="off" list="rqPplAll" placeholder="'+tx('নাম (ঐচ্ছিক, না দিলে তার প্রোফাইলের নাম)','Name (optional, defaults to their profile name)')+'">',
+  '<div id="rqGate" class="rqCard"><p class="rqHint">'+bl('অনুরোধ পাঠাতে ও পেতে অ্যাকাউন্টে লগইন করা থাকতে হবে। গেস্ট মোডে এই ফিচার চলে না। QR ট্যাব লগইন ছাড়াও চলবে।','Log in to send or receive requests (not available in guest mode). The QR tab works without login.')+'</p></div>',
+  '<div id="rqPSend" class="rqCard"><div id="rqMain" style="display:none">',
+  '<div class="rqChips"><button type="button" id="rqK1" class="on">'+bl('ধার দিয়েছি','I lent')+'</button><button type="button" id="rqK2">'+bl('শোধ করেছি','I repaid')+'</button><button type="button" id="rqK3">'+bl('টাকা চাই','Ask money')+'</button></div>',
+  '<input class="rqIn" id="rqTo" type="text" autocapitalize="none" autocomplete="off" placeholder="'+tx('@ইউজারনেম বা ইমেইল','@username or email')+'">',
+  '<input class="rqIn" id="rqPer" type="text" autocomplete="off" list="rqPplAll" placeholder="'+tx('লোন তালিকায় নাম (ঐচ্ছিক)','Name in your loan list (optional)')+'">',
   '<input class="rqIn" id="rqAmt" type="number" inputmode="decimal" placeholder="'+tx('পরিমাণ (৳)','Amount (৳)')+'">',
+  '<div class="rqQ">'+[500,1000,2000,5000].map(function(a){ return '<button type="button" data-q="'+a+'">'+F(a)+'</button>'; }).join('')+'</div>',
   '<div class="rqHint" id="rqRem"></div>',
+  '<label class="rqLb" id="rqMethLb"></label><select class="rqIn" id="rqMeth"></select>',
   '<div id="rqDueW"><label class="rqLb">'+bl('ফেরতের তারিখ (ঐচ্ছিক)','Due date (optional)')+'</label><input class="rqIn" id="rqDue" type="date"></div>',
   '<input class="rqIn" id="rqNote" type="text" placeholder="'+tx('নোট (ঐচ্ছিক)','Note (optional)')+'">',
-  '<button type="button" class="typebtn" id="rqSend" style="width:100%">'+bl('অনুরোধ পাঠান','Send request')+'</button>',
+  '<button type="button" class="rqGo" id="rqSend">'+bl('অনুরোধ পাঠান','Send request')+'</button>',
   '<div class="rqMsg" id="rqMsg"></div>',
-  '<div class="rqH"><span>'+bl('আমার ইনবক্স','My inbox')+'</span><button type="button" id="rqRef">'+bl('রিফ্রেশ','Refresh')+'</button></div><div id="rqInbox"></div>',
-  '<div class="rqH"><span>'+bl('পাঠানো অনুরোধ','Sent requests')+'</span></div><div id="rqSent"></div>',
-  '</div></div></div>'].join('');
-  var anchor=$('getList'); anchor=anchor&&anchor.closest('.box');
-  if(anchor) sec.insertBefore(box,anchor); else sec.appendChild(box);
-  var qb=$('qrBox'), slot=$('rqPaneQ');
-  if(qb&&slot){ while(qb.firstElementChild){ var c=qb.firstElementChild; if(c.tagName==='H3'){ qb.removeChild(c); continue; } slot.appendChild(c); } qb.remove(); }
-  $('rqM1').onclick=function(){mode('q');}; $('rqM2').onclick=function(){mode('e');};
-  $('rqK1').onclick=function(){setKind('loan');}; $('rqK2').onclick=function(){setKind('repay');};
+  '<p class="rqHint" style="margin-top:10px">'+bl('এখানে আসল টাকা যায় না। মাধ্যমে টাকা পাঠিয়ে এখানে জানান। অপর পক্ষ গ্রহণ করলে দুজনের লোন তালিকা নিজে থেকে হালনাগাদ হবে।','No real money moves here. Send money via your method, then notify here. When accepted, both loan lists update automatically.')+'</p>',
+  '</div></div>',
+  '<div id="rqPIn" style="display:none"><div class="rqH"><span>'+bl('আমার ইনবক্স','My inbox')+'</span><button type="button" id="rqRef">'+bl('রিফ্রেশ','Refresh')+'</button></div><div id="rqInbox"></div></div>',
+  '<div id="rqPSent" style="display:none"><div class="rqH"><span>'+bl('পাঠানো অনুরোধ','Sent requests')+'</span></div><div id="rqSent"></div></div>',
+  '<div id="rqPQr" style="display:none"></div>'].join('');
+  var first=sec.firstElementChild; sec.insertBefore(hero,first); sec.insertBefore(tp,first);
+  var lw=document.createElement('div'), gl=$('getList'), ol=$('oweList'); lw.id='rqLoans'; gl=gl&&gl.closest('.box'); ol=ol&&ol.closest('.box');
+  sec.insertBefore(lw,gl||null); if(gl) lw.appendChild(gl); if(ol) lw.appendChild(ol); sec.appendChild(box);
+  var qb=$('qrBox'), slot=$('rqPQr'); if(qb&&slot){ var h=qb.querySelector(':scope>h3'); if(h) h.remove(); qb.style.cssText='border:0;box-shadow:none;padding:0;background:transparent;margin:0'; slot.appendChild(qb); }
+  $('rqT1').onclick=function(){top('loan');}; $('rqT2').onclick=function(){top('req');};
+  ['send','in','sent','qr'].forEach(function(k,i){ $('rqS'+(i+1)).onclick=function(){ mode(k); }; });
+  $('rqK1').onclick=function(){setKind('loan');}; $('rqK2').onclick=function(){setKind('repay');}; $('rqK3').onclick=function(){setKind('ask');};
   $('rqSend').onclick=send; $('rqRef').onclick=function(){ loadInbox(); refreshSent(); };
-  $('rqPer').addEventListener('input',onPick); $('rqPer').addEventListener('change',onPick);
-  $('rqAmt').addEventListener('input',updateRem);
+  $('rqPer').addEventListener('input',onPick); $('rqPer').addEventListener('change',onPick); $('rqAmt').addEventListener('input',updateRem);
   box.addEventListener('input',function(e){ var n=e.target.getAttribute&&e.target.getAttribute('data-nm'); if(n) edits[n]=e.target.value; });
-  box.addEventListener('click',function(e){ var c=e.target.closest('[data-cancel]'); if(c){ cancelReq(c.getAttribute('data-cancel')); return; } var b=e.target.closest('[data-rq]'); if(b) act(b.getAttribute('data-id'),b.getAttribute('data-rq')==='y'); });
-  box.addEventListener('toggle',function(){ if(!box.open){ try{ closeQRScan(); }catch(x){} return; } fillLists(); if($('rqPaneE').style.display!=='none'&&gate()){ register().catch(function(){}); loadInbox(); refreshSent(); } renderSent(); });
-  setKind('loan'); fillLists(); gate(); renderSent(); renderInbox(true);
+  box.addEventListener('click',function(e){
+    var q=e.target.closest('[data-q]'); if(q){ $('rqAmt').value=q.getAttribute('data-q'); updateRem(); return; }
+    var c=e.target.closest('[data-cancel]'); if(c){ cancelReq(c.getAttribute('data-cancel')); return; }
+    var b=e.target.closest('[data-rq]'); if(b) act(b.getAttribute('data-id'),b.getAttribute('data-rq')==='y');
+  });
+  var _rl=window.renderLoans; if(typeof _rl==='function'){ window.renderLoans=function(){ var r=_rl.apply(this,arguments); try{ heroUp(); }catch(e){} return r; }; }
+  setKind('loan'); fillLists(); fillMeth(); gate(); renderSent(); renderInbox(true); heroUp();
   if(gate()){ register().catch(function(){}); loadInbox(); refreshSent(); }
 }
 try{ build(); }catch(e){ console.warn('requests',e); }
