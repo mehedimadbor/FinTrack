@@ -2,7 +2,7 @@
   "on": true,
   "id": 1,
   "title": "নতুন আপডেট এসেছে!",
-  "message": "FinTrack-এ রিপোর্ট ট্যাব যোগ হয়েছে। মাস শেষে আয়-খরচের পুরো হিসাব দেখুন।",
+  "message": "FinTrack-এ Gmail দিয়ে ব্যাকআপ নিন এবং বন্ধুদের Gmail/Username ব্যবহার করে সহজেই Money Request পাঠান। এখনই আপডেট করে নতুন সুবিধাগুলো ব্যবহার করুন।",
   "type": "update",
   "always": false
 }
