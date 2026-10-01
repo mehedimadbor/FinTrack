@@ -600,6 +600,91 @@ details.setBox[open]>summary{border-bottom:1px solid var(--border);}
 html.hasUser #loginScreen{display:none !important;}
 html.booting .wrap, html.booting .bottomnav{visibility:hidden;}
 .section.active .box{animation:none !important;}
+/* ===== Profile rows + account sheet + cloud switch ===== */
+.pfList{border:1px solid var(--border); border-radius:18px; overflow:hidden; margin:6px 0 8px; background:var(--card);}
+.pfRow{display:flex; align-items:center; gap:12px; padding:12px 14px; border-bottom:1px solid var(--border); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:background .15s;}
+.pfRow:last-child{border-bottom:0;}
+.pfRow:active{background:color-mix(in srgb,var(--primary) 7%,transparent);}
+.pfMid{flex:1; min-width:0;}
+.pfLbl{font-size:11.5px; font-weight:600; color:var(--muted); letter-spacing:.2px;}
+.pfVal{font-size:14.5px; font-weight:700; color:var(--text); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.pfVal.empty{color:var(--muted); font-weight:500;}
+.pfAct{flex:none; font-size:12.5px; font-weight:700; color:var(--primary); padding:6px 13px; border-radius:20px; background:color-mix(in srgb,var(--primary) 10%,transparent);}
+.pfNote{font-size:12px; color:var(--muted); line-height:1.45; padding:0 2px;}
+.csRow{padding:10px 0 4px;}
+.csTx{display:flex; flex-direction:column; gap:2px; min-width:0;}
+.csT{font-size:14.5px; font-weight:700;}
+.csS{font-size:12px; color:var(--muted); font-weight:500; word-break:break-all;}
+.pfOv{position:fixed; inset:0; z-index:9500; background:rgba(10,14,25,.5); display:none; align-items:flex-end; justify-content:center; -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px);}
+.pfOv.on{display:flex; animation:pfFade .18s ease both;}
+.pfSheet{width:100%; max-width:520px; max-height:92vh; overflow:auto; background:var(--card); color:var(--text); border-radius:26px 26px 0 0; padding:10px 18px calc(18px + env(safe-area-inset-bottom,0px)); box-shadow:0 -16px 40px -12px rgba(0,0,0,.35); animation:pfUp .26s cubic-bezier(.2,.9,.3,1) both;}
+.pfGrab{width:40px; height:4px; border-radius:4px; background:var(--border); margin:0 auto 14px;}
+.pfTitle{font-size:18px; font-weight:800;}
+.pfHint{font-size:12.5px; color:var(--muted); line-height:1.5; margin-top:6px;}
+.pfLb{display:block; font-size:12px; font-weight:600; color:var(--muted); margin:14px 0 6px;}
+.pfIn{position:relative;}
+.pfIn input{width:100%; min-height:48px; padding:12px 14px; border-radius:14px; border:1.5px solid var(--border); background:var(--bg); color:var(--text); font-size:16px; font-family:inherit; outline:none; transition:border-color .15s,box-shadow .15s;}
+.pfIn input[type=password]{padding-right:70px;}
+.pfIn input:focus{border-color:var(--primary); box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 18%,transparent);}
+.pfEye{position:absolute; right:6px; top:50%; transform:translateY(-50%); border:0; background:transparent; color:var(--primary); font-size:12.5px; font-weight:700; font-family:inherit; padding:8px 10px; cursor:pointer;}
+.pfErr{font-size:12.5px; font-weight:600; color:var(--red); margin-top:10px; line-height:1.45;}
+.pfErr:empty{display:none;}
+.pfForgot{font-size:12.5px; font-weight:600; color:var(--primary); margin-top:12px; cursor:pointer; display:none; width:max-content;}
+.pfBtns{display:flex; gap:10px; margin-top:18px;}
+.pfBtns button{flex:1; min-height:48px; border-radius:14px; font-size:15px; font-weight:700; font-family:inherit; cursor:pointer; border:1.5px solid var(--border); transition:transform .12s,opacity .2s;}
+.pfBtns button:active{transform:scale(.97);}
+.pfBtns button:disabled{opacity:.6; cursor:default;}
+.pfCancel{background:var(--bg); color:var(--text);}
+.pfSave{background:var(--primary); color:#fff; border-color:var(--primary) !important;}
+.pfToast{position:fixed; left:50%; bottom:calc(92px + env(safe-area-inset-bottom,0px)); transform:translate(-50%,12px); z-index:9600; max-width:86vw; padding:11px 18px; border-radius:22px; background:#111827; color:#fff; font-size:13.5px; font-weight:600; opacity:0; pointer-events:none; transition:opacity .25s,transform .25s; text-align:center;}
+.pfToast.on{opacity:1; transform:translate(-50%,0);}
+.pfProg{padding:12px 14px; border-radius:18px; margin:6px 0 10px; background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 12%,var(--card)),var(--card)); border:1px solid color-mix(in srgb,var(--primary) 22%,var(--border));}
+.pfProgTop{display:flex; align-items:center; justify-content:space-between; font-size:12.5px; font-weight:700; color:var(--text);}
+.pfProgTop b{color:var(--primary); font-size:13px;}
+.pfBar{height:7px; border-radius:7px; background:color-mix(in srgb,var(--text) 10%,transparent); margin-top:9px; overflow:hidden;}
+.pfBar i{display:block; height:100%; width:0; border-radius:7px; background:var(--grad,var(--primary)); transition:width .5s cubic-bezier(.2,.9,.3,1);}
+.pfList{border-radius:20px; box-shadow:0 1px 2px rgba(16,24,40,.04),0 10px 24px -16px rgba(16,24,40,.25);}
+.pfRow{position:relative; padding:13px 14px 13px 16px;}
+.pfRow::before{content:""; position:absolute; left:0; top:14px; bottom:14px; width:3px; border-radius:0 3px 3px 0; background:var(--c); opacity:.28; transition:opacity .2s;}
+.pfRow.done::before{opacity:1;}
+.pfIc{flex:none; width:40px; height:40px; border-radius:13px; display:flex; align-items:center; justify-content:center; color:var(--c); background:color-mix(in srgb,var(--c) 14%,transparent); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 24%,transparent);}
+.pfIc svg{width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round;}
+.pfLbl{display:flex; align-items:center; gap:7px;}
+.pfChip{font-style:normal; font-size:10px; font-weight:800; letter-spacing:.3px; padding:2px 8px; border-radius:20px; text-transform:uppercase;}
+.pfChip.ok{color:#16a34a; background:rgba(34,197,94,.14);}
+.pfChip.warn{color:#d97706; background:rgba(245,158,11,.16);}
+.pfChip.opt{color:var(--muted); background:color-mix(in srgb,var(--text) 8%,transparent);}
+.pfVal{font-size:15px; letter-spacing:.1px;}
+.pfAct{border:1.5px solid color-mix(in srgb,var(--primary) 40%,transparent); background:transparent; padding:6px 14px;}
+.pfAct.set{background:var(--primary); color:#fff; border-color:var(--primary); box-shadow:0 6px 14px -6px color-mix(in srgb,var(--primary) 70%,transparent);}
+.pfNote{margin-top:2px;}
+.pfCard{margin:8px 0 6px; border-radius:30px; overflow:hidden; position:relative; background:var(--card); box-shadow:0 1px 2px rgba(16,24,40,.05),0 18px 36px -20px rgba(16,24,40,.35);}
+.pfHd{position:relative; height:128px; padding:26px 20px 0; text-align:center; color:#fff; background:var(--grad,var(--primary)); overflow:hidden;}
+.pfHd i{position:absolute; border-radius:50%; background:rgba(255,255,255,.2);}
+.pfHd i.a{width:110px; height:110px; left:-34px; top:34px;}
+.pfHd i.b{width:96px; height:96px; right:-26px; bottom:10px; background:rgba(255,255,255,.14);}
+.pfHdT{position:relative; font-size:22px; font-weight:800; letter-spacing:.2px;}
+.pfHdS{position:relative; font-size:12px; font-weight:600; opacity:.92; margin-top:5px; padding:0 14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.pfPanel{position:relative; margin-top:-34px; background:var(--card); border-radius:30px 30px 0 0; padding:18px 16px 18px;}
+.pfG2{display:flex; gap:5px;}
+.pfG2>.pfPill{flex:1; min-width:0;}
+.pfPill{background:color-mix(in srgb,var(--text) 6%,var(--card)); border-radius:26px; margin-bottom:8px; transition:box-shadow .15s,background .15s;}
+.pfG2 .pfPill{margin-bottom:0;} .pfPanel>.pfG2,.pfPanel>div>.pfG2{margin-bottom:8px;}
+.pfG2:first-child .pfPill:first-child{border-radius:26px 8px 8px 26px;} .pfG2:first-child .pfPill:last-child{border-radius:8px 26px 26px 8px;}
+.pfPill:focus-within{background:var(--card); box-shadow:0 0 0 2px var(--primary);}
+.pfCard .pfPill input{display:block; width:100%; height:52px; padding:0 20px; border:0 !important; outline:none; box-shadow:none !important; background:transparent !important; color:var(--text); font-size:15.5px; font-family:inherit; border-radius:inherit;}
+.pfCard .pfPill input::placeholder{color:var(--muted); opacity:.85;}
+.pfEyeB{flex:none; width:56px; height:52px; border:0; border-radius:8px 26px 26px 8px; background:color-mix(in srgb,var(--text) 6%,var(--card)); color:var(--muted); display:flex; align-items:center; justify-content:center; cursor:pointer;}
+.pfG2:has(.pfEyeB) .pfPill{border-radius:26px 8px 8px 26px;}
+.pfEyeB svg{width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round;}
+.pfEyeB .sl{display:none;} .pfEyeB.on{color:var(--primary);} .pfEyeB.on .sl{display:block;}
+.pfMsg{font-size:12.5px; font-weight:600; color:var(--red); line-height:1.45; padding:2px 8px 8px;}
+.pfMsg:empty{display:none;} .pfMsg.ok{color:#16a34a;}
+.pfBig{display:block; width:100%; height:54px; margin-top:8px; border:0; border-radius:27px; background:var(--text); color:var(--card); font-size:16px; font-weight:800; font-family:inherit; cursor:pointer; transition:transform .12s,opacity .2s; letter-spacing:.2px;}
+.pfBig:active{transform:scale(.98);} .pfBig:disabled{opacity:.6;}
+.pfFoot{font-size:11.5px; color:var(--muted); text-align:center; line-height:1.55; margin-top:14px; padding:0 8px;}
+@keyframes pfFade{from{opacity:0}to{opacity:1}}
+@keyframes pfUp{from{transform:translateY(40px); opacity:.6}to{transform:none; opacity:1}}
 .tabs,.profileBar,.bottomnav,.lkBrand,.lkCard{-webkit-backdrop-filter:none !important; backdrop-filter:none !important;}
 .tabs,.profileBar,.bottomnav,.lkBrand,.lkCard{background:var(--card) !important;}
 .bottomnav{transform:translateZ(0);}
@@ -858,11 +943,14 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   function acRefresh(){ var w=$('acWho'); if(!w) return; var s=ses(), n=''; try{ n=localStorage.getItem('myName_v1')||''; }catch(e){}
     w.textContent = s ? ((n?n+' · ':'')+(s.email||'')) : tx((n?n+' · ':'')+'গেস্ট (শুধু এই ফোনে)',(n?n+' · ':'')+'Guest (this phone only)'); }
   function ui(){
-    acRefresh();
-    var s=ses(), o=$('csOut'), i=$('csIn'); if(!o||!i) return;
-    o.style.display=s?'none':''; i.style.display=s?'':'none';
-    if(s){ $('csWho').textContent=s.email||''; $('csAuto').checked=auto(); }
-    if(!ok()) status(tx('ক্লাউড সিঙ্ক এখনো সেট-আপ হয়নি (ডেভেলপারকে FT_FIREBASE এ apiKey ও dbUrl দিতে হবে)।','Cloud sync is not set up yet (developer must fill apiKey and dbUrl in FT_FIREBASE).'),true);
+    acRefresh(); profRefresh();
+    var s=ses(), c=$('csAuto'); if(!c) return;
+    var on=!!s&&auto(); c.checked=on;
+    var sub=$('csSub');
+    if(sub) sub.textContent = s ? (on ? tx('চালু · ','On · ')+(s.email||'') : tx('বন্ধ · ডেটা শুধু এই ফোনে থাকছে','Off · data stays on this phone only'))
+                                : tx('বন্ধ · চালু করতে ইমেইল ও পাসওয়ার্ড সেট করুন','Off · set an email & password to turn on');
+    if(!ok()){ status(tx('ক্লাউড সিঙ্ক এখনো সেট-আপ হয়নি (ডেভেলপারকে FT_FIREBASE এ apiKey ও dbUrl দিতে হবে)।','Cloud sync is not set up yet (developer must fill apiKey and dbUrl in FT_FIREBASE).'),true); }
+    else if(!busy){ if(on) doneMsg(); else status(s?tx('সিঙ্ক বন্ধ আছে — চালু করলে সব পরিবর্তন ক্লাউডে যাবে','Sync is paused — turn it on to back up your changes'):''); }
   }
   function errMsg(e){
     var m=String((e&&e.message)||e||'');
@@ -932,17 +1020,182 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   function onChange(k){ if(applying||!syncKey(k)||!ses()) return; _set.call(LS,DIRTY,'1'); if(auto()) schedule(); }
   Storage.prototype.setItem=function(k){ var r=_set.apply(this,arguments); if(this===LS){ try{onChange(k)}catch(e){} } return r; };
   Storage.prototype.removeItem=function(k){ var r=_rem.apply(this,arguments); if(this===LS){ try{onChange(k)}catch(e){} } return r; };
-  async function enter(kind){
-    if(!ok()){ ui(); return; }
-    var em=($('csEmail').value||'').trim(), pw=$('csPass').value||'';
-    if(!em||!pw){ status(tx('ইমেইল ও পাসওয়ার্ড দিন','Enter email and password'),true); return; }
-    status(tx('অপেক্ষা করুন…','Please wait…'));
+  /* ---- profile rows + account sheet (name / username / phone / email / password) ---- */
+  var sh={mode:'',busy:false,label:''};
+  function lsGet(k){ try{ return LS.getItem(k)||''; }catch(e){ return ''; } }
+  function escH(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function toast(m){ var d=$('pfToast'); if(!d){ d=document.createElement('div'); d.id='pfToast'; d.className='pfToast'; document.body.appendChild(d); } d.textContent=m; d.classList.add('on'); clearTimeout(d._t); d._t=setTimeout(function(){ d.classList.remove('on'); },2600); }
+  var pfDirty=false;
+  function curVis(){ var w=$('pfCurWrap'); if(!w) return; var ss=ses(), em=(($('pfe')||{}).value||'').trim().toLowerCase(), pw=(($('pfw')||{}).value||'');
+    w.style.display=(ss&&((em&&em!==String(ss.email||'').toLowerCase())||pw))?'':'none'; }
+  function pfTouch(){ pfDirty=true; var m=$('pfMsg'); if(m) m.textContent=''; curVis(); }
+  function pfEye(id,b){ var i=$(id); if(!i) return; var h=i.type==='password'; i.type=h?'text':'password'; b.classList.toggle('on',h); }
+  function profRefresh(){
+    if(!$('pfn')) return; var ss=ses();
+    var P={pfn:tx('নাম','Name'),pfu:tx('ইউজারনেম','Username'),pfe:tx('ইমেইল','Email'),pfw:ss?tx('নতুন পাসওয়ার্ড (বদলাতে চাইলে)','New password (only to change)'):tx('পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)','Password (min 6 characters)'),pfc:tx('বর্তমান পাসওয়ার্ড','Current password'),pfp:tx('মোবাইল নম্বর (ঐচ্ছিক)','Mobile number (optional)')};
+    Object.keys(P).forEach(function(k){ var e=$(k); if(e){ e.placeholder=P[k]; e.setAttribute('aria-label',P[k]); } });
+    if(!pfDirty && !sh.busy){ $('pfn').value=lsGet('myName_v1'); $('pfu').value=lsGet('myUsername_v1').replace(/^@/,''); $('pfp').value=lsGet('myPhone_v1'); $('pfe').value=ss?ss.email:''; $('pfw').value=''; $('pfc').value=''; }
+    var hs=$('pfHdS'); if(hs) hs.textContent=ss?(auto()?tx('ক্লাউড সিঙ্ক চালু · ','Cloud sync on · '):tx('সিঙ্ক বন্ধ · ','Sync off · '))+ss.email:tx('গেস্ট · ডেটা শুধু এই ফোনে','Guest · data on this phone only');
+    var bb=$('pfBigBtn'); if(bb&&!sh.busy){ bb.textContent=tx('সংরক্ষণ করুন','Save'); bb.disabled=false; }
+    curVis();
+  }
+  function pfMsg(m,ok2){ var e=$('pfMsg'); if(!e) return; e.textContent=m||''; e.className='pfMsg'+(ok2?' ok':''); }
+  function pfBusy(b){ sh.busy=b; var bb=$('pfBigBtn'); if(!bb) return; bb.disabled=b; bb.textContent=b?tx('সংরক্ষণ হচ্ছে…','Saving…'):tx('সংরক্ষণ করুন','Save'); }
+  async function profSave(){
+    if(sh.busy) return;
+    var g=function(i){ return (($(i)||{}).value)||''; };
+    var nm=g('pfn').trim(), un=g('pfu').trim().replace(/^@/,''), ph=g('pfp').trim(), em=g('pfe').trim(), pw=g('pfw'), cur=g('pfc'), ss=ses();
+    pfMsg('');
+    if(!nm) return pfMsg(tx('নাম লিখুন','Enter your name'));
+    if(un&&!/^[A-Za-z0-9_.]{3,24}$/.test(un)) return pfMsg(tx('ইউজারনেম ৩–২৪ অক্ষরের হতে হবে (অক্ষর, সংখ্যা, _ বা .)','Username must be 3–24 characters (letters, numbers, _ or .)'));
+    if(ph&&!/^[0-9+\-\s]{6,16}$/.test(ph)) return pfMsg(tx('সঠিক মোবাইল নম্বর দিন','Enter a valid mobile number'));
+    if(em&&!EM.test(em)) return pfMsg(tx('সঠিক ইমেইল দিন','Enter a valid email'));
+    var emChg=!!(ss&&em&&em.toLowerCase()!==String(ss.email||'').toLowerCase()), newAcc=!ss&&(em||pw);
+    if(newAcc){ if(!em) return pfMsg(tx('ইমেইল দিন','Enter your email')); if(pw.length<6) return pfMsg(tx('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের দিন','Password must be at least 6 characters')); if(!ok()) return pfMsg(tx('ক্লাউড অ্যাকাউন্ট এখনো চালু নেই','Cloud account is not set up yet')); }
+    if(ss&&pw&&pw.length<6) return pfMsg(tx('নতুন পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের দিন','New password must be at least 6 characters'));
+    if(ss&&(emChg||pw)&&!cur) return pfMsg(tx('ইমেইল বা পাসওয়ার্ড বদলাতে বর্তমান পাসওয়ার্ড দিন','Enter your current password to change email or password'));
+    pfBusy(true);
+    try{ LS.setItem('myName_v1',nm); LS.setItem('myUsername_v1',un); LS.setItem('myPhone_v1',ph); }catch(e){}
+    ['myNameInput','myUsernameInput','myPhoneInput'].forEach(function(id,i){ var h=$(id); if(h) h.value=[nm,un,ph][i]; });
+    try{ if(typeof renderHomeProfile==='function') renderHomeProfile(); }catch(e){}
+    var done=tx('সব তথ্য সংরক্ষিত হয়েছে','All details saved');
     try{
-      var j=await authReq(kind==='up'?'signUp':'signInWithPassword',{email:em,password:pw,returnSecureToken:true});
-      idTok=j.idToken; idExp=Date.now()+(+j.expiresIn||3600)*1000;
-      setSes({uid:j.localId,rt:j.refreshToken,email:j.email||em}); $('csPass').value=''; ui();
-      busy=true; try{ await firstSync(); } finally{ busy=false; }
-    }catch(e){ status(errMsg(e),true); }
+      if(newAcc){
+        var existed=false, j;
+        try{ j=await authReq('signUp',{email:em,password:pw,returnSecureToken:true}); }
+        catch(e1){ if(/EMAIL_EXISTS/.test(String((e1&&e1.message)||e1))){ existed=true; j=await authReq('signInWithPassword',{email:em,password:pw,returnSecureToken:true}); } else throw e1; }
+        idTok=j.idToken; idExp=Date.now()+(+j.expiresIn||3600)*1000;
+        setSes({uid:j.localId,rt:j.refreshToken,email:j.email||em}); _set.call(LS,AUTO,'1');
+        if(existed){
+          var rem=null; try{ rem=await dbGet('backup'); }catch(e2){ setSes(null); idTok=''; throw e2; }
+          if(rem&&rem.data){ keepPrev(); toast(tx('আপনার ক্লাউড ডেটা ফিরিয়ে আনা হচ্ছে…','Restoring your cloud data…')); applyRemote(rem); return; }
+        }
+        busy=true; try{ await push(); doneMsg(); }catch(e3){ status(errMsg(e3),true); } finally{ busy=false; }
+        done=existed?tx('লগইন হয়েছে, ক্লাউড সিঙ্ক চালু','Signed in, cloud sync is on'):tx('অ্যাকাউন্ট তৈরি হয়েছে, ক্লাউড সিঙ্ক চালু','Account created, cloud sync is on');
+      } else if(ss&&(emChg||pw)){
+        var r=await authReq('signInWithPassword',{email:ss.email,password:cur,returnSecureToken:true});
+        var body={idToken:r.idToken,returnSecureToken:true}; if(emChg) body.email=em; if(pw) body.password=pw;
+        var u=await authReq('update',body);
+        if(emChg) ss.email=u.email||em; grabTok(u.idToken?u:r,ss); setSes(ss);
+        done=emChg&&pw?tx('ইমেইল ও পাসওয়ার্ড বদলানো হয়েছে','Email and password updated'):emChg?tx('ইমেইল বদলানো হয়েছে','Email updated'):tx('পাসওয়ার্ড বদলানো হয়েছে','Password updated');
+      }
+      pfDirty=false; pfBusy(false); profRefresh(); ui(); toast(done);
+    }catch(e){
+      pfBusy(false); pfMsg(tx('নাম, ইউজারনেম ও মোবাইল সংরক্ষিত হয়েছে, কিন্তু: ','Name, username & mobile saved, but: ')+accErr(e,(ss?'change':'')));
+    }
+  }
+  function F(id,type,lbl,ph,val,ac){
+    return '<label class="pfLb" for="pf_'+id+'">'+escH(lbl)+'</label><div class="pfIn"><input id="pf_'+id+'" type="'+type+'" placeholder="'+escH(ph)+'" value="'+escH(val)+'" autocomplete="'+ac+'" autocapitalize="none" spellcheck="false">'
+      +(type==='password'?'<button type="button" class="pfEye" onclick="ftCloud.eye(\'pf_'+id+'\',this)">'+tx('দেখান','Show')+'</button>':'')+'</div>';
+  }
+  function eyeToggle(id,b){ var i=$(id); if(!i) return; var s=i.type==='password'; i.type=s?'text':'password'; b.textContent=s?tx('লুকান','Hide'):tx('দেখান','Show'); }
+  function openSheet(mode){
+    var s=ses();
+    if((mode==='email'||mode==='password')&&!ok()){ toast(tx('ক্লাউড অ্যাকাউন্ট এখনো চালু নেই','Cloud account is not set up yet')); return; }
+    if(mode==='password'&&!s) mode='email';
+    sh.mode=mode; sh.busy=false;
+    var T='',H='',B=tx('সংরক্ষণ করুন','Save'),h='',fg=false;
+    if(mode==='name'){ T=tx('নাম','Name'); h=F('v','text',tx('আপনার নাম','Your name'),tx('যেমন: করিম','e.g. Karim'),lsGet('myName_v1'),'name'); }
+    else if(mode==='username'){ T=tx('ইউজারনেম','Username'); H=tx('অক্ষর, সংখ্যা, _ ও . ব্যবহার করুন (৩–২৪ অক্ষর)।','Use letters, numbers, _ and . (3–24 characters).'); h=F('v','text',tx('ইউজারনেম','Username'),'karim123',lsGet('myUsername_v1').replace(/^@/,''),'username'); }
+    else if(mode==='phone'){ T=tx('মোবাইল নম্বর','Mobile number'); h=F('v','tel',tx('মোবাইল নম্বর','Mobile number'),'01XXXXXXXXX',lsGet('myPhone_v1'),'tel'); }
+    else if(mode==='email'&&!s){ T=tx('ইমেইল ও পাসওয়ার্ড সেট করুন','Set email & password'); H=tx('এই ইমেইলে আগে থেকে ক্লাউড ডেটা থাকলে নিজে থেকেই ফিরিয়ে আনা হবে, না থাকলে নতুন অ্যাকাউন্ট খোলা হবে।','If this email already has cloud data it is restored automatically; otherwise a new account is created.'); B=tx('এগিয়ে যান','Continue'); fg=true;
+      h=F('em','email',tx('ইমেইল','Email'),'name@example.com','','email')+F('pw','password',tx('পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)','Password (min 6 characters)'),'','','new-password'); }
+    else if(mode==='email'){ T=tx('ইমেইল পরিবর্তন','Change email'); H=tx('বর্তমান ইমেইল: ','Current email: ')+s.email; B=tx('ইমেইল বদলান','Update email'); fg=true;
+      h=F('em','email',tx('নতুন ইমেইল','New email'),'name@example.com','','email')+F('pw','password',tx('বর্তমান পাসওয়ার্ড','Current password'),'','','current-password'); }
+    else { T=tx('পাসওয়ার্ড পরিবর্তন','Change password'); B=tx('পাসওয়ার্ড বদলান','Update password'); fg=true;
+      h=F('cur','password',tx('বর্তমান পাসওয়ার্ড','Current password'),'','','current-password')+F('pw','password',tx('নতুন পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)','New password (min 6 characters)'),'','','new-password')+F('cf','password',tx('নতুন পাসওয়ার্ড আবার দিন','Confirm new password'),'','','new-password'); }
+    sh.label=B;
+    $('pfTitle').textContent=T; var hn=$('pfHint'); hn.textContent=H; hn.style.display=H?'':'none';
+    $('pfFields').innerHTML=h; $('pfErr').textContent=''; $('pfForgot').style.display=fg?'':'none';
+    var sv=$('pfSave'); sv.textContent=B; sv.disabled=false; $('pfCancel').disabled=false;
+    $('pfOv').classList.add('on'); document.body.style.overflow='hidden';
+    setTimeout(function(){ var i=$('pfFields').querySelector('input'); if(i){ i.focus(); try{ i.select(); }catch(e){} } },140);
+  }
+  function sheetClose(){ if(sh.busy) return; $('pfOv').classList.remove('on'); document.body.style.overflow=''; $('pfFields').innerHTML=''; }
+  function setBusy(b){ sh.busy=b; var sv=$('pfSave'); sv.disabled=b; $('pfCancel').disabled=b; sv.textContent=b?tx('অপেক্ষা করুন…','Please wait…'):sh.label; }
+  function pfErr(m){ $('pfErr').textContent=m||''; }
+  function accErr(e,ctx){
+    var m=String((e&&e.message)||e||'');
+    if(ctx==='change'&&/EMAIL_EXISTS/.test(m)) return tx('এই ইমেইল অন্য অ্যাকাউন্টে ব্যবহৃত হচ্ছে','This email is already used by another account');
+    if(ctx==='change'&&/INVALID_LOGIN|INVALID_PASSWORD/.test(m)) return tx('বর্তমান পাসওয়ার্ড ঠিক নয়','Current password is incorrect');
+    if(ctx==='existing'&&/INVALID_LOGIN|INVALID_PASSWORD/.test(m)) return tx('এই ইমেইলে আগেই অ্যাকাউন্ট আছে, কিন্তু পাসওয়ার্ড মেলেনি। সঠিক পাসওয়ার্ড দিন অথবা "পাসওয়ার্ড ভুলে গেছেন?" চাপুন।','This email already has an account, but the password does not match. Enter the right password or tap "Forgot password?".');
+    if(ctx==='change'&&/OPERATION_NOT_ALLOWED/.test(m)) return tx('সার্ভার সেটিংসের কারণে ইমেইল পরিবর্তন করা যাচ্ছে না','Email change is blocked by server settings');
+    return errMsg(e);
+  }
+  function saveField(key,val,hid){ try{ LS.setItem(key,val); }catch(e){} var h=$(hid); if(h) h.value=val; try{ if(typeof renderHomeProfile==='function') renderHomeProfile(); }catch(e){} ui(); }
+  function keepPrev(){ try{ _set.call(LS,'ftSyncPrev_v1',JSON.stringify({at:Date.now(),data:snapshot()})); }catch(e){} }
+  function grabTok(j,s){ idTok=j.idToken||idTok; idExp=Date.now()+(+j.expiresIn||3600)*1000; if(s&&j.refreshToken) s.rt=j.refreshToken; }
+  async function sheetSave(){
+    if(sh.busy) return;
+    var m=sh.mode, v=function(id){ var e=$('pf_'+id); return e?e.value:''; };
+    pfErr('');
+    if(m==='name'){ var n=v('v').trim(); if(!n) return pfErr(tx('নাম লিখুন','Enter your name')); saveField('myName_v1',n,'myNameInput'); sheetClose(); return toast(tx('নাম সংরক্ষিত হয়েছে','Name saved')); }
+    if(m==='username'){ var u=v('v').trim().replace(/^@/,''); if(u&&!/^[A-Za-z0-9_.]{3,24}$/.test(u)) return pfErr(tx('ইউজারনেম ৩–২৪ অক্ষরের হতে হবে (অক্ষর, সংখ্যা, _ বা .)','Username must be 3–24 characters (letters, numbers, _ or .)')); saveField('myUsername_v1',u,'myUsernameInput'); sheetClose(); return toast(tx('ইউজারনেম সংরক্ষিত হয়েছে','Username saved')); }
+    if(m==='phone'){ var p=v('v').trim(); if(p&&!/^[0-9+\-\s]{6,16}$/.test(p)) return pfErr(tx('সঠিক মোবাইল নম্বর দিন','Enter a valid mobile number')); saveField('myPhone_v1',p,'myPhoneInput'); sheetClose(); return toast(tx('মোবাইল নম্বর সংরক্ষিত হয়েছে','Mobile number saved')); }
+    var s=ses();
+    if(m==='email'&&!s){
+      var em=v('em').trim(), pw=v('pw');
+      if(!EM.test(em)) return pfErr(tx('সঠিক ইমেইল দিন','Enter a valid email'));
+      if(pw.length<6) return pfErr(tx('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের দিন','Password must be at least 6 characters'));
+      setBusy(true); var existed=false, j;
+      try{
+        try{ j=await authReq('signUp',{email:em,password:pw,returnSecureToken:true}); }
+        catch(e1){
+          if(/EMAIL_EXISTS/.test(String((e1&&e1.message)||e1))){ existed=true; j=await authReq('signInWithPassword',{email:em,password:pw,returnSecureToken:true}); }
+          else throw e1;
+        }
+        idTok=j.idToken; idExp=Date.now()+(+j.expiresIn||3600)*1000;
+        setSes({uid:j.localId,rt:j.refreshToken,email:j.email||em}); _set.call(LS,AUTO,'1');
+        if(existed){
+          var rem=null; try{ rem=await dbGet('backup'); }catch(e2){ setSes(null); idTok=''; throw e2; }
+          if(rem&&rem.data){ keepPrev(); sh.busy=false; sheetClose(); toast(tx('আপনার ডেটা ফিরিয়ে আনা হচ্ছে…','Restoring your data…')); applyRemote(rem); return; }
+        }
+        sh.busy=false; sheetClose(); ui();
+        busy=true; try{ await push(); doneMsg(); }catch(e3){ status(errMsg(e3),true); } finally{ busy=false; }
+        ui(); toast(existed?tx('লগইন হয়েছে, ক্লাউড সিঙ্ক চালু','Signed in, cloud sync is on'):tx('অ্যাকাউন্ট তৈরি হয়েছে, ক্লাউড সিঙ্ক চালু','Account created, cloud sync is on'));
+      }catch(e){ setBusy(false); pfErr(accErr(e,existed?'existing':'')); }
+      return;
+    }
+    if(m==='email'){
+      var ne=v('em').trim(), cp=v('pw');
+      if(!EM.test(ne)) return pfErr(tx('সঠিক ইমেইল দিন','Enter a valid email'));
+      if(ne.toLowerCase()===String(s.email||'').toLowerCase()) return pfErr(tx('এটাই আপনার বর্তমান ইমেইল','This is already your current email'));
+      if(!cp) return pfErr(tx('বর্তমান পাসওয়ার্ড দিন','Enter your current password'));
+      setBusy(true);
+      try{
+        var r=await authReq('signInWithPassword',{email:s.email,password:cp,returnSecureToken:true});
+        var u2=await authReq('update',{idToken:r.idToken,email:ne,returnSecureToken:true});
+        s.email=u2.email||ne; grabTok(u2.idToken?u2:r,s); setSes(s);
+        sh.busy=false; sheetClose(); ui(); toast(tx('ইমেইল বদলানো হয়েছে','Email updated'));
+      }catch(e){ setBusy(false); pfErr(accErr(e,'change')); }
+      return;
+    }
+    if(m==='password'){
+      var cur=v('cur'), nw=v('pw'), cf=v('cf');
+      if(!cur) return pfErr(tx('বর্তমান পাসওয়ার্ড দিন','Enter your current password'));
+      if(nw.length<6) return pfErr(tx('নতুন পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের দিন','New password must be at least 6 characters'));
+      if(nw!==cf) return pfErr(tx('দুটি পাসওয়ার্ড মিলছে না','The two passwords do not match'));
+      if(nw===cur) return pfErr(tx('নতুন পাসওয়ার্ড আগেরটার থেকে আলাদা দিন','Choose a password different from the current one'));
+      setBusy(true);
+      try{
+        var r2=await authReq('signInWithPassword',{email:s.email,password:cur,returnSecureToken:true});
+        var u3=await authReq('update',{idToken:r2.idToken,password:nw,returnSecureToken:true});
+        grabTok(u3.idToken?u3:r2,s); setSes(s);
+        sh.busy=false; sheetClose(); ui(); toast(tx('পাসওয়ার্ড বদলানো হয়েছে','Password updated'));
+      }catch(e){ setBusy(false); pfErr(accErr(e,'change')); }
+    }
+  }
+  async function sheetForgot(){
+    var s=ses(), em=(s&&s.email)||(($('pf_em')||{}).value||'').trim();
+    if(!EM.test(em)) return pfErr(tx('আগে ইমেইল লিখুন','Enter your email first'));
+    try{ await authReq('sendOobCode',{requestType:'PASSWORD_RESET',email:em}); pfErr(''); toast(tx('রিসেট লিংক ইমেইলে পাঠানো হয়েছে','Reset link sent to your email')); }catch(e){ pfErr(errMsg(e)); }
+  }
+  /* ---- cloud sync: just an on/off switch ---- */
+  function toggleSync(cb){
+    if(!ses()){ cb.checked=false; var fe=$('pfe'); if(fe){ var dt=fe.closest('details'); if(dt) dt.open=true; setTimeout(function(){ try{ fe.scrollIntoView({behavior:'smooth',block:'center'}); fe.focus(); }catch(e){} },60); } toast(tx('ইমেইল ও পাসওয়ার্ড দিয়ে সংরক্ষণ করুন, তারপর সিঙ্ক চালু হবে','Enter email & password and Save to turn on sync')); return; }
+    _set.call(LS,AUTO,cb.checked?'1':'0');
+    if(cb.checked){ sync(true); } else { clearTimeout(timer); }
+    ui();
   }
   /* ---- login screen: create account (name+email+password) / log in / guest ---- */
   var lgMode='up', EM=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -996,9 +1249,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   window.ftCloud={
     _raw:function(){ return {ses:ses,token:token,call:call,CFG:CFG,ok:ok,errMsg:errMsg}; },
     loginSubmit:loginSubmit, loginMode:loginMode, loginReset:loginReset, loginGuest:loginGuest, loginEye:loginEye,
-    signIn:function(){ enter('in'); }, signUp:function(){ enter('up'); },
-    reset:async function(){ if(!ok()) return ui(); var em=($('csEmail').value||'').trim(); if(!em){ status(tx('আগে ইমেইল লিখুন','Enter your email first'),true); return; }
-      try{ await authReq('sendOobCode',{requestType:'PASSWORD_RESET',email:em}); status(tx('পাসওয়ার্ড রিসেট লিংক ইমেইলে পাঠানো হয়েছে','Password reset link sent to your email')); }catch(e){ status(errMsg(e),true); } },
+    edit:openSheet, profSave:profSave, pfTouch:pfTouch, pfEye:pfEye, sheetClose:sheetClose, sheetSave:sheetSave, sheetForgot:sheetForgot, eye:eyeToggle, toggle:toggleSync, refresh:function(){ ui(); },
     syncNow:function(){ sync(true); },
     setAuto:function(v){ _set.call(LS,AUTO,v?'1':'0'); if(v) schedule(); },
     accountLogout:function(){
@@ -1341,13 +1592,25 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
       </div>
     </div>
     <button class="typebtn" id="profilePicResetBtn" style="width:100%; display:none; margin-bottom:8px;" onclick="resetProfilePic()" data-i18n="btn_reset_photo">ছবি সরিয়ে দিন</button>
-    <label data-i18n="lbl_your_name">আপনার নাম</label>
-    <input type="text" id="myNameInput" data-i18n-ph="ph_your_name" placeholder="যেমন: করিম">
-    <label data-i18n="lbl_username">ইউজারনেম</label>
-    <input type="text" id="myUsernameInput" data-i18n-ph="ph_username" placeholder="যেমন: karim123">
-    <label data-i18n="lbl_phone">মোবাইল নম্বর</label>
-    <input type="tel" id="myPhoneInput" data-i18n-ph="ph_phone" placeholder="যেমন: 01XXXXXXXXX">
-    <button class="typebtn" style="width:100%; margin-top:8px;" onclick="saveMyName()" data-i18n="btn_save">সংরক্ষণ করুন</button>
+    <div class="pfCard">
+      <div class="pfHd"><i class="a"></i><i class="b"></i>
+        <div class="pfHdT"><span class="bn">আপনার তথ্য</span><span class="en">Your details</span></div>
+        <div class="pfHdS" id="pfHdS"></div>
+      </div>
+      <div class="pfPanel">
+        <div class="pfG2"><div class="pfPill"><input id="pfn" type="text" autocomplete="name" autocapitalize="none" spellcheck="false" oninput="ftCloud.pfTouch()" ></div><div class="pfPill"><input id="pfu" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" oninput="ftCloud.pfTouch()" ></div></div>
+        <div class="pfPill"><input id="pfe" type="email" autocomplete="email" autocapitalize="none" spellcheck="false" oninput="ftCloud.pfTouch()" ></div>
+        <div class="pfG2"><div class="pfPill"><input id="pfw" type="password" autocomplete="new-password" oninput="ftCloud.pfTouch()"></div><button type="button" class="pfEyeB" aria-label="Show / hide" onclick="ftCloud.pfEye('pfw',this)"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="sl" d="M4 4l16 16"/></svg></button></div>
+        <div id="pfCurWrap" style="display:none;"><div class="pfG2"><div class="pfPill"><input id="pfc" type="password" autocomplete="current-password" oninput="ftCloud.pfTouch()"></div><button type="button" class="pfEyeB" aria-label="Show / hide" onclick="ftCloud.pfEye('pfc',this)"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="sl" d="M4 4l16 16"/></svg></button></div></div>
+        <div class="pfPill"><input id="pfp" type="tel" autocomplete="tel" autocapitalize="none" spellcheck="false" oninput="ftCloud.pfTouch()" ></div>
+        <div class="pfMsg" id="pfMsg" role="alert"></div>
+        <button type="button" class="pfBig" id="pfBigBtn" onclick="ftCloud.profSave()"></button>
+        <div class="pfFoot"><span class="bn">ইমেইল ও পাসওয়ার্ড দিলে আপনার ডেটা ক্লাউডে নিরাপদ থাকবে। ইমেইল বা পাসওয়ার্ড বদলাতে বর্তমান পাসওয়ার্ড লাগবে।</span><span class="en">Add an email and password to keep your data safe in the cloud. Changing them needs your current password.</span></div>
+      </div>
+    </div>
+    <div style="display:none;">
+      <input type="text" id="myNameInput"><input type="text" id="myUsernameInput"><input type="tel" id="myPhoneInput">
+    </div>
   </div>
   <div class="box">
     <h3 data-i18n="backup_heading">লোকাল ব্যাকআপ</h3>
@@ -1368,26 +1631,9 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   </div>
   <div class="box" id="cloudSyncBox">
     <h3><span class="bn">ক্লাউড সিঙ্ক</span><span class="en">Cloud sync</span></h3>
-    <p style="font-size:12.5px; color:var(--muted); margin:0 0 8px;"><span class="bn">লগইন করলে আপনার সব ডেটা আপনার অ্যাকাউন্টে ক্লাউডে সেভ থাকবে, নতুন ফোনেও ফিরে পাবেন। PIN ও ফিঙ্গারপ্রিন্ট আপলোড হয় না।</span><span class="en">Sign in to keep all your data in the cloud under your account and get it back on a new phone. Your PIN and fingerprint are never uploaded.</span></p>
-    <div id="csOut">
-      <input type="email" id="csEmail" placeholder="Email / ইমেইল" autocomplete="email">
-      <input type="password" id="csPass" placeholder="Password / পাসওয়ার্ড (6+)" autocomplete="current-password" style="margin-top:8px;">
-      <div class="row2" style="margin-top:8px;">
-        <button class="typebtn" onclick="ftCloud.signIn()"><span class="bn">লগইন</span><span class="en">Sign in</span></button>
-        <button class="typebtn" onclick="ftCloud.signUp()"><span class="bn">নতুন অ্যাকাউন্ট</span><span class="en">Create account</span></button>
-      </div>
-      <div style="font-size:12.5px; color:var(--primary); margin-top:10px; cursor:pointer; text-align:center;" onclick="ftCloud.reset()"><span class="bn">পাসওয়ার্ড ভুলে গেছেন?</span><span class="en">Forgot password?</span></div>
-    </div>
-    <div id="csIn" style="display:none;">
-      <div style="font-size:13px; font-weight:700; word-break:break-all;" id="csWho"></div>
-      <label style="display:flex; align-items:center; gap:8px; margin:10px 0 0; font-size:13.5px; color:var(--text);"><input type="checkbox" id="csAuto" onchange="ftCloud.setAuto(this.checked)" style="width:auto; margin:0;"><span class="bn">অটো সিঙ্ক (পরিবর্তন হলেই সেভ)</span><span class="en">Auto sync (save on every change)</span></label>
-      <div class="row2" style="margin-top:10px;">
-        <button class="typebtn" onclick="ftCloud.syncNow()"><span class="bn">এখনই সিঙ্ক</span><span class="en">Sync now</span></button>
-        <button class="typebtn" onclick="ftCloud.signOut()"><span class="bn">লগআউট</span><span class="en">Sign out</span></button>
-      </div>
-      <button class="typebtn" style="width:100%; margin-top:8px; color:var(--red);" onclick="ftCloud.wipe()"><span class="bn">ক্লাউড ডেটা মুছুন</span><span class="en">Delete cloud data</span></button>
-    </div>
-    <div id="csStatus" style="font-size:12.5px; color:var(--primary); margin-top:8px;"></div>
+    <p style="font-size:12.5px; color:var(--muted); margin:0 0 4px;"><span class="bn">আপনার ইমেইলে ক্লাউডে ডেটা থাকলে নতুন ফোনে ওই ইমেইল দিয়ে ঢুকলেই নিজে থেকে ফিরে আসবে। PIN ও ফিঙ্গারপ্রিন্ট আপলোড হয় না।</span><span class="en">If your email already has data in the cloud, it comes back automatically when you sign in on a new phone. Your PIN and fingerprint are never uploaded.</span></p>
+    <label class="ftRow csRow"><span class="csTx"><span class="csT"><span class="bn">অটো ক্লাউড সিঙ্ক</span><span class="en">Automatic cloud sync</span></span><small class="csS" id="csSub"></small></span><input type="checkbox" id="csAuto" onchange="ftCloud.toggle(this)"></label>
+    <div id="csStatus" style="font-size:12.5px; color:var(--primary); margin-top:6px;"></div>
   </div>
   <div class="box">
     <h3 data-i18n="settings_budget">মাসিক বাজেট</h3>
@@ -6259,6 +6505,32 @@ function poll(){ try{ var r=R(); if(r.ok()&&r.ses()&&!document.hidden){ loadInbo
 setInterval(poll,20000);
 document.addEventListener('visibilitychange',function(){ if(!document.hidden) poll(); });
 window.addEventListener('focus',poll);
+})();
+</script>
+<div class="pfOv" id="pfOv" onclick="if(event.target===this)ftCloud.sheetClose()">
+  <div class="pfSheet" role="dialog" aria-modal="true" aria-labelledby="pfTitle">
+    <div class="pfGrab"></div>
+    <div class="pfTitle" id="pfTitle"></div>
+    <div class="pfHint" id="pfHint"></div>
+    <div id="pfFields"></div>
+    <div class="pfErr" id="pfErr" role="alert"></div>
+    <div class="pfForgot" id="pfForgot" onclick="ftCloud.sheetForgot()"><span class="bn">পাসওয়ার্ড ভুলে গেছেন?</span><span class="en">Forgot password?</span></div>
+    <div class="pfBtns">
+      <button type="button" class="pfCancel" id="pfCancel" onclick="ftCloud.sheetClose()"><span class="bn">বাতিল</span><span class="en">Cancel</span></button>
+      <button type="button" class="pfSave" id="pfSave" onclick="ftCloud.sheetSave()"></button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  function rf(){ try{ ftCloud.refresh(); }catch(e){} }
+  ['langBnBtn','langEnBtn'].forEach(function(id){ var b=document.getElementById(id); if(b) b.addEventListener('click',function(){ setTimeout(rf,60); }); });
+  try{ if(typeof renderHomeProfile==='function'){ var _r=renderHomeProfile; renderHomeProfile=function(){ var x=_r.apply(this,arguments); rf(); return x; }; } }catch(e){}
+  document.getElementById('pfOv').addEventListener('keydown',function(e){
+    if(e.key==='Enter' && e.target && e.target.tagName==='INPUT'){ e.preventDefault(); ftCloud.sheetSave(); }
+    if(e.key==='Escape') ftCloud.sheetClose();
+  });
+  rf();
 })();
 </script>
 </body>
