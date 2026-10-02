@@ -6327,19 +6327,20 @@ async function loadInbox(){
 async function refreshSent(){
   if(syncing) return; syncing=true;
   try{
-    var arr=getSent(), ch=false, did=false;
+    var arr=getSent(), ch=false, did=false, res=[];
     for(var i=0;i<arr.length;i++){
       var it=arr[i]; if(it.status!=='pending') continue;
       try{
         var st=await db('requests/'+it.toUid+'/'+it.rid+'/status');
         if(st===null){ it.status='cancelled'; ch=true; }
         else if(st==='accepted'||st==='declined'){
-          it.status=st; ch=true;
+          it.status=st; ch=true; res.push({rid:it.rid,toUid:it.toUid,name:it.person||it.toName,kind:it.kind,amount:it.amount,status:st});
           if(st==='accepted'&&!it.applied){ it.applied=1; setSent(arr); addTx(it.kind==='repay'?'loan_repay_taken':it.kind==='ask'?'loan_taken':'loan_given',it.amount,it.person||it.toName,it.note,it.kind==='repay'?null:it.due); did=true; }
         }
       }catch(e){}
     }
     if(ch) setSent(arr); renderSent(); if(ch) fire();
+    if(res.length){ try{ window.dispatchEvent(new CustomEvent('ftReqResult',{detail:res})); }catch(e){} }
     if(did) msg(tx('অনুরোধ গ্রহণ হয়েছে, আপনার লোন তালিকায় এন্ট্রি যোগ হয়েছে','Request accepted, entry added to your loans'));
   }finally{ syncing=false; }
 }
@@ -6492,19 +6493,21 @@ function showReqPop(){
   var rows=top.map(function(it){
     var rp=it.kind==='repay', nm=E(it.fromName||it.fromEmail||'?');
     return '<div class="rmRow"><span class="rmChip" style="--c:'+(rp?'#22c55e':'#f59e0b')+'">'+(typeof mi==='function'?mi(rp?'undo':'loan-in'):'')+'</span>'
-      +'<div class="rmTx"><b>'+nm+' — '+F(it.amount)+'</b><small>'+(rp?tx('ধার শোধ করেছেন','Repaid you'):tx('আপনাকে ধার দিয়েছেন','Lent you'))+(it.due?' · '+tx('ফেরত: ','Due: ')+E(it.due):'')+(it.note?' · “'+E(it.note)+'”':'')+'</small></div></div>';
+      +'<div class="rmTx"><b>'+nm+' — '+F(it.amount)+'</b><small>'+(rp?tx('ধার শোধ করেছেন','Repaid you'):it.kind==='ask'?tx('আপনার কাছে ধার চাইছেন','Asks you for a loan'):tx('আপনাকে ধার দিয়েছেন','Lent you'))+(it.due?' · '+tx('ফেরত: ','Due: ')+E(it.due):'')+(it.note?' · “'+E(it.note)+'”':'')+'</small></div></div>';
   }).join('');
   var o=document.createElement('div'); o.id='rqPop'; o.className='rmOv';
   o.innerHTML='<div class="rmCard"><div class="rmHd"><div class="ico">'+(typeof mi==='function'?mi('bell'):'')+'</div><h4>'+tx('নতুন টাকার অনুরোধ','New money requests')+'</h4><small>'+tx(list.length+' টি অনুরোধ অপেক্ষায় আছে',list.length+' pending request'+(list.length>1?'s':''))+'</small></div>'
     +'<div class="rmBody">'+rows+(more>0?'<div class="rqEmpty">'+tx('আরও '+more+' টি আছে','+ '+more+' more')+'</div>':'')+'</div>'
-    +'<div class="row2" style="margin-top:12px;display:grid;grid-template-columns:1fr 2fr;gap:8px"><button type="button" class="typebtn" data-a="later">'+tx('পরে','Later')+'</button><button type="button" class="main" style="margin-top:0" data-a="view">'+tx('দেখুন','View')+'</button></div></div>';
+    +'<div class="row2" style="margin-top:12px;display:grid;grid-template-columns:1fr 2fr;gap:8px"><button type="button" class="typebtn" data-a="later">'+tx('পরে','Later')+'</button><button type="button" class="main" style="margin-top:0" data-a="view">'+tx('চ্যাটে দেখুন','Open in chat')+'</button></div></div>';
   document.body.appendChild(o);
   o.addEventListener('click',function(e){
     if(e.target===o){ closePop(); return; }
     var b=e.target.closest('button'); if(!b) return; var a=b.getAttribute('data-a');
     if(a==='later') closePop();
     else if(a==='view'){
-      closePop(); try{ activateTab('loan'); }catch(x){}
+      closePop();
+      if(window.ftChatOpen){ try{ window.ftChatOpen(list.map(function(x){ return x.fromUid; })); return; }catch(x){} }
+      try{ activateTab('loan'); }catch(x){}
       var box=$('rqBox'); if(box){ top('req'); mode('in'); setTimeout(function(){ try{ box.scrollIntoView({behavior:'smooth',block:'start'}); }catch(x){} },150); }
     }
   });
@@ -6631,6 +6634,7 @@ async function apiAct(id,yes,name){
 window.ftReqApi={
   ready:function(){ try{ var r=R(); return !!(r.ok()&&r.ses()); }catch(e){ return false; } },
   inbox:function(){ return inbox.slice(); }, inboxAll:function(){ return allReq.slice(); }, sent:function(){ return getSent(); },
+  bal:function(name){ var m=maps(), g=pos(m.getMap,name), o=pos(m.oweMap,name); return {get:g?Math.round(m.getMap[g]):0,owe:o?Math.round(m.oweMap[o]):0,getKey:g,oweKey:o}; },
   F:F, kindTxt:kindTxt, defName:defName, linkName:linkName, remainOwe:remainOwe, names:namesFor, methods:methods,
   sendTo:apiSend, accept:apiAct,
   cancel:async function(rid){ await cancelReq(rid); fire(); },
@@ -6665,6 +6669,7 @@ window.ftReqApi={
 })();
 </script>
 <style id="ftChatCss">
+#ftFrPane{padding-bottom:96px}
 #ftChatTop{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:4px;border-radius:20px;border:1px solid var(--border);background:var(--card);margin-bottom:12px}
 #ftChatTop button{font:inherit;cursor:pointer;border:0;background:transparent;border-radius:16px;padding:12px 6px;font-weight:800;font-size:14.5px;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:6px}
 #ftChatTop button.on{background:var(--grad);color:#fff;box-shadow:0 6px 16px color-mix(in srgb,var(--primary) 35%,transparent)}
@@ -6694,6 +6699,26 @@ window.ftReqApi={
 .fcSendRow input{flex:1;min-width:0;border-radius:18px;border:1px solid var(--border);padding:13px 15px;font-size:15px;font-family:inherit;background:var(--bg);color:var(--text)}
 .fcSendRow button{border:0;border-radius:18px;padding:0 20px;font:inherit;font-weight:800;color:#fff;background:var(--grad);cursor:pointer}.fcSendRow button:disabled{opacity:.6}
 .fcEmpty{text-align:center;color:var(--muted);font-size:13px;padding:14px 0}
+.fcBan{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:18px;margin-bottom:12px;cursor:pointer;font-weight:800;font-size:14px;border:1px solid #f59e0b;background:color-mix(in srgb,#f59e0b 13%,var(--card));color:var(--text)}
+.fcBan i{font-style:normal;margin-left:auto;font-size:18px}
+.fcRt p.pend{color:#b45309;font-weight:800}
+.fcBal{display:flex;flex-direction:column;gap:6px;margin:0 0 8px}
+.fcBal .bl{display:flex;align-items:center;justify-content:space-between;gap:8px;border-radius:14px;padding:8px 12px;font-size:13.5px;font-weight:700;border:1px solid var(--border);background:var(--bg)}
+.fcBal .bl.g{border-color:color-mix(in srgb,var(--green) 45%,var(--border));background:color-mix(in srgb,var(--green) 10%,var(--card))}
+.fcBal .bl.r{border-color:color-mix(in srgb,var(--red) 45%,var(--border));background:color-mix(in srgb,var(--red) 9%,var(--card))}
+.fcBal .bl.z{color:var(--muted);font-weight:600;justify-content:center}
+.fcBal .bl button{font:inherit;cursor:pointer;border:0;border-radius:12px;padding:7px 11px;font-weight:800;font-size:12px;color:#fff;background:var(--grad);white-space:nowrap}
+.fcPin{display:grid;gap:8px;margin:0 0 8px;max-height:48vh;overflow-y:auto}
+.fcPin .fcReq{margin:0;border-color:#f59e0b;background:color-mix(in srgb,#f59e0b 11%,var(--card))}
+.fcReq .imp{display:block;margin-top:8px;padding:8px 10px;border-radius:12px;font-size:12.5px;font-weight:600;background:color-mix(in srgb,var(--green) 11%,var(--card));color:var(--text)}
+.fcReq .nmr{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12.5px;color:var(--muted)}
+.fcReq .nmr input.fcIn{margin:0;flex:1}
+.fcReq .rn{width:100%;margin-top:8px;padding:8px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--text);font:inherit;font-weight:700;font-size:12.5px;cursor:pointer}.fcReq .rn:disabled{opacity:.55;cursor:default}
+.fcQ .intro{margin:0 0 10px;font-size:13px;color:var(--muted);line-height:1.5}
+.fcQ .big{font-size:26px!important;font-weight:900;text-align:center;padding:14px!important}
+.fcQ .fcNm{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted);margin:2px 0 8px}
+.fcQ .fcNm button,.fcQ .fcMore{font:inherit;cursor:pointer;border:0;background:transparent;color:var(--primary);font-weight:800;font-size:12.5px;padding:4px 2px}
+.fcQ .fcMore{display:block;margin:0 0 6px}
 .fcActs{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 0}
 .fcActs button{font:inherit;cursor:pointer;border:1px solid color-mix(in srgb,var(--primary) 35%,var(--border));background:color-mix(in srgb,var(--primary) 9%,var(--card));color:var(--text);border-radius:16px;padding:8px 12px;font-weight:700;font-size:12.5px}
 .fcActs button.on{background:var(--grad);color:#fff;border-color:transparent}
@@ -6732,7 +6757,7 @@ var Q=function(){ return window.ftReqApi||null; };
 var bnL=function(){return document.documentElement.lang!=='en';}, tx=function(b,e){return bnL()?b:e;};
 var bl=function(b,e){return '<span class="bn">'+b+'</span><span class="en">'+e+'</span>';};
 var KEY='ftChat_v1', J={'Content-Type':'application/json'};
-var pane='ai', cur=null, busy=false, pulling=false, needPop=false, tick=0, registered=false, lastSig='', edits={}, formKind=null;
+var pane='ai', cur=null, busy=false, pulling=false, needPop=false, tick=0, registered=false, lastSig='', edits={}, formKind=null, nameOpen=false;
 function E(v){ return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 function ek(v){ return String(v||'').trim().toLowerCase().replace(/\./g,',').replace(/[#$\[\]\/%]/g,'_'); }
 function load(){ try{ var o=JSON.parse(localStorage.getItem(KEY)||'null'); if(o&&o.th) return o; }catch(e){} return {th:{}}; }
@@ -6805,6 +6830,17 @@ function allUids(){
   if(q){ q.inboxAll().forEach(function(it){ if(it.fromUid) set[it.fromUid]=1; }); q.sent().forEach(function(it){ if(it.toUid) set[it.toUid]=1; }); }
   return Object.keys(set);
 }
+function cands(uid){
+  var q=Q(), th=load().th[uid]||{}, i=info(uid), a=[q?q.linkName(uid):'', i.name, th.name, i.un, String(i.email||'').split('@')[0]];
+  return a.filter(function(v,x,arr){ return v&&arr.indexOf(v)===x; });
+}
+function balFor(uid){
+  var q=Q(), out={get:0,owe:0,getKey:'',oweKey:''}; if(!q) return out;
+  cands(uid).forEach(function(c){ var b=q.bal(c); if(!out.getKey&&b.get>0){ out.get=b.get; out.getKey=b.getKey; } if(!out.oweKey&&b.owe>0){ out.owe=b.owe; out.oweKey=b.oweKey; } });
+  return out;
+}
+function nudged(id){ try{ var o=JSON.parse(localStorage.getItem('ftChatNudge_v1')||'{}'); return Date.now()-(o[id]||0)<36e5; }catch(e){ return false; } }
+function markNudged(id){ try{ var o=JSON.parse(localStorage.getItem('ftChatNudge_v1')||'{}'); o[id]=Date.now(); var k=Object.keys(o); if(k.length>60) delete o[k[0]]; localStorage.setItem('ftChatNudge_v1',JSON.stringify(o)); }catch(e){} }
 function pendingFrom(uid){ var q=Q(); return q?q.inbox().filter(function(x){ return x.fromUid===uid; }).length:0; }
 function unreadTotal(st){ var n=0; Object.keys(st.th).forEach(function(k){ n+=(st.th[k].unread||0); }); var q=Q(); if(q) n+=q.inbox().length; return n; }
 function setBadge(){
@@ -6831,7 +6867,7 @@ function build(){
   $('fcT1').onclick=function(){ setPane('ai'); }; $('fcT2').onclick=function(){ setPane('fr'); };
   fr.addEventListener('click',onClick);
   fr.addEventListener('input',function(e){ var n=e.target.getAttribute&&e.target.getAttribute('data-nm'); if(n) edits[n]=e.target.value; if(e.target.id==='fcQNm'||e.target.id==='fcQAmt') remHint(e.target.id==='fcQNm'); });
-  fr.addEventListener('keydown',function(e){ if(e.key!=='Enter') return; if(e.target&&e.target.id==='fcInput'){ e.preventDefault(); sendMsg(); } if(e.target&&e.target.id==='fcTo'){ e.preventDefault(); startChat(); } });
+  fr.addEventListener('keydown',function(e){ if(e.key!=='Enter') return; if(e.target&&e.target.id==='fcInput'){ e.preventDefault(); sendMsg(); } if(e.target&&e.target.id==='fcTo'){ e.preventDefault(); startChat(); } if(e.target&&(e.target.id==='fcQAmt'||e.target.id==='fcQNote')){ e.preventDefault(); submitReq(); } });
   try{ if(window.I18N){ if(I18N.bn) I18N.bn.bn_chat='চ্যাট'; if(I18N.en) I18N.en.bn_chat='Chat'; } document.querySelectorAll('[data-i18n="bn_chat"]').forEach(function(l){ l.textContent=tx('চ্যাট','Chat'); }); }catch(e){}
   ['langBnBtn','langEnBtn'].forEach(function(id){ var b=$(id); if(b) b.addEventListener('click',function(){ setTimeout(function(){ if(pane==='fr'){ lastSig=''; renderFr(); } },80); }); });
   setBadge();
@@ -6856,11 +6892,13 @@ function reqPreview(r){
 }
 function renderList(){
   var f=$('ftFrPane'), st=load(), oldTo=($('fcTo')||{}).value||'';
-  var ids=allUids().map(function(u){ var it=items(u); return {u:u,its:it,last:it.length?it[it.length-1].ts:0}; }).sort(function(a,b){ return b.last-a.last; });
+  var ids=allUids().map(function(u){ var it=items(u); return {u:u,its:it,last:it.length?it[it.length-1].ts:0,pd:pendingFrom(u)}; }).sort(function(a,b){ return (b.pd>0)-(a.pd>0)||b.last-a.last; });
   var links={}; try{ links=JSON.parse(localStorage.getItem('ftReqLink_v1')||'{}')||{}; }catch(e){}
   var have={}; ids.forEach(function(x){ have[x.u]=1; });
   var sug=Object.keys(links).filter(function(u){ return !have[u]&&links[u]&&links[u].name; });
-  var h='<div class="fcCard"><h4>'+tx('নতুন চ্যাট শুরু করুন','Start a new chat')+'</h4>'
+  var qq=Q(), pn=qq?qq.inbox().length:0;
+  var h=(pn?'<div class="fcBan" data-ban="1"><span>💰 '+tx(pn+' টি টাকার অনুরোধ আপনার সিদ্ধান্তের অপেক্ষায়',pn+' money request'+(pn>1?'s':'')+' waiting for you')+'</span><i>›</i></div>':'')
+    +'<div class="fcCard"><h4>'+tx('নতুন চ্যাট শুরু করুন','Start a new chat')+'</h4>'
     +'<input class="fcIn" id="fcTo" type="text" autocapitalize="none" autocomplete="off" placeholder="'+tx('@ইউজারনেম বা ইমেইল','@username or email')+'">'
     +(sug.length?'<div class="fcChips">'+sug.slice(0,8).map(function(u){ return '<button type="button" data-sug="'+E(u)+'">'+E(links[u].name)+'</button>'; }).join('')+'</div>':'')
     +'<button type="button" class="fcGo" id="fcStart">'+tx('চ্যাট শুরু করুন','Start chat')+'</button><div class="fcErr" id="fcErr"></div></div>';
@@ -6868,35 +6906,56 @@ function renderList(){
   if(!ids.length) h+='<div class="fcEmpty">'+tx('এখনো কোনো চ্যাট নেই। ইউজারনেম বা ইমেইল দিয়ে কাউকে খুঁজে মেসেজ বা টাকার অনুরোধ পাঠান।','No chats yet. Find someone by username or email and send a message or money request.')+'</div>';
   ids.forEach(function(x){
     var u=x.u, th=st.th[u]||{}, i=info(u), nm=i.name||i.un||i.email||'?', lm=x.its[x.its.length-1], un=(th.unread||0)+pendingFrom(u), pv='';
-    if(lm){ pv=lm.k==='m'?((lm.m.me?tx('আপনি: ','You: '):'')+E(lm.m.t)):((lm.me?tx('আপনি: ','You: '):'')+E(reqPreview(lm.r))); }
+    var pr=null; if(x.pd){ var pl=Q().inbox().filter(function(y){ return y.fromUid===u; }); pr=pl[pl.length-1]; }
+    if(pr) pv='<span class="pend">💰 '+E(Q().F(pr.amount))+' · '+E(pr.kind==='repay'?tx('শোধ করেছেন','repaid you'):pr.kind==='ask'?tx('ধার চাইছেন','asks a loan'):tx('ধার দিয়েছেন','lent you'))+' — '+tx('সিদ্ধান্ত দিন','respond')+'</span>';
+    else if(lm){ pv=lm.k==='m'?((lm.m.me?tx('আপনি: ','You: '):'')+E(lm.m.t)):((lm.me?tx('আপনি: ','You: '):'')+E(reqPreview(lm.r))); }
     else pv=tx('মেসেজ লিখুন…','Say hi…');
-    h+='<div class="fcRow'+(un?' un':'')+'" data-open="'+E(u)+'"><div class="fcAv">'+E(nm.charAt(0).toUpperCase())+'</div><div class="fcRt"><b><span>'+E(nm)+'</span><small>'+(lm?tm(lm.ts,true):'')+'</small></b><p>'+pv+'</p></div>'
+    h+='<div class="fcRow'+(un?' un':'')+'" data-open="'+E(u)+'"><div class="fcAv">'+E(nm.charAt(0).toUpperCase())+'</div><div class="fcRt"><b><span>'+E(nm)+'</span><small>'+(lm?tm(lm.ts,true):'')+'</small></b><p class="'+(pr?'pend':'')+'">'+pv+'</p></div>'
       +(un?'<em class="fcBdg" style="display:inline-flex">'+un+'</em>':'')+'</div>';
   });
   f.innerHTML=h+'</div>';
   if(oldTo&&$('fcTo')) $('fcTo').value=oldTo;
 }
 /* ---------- one money-request card inside the conversation ---------- */
-function reqCard(x){
+function impact(r,nm){
+  var q=Q(), F=q.F, a=+r.amount, w=nm||r.fromName||'?', b=q.bal(nm);
+  if(r.kind==='repay'){ var left=Math.max(b.get-a,0); return tx('✅ গ্রহণ করলে '+w+' এর কাছে আপনার পাওনা '+F(a)+' কমে '+(b.get>0?F(left)+' হবে':'যাবে'),'✅ If you accept, what '+w+' owes you drops by '+F(a)+(b.get>0?' to '+F(left):'')); }
+  if(r.kind==='ask') return tx('✅ গ্রহণ করলে আপনার “পাবো” তালিকায় '+w+' এর নামে '+F(a)+' যোগ হবে (আপনি তাকে ধার দিচ্ছেন)','✅ If you accept, '+F(a)+' is added to your “To receive” list under '+w+' (you are lending to them)');
+  return tx('✅ গ্রহণ করলে আপনার “দিতে হবে” তালিকায় '+w+' এর নামে '+F(a)+' যোগ হবে','✅ If you accept, '+F(a)+' is added to your “To pay” list under '+w);
+}
+function reqCard(x,pin){
   var q=Q(), r=x.r, st=r.status||'pending', me=x.me, kd=r.kind, F=q.F, id=r.id||r.rid;
-  var who=E(me?(r.toName||r.person||''):(r.fromName||r.fromEmail||'?'));
   var head=kd==='repay'?tx('ধার শোধ','Repayment'):kd==='ask'?tx('টাকা চাওয়া','Money request'):tx('ধার দেওয়া','Loan given');
   var line;
   if(me) line=kd==='repay'?tx('আপনি '+F(r.amount)+' শোধ করেছেন বলে জানিয়েছেন','You said you repaid '+F(r.amount)):kd==='ask'?tx('আপনি '+F(r.amount)+' ধার চেয়েছেন','You asked for a loan of '+F(r.amount)):tx('আপনি '+F(r.amount)+' ধার দিয়েছেন বলে জানিয়েছেন','You said you lent '+F(r.amount));
   else line=E(q.kindTxt(kd,r.fromName||r.fromEmail||'?',r.amount));
   var pc=st==='accepted'?'a':(st==='declined'||st==='cancelled')?'d':'p';
-  var pt=st==='accepted'?(me?tx('গ্রহণ করেছে','Accepted'):tx('গ্রহণ করেছেন','Accepted')):st==='declined'?(me?tx('প্রত্যাখ্যান করেছে','Declined'):tx('বাতিল করেছেন','Declined')):st==='cancelled'?tx('বাতিল','Cancelled'):tx('অপেক্ষমাণ','Pending');
+  var pt=st==='accepted'?(me?tx('গ্রহণ করেছে','Accepted'):tx('গ্রহণ করেছেন','Accepted')):st==='declined'?(me?tx('প্রত্যাখ্যান করেছে','Declined'):tx('বাতিল করেছেন','Declined')):st==='cancelled'?tx('বাতিল','Cancelled'):(me?tx('অপেক্ষমাণ','Pending'):tx('সিদ্ধান্ত দিন','Respond'));
   var h='<div class="fcReq '+(me?'me':'them')+'"><div class="rt"><span>💰 '+head+' · '+F(r.amount)+'</span><span class="fcPill '+pc+'">'+pt+'</span></div>'
-    +'<span class="sm tx">'+(me?line:line)+'</span>'
+    +'<span class="sm tx">'+line+'</span>'
     +'<span class="sm">'+(r.due?tx('ফেরতের তারিখ: ','Due: ')+E(r.due)+' · ':'')+(r.method?tx('মাধ্যম: ','Method: ')+E(r.method)+(r.payTo?' ('+E(r.payTo)+')':'')+' · ':'')+(r.note?'“'+E(r.note)+'” · ':'')+tm(r.ts||Date.now())+'</span>';
-  if(!me&&st==='pending'){
+  if(pin){
     var dv=edits[id]!==undefined?edits[id]:q.defName(r);
-    h+='<input class="fcIn" data-nm="'+E(id)+'" list="'+(kd==='repay'?'fcPplG':'fcPplA')+'" value="'+E(dv)+'" placeholder="'+tx('আপনার লোন তালিকায় যে নামে থাকবে','Name in your loan list')+'">'
+    h+='<span class="imp">'+E(impact(r,dv))+'</span>'
+      +'<div class="nmr"><span>'+tx('লোন তালিকায় নাম','Name in list')+'</span><input class="fcIn" data-nm="'+E(id)+'" list="'+(kd==='repay'?'fcPplG':'fcPplA')+'" value="'+E(dv)+'"></div>'
       +'<div class="ra"><button type="button" class="y" data-ra="y" data-id="'+E(id)+'">'+tx('গ্রহণ করুন','Accept')+'</button><button type="button" class="n" data-ra="n" data-id="'+E(id)+'">'+tx('বাতিল','Decline')+'</button></div>';
+  }else{
+    if(!me&&st==='pending') h+='<span class="sm">'+tx('⬆️ উপরের বাক্স থেকে গ্রহণ বা বাতিল করুন','⬆️ Accept or decline in the box above')+'</span>';
+    if(me&&st==='pending'){
+      var nd=nudged(r.rid);
+      h+='<button type="button" class="rn" data-rn="'+E(r.rid)+'"'+(nd?' disabled':'')+'>'+(nd?tx('✓ মনে করানো হয়েছে','✓ Reminder sent'):tx('🔔 মনে করিয়ে দিন','🔔 Remind them'))+'</button>'
+        +'<button type="button" class="rc" data-rc="'+E(r.rid)+'">'+tx('অনুরোধ বাতিল করুন','Cancel request')+'</button>';
+    }
+    if(st==='accepted') h+='<span class="sm">'+tx('✅ লোন তালিকায় এন্ট্রি যোগ হয়েছে','✅ Added to the loan list')+'</span>';
   }
-  if(me&&st==='pending') h+='<button type="button" class="rc" data-rc="'+E(r.rid)+'">'+tx('অনুরোধ বাতিল করুন','Cancel request')+'</button>';
-  if(st==='accepted') h+='<span class="sm">'+tx('লোন তালিকায় এন্ট্রি যোগ হয়েছে','Added to the loan list')+'</span>';
   return h+'</div>';
+}
+function balHtml(){
+  var q=Q(), th=load().th[cur]||{}, who=E(th.name||th.un||th.email||'?'), b=balFor(cur), h='';
+  if(b.get>0) h+='<div class="bl g"><span>💚 '+tx('<b>'+who+'</b> আপনাকে দেবে '+q.F(b.get),'<b>'+who+'</b> owes you '+q.F(b.get))+'</span><button type="button" data-fk="nudge">'+tx('🔔 তাগাদা','🔔 Remind')+'</button></div>';
+  if(b.owe>0) h+='<div class="bl r"><span>🔴 '+tx('আপনি <b>'+who+'</b> কে দেবেন '+q.F(b.owe),'You owe <b>'+who+'</b> '+q.F(b.owe))+'</span><button type="button" data-fk="repayall">'+tx('সব শোধ','Repay all')+'</button></div>';
+  if(!h) h='<div class="bl z">'+tx('এই বন্ধুর সাথে কোনো বাকি নেই ✅','Nothing owed between you ✅')+'</div>';
+  return h;
 }
 function dl(id,arr){ return '<datalist id="'+id+'">'+arr.map(function(n){ return '<option value="'+E(n)+'">'; }).join('')+'</datalist>'; }
 function renderConv(force){
@@ -6905,11 +6964,13 @@ function renderConv(force){
   var its=items(cur);
   var sg=its.map(function(it){ return it.k==='m'?it.m.id:('r'+(it.r.id||it.r.rid)+(it.r.status||'')); }).join('|')+(bnL()?'b':'e');
   var hasShell=!!$('fcLog')&&f.getAttribute('data-cur')===cur;
+  var balEl=$('fcBal'); if(hasShell&&balEl) balEl.innerHTML=balHtml();
   if(hasShell&&!force&&sg===lastSig) return;
   lastSig=sg;
   if(!hasShell){
     f.setAttribute('data-cur',cur);
     f.innerHTML='<div class="fcCard"><div class="fcHd"><button type="button" data-a="back">←</button><div class="fcAv">'+E(nm.charAt(0).toUpperCase())+'</div><div class="fcRt"><b>'+E(nm)+'</b><p>'+E(th.un?'@'+th.un:th.email)+'</p></div><button type="button" data-a="del" title="'+tx('চ্যাট মুছুন','Delete chat')+'">🗑</button></div>'
+      +'<div class="fcBal" id="fcBal"></div><div class="fcPin" id="fcPin"></div>'
       +'<div class="fcLog" id="fcLog"></div><div class="fcErr" id="fcErr"></div>'
       +'<div class="fcActs"><button type="button" data-fk="loan">💰 '+tx('ধার দিয়েছি','I lent')+'</button><button type="button" data-fk="repay">↩️ '+tx('শোধ করেছি','I repaid')+'</button><button type="button" data-fk="ask">🙏 '+tx('টাকা চাই','Ask money')+'</button></div>'
       +'<div id="fcReqForm" style="display:none"></div>'
@@ -6917,39 +6978,56 @@ function renderConv(force){
       +'<span id="fcDls"></span>';
     formKind=null;
   }
+  $('fcBal').innerHTML=balHtml();
+  var pin=$('fcPin'), pl=q.inbox().filter(function(y){ return y.fromUid===cur; }); pin.innerHTML=pl.map(function(r){ return reqCard({k:'r',me:0,ts:r.ts,r:r},true); }).join('');
   var dls=$('fcDls'); if(dls) dls.innerHTML=dl('fcPplG',q.names('repay'))+dl('fcPplA',q.names('loan'));
   var log=$('fcLog'), atBottom=log.scrollHeight-log.scrollTop-log.clientHeight<80, lastDay='', h='';
   if(!its.length) h='<div class="fcEmpty">'+tx('এখনো কিছু নেই। মেসেজ লিখুন অথবা নিচের বাটন থেকে ধার/শোধের অনুরোধ পাঠান।','Nothing here yet. Type a message or send a loan/repayment request with the buttons below.')+'</div>';
   its.forEach(function(it){
     var d=new Date(it.ts).toDateString(); if(d!==lastDay){ lastDay=d; h+='<div class="fcDay">'+dayLbl(it.ts)+'</div>'; }
     if(it.k==='m') h+='<div class="fcMsg '+(it.me?'me':'them')+'">'+E(it.m.t)+'<small>'+new Date(it.ts).toLocaleTimeString(bnL()?'bn-BD':'en-GB',{hour:'numeric',minute:'2-digit'})+'</small></div>';
-    else h+=reqCard(it);
+    else h+=reqCard(it,false);
   });
   log.innerHTML=h; if(!hasShell||atBottom||force) log.scrollTop=log.scrollHeight;
 }
 /* ---------- money request form (inside chat) ---------- */
 function openForm(k){
   var q=Q(), host=$('fcReqForm'); if(!host||!q) return;
-  if(formKind===k){ closeForm(); return; }
-  var th=load().th[cur]||{}; formKind=k;
-  var nm=q.linkName(cur)||th.name||'', title=k==='repay'?tx('ধার শোধ করেছি','I repaid a loan'):k==='ask'?tx('টাকা চাই','Ask for money'):tx('ধার দিয়েছি','I lent money');
+  if(k==='nudge'){ nudgeBalance(); return; }
+  var all=false; if(k==='repayall'){ k='repay'; all=true; }
+  if(formKind===k&&!all){ closeForm(); return; }
+  var th=load().th[cur]||{}, b=balFor(cur); formKind=k; nameOpen=false;
+  var who=th.name||th.un||th.email||'?', W=E(who);
+  var nm=k==='repay'?(b.oweKey||q.linkName(cur)||who):(q.linkName(cur)||b.getKey||b.oweKey||who);
+  var title=k==='repay'?tx('ধার শোধ করেছি','I repaid a loan'):k==='ask'?tx('টাকা চাই (ধার)','Ask for money (loan)'):tx('ধার দিয়েছি','I lent money');
+  var intro=k==='repay'?tx('আপনি '+W+' এর ধার শোধ করেছেন? '+W+' গ্রহণ করলে আপনার “দিতে হবে” কমবে, তার “পাবো” কমবে।','Repaid '+W+'? Once they accept, your “To pay” and their “To receive” both go down.')
+        :k==='ask'?tx(W+' এর কাছে টাকা ধার চাইছেন। '+W+' গ্রহণ করলে দুজনের তালিকায় নিজে থেকে যোগ হবে।','Asking '+W+' for a loan. Once they accept, it is added to both lists.')
+        :tx('আপনি '+W+' কে টাকা ধার দিয়েছেন। '+W+' গ্রহণ করলে দুজনের তালিকায় নিজে থেকে যোগ হবে।','You lent money to '+W+'. Once they accept, it is added to both lists.');
   var meths=q.methods();
+  var chips=[500,1000,2000,5000].map(function(a){ return '<button type="button" data-fq="'+a+'">'+q.F(a)+'</button>'; }).join('');
+  if(k==='repay'&&b.owe>0) chips='<button type="button" data-fq="ALL">'+tx('সব বাকি ','All ')+q.F(b.owe)+'</button>'+chips;
   host.style.display='';
-  host.innerHTML='<div class="fcQ"><div class="qt"><span>'+title+'</span></div>'
-    +'<label>'+tx('পরিমাণ (৳)','Amount (৳)')+'</label><input class="fcIn" id="fcQAmt" type="number" inputmode="decimal" placeholder="0">'
-    +'<div class="fcChips" style="margin-bottom:8px">'+[500,1000,2000,5000].map(function(a){ return '<button type="button" data-fq="'+a+'">'+q.F(a)+'</button>'; }).join('')+'</div>'
-    +'<label>'+tx('আপনার লোন তালিকায় নাম','Name in your loan list')+'</label><input class="fcIn" id="fcQNm" type="text" autocomplete="off" list="'+(k==='repay'?'fcPplG':'fcPplA')+'" value="'+E(nm)+'">'
-    +'<div class="fcHint" id="fcQRem" style="margin:-4px 0 8px"></div>'
-    +'<label>'+(k==='ask'?tx('যে মাধ্যমে টাকা পেতে চান','Receive money via'):tx('পাঠানোর মাধ্যম','Payment method'))+'</label><select class="fcIn" id="fcQMeth">'+meths.map(function(m){ return '<option value="'+E(m.v)+'">'+E(m.label)+(m.payTo?' · '+E(m.payTo):'')+'</option>'; }).join('')+'</select>'
+  host.innerHTML='<div class="fcQ"><div class="qt"><span>'+title+'</span><button type="button" data-fq2="x" style="border:0;background:transparent;font-size:18px;cursor:pointer;color:var(--muted)">✕</button></div>'
+    +'<p class="intro">'+intro+'</p>'
+    +'<input class="fcIn big" id="fcQAmt" type="number" inputmode="decimal" placeholder="৳ 0">'
+    +'<div class="fcChips" style="margin-bottom:8px">'+chips+'</div>'
+    +'<input class="fcIn" id="fcQNote" type="text" maxlength="120" placeholder="'+tx('নোট (ঐচ্ছিক) — যেমন: বাজার খরচ','Note (optional) — e.g. groceries')+'">'
+    +'<div class="fcNm"><span>'+tx('লোন তালিকায় নাম: ','Name in loan list: ')+'<b id="fcQNmT">'+E(nm)+'</b></span><button type="button" data-fq2="nm">✎ '+tx('বদলান','Change')+'</button></div>'
+    +'<div id="fcQNmW" style="display:none"><input class="fcIn" id="fcQNm" type="text" autocomplete="off" list="'+(k==='repay'?'fcPplG':'fcPplA')+'" value="'+E(nm)+'"></div>'
+    +'<div class="fcHint" id="fcQRem" style="margin:-2px 0 8px"></div>'
+    +'<button type="button" class="fcMore" data-fq2="more">⚙️ '+tx('আরও অপশন (মাধ্যম, তারিখ)','More options (method, due date)')+' ▾</button>'
+    +'<div id="fcQMore" style="display:none">'
+    +'<label>'+(k==='ask'?tx('যে মাধ্যমে টাকা পেতে চান','Receive money via'):tx('পাঠানোর মাধ্যম','Payment method'))+'</label><select class="fcIn" id="fcQMeth">'+meths.map(function(m2){ return '<option value="'+E(m2.v)+'">'+E(m2.label)+(m2.payTo?' · '+E(m2.payTo):'')+'</option>'; }).join('')+'</select>'
     +(k!=='repay'?'<label>'+tx('ফেরতের তারিখ (ঐচ্ছিক)','Due date (optional)')+'</label><input class="fcIn" id="fcQDue" type="date">':'')
-    +'<label>'+tx('নোট (ঐচ্ছিক)','Note (optional)')+'</label><input class="fcIn" id="fcQNote" type="text">'
+    +'</div>'
     +'<div class="fcErr" id="fcQErr"></div>'
     +'<div class="qb"><button type="button" data-fq2="x">'+tx('বাতিল','Cancel')+'</button><button type="button" class="go" id="fcQGo" data-fq2="go">'+tx('অনুরোধ পাঠান','Send request')+'</button></div>'
-    +'<p class="fcHint">'+tx('এখানে আসল টাকা যায় না। অপর পক্ষ গ্রহণ করলেই দুজনের লোন তালিকায় নিজে থেকে এন্ট্রি হবে।','No real money moves here. Entries are added to both loan lists only after they accept.')+'</p></div>';
-  Array.prototype.forEach.call(document.querySelectorAll('.fcActs button'),function(b){ b.classList.toggle('on',b.getAttribute('data-fk')===k); });
-  if(k==='repay'){ var r=q.remainOwe(nm); if(r&&r.rem>0) $('fcQAmt').value=r.rem; }
+    +'<p class="fcHint">'+tx('এখানে আসল টাকা যায় না। অপর পক্ষ গ্রহণ না করা পর্যন্ত কারো তালিকায় কিছু যোগ হবে না।','No real money moves here. Nothing is added to anyone\'s list until they accept.')+'</p></div>';
+  Array.prototype.forEach.call(document.querySelectorAll('.fcActs button'),function(bt){ bt.classList.toggle('on',bt.getAttribute('data-fk')===k); });
+  if(k==='repay'){ var r=q.remainOwe(nm); if(r&&r.rem>0&&(all||b.owe>0)) $('fcQAmt').value=r.rem; }
   remHint(false);
-  try{ host.scrollIntoView({behavior:'smooth',block:'nearest'}); }catch(e){}
+  try{ host.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){}
+  setTimeout(function(){ var a2=$('fcQAmt'); if(a2&&!a2.value&&!/Android|iPhone|iPad/i.test(navigator.userAgent)) a2.focus(); },60);
 }
 function closeForm(){
   formKind=null; var h=$('fcReqForm'); if(h){ h.style.display='none'; h.innerHTML=''; }
@@ -6957,17 +7035,42 @@ function closeForm(){
 }
 function remHint(nameChanged){
   var e=$('fcQRem'), q=Q(); if(!e||!q) return; e.textContent='';
+  var nmv=(($('fcQNm')||{}).value||'').trim(), t=$('fcQNmT'); if(t) t.textContent=nmv||'—';
   if(formKind!=='repay') return;
-  var nm=($('fcQNm')||{}).value||'', r=nm.trim()?q.remainOwe(nm):null;
-  if(!nm.trim()) e.textContent=tx('যাকে শোধ করছেন তার নাম আপনার “দিতে হবে” তালিকা থেকে বেছে নিন','Pick who you are repaying from your “I owe” list');
-  else if(!r) e.textContent=tx('এই নামে কোনো বাকি নেই','No balance under this name');
+  var r=nmv?q.remainOwe(nmv):null;
+  if(!nmv) e.textContent=tx('যাকে শোধ করছেন তার নাম আপনার “দিতে হবে” তালিকা থেকে বেছে নিন','Pick who you are repaying from your “To pay” list');
+  else if(!r) e.textContent=tx('এই নামে কোনো বাকি নেই। ✎ বদলান চেপে সঠিক নাম দিন','No balance under this name. Tap ✎ Change and pick the right name');
   else{ e.textContent=tx('বাকি আছে ','Remaining ')+q.F(Math.max(r.rem,0)); if(nameChanged&&r.rem>0&&!($('fcQAmt').value)) $('fcQAmt').value=r.rem; }
+}
+async function postMsg(text){
+  var s=R().ses(); if(!s||!cur) throw new Error('NO_SESSION'); var to=cur;
+  var body={fromUid:s.uid,fromName:myName()||String(s.email).split('@')[0],fromEmail:s.email,fromUn:myUn(),text:String(text).slice(0,1000),ts:Date.now()};
+  var rs=await db('chat/'+to,{method:'POST',headers:J,body:JSON.stringify(body)});
+  var st=load(), th=st.th[to]; if(th){ th.msgs.push({id:'o'+rs.name,me:1,t:body.text,ts:body.ts}); th.last=body.ts; save(st); }
+}
+async function nudgeBalance(){
+  var q=Q(), b=balFor(cur); if(!q||busy||!(b.get>0)) return;
+  if(!confirm(tx('বন্ধুকে ৳'+b.get+' এর একটি ভদ্র রিমাইন্ডার মেসেজ পাঠাবেন?','Send a polite reminder message about '+q.F(b.get)+'?'))) return;
+  busy=true;
+  try{ await postMsg(tx('⏰ রিমাইন্ডার: আপনার কাছে আমার '+q.F(b.get)+' পাওনা আছে। সুবিধামতো দিয়ে দিলে ভালো হয়, ধন্যবাদ 🙏','⏰ Reminder: you owe me '+q.F(b.get)+'. Please settle when you can, thank you 🙏')); toast(tx('রিমাইন্ডার পাঠানো হয়েছে','Reminder sent')); renderConv(true); }
+  catch(e){ fcMsg(sendErr(e)); }
+  busy=false;
+}
+async function nudgeReq(rid){
+  var q=Q(); if(!q||busy||nudged(rid)) return;
+  var r=q.sent().filter(function(x){ return x.rid===rid; })[0]; if(!r||r.status!=='pending') return;
+  busy=true;
+  try{ await postMsg(tx('⏰ '+q.F(r.amount)+' এর টাকার অনুরোধটি অপেক্ষমাণ আছে। সময় পেলে দেখে গ্রহণ করে নিন 🙏','⏰ My '+q.F(r.amount)+' money request is still pending. Please take a look when you can 🙏')); markNudged(rid); toast(tx('মনে করানো হয়েছে','Reminder sent')); renderConv(true); }
+  catch(e){ fcMsg(sendErr(e)); }
+  busy=false;
 }
 function qErr(m){ var e=$('fcQErr'); if(e) e.textContent=m||''; }
 async function submitReq(){
   var q=Q(); if(!q||!formKind||!cur||busy) return;
   var th=ensureTh(cur), amt=parseFloat(($('fcQAmt')||{}).value);
   if(!amt||amt<=0){ qErr(tx('সঠিক পরিমাণ লিখুন','Enter a valid amount')); return; }
+  var dup=q.sent().filter(function(s2){ return s2.toUid===cur&&s2.status==='pending'&&s2.kind===formKind&&+s2.amount===amt; }).length;
+  if(dup&&!confirm(tx('একই অনুরোধ আগেই পাঠানো হয়েছে এবং এখনো অপেক্ষমাণ। আবার পাঠাবেন?','The same request was already sent and is still pending. Send again?'))) return;
   var ms=$('fcQMeth'), mt=ms?q.methods().filter(function(m){ return m.v===ms.value; })[0]:null;
   busy=true; var b=$('fcQGo'); if(b){ b.disabled=true; b.textContent=tx('পাঠানো হচ্ছে…','Sending…'); } qErr('');
   var res=await q.sendTo({uid:cur,name:th.name,email:th.email,username:th.un},{kind:formKind,amt:amt,nm:($('fcQNm')||{}).value,note:($('fcQNote')||{}).value,due:($('fcQDue')||{}).value,method:mt?mt.label:'',payTo:mt?mt.payTo:''});
@@ -6977,8 +7080,8 @@ async function submitReq(){
 }
 async function doAct(id,yes,btn){
   var q=Q(); if(!q||busy) return;
-  var inp=document.querySelector('#fcLog [data-nm="'+id+'"]'), nm=inp?inp.value.trim():'';
-  busy=true; fcMsg(''); Array.prototype.forEach.call(document.querySelectorAll('#fcLog .ra button'),function(b){ b.disabled=true; });
+  var inp=document.querySelector('#fcPin [data-nm="'+id+'"]'), nm=inp?inp.value.trim():'';
+  busy=true; fcMsg(''); Array.prototype.forEach.call(document.querySelectorAll('#fcPin .ra button'),function(b){ b.disabled=true; });
   var res=await q.accept(id,yes,nm);
   busy=false;
   if(res.ok) toast(res.msg); else fcMsg(res.msg);
@@ -7004,8 +7107,17 @@ function onClick(e){
     return;
   }
   var fk=e.target.closest('[data-fk]'); if(fk){ openForm(fk.getAttribute('data-fk')); return; }
-  var fq=e.target.closest('[data-fq]'); if(fq){ var am=$('fcQAmt'); if(am){ am.value=fq.getAttribute('data-fq'); } return; }
-  var f2=e.target.closest('[data-fq2]'); if(f2){ if(f2.getAttribute('data-fq2')==='go') submitReq(); else closeForm(); return; }
+  var fq=e.target.closest('[data-fq]'); if(fq){ var am=$('fcQAmt'), v=fq.getAttribute('data-fq'); if(am){ if(v==='ALL'){ var rr=Q().remainOwe((($('fcQNm')||{}).value)||''); v=rr?rr.rem:(balFor(cur).owe||''); } am.value=v; } return; }
+  var f2=e.target.closest('[data-fq2]'); if(f2){
+    var w=f2.getAttribute('data-fq2');
+    if(w==='go') submitReq();
+    else if(w==='nm'){ var nw=$('fcQNmW'); if(nw){ nw.style.display=nw.style.display==='none'?'':'none'; if(nw.style.display==='') $('fcQNm').focus(); } }
+    else if(w==='more'){ var mo=$('fcQMore'); if(mo) mo.style.display=mo.style.display==='none'?'':'none'; }
+    else closeForm();
+    return;
+  }
+  var bn=e.target.closest('[data-ban]'); if(bn){ var pl=Q()?Q().inbox():[]; if(pl.length) openConv(pl[0].fromUid); return; }
+  var rn=e.target.closest('[data-rn]'); if(rn){ nudgeReq(rn.getAttribute('data-rn')); return; }
   var ra=e.target.closest('[data-ra]'); if(ra){ doAct(ra.getAttribute('data-id'),ra.getAttribute('data-ra')==='y',ra); return; }
   var rc=e.target.closest('[data-rc]'); if(rc){ doCancel(rc.getAttribute('data-rc')); return; }
   if(e.target.closest('#fcStart')) { startChat(); return; }
@@ -7030,14 +7142,9 @@ async function startChat(){
 }
 async function sendMsg(){
   if(busy||!cur) return; var inp=$('fcInput'); if(!inp) return; var text=inp.value.trim(); if(!text) return;
-  var s=R().ses(); if(!s) return; var to=cur;
-  busy=true; var sb=$('fcSend'); if(sb) sb.disabled=true; fcMsg('');
-  try{
-    var body={fromUid:s.uid,fromName:myName()||String(s.email).split('@')[0],fromEmail:s.email,fromUn:myUn(),text:text.slice(0,1000),ts:Date.now()};
-    var rs=await db('chat/'+to,{method:'POST',headers:J,body:JSON.stringify(body)});
-    var st=load(), th=st.th[to]; if(th){ th.msgs.push({id:'o'+rs.name,me:1,t:body.text,ts:body.ts}); th.last=body.ts; save(st); }
-    inp.value=''; if(cur===to) renderConv(true);
-  }catch(e){ fcMsg(sendErr(e)); }
+  var to=cur; busy=true; var sb=$('fcSend'); if(sb) sb.disabled=true; fcMsg('');
+  try{ await postMsg(text); inp.value=''; if(cur===to) renderConv(true); }
+  catch(e){ fcMsg(sendErr(e)); }
   busy=false; sb=$('fcSend'); if(sb) sb.disabled=false; if($('fcInput')) $('fcInput').focus();
 }
 /* ---------- receive ---------- */
@@ -7103,6 +7210,20 @@ setInterval(function(){ try{ if(needPop&&!blocked()){ if(msgUnread(load())>0) sh
 /* ---------- keep the screen fresh ---------- */
 var _at=window.activateTab;
 if(typeof _at==='function'){ window.activateTab=function(name){ var r=_at.apply(this,arguments); try{ if(name==='chat'&&pane==='fr'){ if(cur){ var s3=load(); if(s3.th[cur]&&s3.th[cur].unread){ s3.th[cur].unread=0; save(s3); } } lastSig=''; renderFr(); setBadge(); pull(); var q=Q(); if(q) q.refresh(); } }catch(e){} return r; }; }
+window.addEventListener('ftReqResult',function(ev){
+  try{
+    var d=(ev&&ev.detail)||[], q=Q(); if(!d.length||!q) return; var x=d[0], more=d.length>1?(' (+'+(d.length-1)+')'):'';
+    toast(x.status==='accepted'?tx('✅ '+x.name+' আপনার '+q.F(x.amount)+' এর অনুরোধ গ্রহণ করেছেন। লোন তালিকায় যোগ হয়েছে'+more,'✅ '+x.name+' accepted your '+q.F(x.amount)+' request. Added to your loans'+more):tx('❌ '+x.name+' আপনার '+q.F(x.amount)+' এর অনুরোধ বাতিল করেছেন'+more,'❌ '+x.name+' declined your '+q.F(x.amount)+' request'+more));
+  }catch(e){}
+});
+window.ftChatOpen=function(uids){
+  try{ activateTab('chat'); }catch(e){}
+  try{ build(); }catch(e){}
+  var u=(uids||[]).filter(function(v,i,a){ return v&&a.indexOf(v)===i; });
+  if(u.length===1) openConv(u[0]);
+  else{ cur=null; lastSig=''; var f=$('ftFrPane'); if(f) f.removeAttribute('data-cur'); setPane('fr'); }
+  setBadge();
+};
 window.addEventListener('ftReqUpdate',function(){ try{ setBadge(); if(pane==='fr'&&visible()) renderFr(); }catch(e){} });
 setInterval(function(){
   try{ tick++; if(document.hidden||!logged()) return; var fast=pane==='fr'&&visible(); if(fast||tick%3===0) pull(); if(fast&&tick%2===0){ var q=Q(); if(q) q.refresh(); } }catch(e){}
