@@ -7634,22 +7634,44 @@ setInterval(function(){ try{ render(); process(); }catch(e){} },2500);
 @media (prefers-reduced-motion:reduce){.smsIco.new::after{animation:none}.smsBar,.pfStage .profileBar{transition-duration:.01s}}
 </style>
 <script>
-/* ===== Notification box: Telegram bot message -> slides over the Home profile box; "Mark as read" (or 30s after entering the app) slides it away ===== */
+/* ===== Notification box =====
+   Telegram bot message -> slides over the Home profile box. Every user keeps their OWN read state:
+   "Mark as read" (or 30s after entering the app) only removes it on that user's phone.
+   BROADCAST MODE (ADMIN_EMAIL + ADMIN_CHAT filled): the admin's app relays bot messages to Firebase (/notices), every app reads them.
+   If both are empty the old single-phone mode is used (this phone polls the bot directly). */
 (function(){
+var ADMIN_EMAIL='misalia88test@gmail.com';   /* admin's FinTrack login email (the app logged in with this email relays the bot messages to everyone) */
+var ADMIN_CHAT='1543116871';    /* admin's Telegram Chat ID (digits) - only messages from this chat are accepted. get it from @userinfobot */
 var P=['SWlrWS1tQXUz','MGhLTGVCdVI5','Wndqc2hyU2tH','OWRfN0xHQUE6','MjMyMjQ5Nzgy','Nw=='];
-var ADMIN_CHAT=''; /* optional: only accept messages from this Telegram chat id (digits) */
-var AUTO_MS=30000;
+var AUTO_MS=30000, EXP=7*864e5, PULL_MS=15000;
 function tok(){try{return atob(P.join('')).split('').reverse().join('');}catch(e){return '';}}
-var KO='ft_tg_offset',KQ='ft_tg_queue';
+var KO='ft_tg_offset',KF='ft_tg_feed',KR='ft_tg_read',KS='ft_tg_since';
 function $(i){return document.getElementById(i);}
 function bn(){try{return currentLang==='bn';}catch(e){return true;}}
 function g(k,d){try{var v=localStorage.getItem(k);return v==null?d:v;}catch(e){return d;}}
 function s(k,v){try{localStorage.setItem(k,v);}catch(e){}}
-function Q(){try{return JSON.parse(g(KQ,'[]'))||[];}catch(e){return [];}}
-function SQ(q){s(KQ,JSON.stringify(q.slice(-50)));}
+function jget(k,d){try{var v=JSON.parse(g(k,'')); return v==null?d:v;}catch(e){return d;}}
 function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
-function api(m,qs,sig){return fetch('https://api.telegram.org/bot'+tok()+'/'+m+(qs?'?'+qs:''),sig?{signal:sig}:undefined).then(function(r){return r.json();});}
-var run=0,ctrl=null,gap=null,auto=null,shownId=null;
+function base(){try{return String(FT_FIREBASE.dbUrl||'').replace(/\/+$/,'');}catch(e){return '';}}
+function broadcast(){return !!(ADMIN_EMAIL&&base());}
+function cloud(){try{return window.ftCloud&&ftCloud._raw?ftCloud._raw():null;}catch(e){return null;}}
+function isAdmin(){try{var c=cloud(),se=c&&c.ses();return !!(se&&ADMIN_EMAIL&&String(se.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase());}catch(e){return false;}}
+var warned=false;
+function warn(m){ if(warned) return; warned=true; try{window.toast&&window.toast(m);}catch(e){} try{console.warn('[notification]',m);}catch(e){} }
+
+/* ---- per-user store: feed cache + read list + "since" (a new install doesn't get old notices) ---- */
+function Feed(){var f=jget(KF,{});return (f&&typeof f==='object'&&!Array.isArray(f))?f:{};}
+function SF(o){s(KF,JSON.stringify(o));}
+function Rd(){var r=jget(KR,[]);return Array.isArray(r)?r:[];}
+function markRead(id){var r=Rd();if(id&&r.indexOf(id)<0){r.push(id);s(KR,JSON.stringify(r.slice(-300)));}}
+function since(){var v=+g(KS,'');if(!v){v=Date.now();s(KS,String(v));}return v;}
+function Q(){ /* unread notifications for THIS phone, oldest first */
+  var f=Feed(),r=Rd(),now=Date.now(),sn=since(),a=[];
+  Object.keys(f).forEach(function(id){var m=f[id]; if(!m||typeof m.text!=='string'||typeof m.ts!=='number') return;
+    if(m.ts<sn-60000||now-m.ts>EXP||r.indexOf(id)>=0) return; a.push({id:id,text:m.text,ts:m.ts});});
+  a.sort(function(x,y){return x.ts-y.ts;}); return a;
+}
+function addLocal(it){var f=Feed();f[it.id]={text:it.text,ts:it.ts};SF(f);show();}
 
 /* ---- smart parsing ---- */
 function kind(t){
@@ -7672,20 +7694,20 @@ function paint(el,t){
   if(last<t.length) el.appendChild(document.createTextNode(t.slice(last)));
 }
 var ICO={in:'arrow-in',out:'arrow-out',sec:'shield',info:'bell'};
+var run=0,ctrl=null,gap=null,auto=null,shownId=null;
 
-/* ---- progress bar (30s countdown) ---- */
 function prog(on){
   var p=$('smsProg'); if(!p) return;
   p.style.transition='none'; p.style.transform='scaleX(1)';
   if(on){ void p.offsetWidth; p.style.transition='transform '+AUTO_MS+'ms linear'; p.style.transform='scaleX(0)'; }
 }
-
-function fill(m){
-  shownId=m.id; var q=Q(), k=kind(m.text), a=amt(m.text);
+function posTxt(n){return n>1?('1/'+n):'';}
+function fill(m,n){
+  shownId=m.id; var k=kind(m.text), a=amt(m.text);
   var bar=$('smsBar'); bar.dataset.kind=k;
   $('smsMi').style.setProperty('--m','var(--ic-'+ICO[k]+')');
   $('smsHead').textContent=bn()?'নোটিফিকেশন':'Notification';
-  $('smsPos').textContent=q.length>1?('1/'+q.length):'';
+  $('smsPos').textContent=posTxt(n);
   paint($('smsBody'),m.text);
   var act=$('smsAct');
   if(a&&(k==='in'||k==='out')){
@@ -7707,18 +7729,49 @@ function arm(){
 }
 function show(){
   var st=$('pfStage'); if(!st) return; var q=Q();
-  if(!q.length){ st.dataset.state='profile'; shownId=null; return; }
+  if(!q.length){ if(auto){clearTimeout(auto);auto=null;prog(false);} st.dataset.state='profile'; shownId=null; return; }
   if(gap) return;
-  if(st.dataset.state==='sms'&&shownId===q[0].id){ $('smsPos').textContent=q.length>1?('1/'+q.length):''; return; }
-  fill(q[0]); st.dataset.state='sms'; arm();
+  if(st.dataset.state==='sms'&&shownId===q[0].id){ $('smsPos').textContent=posTxt(q.length); return; }
+  fill(q[0],q.length); st.dataset.state='sms'; arm();
   try{navigator.vibrate&&navigator.vibrate([40,40,40]);}catch(e){}
 }
+
+/* ---- broadcast: read the shared feed (everyone) ---- */
+var rdBusy=false;
+async function pull(){
+  if(rdBusy||!broadcast()||document.hidden) return; rdBusy=true;
+  try{
+    var c=new AbortController(),t=setTimeout(function(){c.abort();},12000);
+    var r=await fetch(base()+'/notices.json?t='+Date.now(),{cache:'no-store',signal:c.signal}); clearTimeout(t);
+    if(r.ok){
+      var j=(await r.json())||{}, keep={}, now=Date.now(), old=[];
+      Object.keys(j).forEach(function(id){var m=j[id]; if(!m||typeof m.text!=='string'||typeof m.ts!=='number') return;
+        if(now-m.ts>EXP){old.push(id);return;} keep[id]={text:m.text.slice(0,1000),ts:m.ts};});
+      SF(keep); show();
+      if(old.length&&isAdmin()) cleanup(old);
+    }
+  }catch(e){} finally{rdBusy=false;}
+}
+async function cleanup(ids){ try{ var c=cloud(),t=await c.token(); for(var i=0;i<Math.min(ids.length,10);i++){ await fetch(base()+'/notices/'+ids[i]+'.json?auth='+encodeURIComponent(t),{method:'DELETE'}); } }catch(e){} }
+/* ---- broadcast: admin app publishes a bot message to Firebase ---- */
+async function relay(it){
+  try{
+    var t=await cloud().token();
+    var r=await fetch(base()+'/notices/'+it.id+'.json?auth='+encodeURIComponent(t),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:it.text.slice(0,1000),ts:it.ts})});
+    if(r.ok){ pull(); return true; }
+    if(r.status===401||r.status===403) warn(bn()?'নোটিফিকেশন পাঠানো যায়নি: ডাটাবেস রুলস-এ /notices যোগ করুন':'Notification relay denied: add the /notices rules in Firebase');
+    return false;
+  }catch(e){return false;}
+}
+
+/* ---- Telegram polling (admin app in broadcast mode, or any phone in single-phone mode) ---- */
+function canPoll(){ if(document.hidden) return false; if(broadcast()) return !!(ADMIN_CHAT&&isAdmin()); return true; }
 async function loop(id){
   var first=!g(KO,'');
   while(id===run){
-    if(document.hidden){await sleep(1500);continue;}
+    if(!canPoll()){await sleep(2000);continue;}
     try{
-      if(first){ /* new device: skip old history, show only new messages */
+      if(first){ /* new device: skip old history, only new messages from now on */
         var l=await api('getUpdates','offset=-1');
         if(l.ok){ if(l.result&&l.result.length) s(KO,String(l.result[l.result.length-1].update_id+1)); else s(KO,'0'); first=false; }
         else if(l.error_code===409){ try{await api('deleteWebhook');}catch(e){} await sleep(4000); }
@@ -7734,15 +7787,19 @@ async function loop(id){
         if(j.error_code===409){try{await api('deleteWebhook');}catch(e){}}
         await sleep(5000);continue;
       }
-      (j.result||[]).forEach(function(u){
-        s(KO,String(u.update_id+1));
-        var m=u.message||u.channel_post; if(!m) return;
-        if(ADMIN_CHAT&&String(m.chat&&m.chat.id)!==ADMIN_CHAT) return;
-        var text=m.text||m.caption||''; if(!text) text=bn()?'[মিডিয়া/ফাইল]':'[media/file]';
-        if(/^\/start\b/i.test(text)) return;
-        var q=Q();q.push({id:u.update_id,text:text,ts:(m.date||Math.floor(Date.now()/1000))*1000});SQ(q);
-      });
-      if((j.result||[]).length) show();
+      var failed=false, list=j.result||[];
+      for(var i=0;i<list.length;i++){
+        var u=list[i], m=u.message||u.channel_post;
+        if(m && !(ADMIN_CHAT&&String(m.chat&&m.chat.id)!==ADMIN_CHAT)){
+          var text=m.text||m.caption||''; if(!text) text=bn()?'[মিডিয়া/ফাইল]':'[media/file]';
+          if(!/^\/start\b/i.test(text)){
+            var it={id:'n'+u.update_id,text:text,ts:Date.now()};
+            if(broadcast()){ if(!(await relay(it))){failed=true;break;} } else addLocal(it);
+          }
+        }
+        s(KO,String(u.update_id+1)); /* advance only after the message is safely stored/relayed */
+      }
+      if(failed) await sleep(6000);
     }catch(e){
       if(id!==run) break;
       if(e&&e.name==='AbortError') continue;
@@ -7750,17 +7807,20 @@ async function loop(id){
     }
   }
 }
+function api(m,qs,sig){return fetch('https://api.telegram.org/bot'+tok()+'/'+m+(qs?'?'+qs:''),sig?{signal:sig}:undefined).then(function(r){return r.json();});}
+
 window.ftTg={
+  /* mark as read: removes it ONLY on this phone */
   ok:function(){
     var st=$('pfStage'); if(!st) return;
     if(auto){clearTimeout(auto);auto=null;} prog(false);
-    var q=Q();q.shift();SQ(q);
+    if(shownId) markRead(shownId); else { var q0=Q(); if(q0.length) markRead(q0[0].id); }
     st.dataset.state='profile'; shownId=null;
-    if(q.length){ if(gap)clearTimeout(gap); gap=setTimeout(function(){gap=null;show();},700); }
+    if(Q().length){ if(gap)clearTimeout(gap); gap=setTimeout(function(){gap=null;show();},700); }
   },
   /* one tap: open Add tab with the detected amount filled in, and mark as read */
   add:function(){
-    var q=Q(),m=q[0]; if(!m) return; var k=kind(m.text),a=amt(m.text); if(!a) return;
+    var m=Q().filter(function(x){return x.id===shownId;})[0]; if(!m) return; var k=kind(m.text),a=amt(m.text); if(!a) return;
     ftTg.ok();
     setTimeout(function(){try{
       activateTab('add'); selectType(k==='in'?'deposit':'expense');
@@ -7781,11 +7841,13 @@ window.ftTg={
    else { bar.style.transform='';bar.style.opacity=''; }
    mv=false;dx=0;},{passive:true});
 })();
-document.addEventListener('visibilitychange',function(){ show(); arm(); });
+document.addEventListener('visibilitychange',function(){ if(!document.hidden) pull(); show(); arm(); });
 setInterval(arm,1000);
-try{ ['ft_tg_token','ft_tg_chat'].forEach(function(k){localStorage.removeItem(k);}); }catch(e){}
+setInterval(pull,PULL_MS);
+try{ ['ft_tg_token','ft_tg_chat','ft_tg_queue'].forEach(function(k){localStorage.removeItem(k);}); }catch(e){}
+since();
 if(tok()){ run++; loop(run); }
-show(); arm();
+show(); arm(); pull();
 })();
 </script>
 </body>
