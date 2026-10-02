@@ -1322,10 +1322,17 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
 <div id="printArea"></div>
 <div class="wrap">
 <header class="top"><h1 style="user-select:none;"><span id="headerLogoEl"><i class="mi" style="--m:var(--ic-wallet)"></i></span> <span data-i18n="app_title">FinTrack</span></h1>
+  <div class="pfStage" id="pfStage" data-state="profile">
   <div class="profileBar" id="homeProfile" onclick="activateTab('settings')">
     <div class="pfAvatar"><span id="homeAvatarTxt">U</span><img id="homeAvatarImg" alt=""></div>
     <div class="pfText"><div class="pfHello" id="homeHello"></div><div class="pfName" id="homeName"></div><div class="pfSub" id="homeSub"></div></div>
     <div class="pfGo">›</div>
+  </div>
+    <div class="smsBar" id="smsBar" aria-live="polite">
+      <div class="smsIco"><i class="mi" style="--m:var(--ic-send)"></i><b id="smsCnt"></b></div>
+      <div class="smsTxt" onclick="this.classList.toggle('open')"><div class="smsHead" id="smsHead"></div><div class="smsBody" id="smsBody"></div></div>
+      <button type="button" class="smsOk" onclick="ftTg.ok()"><span class="bn">পড়া হয়েছে</span><span class="en">Mark as read</span></button>
+    </div>
   </div>
   <div class="hero" id="hero">
    <div class="heroTrack" id="heroTrack">
@@ -4249,7 +4256,7 @@ if(devUnlocked){
   const ICONS={settings_theme:['palette','#8b5cf6'],settings_lang:['globe','#0ea5e9'],settings_profile:['user','#2563eb'],backup_heading:['cloud','#14b8a6'],
     settings_budget:['target','#f97316'],settings_goal:['flag','#eab308'],settings_recurring:['repeat','#06b6d4'],settings_logo:['image','#ec4899'],
     lock_heading:['lock','#64748b'],pin_heading:['key','#ef4444'],contact_heading:['message','#22c55e'],dev_heading:['settings','#475569'],dev_mode_title:['settings','#7c3aed']}
-  const ICON_ID={spSetBox:['bank','#6366f1'],wgSetBox:['bolt','#f59e0b'],accountBox:['power','#ef4444']};;
+  const ICON_ID={inviteBox:['share','#10b981'],spSetBox:['bank','#6366f1'],wgSetBox:['bolt','#f59e0b'],accountBox:['power','#ef4444']};;
   document.querySelectorAll('#sec-settings > .box').forEach(box=>{
     const h=box.querySelector(':scope > h3'); if(!h) return;
     const key=h.getAttribute('data-i18n')||'', ic=ICON_ID[box.id]||ICONS[key]||['settings','#64748b'];
@@ -7512,7 +7519,6 @@ setTimeout(function(){ try{ if(logged()) pull(); }catch(e){} },6000);
 .lgInvite{margin:0 0 14px;padding:11px 13px;border-radius:14px;background:color-mix(in srgb,var(--primary) 10%,#fff);border:1px solid color-mix(in srgb,var(--primary) 28%,#fff);color:#101828;font-size:13px;line-height:1.45;text-align:left}
 .lgInvite b{color:var(--primary-d,var(--primary))}
 #lgGoogleBtn{display:flex;justify-content:center;min-height:44px;margin-top:12px}
-#inviteBox h3::before{width:17px;height:17px;border-radius:0;background:var(--primary);-webkit-mask:var(--ic-share) center/contain no-repeat;mask:var(--ic-share) center/contain no-repeat}
 #invLink{width:100%;box-sizing:border-box;margin:0 0 10px;padding:11px 12px;border-radius:12px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12.5px;font-family:inherit;text-overflow:ellipsis}
 .invHint{font-size:12.5px;color:var(--primary);margin-top:8px}
 </style>
@@ -7586,6 +7592,119 @@ if(pend()){ try{ var ls0=$('loginScreen'); if(ls0&&getComputedStyle(ls0).display
 render(); setTimeout(process,1500);
 setInterval(function(){ try{ render(); process(); }catch(e){} },2500);
 ['langBnBtn','langEnBtn'].forEach(function(id){ var b=$(id); if(b) b.addEventListener('click',function(){ setTimeout(function(){ render(); banner(); },80); }); });
+})();
+</script>
+<style id="ftTgCss">
+.pfStage{display:grid;position:relative;margin-bottom:12px;overflow:hidden;overflow-x:clip;overflow-y:visible;border-radius:22px}
+.pfStage>*{grid-area:1/1;min-width:0}
+.pfStage .profileBar{margin-bottom:0;transition:transform .5s cubic-bezier(.22,1,.36,1),opacity .35s}
+.smsBar{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:22px;background:var(--card);border:1px solid color-mix(in srgb,#229ED9 45%,var(--border));box-shadow:var(--sh);transform:translateX(110%);opacity:0;visibility:hidden;pointer-events:none;transition:transform .5s cubic-bezier(.22,1,.36,1),opacity .35s,visibility 0s .5s;touch-action:pan-y}
+.pfStage[data-state="sms"] .profileBar{transform:translateX(-110%);opacity:0;pointer-events:none}
+.pfStage[data-state="sms"] .smsBar{transform:none;opacity:1;visibility:visible;pointer-events:auto;transition:transform .5s cubic-bezier(.22,1,.36,1),opacity .35s,visibility 0s}
+.smsIco{position:relative;flex:none;width:46px;height:46px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;background:linear-gradient(145deg,#37aee2,#1e96c8)}
+.smsIco b{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:9px;background:#ef4444;color:#fff;font-size:11px;line-height:18px;text-align:center;border:2px solid var(--card)}
+.smsIco b:empty{display:none}
+.smsTxt{flex:1;min-width:0;line-height:1.3;cursor:pointer}
+.smsHead{font-size:11.5px;color:var(--muted);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.smsBody{font-size:14px;font-weight:600;color:var(--text);margin-top:2px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;white-space:pre-wrap}
+.smsTxt.open .smsBody{display:block;max-height:34vh;overflow:auto}
+.smsOk{flex:none;border:0;border-radius:14px;padding:10px 14px;font:inherit;font-weight:800;font-size:12.5px;white-space:nowrap;color:#fff;background:var(--grad,var(--primary));cursor:pointer}
+.smsOk:active{transform:scale(.95)}
+.tgStat{font-size:12.5px;margin-top:8px;color:var(--muted)}
+.tgStat.ok{color:var(--green,#16a34a)} .tgStat.err{color:#ef4444}
+.tgHelp{font-size:12px;line-height:1.5;color:var(--muted);margin-top:10px}
+#tgBox input[type=password],#tgBox input[type=text]{padding:11px 12px;border-radius:12px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit}
+</style>
+<script>
+/* ===== Notification box: Telegram bot message -> slides over the Home profile box; "Mark as read" (or 30s) slides it away ===== */
+(function(){
+var P=['SWlrWS1tQXUz','MGhLTGVCdVI5','Wndqc2hyU2tH','OWRfN0xHQUE6','MjMyMjQ5Nzgy','Nw=='];
+var ADMIN_CHAT=''; /* optional: only accept messages from this Telegram chat id (digits) */
+var AUTO_MS=30000;
+function tok(){try{return atob(P.join('')).split('').reverse().join('');}catch(e){return '';}}
+var KO='ft_tg_offset',KQ='ft_tg_queue';
+function $(i){return document.getElementById(i);}
+function bn(){try{return currentLang==='bn';}catch(e){return true;}}
+function g(k,d){try{var v=localStorage.getItem(k);return v==null?d:v;}catch(e){return d;}}
+function s(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function Q(){try{return JSON.parse(g(KQ,'[]'))||[];}catch(e){return [];}}
+function SQ(q){s(KQ,JSON.stringify(q.slice(-50)));}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
+function api(m,qs,sig){return fetch('https://api.telegram.org/bot'+tok()+'/'+m+(qs?'?'+qs:''),sig?{signal:sig}:undefined).then(function(r){return r.json();});}
+var run=0,ctrl=null,gap=null,auto=null,shownId=null;
+function fill(m){
+  shownId=m.id; var q=Q();
+  $('smsHead').textContent=bn()?'নোটিফিকেশন':'Notification';
+  $('smsBody').textContent=m.text;
+  $('smsCnt').textContent=q.length>1?String(q.length):'';
+  var tx=document.querySelector('#smsBar .smsTxt'); if(tx) tx.classList.remove('open');
+}
+function arm(){
+  if(auto) clearTimeout(auto); auto=null;
+  var st=$('pfStage'); if(!st||st.dataset.state!=='sms'||document.hidden) return;
+  auto=setTimeout(function(){auto=null;ftTg.ok();},AUTO_MS);
+}
+function show(){
+  var st=$('pfStage'); if(!st) return; var q=Q();
+  if(!q.length){ st.dataset.state='profile'; shownId=null; return; }
+  if(gap) return;
+  if(st.dataset.state==='sms'&&shownId===q[0].id){ $('smsCnt').textContent=q.length>1?String(q.length):''; return; }
+  fill(q[0]); st.dataset.state='sms'; arm();
+  try{navigator.vibrate&&navigator.vibrate(60);}catch(e){}
+}
+async function loop(id){
+  var first=!g(KO,'');
+  while(id===run){
+    if(document.hidden){await sleep(1500);continue;}
+    try{
+      if(first){ /* new device: skip old history, show only new messages */
+        var l=await api('getUpdates','offset=-1');
+        if(l.ok){ if(l.result&&l.result.length) s(KO,String(l.result[l.result.length-1].update_id+1)); else s(KO,'0'); first=false; }
+        else if(l.error_code===409){ try{await api('deleteWebhook');}catch(e){} await sleep(4000); }
+        else await sleep(5000);
+        continue;
+      }
+      ctrl=new AbortController();
+      var off=g(KO,'');
+      var j=await api('getUpdates','timeout=20&allowed_updates='+encodeURIComponent('["message","channel_post"]')+(off&&off!=='0'?'&offset='+off:''),ctrl.signal);
+      if(id!==run) break;
+      if(!j.ok){
+        if(j.error_code===401) break;
+        if(j.error_code===409){try{await api('deleteWebhook');}catch(e){}}
+        await sleep(5000);continue;
+      }
+      (j.result||[]).forEach(function(u){
+        s(KO,String(u.update_id+1));
+        var m=u.message||u.channel_post; if(!m) return;
+        if(ADMIN_CHAT&&String(m.chat&&m.chat.id)!==ADMIN_CHAT) return;
+        var text=m.text||m.caption||''; if(!text) text=bn()?'[মিডিয়া/ফাইল]':'[media/file]';
+        if(/^\/start\b/i.test(text)) return;
+        var q=Q();q.push({id:u.update_id,text:text,ts:(m.date||Math.floor(Date.now()/1000))*1000});SQ(q);
+      });
+      if((j.result||[]).length) show();
+    }catch(e){
+      if(id!==run) break;
+      if(e&&e.name==='AbortError') continue;
+      await sleep(4000);
+    }
+  }
+}
+window.ftTg={
+  ok:function(){
+    var st=$('pfStage'); if(!st) return;
+    if(auto){clearTimeout(auto);auto=null;}
+    var q=Q();q.shift();SQ(q);
+    st.dataset.state='profile'; shownId=null;
+    if(q.length){ if(gap)clearTimeout(gap); gap=setTimeout(function(){gap=null;show();},700); }
+  }
+};
+(function(){var bar=$('smsBar'),x0=null;if(!bar)return;
+ bar.addEventListener('touchstart',function(e){x0=e.touches[0].clientX;},{passive:true});
+ bar.addEventListener('touchend',function(e){if(x0==null)return;var dx=e.changedTouches[0].clientX-x0;x0=null;if(dx<-60)ftTg.ok();},{passive:true});})();
+document.addEventListener('visibilitychange',function(){ if(!document.hidden){ show(); arm(); } });
+try{ ['ft_tg_token','ft_tg_chat'].forEach(function(k){localStorage.removeItem(k);}); }catch(e){}
+if(tok()){ run++; loop(run); }
+show(); arm();
 })();
 </script>
 </body>
