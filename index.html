@@ -7662,13 +7662,14 @@ function warn(m){ if(warned) return; warned=true; try{window.toast&&window.toast
 /* ---- per-user store: feed cache + read list + "since" (a new install doesn't get old notices) ---- */
 function Feed(){var f=jget(KF,{});return (f&&typeof f==='object'&&!Array.isArray(f))?f:{};}
 function SF(o){s(KF,JSON.stringify(o));}
-function Rd(){var r=jget(KR,[]);return Array.isArray(r)?r:[];}
-function markRead(id){var r=Rd();if(id&&r.indexOf(id)<0){r.push(id);s(KR,JSON.stringify(r.slice(-300)));}}
+function RK(){try{var c=cloud(),se=c&&c.ses&&c.ses();return KR+'_'+((se&&se.uid)||'guest');}catch(e){return KR+'_guest';}}
+function Rd(){var r=jget(RK(),[]);return Array.isArray(r)?r:[];}
+function markRead(id){var r=Rd();if(id&&r.indexOf(id)<0){r.push(id);s(RK(),JSON.stringify(r.slice(-300)));}}
 function since(){var v=+g(KS,'');if(!v){v=Date.now();s(KS,String(v));}return v;}
 function Q(){ /* unread notifications for THIS phone, oldest first */
-  var f=Feed(),r=Rd(),now=Date.now(),sn=since(),a=[];
+  var f=Feed(),r=Rd(),now=Date.now(),a=[];
   Object.keys(f).forEach(function(id){var m=f[id]; if(!m||typeof m.text!=='string'||typeof m.ts!=='number') return;
-    if(m.ts<sn-60000||now-m.ts>EXP||r.indexOf(id)>=0) return; a.push({id:id,text:m.text,ts:m.ts});});
+    if(now-m.ts>EXP||r.indexOf(id)>=0) return; a.push({id:id,text:m.text,ts:m.ts});});
   a.sort(function(x,y){return x.ts-y.ts;}); return a;
 }
 function addLocal(it){var f=Feed();f[it.id]={text:it.text,ts:it.ts};SF(f);show();}
@@ -7843,9 +7844,9 @@ window.ftTg={
 })();
 document.addEventListener('visibilitychange',function(){ if(!document.hidden) pull(); show(); arm(); });
 setInterval(arm,1000);
+setInterval(show,3000);
 setInterval(pull,PULL_MS);
 try{ ['ft_tg_token','ft_tg_chat','ft_tg_queue'].forEach(function(k){localStorage.removeItem(k);}); }catch(e){}
-since();
 if(tok()){ run++; loop(run); }
 show(); arm(); pull();
 })();
