@@ -1328,10 +1328,15 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     <div class="pfText"><div class="pfHello" id="homeHello"></div><div class="pfName" id="homeName"></div><div class="pfSub" id="homeSub"></div></div>
     <div class="pfGo">›</div>
   </div>
-    <div class="smsBar" id="smsBar" aria-live="polite">
-      <div class="smsIco"><i class="mi" style="--m:var(--ic-send)"></i><b id="smsCnt"></b></div>
-      <div class="smsTxt" onclick="this.classList.toggle('open')"><div class="smsHead" id="smsHead"></div><div class="smsBody" id="smsBody"></div></div>
-      <button type="button" class="smsOk" onclick="ftTg.ok()"><span class="bn">পড়া হয়েছে</span><span class="en">Mark as read</span></button>
+    <div class="smsBar" id="smsBar" data-kind="info" aria-live="polite">
+      <div class="smsIco" id="smsIco"><i class="mi" id="smsMi" style="--m:var(--ic-bell)"></i></div>
+      <div class="smsTxt" id="smsTxt" onclick="this.classList.toggle('open')">
+        <div class="smsHeadRow"><span class="smsHead" id="smsHead">Notification</span><em class="smsPos" id="smsPos"></em></div>
+        <div class="smsBody" id="smsBody"></div>
+        <button type="button" class="smsAct" id="smsAct" onclick="event.stopPropagation();ftTg.add()" hidden></button>
+      </div>
+      <button type="button" class="smsOk" onclick="ftTg.ok()"><i class="mi" style="--m:var(--ic-check)"></i><span class="bn">পড়া হয়েছে</span><span class="en">Mark as read</span></button>
+      <i class="smsProg" id="smsProg"></i>
     </div>
   </div>
   <div class="hero" id="hero">
@@ -7598,25 +7603,38 @@ setInterval(function(){ try{ render(); process(); }catch(e){} },2500);
 .pfStage{display:grid;position:relative;margin-bottom:12px;overflow:hidden;overflow-x:clip;overflow-y:visible;border-radius:22px}
 .pfStage>*{grid-area:1/1;min-width:0}
 .pfStage .profileBar{margin-bottom:0;transition:transform .5s cubic-bezier(.22,1,.36,1),opacity .35s}
-.smsBar{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:22px;background:var(--card);border:1px solid color-mix(in srgb,#229ED9 45%,var(--border));box-shadow:var(--sh);transform:translateX(110%);opacity:0;visibility:hidden;pointer-events:none;transition:transform .5s cubic-bezier(.22,1,.36,1),opacity .35s,visibility 0s .5s;touch-action:pan-y}
+.smsBar{--k:var(--primary);position:relative;overflow:hidden;display:flex;align-items:center;gap:11px;padding:11px 12px 13px 16px;border-radius:22px;
+ background:linear-gradient(120deg,color-mix(in srgb,var(--k) 15%,var(--card)),var(--card) 62%);
+ border:1px solid color-mix(in srgb,var(--k) 38%,var(--border));box-shadow:var(--sh),0 8px 22px -12px var(--k);
+ transform:translateX(110%);opacity:0;visibility:hidden;pointer-events:none;touch-action:pan-y;
+ transition:transform .5s cubic-bezier(.22,1,.36,1),opacity .35s,visibility 0s .5s}
+.smsBar::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:4px;border-radius:0 4px 4px 0;background:var(--k)}
+.smsBar[data-kind="in"]{--k:#16a34a}.smsBar[data-kind="out"]{--k:#ef4444}.smsBar[data-kind="sec"]{--k:#f59e0b}
 .pfStage[data-state="sms"] .profileBar{transform:translateX(-110%);opacity:0;pointer-events:none}
 .pfStage[data-state="sms"] .smsBar{transform:none;opacity:1;visibility:visible;pointer-events:auto;transition:transform .5s cubic-bezier(.22,1,.36,1),opacity .35s,visibility 0s}
-.smsIco{position:relative;flex:none;width:46px;height:46px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;background:linear-gradient(145deg,#37aee2,#1e96c8)}
-.smsIco b{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:9px;background:#ef4444;color:#fff;font-size:11px;line-height:18px;text-align:center;border:2px solid var(--card)}
-.smsIco b:empty{display:none}
+.smsBar.drag{transition:none !important}
+.smsIco{position:relative;flex:none;width:46px;height:46px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;
+ background:linear-gradient(145deg,color-mix(in srgb,var(--k) 78%,#fff),var(--k));box-shadow:0 6px 14px -6px var(--k)}
+.smsIco.new::after{content:"";position:absolute;inset:0;border-radius:15px;border:2px solid var(--k);animation:smsPing 1.3s ease-out 2}
+@keyframes smsPing{0%{transform:scale(1);opacity:.8}100%{transform:scale(1.65);opacity:0}}
 .smsTxt{flex:1;min-width:0;line-height:1.3;cursor:pointer}
-.smsHead{font-size:11.5px;color:var(--muted);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.smsBody{font-size:14px;font-weight:600;color:var(--text);margin-top:2px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;white-space:pre-wrap}
+.smsHeadRow{display:flex;align-items:center;gap:6px}
+.smsHead{font-size:11px;letter-spacing:.4px;text-transform:uppercase;color:var(--k);font-weight:800}
+.smsPos{font-style:normal;font-size:10.5px;font-weight:800;color:#fff;background:var(--k);border-radius:8px;padding:1px 6px}
+.smsPos:empty{display:none}
+.smsBody{font-size:13.5px;font-weight:600;color:var(--text);margin-top:2px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;white-space:pre-wrap}
+.smsBody .smsAmt{font-weight:800;color:var(--k);background:color-mix(in srgb,var(--k) 14%,transparent);border-radius:6px;padding:0 4px}
 .smsTxt.open .smsBody{display:block;max-height:34vh;overflow:auto}
-.smsOk{flex:none;border:0;border-radius:14px;padding:10px 14px;font:inherit;font-weight:800;font-size:12.5px;white-space:nowrap;color:#fff;background:var(--grad,var(--primary));cursor:pointer}
-.smsOk:active{transform:scale(.95)}
-.tgStat{font-size:12.5px;margin-top:8px;color:var(--muted)}
-.tgStat.ok{color:var(--green,#16a34a)} .tgStat.err{color:#ef4444}
-.tgHelp{font-size:12px;line-height:1.5;color:var(--muted);margin-top:10px}
-#tgBox input[type=password],#tgBox input[type=text]{padding:11px 12px;border-radius:12px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit}
+.smsAct{margin-top:7px;border:1px dashed color-mix(in srgb,var(--k) 55%,transparent);background:color-mix(in srgb,var(--k) 10%,transparent);color:var(--k);border-radius:10px;padding:5px 10px;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+.smsAct[hidden]{display:none}
+.smsOk{flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;border:0;border-radius:14px;padding:8px 11px;font:inherit;font-weight:800;font-size:11px;line-height:1.1;color:#fff;background:var(--k);cursor:pointer;box-shadow:0 6px 14px -8px var(--k)}
+.smsOk .mi{font-size:17px}
+.smsOk:active{transform:scale(.94)}
+.smsProg{position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--k);transform-origin:left center;transform:scaleX(1);opacity:.85}
+@media (prefers-reduced-motion:reduce){.smsIco.new::after{animation:none}.smsBar,.pfStage .profileBar{transition-duration:.01s}}
 </style>
 <script>
-/* ===== Notification box: Telegram bot message -> slides over the Home profile box; "Mark as read" (or 30s) slides it away ===== */
+/* ===== Notification box: Telegram bot message -> slides over the Home profile box; "Mark as read" (or 30s after entering the app) slides it away ===== */
 (function(){
 var P=['SWlrWS1tQXUz','MGhLTGVCdVI5','Wndqc2hyU2tH','OWRfN0xHQUE6','MjMyMjQ5Nzgy','Nw=='];
 var ADMIN_CHAT=''; /* optional: only accept messages from this Telegram chat id (digits) */
@@ -7632,25 +7650,68 @@ function SQ(q){s(KQ,JSON.stringify(q.slice(-50)));}
 function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
 function api(m,qs,sig){return fetch('https://api.telegram.org/bot'+tok()+'/'+m+(qs?'?'+qs:''),sig?{signal:sig}:undefined).then(function(r){return r.json();});}
 var run=0,ctrl=null,gap=null,auto=null,shownId=null;
-function fill(m){
-  shownId=m.id; var q=Q();
-  $('smsHead').textContent=bn()?'নোটিফিকেশন':'Notification';
-  $('smsBody').textContent=m.text;
-  $('smsCnt').textContent=q.length>1?String(q.length):'';
-  var tx=document.querySelector('#smsBar .smsTxt'); if(tx) tx.classList.remove('open');
+
+/* ---- smart parsing ---- */
+function kind(t){
+  var x=String(t).toLowerCase();
+  if(/otp|verification|passcode|ওটিপি|ভেরিফিকেশন|পিন কোড/.test(x)) return 'sec';
+  if(/credited|received|cash[\s-]?in|deposit|salary|refund|জমা|পেয়েছেন|গ্রহণ|বেতন|ফেরত/.test(x)) return 'in';
+  if(/debited|paid|payment|cash[\s-]?out|withdraw|purchase|sent|bill|due|খরচ|পরিশোধ|কাটা|পাঠিয়েছেন|বিল|বকেয়া/.test(x)) return 'out';
+  return 'info';
 }
+var AMT=/(?:৳|tk\.?|taka|bdt|টাকা)\s*([0-9০-৯][0-9০-৯,]*(?:\.[0-9০-৯]+)?)|([0-9০-৯][0-9০-৯,]*(?:\.[0-9০-৯]+)?)\s*(?:৳|tk\.?|taka|bdt|টাকা)/ig;
+function en(n){return String(n).replace(/[০-৯]/g,function(d){return '০১২৩৪৫৬৭৮৯'.indexOf(d);}).replace(/,/g,'');}
+function amt(t){AMT.lastIndex=0;var m=AMT.exec(String(t));return m?en(m[1]||m[2]):'';}
+function paint(el,t){
+  el.textContent=''; var last=0,m; AMT.lastIndex=0; t=String(t);
+  while((m=AMT.exec(t))){
+    if(m.index>last) el.appendChild(document.createTextNode(t.slice(last,m.index)));
+    var sp=document.createElement('span'); sp.className='smsAmt'; sp.textContent=m[0]; el.appendChild(sp);
+    last=m.index+m[0].length; if(m[0].length===0) AMT.lastIndex++;
+  }
+  if(last<t.length) el.appendChild(document.createTextNode(t.slice(last)));
+}
+var ICO={in:'arrow-in',out:'arrow-out',sec:'shield',info:'bell'};
+
+/* ---- progress bar (30s countdown) ---- */
+function prog(on){
+  var p=$('smsProg'); if(!p) return;
+  p.style.transition='none'; p.style.transform='scaleX(1)';
+  if(on){ void p.offsetWidth; p.style.transition='transform '+AUTO_MS+'ms linear'; p.style.transform='scaleX(0)'; }
+}
+
+function fill(m){
+  shownId=m.id; var q=Q(), k=kind(m.text), a=amt(m.text);
+  var bar=$('smsBar'); bar.dataset.kind=k;
+  $('smsMi').style.setProperty('--m','var(--ic-'+ICO[k]+')');
+  $('smsHead').textContent=bn()?'নোটিফিকেশন':'Notification';
+  $('smsPos').textContent=q.length>1?('1/'+q.length):'';
+  paint($('smsBody'),m.text);
+  var act=$('smsAct');
+  if(a&&(k==='in'||k==='out')){
+    act.hidden=false;
+    act.textContent=(k==='in'?(bn()?'＋ আয় হিসেবে যোগ করুন':'＋ Add as income'):(bn()?'＋ খরচ হিসেবে যোগ করুন':'＋ Add as expense'))+' ৳'+a;
+  } else act.hidden=true;
+  $('smsTxt').classList.remove('open');
+  var ic=$('smsIco'); ic.classList.remove('new'); void ic.offsetWidth; ic.classList.add('new');
+}
+function vis(id){var e=$(id);if(!e)return false;try{var c=getComputedStyle(e);return c.display!=='none'&&c.visibility!=='hidden';}catch(x){return false;}}
+function inApp(){return !document.hidden&&!vis('lockOverlay')&&!vis('loginScreen');}
+/* 30s countdown starts only once the user is actually inside the app (not hidden, past lock/login) */
 function arm(){
-  if(auto) clearTimeout(auto); auto=null;
-  var st=$('pfStage'); if(!st||st.dataset.state!=='sms'||document.hidden) return;
-  auto=setTimeout(function(){auto=null;ftTg.ok();},AUTO_MS);
+  var st=$('pfStage');
+  if(!st||st.dataset.state!=='sms'||!inApp()){ if(auto){clearTimeout(auto);auto=null;prog(false);} return; }
+  if(auto) return;
+  prog(true);
+  auto=setTimeout(function(){auto=null;if(inApp())ftTg.ok();else arm();},AUTO_MS);
 }
 function show(){
   var st=$('pfStage'); if(!st) return; var q=Q();
   if(!q.length){ st.dataset.state='profile'; shownId=null; return; }
   if(gap) return;
-  if(st.dataset.state==='sms'&&shownId===q[0].id){ $('smsCnt').textContent=q.length>1?String(q.length):''; return; }
+  if(st.dataset.state==='sms'&&shownId===q[0].id){ $('smsPos').textContent=q.length>1?('1/'+q.length):''; return; }
   fill(q[0]); st.dataset.state='sms'; arm();
-  try{navigator.vibrate&&navigator.vibrate(60);}catch(e){}
+  try{navigator.vibrate&&navigator.vibrate([40,40,40]);}catch(e){}
 }
 async function loop(id){
   var first=!g(KO,'');
@@ -7692,16 +7753,36 @@ async function loop(id){
 window.ftTg={
   ok:function(){
     var st=$('pfStage'); if(!st) return;
-    if(auto){clearTimeout(auto);auto=null;}
+    if(auto){clearTimeout(auto);auto=null;} prog(false);
     var q=Q();q.shift();SQ(q);
     st.dataset.state='profile'; shownId=null;
     if(q.length){ if(gap)clearTimeout(gap); gap=setTimeout(function(){gap=null;show();},700); }
+  },
+  /* one tap: open Add tab with the detected amount filled in, and mark as read */
+  add:function(){
+    var q=Q(),m=q[0]; if(!m) return; var k=kind(m.text),a=amt(m.text); if(!a) return;
+    ftTg.ok();
+    setTimeout(function(){try{
+      activateTab('add'); selectType(k==='in'?'deposit':'expense');
+      var i=$('inAmount'); if(i){ i.value=a; i.dispatchEvent(new Event('input',{bubbles:true})); }
+      window.scrollTo({top:0,behavior:'smooth'});
+    }catch(e){}},320);
   }
 };
-(function(){var bar=$('smsBar'),x0=null;if(!bar)return;
- bar.addEventListener('touchstart',function(e){x0=e.touches[0].clientX;},{passive:true});
- bar.addEventListener('touchend',function(e){if(x0==null)return;var dx=e.changedTouches[0].clientX-x0;x0=null;if(dx<-60)ftTg.ok();},{passive:true});})();
-document.addEventListener('visibilitychange',function(){ if(!document.hidden){ show(); arm(); } });
+/* swipe either way (finger-follow) = mark as read */
+(function(){var bar=$('smsBar'),x0=null,y0=0,dx=0,mv=false;if(!bar)return;
+ bar.addEventListener('touchstart',function(e){x0=e.touches[0].clientX;y0=e.touches[0].clientY;dx=0;mv=false;},{passive:true});
+ bar.addEventListener('touchmove',function(e){if(x0==null)return;var x=e.touches[0].clientX-x0,y=e.touches[0].clientY-y0;
+   if(!mv){ if(Math.abs(x)<8||Math.abs(x)<Math.abs(y)) return; mv=true; bar.classList.add('drag'); }
+   dx=x; bar.style.transform='translateX('+dx+'px)'; bar.style.opacity=String(Math.max(.35,1-Math.abs(dx)/320));},{passive:true});
+ bar.addEventListener('touchend',function(){if(x0==null)return;x0=null;
+   bar.classList.remove('drag');
+   if(mv&&Math.abs(dx)>80){ bar.style.transform='';bar.style.opacity=''; ftTg.ok(); }
+   else { bar.style.transform='';bar.style.opacity=''; }
+   mv=false;dx=0;},{passive:true});
+})();
+document.addEventListener('visibilitychange',function(){ show(); arm(); });
+setInterval(arm,1000);
 try{ ['ft_tg_token','ft_tg_chat'].forEach(function(k){localStorage.removeItem(k);}); }catch(e){}
 if(tok()){ run++; loop(run); }
 show(); arm();
