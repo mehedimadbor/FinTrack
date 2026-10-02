@@ -807,6 +807,7 @@ i.ti,b.ti{background:var(--green);} i.te,b.te{background:var(--red);}
   <div class="loginBrand">FinTrack</div>
   <div class="loginTag" data-i18n="login_tag">আপনার আর্থিক হিসাবের সঙ্গী</div>
   <div class="loginBox">
+    <div class="lgInvite" id="lgInvite" style="display:none;"></div>
     <div class="lgTabs" id="lgTabs">
       <button type="button" class="lgTab on" id="lgTabUp" onclick="ftCloud.loginMode('up')"><span class="bn">নতুন অ্যাকাউন্ট</span><span class="en">Sign up</span></button>
       <button type="button" class="lgTab" id="lgTabIn" onclick="ftCloud.loginMode('in')"><span class="bn">লগইন</span><span class="en">Log in</span></button>
@@ -828,6 +829,7 @@ i.ti,b.ti{background:var(--green);} i.te,b.te{background:var(--red);}
       <div class="lgLink" id="lgForgot" style="display:none;" onclick="ftCloud.loginReset()"><span class="bn">পাসওয়ার্ড ভুলে গেছেন?</span><span class="en">Forgot password?</span></div>
       <div class="lgStatus" id="lgStatus"></div>
       <button class="loginBtn" id="lgBtn" onclick="ftCloud.loginSubmit()"><span class="bn">অ্যাকাউন্ট খুলুন</span><span class="en">Create account</span></button>
+      <div id="lgGoogleBox" style="display:none;"><div class="lgOr"><span class="bn">অথবা</span><span class="en">or</span></div><div id="lgGoogleBtn"></div></div>
       <div class="lgOr"><span class="bn">অথবা</span><span class="en">or</span></div>
       <button class="lgGuest" onclick="ftCloud.loginGuest()"><span class="bn">গেস্ট হিসেবে চালিয়ে যান</span><span class="en">Continue as guest</span></button>
       <div class="lgNote"><span class="bn">গেস্ট হিসেবে ডেটা শুধু এই ফোনে থাকবে। পরে Settings থেকে অ্যাকাউন্ট খুলে ক্লাউডে ব্যাকআপ রাখতে পারবেন।</span><span class="en">As a guest, your data stays on this phone only. You can create an account later in Settings to back it up to the cloud.</span></div>
@@ -887,6 +889,8 @@ var HAPPY_COUNTER_URL = 'https://fintrack-cde62-default-rtdb.asia-southeast1.fir
 /* ===== Firebase (used by the user counter AND Cloud sync) =====
    apiKey: Firebase console > Project settings > General > Web API Key
    dbUrl : your Realtime Database url, e.g. 'https://YOUR-PROJECT-default-rtdb.firebaseio.com' (no trailing slash) */
+/* Google sign-in: paste the Web client ID here (Firebase console > Authentication > Sign-in method > Google > Web SDK configuration). Leave '' to hide the Google button. */
+var FT_GOOGLE_CLIENT_ID = '';
 var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'https://fintrack-cde62-default-rtdb.asia-southeast1.firebasedatabase.app' };
 (function(){
   var box=document.getElementById('lkHappy'); if(!box) return;
@@ -1246,9 +1250,43 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     if(ok()){ loginMode('up'); var _pw=$('lgPass'); if(_pw) _pw.addEventListener('keydown',function(e){ if(e.key==='Enter') loginSubmit(); }); }
     else{ if(_c) _c.style.display='none'; if(_t) _t.style.display='none'; if(_p) _p.style.display=''; }
   })();
+  /* ---- Google sign-in (Google Identity Services -> Firebase signInWithIdp) ---- */
+  function gErr(e){
+    var m=String((e&&e.message)||e||'');
+    if(/GOOGLE_NEEDS_PASSWORD/.test(m)) return tx('এই ইমেইলে আগে পাসওয়ার্ড দিয়ে অ্যাকাউন্ট খোলা আছে — পাসওয়ার্ড দিয়ে লগইন করুন','This email already has a password account — log in with the password');
+    if(/INVALID_IDP|audience|CREDENTIAL/i.test(m)) return tx('Google লগইন সেট-আপে সমস্যা (Client ID মিলছে না)','Google sign-in setup problem (Client ID mismatch)');
+    if(/OPERATION_NOT_ALLOWED/.test(m)) return tx('Firebase এ Google লগইন চালু করা নেই','Google sign-in is not enabled in Firebase');
+    return errMsg(e);
+  }
+  async function loginGoogle(cred){
+    lgStatus(tx('Google দিয়ে লগইন হচ্ছে…','Signing in with Google…'));
+    try{
+      var j=await authReq('signInWithIdp',{postBody:'id_token='+encodeURIComponent(cred)+'&providerId=google.com',requestUri:/^https?:/.test(location.origin)?location.origin:'http://localhost',returnIdpCredential:true,returnSecureToken:true});
+      if(j.needConfirmation||!j.idToken) throw new Error('GOOGLE_NEEDS_PASSWORD');
+      idTok=j.idToken; idExp=Date.now()+(+j.expiresIn||3600)*1000;
+      setSes({uid:j.localId,rt:j.refreshToken,email:j.email||''});
+      var rem=null; try{ rem=await dbGet('backup'); }catch(e){ setSes(null); idTok=''; throw e; }
+      if(rem&&rem.data&&applyRemote(rem)){ lgStatus(tx('আপনার ডেটা ফিরিয়ে আনা হচ্ছে…','Restoring your data…')); return; }
+      var ni=$('loginNameInput'); if(ni&&!(ni.value||'').trim()&&!lsGet('myName_v1')) ni.value=j.displayName||String(j.email||'').split('@')[0];
+    }catch(e){ lgStatus(gErr(e),true); return; }
+    lgStatus('');
+    if(typeof loginContinue==='function') loginContinue();
+    setTimeout(function(){ ui(); sync(); },1200);
+  }
+  function gInit(){
+    var cid=window.FT_GOOGLE_CLIENT_ID||'', box=$('lgGoogleBox'), host=$('lgGoogleBtn'); if(!cid||!ok()||!box||!host) return;
+    box.style.display='';
+    function go(){ try{
+      google.accounts.id.initialize({client_id:cid,callback:function(r){ if(r&&r.credential) loginGoogle(r.credential); },ux_mode:'popup',auto_select:false});
+      var w=Math.max(220,Math.min(340,box.offsetWidth||300));
+      google.accounts.id.renderButton(host,{type:'standard',theme:'outline',size:'large',text:'continue_with',shape:'pill',width:w,logo_alignment:'left'});
+    }catch(e){} }
+    if(window.google&&google.accounts&&google.accounts.id){ go(); return; }
+    var sc=document.createElement('script'); sc.src='https://accounts.google.com/gsi/client'; sc.async=true; sc.defer=true; sc.onload=go; sc.onerror=function(){ box.style.display='none'; }; document.head.appendChild(sc);
+  }
   window.ftCloud={
     _raw:function(){ return {ses:ses,token:token,call:call,CFG:CFG,ok:ok,errMsg:errMsg}; },
-    loginSubmit:loginSubmit, loginMode:loginMode, loginReset:loginReset, loginGuest:loginGuest, loginEye:loginEye,
+    loginSubmit:loginSubmit, loginGoogle:loginGoogle, loginMode:loginMode, loginReset:loginReset, loginGuest:loginGuest, loginEye:loginEye,
     edit:openSheet, profSave:profSave, pfTouch:pfTouch, pfEye:pfEye, sheetClose:sheetClose, sheetSave:sheetSave, sheetForgot:sheetForgot, eye:eyeToggle, toggle:toggleSync, refresh:function(){ ui(); },
     syncNow:function(){ sync(true); },
     setAuto:function(v){ _set.call(LS,AUTO,v?'1':'0'); if(v) schedule(); },
@@ -1267,7 +1305,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     wipe:async function(){ if(!confirm(tx('ক্লাউড থেকে আপনার সব ডেটা মুছে যাবে। এই ফোনের ডেটা থাকবে। নিশ্চিত?','This deletes all your data from the cloud. Data on this phone stays. Sure?'))) return;
       try{ var r=await call(await dbUrl('backup'),{method:'DELETE'}); if(!r.ok) throw new Error('HTTP '+r.status); _rem.call(LS,BASE); _set.call(LS,DIRTY,'1'); status(tx('ক্লাউড ডেটা মুছে ফেলা হয়েছে','Cloud data deleted')); }catch(e){ status(errMsg(e),true); } }
   };
-  function init(){ ui(); if(ses()&&ok()){ doneMsg(); setTimeout(function(){ if(auto()) sync(); },1500); } }
+  function init(){ ui(); try{ gInit(); }catch(e){} if(ses()&&ok()){ doneMsg(); setTimeout(function(){ if(auto()) sync(); },1500); } }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
   window.addEventListener('online',function(){ if(ses()&&auto()) sync(); });
   var lastVis=0; document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible'&&ses()&&auto()&&Date.now()-lastVis>60000){ lastVis=Date.now(); sync(); } });
@@ -1611,6 +1649,17 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     <div style="display:none;">
       <input type="text" id="myNameInput"><input type="text" id="myUsernameInput"><input type="tel" id="myPhoneInput">
     </div>
+  </div>
+  <div class="box" id="inviteBox">
+    <h3><span class="bn">বন্ধুদের ইনভাইট করুন</span><span class="en">Invite friends</span></h3>
+    <p style="font-size:12.5px; color:var(--muted); margin:0 0 10px;"><span class="bn">আপনার লিংক শেয়ার করুন। বন্ধু লিংকে ঢুকে Google দিয়ে অ্যাকাউন্ট খুললেই আপনার সাথে চ্যাটে নিজে থেকে যুক্ত হয়ে যাবে।</span><span class="en">Share your link. When a friend opens it and signs up with Google, they are added to your chat automatically.</span></p>
+    <input type="text" id="invLink" readonly onclick="this.select()">
+    <button type="button" class="typebtn sel" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="ftInvite.share()"><i class="mi" style="--m:var(--ic-share); width:18px; height:18px; flex:none;"></i><span class="bn">ইনভাইট পাঠান</span><span class="en">Send invite</span></button>
+    <div class="row2" style="margin-top:8px;">
+      <button type="button" class="typebtn" onclick="ftInvite.copy()"><span class="bn">লিংক কপি</span><span class="en">Copy link</span></button>
+      <button type="button" class="typebtn" onclick="ftInvite.wa()">WhatsApp</button>
+    </div>
+    <div class="invHint" id="invHint"><span class="bn">ইনভাইট লিংক পেতে আগে অ্যাকাউন্ট খুলুন বা লগইন করুন (গেস্ট মোডে চ্যাট চলে না)।</span><span class="en">Create an account or log in to get your invite link (chat does not work in guest mode).</span></div>
   </div>
   <div class="box">
     <h3 data-i18n="backup_heading">লোকাল ব্যাকআপ</h3>
@@ -7434,11 +7483,110 @@ setInterval(function(){
 },5000);
 document.addEventListener('visibilitychange',function(){ if(!document.hidden) pull(); });
 window.addEventListener('focus',function(){ pull(); });
+window.ftChatApi={
+  welcome:async function(uid,name,text){
+    var s=R().ses(); if(!s||!uid||uid===s.uid||blocked(uid)) return 'skip';
+    var t0=load().th[uid]; if(t0&&t0.msgs&&t0.msgs.length) return 'exists';
+    try{ await register(); }catch(e){}
+    ensureTh(uid); var st=load(), t=st.th[uid]; if(name&&!t.name) t.name=name;
+    var ts=Date.now(), lid='p'+ts+Math.random().toString(36).slice(2,6), tt=String(text).slice(0,1000);
+    t.msgs.push({id:lid,me:1,t:tt,ts:ts,st:'s'}); t.last=ts; save(st);
+    var body={fromUid:s.uid,fromName:myName()||String(s.email).split('@')[0],fromEmail:s.email,fromUn:myUn(),text:tt,ts:ts};
+    try{
+      var rs=await db('chat/'+uid,{method:'POST',headers:J,body:JSON.stringify(body)});
+      var s2=load(), t2=s2.th[uid], m=t2&&t2.msgs.filter(function(x){ return x.id===lid; })[0]; if(m){ m.id='o'+rs.name; delete m.st; save(s2); }
+      if(pane==='fr') renderFr(); setBadge(); return 'ok';
+    }catch(e){
+      var s3=load(), t3=s3.th[uid]; if(t3){ t3.msgs=t3.msgs.filter(function(x){ return x.id!==lid; }); save(s3); }
+      return 'retry';
+    }
+  }
+};
 try{ build(); }catch(e){ console.warn('friend chat',e); }
 setTimeout(function(){ try{ build(); if(logged()){ register().catch(function(){}); pull(); } setBadge(); }catch(e){} },2800);
 setTimeout(function(){ try{ if(logged()) pull(); }catch(e){} },6000);
 })();
 </script>
 
+<style id="ftInviteCss">
+.lgInvite{margin:0 0 14px;padding:11px 13px;border-radius:14px;background:color-mix(in srgb,var(--primary) 10%,#fff);border:1px solid color-mix(in srgb,var(--primary) 28%,#fff);color:#101828;font-size:13px;line-height:1.45;text-align:left}
+.lgInvite b{color:var(--primary-d,var(--primary))}
+#lgGoogleBtn{display:flex;justify-content:center;min-height:44px;margin-top:12px}
+#inviteBox h3::before{width:17px;height:17px;border-radius:0;background:var(--primary);-webkit-mask:var(--ic-share) center/contain no-repeat;mask:var(--ic-share) center/contain no-repeat}
+#invLink{width:100%;box-sizing:border-box;margin:0 0 10px;padding:11px 12px;border-radius:12px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12.5px;font-family:inherit;text-overflow:ellipsis}
+.invHint{font-size:12.5px;color:var(--primary);margin-top:8px}
+</style>
+<script>
+/* ===== Invite friends: referral link (?ref=<uid>) -> friend is auto-added to chat after sign-up ===== */
+(function(){
+if(!window.ftCloud||!ftCloud._raw) return;
+var R=function(){return ftCloud._raw();}, $=function(i){return document.getElementById(i);}, LS=localStorage, PK='ftRefPending';
+var bnL=function(){return document.documentElement.lang!=='en';}, tx=function(b,e){return bnL()?b:e;};
+var BASE=/^https?:$/.test(location.protocol)?(location.origin+location.pathname.replace(/index\.html$/,'')):'https://mehedimadbor.github.io/FinTrack/';
+var busy=false, fails=0, nextAt=0;
+function E(v){ return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function sess(){ try{ var r=R(); return r.ok()?r.ses():null; }catch(e){ return null; } }
+function myName(){ try{ return LS.getItem('myName_v1')||''; }catch(e){ return ''; } }
+function toast(m){ var d=$('pfToast'); if(!d){ d=document.createElement('div'); d.id='pfToast'; d.className='pfToast'; document.body.appendChild(d); } d.textContent=m; d.classList.add('on'); clearTimeout(d._t); d._t=setTimeout(function(){ d.classList.remove('on'); },2800); }
+function link(){ var s=sess(); if(!s) return ''; var u=BASE+'?ref='+encodeURIComponent(s.uid), n=myName().slice(0,40); if(n) u+='&n='+encodeURIComponent(n); return u; }
+function pend(){ try{ var o=JSON.parse(LS.getItem(PK)||'null'); if(o&&o.u&&Date.now()-(o.t||0)<2592e6) return o; }catch(e){} return null; }
+function clear(){ try{ LS.removeItem(PK); }catch(e){} banner(); }
+function capture(){
+  try{
+    var q=new URLSearchParams(location.search), u=(q.get('ref')||'').trim(); if(!u) return;
+    if(/^[A-Za-z0-9_-]{6,64}$/.test(u)) LS.setItem(PK,JSON.stringify({u:u,n:(q.get('n')||'').slice(0,40),t:Date.now()}));
+    q.delete('ref'); q.delete('n'); var qs=q.toString();
+    history.replaceState(null,'',location.pathname+(qs?'?'+qs:'')+location.hash);
+  }catch(e){}
+}
+function banner(){
+  var b=$('lgInvite'); if(!b) return; var p=pend(); if(!p){ b.style.display='none'; return; }
+  var n=E(p.n||'');
+  b.innerHTML=n?('🎉 <b>'+n+'</b> '+tx('আপনাকে FinTrack-এ আমন্ত্রণ জানিয়েছেন।','invited you to FinTrack.')):('🎉 '+tx('একজন বন্ধু আপনাকে FinTrack-এ আমন্ত্রণ জানিয়েছেন।','A friend invited you to FinTrack.'));
+  b.innerHTML+='<br>'+tx('Google দিয়ে অ্যাকাউন্ট খুললেই চ্যাটে নিজে থেকে যুক্ত হয়ে যাবেন।','Sign up with Google and you will be added to their chat automatically.');
+  b.style.display='';
+}
+async function process(){
+  var p=pend(); if(!p||busy||Date.now()<nextAt) return;
+  var s=sess(); if(!s) return;
+  var ls=$('loginScreen'); if(ls&&getComputedStyle(ls).display!=='none') return;
+  if(p.u===s.uid){ clear(); return; }
+  var api=window.ftChatApi; if(!api) return;
+  busy=true;
+  try{
+    var nm=p.n||tx('ইনভাইটকারী','Inviter');
+    var r=await api.welcome(p.u,nm,tx('👋 হাই! আপনার ইনভাইট লিংক দিয়ে আমি FinTrack-এ যোগ দিলাম।','👋 Hi! I joined FinTrack through your invite link.'));
+    if(r==='retry'){ fails++; nextAt=Date.now()+20000; if(fails>=5) nextAt=Date.now()+36e5; }
+    else{ clear(); if(r==='ok') toast(tx('✅ '+nm+' আপনার চ্যাটে যুক্ত হয়েছেন','✅ '+nm+' was added to your chat')); }
+  }catch(e){ fails++; nextAt=Date.now()+20000; }
+  busy=false;
+}
+function need(){
+  var s=sess(); if(s) return s;
+  toast(tx('ইনভাইট লিংক পেতে আগে অ্যাকাউন্ট খুলুন বা লগইন করুন','Create an account or log in first to get your invite link'));
+  var fe=$('pfe'); if(fe){ var dt=fe.closest('details'); if(dt) dt.open=true; setTimeout(function(){ try{ fe.scrollIntoView({behavior:'smooth',block:'center'}); fe.focus(); }catch(e){} },80); }
+  return null;
+}
+function msgText(){ var n=myName(); return tx((n?n+' তোমাকে ':'')+'FinTrack-এ ইনভাইট করছে — হিসাব রাখার সহজ অ্যাপ। এই লিংকে Google দিয়ে অ্যাকাউন্ট খুললে আমার সাথে চ্যাটে যুক্ত হবে:','Join me on FinTrack, an easy money-tracking app. Sign up with Google through this link and we will be connected in chat:'); }
+function copyTxt(t){
+  function fb(){ try{ var a=document.createElement('textarea'); a.value=t; a.style.cssText='position:fixed;opacity:0'; document.body.appendChild(a); a.select(); var ok=document.execCommand('copy'); a.remove(); return ok; }catch(e){ return false; } }
+  var done=function(ok){ toast(ok?tx('লিংক কপি হয়েছে','Link copied'):tx('কপি করা যায়নি, লিংকটি চেপে ধরে কপি করুন','Could not copy, long-press the link to copy')); };
+  try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(function(){ done(true); },function(){ done(fb()); }); return; } }catch(e){}
+  done(fb());
+}
+window.ftInvite={
+  share:function(){ if(!need()) return; var u=link();
+    if(navigator.share){ navigator.share({title:'FinTrack',text:msgText(),url:u}).catch(function(e){ if(!e||e.name!=='AbortError') copyTxt(u); }); } else copyTxt(u); },
+  copy:function(){ if(!need()) return; copyTxt(link()); },
+  wa:function(){ if(!need()) return; window.open('https://wa.me/?text='+encodeURIComponent(msgText()+' '+link()),'_blank','noopener'); }
+};
+function render(){ var i=$('invLink'); if(!i) return; var s=sess(); i.value=link(); i.placeholder=tx('অ্যাকাউন্ট খুললে লিংক এখানে দেখাবে','Your link appears here once you have an account'); var h=$('invHint'); if(h) h.style.display=s?'none':''; }
+capture(); banner();
+if(pend()){ try{ var ls0=$('loginScreen'); if(ls0&&getComputedStyle(ls0).display!=='none') ftCloud.loginMode('up'); }catch(e){} }
+render(); setTimeout(process,1500);
+setInterval(function(){ try{ render(); process(); }catch(e){} },2500);
+['langBnBtn','langEnBtn'].forEach(function(id){ var b=$(id); if(b) b.addEventListener('click',function(){ setTimeout(function(){ render(); banner(); },80); }); });
+})();
+</script>
 </body>
 </html>
