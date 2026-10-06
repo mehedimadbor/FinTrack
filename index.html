@@ -868,11 +868,27 @@ header.top{position:relative}
 .ntIt.un b::after{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--primary);margin-left:6px}
 .ntEmpty{text-align:center;color:var(--muted);padding:28px 0;font-size:13.5px}
 .ntRow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:14px}.ntRow:last-of-type{border-bottom:0}
-.ntRow input[type=checkbox]{width:44px;height:26px;appearance:none;-webkit-appearance:none;border-radius:13px;background:var(--border);position:relative;flex:none;cursor:pointer;transition:background .2s}
-.ntRow input[type=checkbox]::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s}
-.ntRow input[type=checkbox]:checked{background:var(--green)}.ntRow input[type=checkbox]:checked::after{transform:translateX(18px)}
-#ntBox .st{font-size:13px;color:var(--muted);margin:2px 0 10px;line-height:1.5}#ntBox .st b{color:var(--text)}
-#ntBox .two{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.ntRow input[type=checkbox]{width:46px;height:26px;appearance:none;-webkit-appearance:none;border-radius:20px;background:var(--border);position:relative;flex:none;cursor:pointer;margin:0;padding:0;transition:background .2s}
+.ntRow input[type=checkbox]::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.ntRow input[type=checkbox]:checked{background:var(--primary)}.ntRow input[type=checkbox]:checked::after{transform:translateX(20px)}
+.ntRow input[type=time]{border:1px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);padding:8px 10px;font:inherit;font-size:13.5px}
+#ntPrefBox .st{font-size:12.5px;color:var(--muted);margin:0 0 8px;line-height:1.55;padding:10px 12px;border-radius:14px;background:color-mix(in srgb,var(--primary) 6%,transparent)}#ntPrefBox .st b{color:var(--text)}
+#ntPrefBox .main{width:100%;border:0;border-radius:13px;padding:12px;font:inherit;font-weight:700;background:var(--primary);color:#fff;cursor:pointer}
+#ntPrefBox .two{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+</style>
+<style id="ftLoginV3">
+html body .loginScreen .loginBox>#lgTabs:not([style*="none"]){display:flex !important;order:5;gap:4px;padding:5px;margin:0 0 16px;border-radius:999px;background:color-mix(in srgb,var(--text) 7%,var(--card));border:1px solid var(--border)}
+html body .loginScreen .lgTabs .lgTab{flex:1;height:46px;border:0;border-radius:999px;background:transparent !important;color:var(--muted) !important;font-size:15px;font-weight:800;cursor:pointer;box-shadow:none;transition:background .2s,color .2s,box-shadow .2s;-webkit-tap-highlight-color:transparent}
+html body .loginScreen .lgTabs .lgTab.on{background:linear-gradient(135deg,var(--primary),color-mix(in srgb,var(--primary) 60%,#7c3aed)) !important;color:#fff !important;box-shadow:0 10px 22px -8px color-mix(in srgb,var(--primary) 80%,transparent)}
+html body .loginScreen .loginBox .loginBtn{background:linear-gradient(135deg,var(--primary),color-mix(in srgb,var(--primary) 60%,#7c3aed)) !important;color:#fff !important;font-weight:800 !important;letter-spacing:.2px;box-shadow:0 14px 28px -10px color-mix(in srgb,var(--primary) 85%,transparent) !important;transition:transform .12s,box-shadow .2s,opacity .2s}
+html body .loginScreen .loginBox .loginBtn:active{transform:scale(.97)}
+html body .loginScreen .loginBox .loginBtn:disabled{opacity:.75;pointer-events:none}
+html body .loginScreen .loginBox .loginBtn:disabled::after{content:"";display:inline-block;width:16px;height:16px;margin-left:10px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;vertical-align:-3px;animation:lgSpin .7s linear infinite}
+@keyframes lgSpin{to{transform:rotate(360deg)}}
+html body .loginScreen .lgGuest{border-color:color-mix(in srgb,var(--primary) 45%,var(--border));color:var(--primary);font-weight:700}
+.lgSwitch a{display:inline-block;margin-left:6px;padding:7px 16px;border:0 !important;border-radius:999px;background:color-mix(in srgb,var(--primary) 14%,var(--card));color:var(--primary) !important;font-weight:800;-webkit-tap-highlight-color:transparent}
+.loginScreen .lgTitle>span,.loginScreen #lgUpOnly{animation:lgIn .28s ease both}
+@keyframes lgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
@@ -901,7 +917,7 @@ header.top{position:relative}
       <input type="text" class="lgIn lgInName" id="loginNameInput" data-i18n-ph="lg_ph_name" placeholder="আপনার নাম" autocomplete="name">
     </div>
     <div id="loginCloud">
-      <input type="email" class="lgIn lgInMail" id="lgEmail" data-i18n-ph="lg_ph_email" placeholder="ইমেইল ঠিকানা" autocomplete="email">
+      <input type="email" class="lgIn lgInMail" id="lgEmail" data-i18n-ph="lg_ph_email" placeholder="ইমেইল ঠিকানা" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next">
       <div class="lgPw"><input type="password" class="lgIn lgInPass" id="lgPass" data-i18n-ph="lg_ph_pass" placeholder="পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)" autocomplete="new-password"><button type="button" class="lgEye" id="lgEye" onclick="ftCloud.loginEye()"><span class="bn">দেখান</span><span class="en">Show</span></button></div>
       <div class="lgLink" id="lgForgot" style="display:none;" onclick="ftCloud.loginReset()"><span class="bn">পাসওয়ার্ড ভুলে গেছেন?</span><span class="en">Forgot password?</span></div>
       <div class="lgStatus" id="lgStatus"></div>
@@ -1281,7 +1297,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     ui();
   }
   /* ---- login screen: create account (name+email+password) / log in / guest ---- */
-  var lgMode='up', EM=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  var lgMode='up', EM=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
   function lgStatus(m,bad){ var e=$('lgStatus'); if(!e) return; e.textContent=m||''; e.className='lgStatus'+(bad?' bad':''); }
   async function loginAuth(kind,em,pw){
     var j=await authReq(kind==='up'?'signUp':'signInWithPassword',{email:em,password:pw,returnSecureToken:true});
@@ -1301,9 +1317,9 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     var b=$('lgBtn'); b.disabled=true; lgStatus(tx('অপেক্ষা করুন…','Please wait…'));
     try{
       var res=await loginAuth(lgMode,em,pw);
-      if(res==='restored'){ lgStatus(tx('আপনার ডেটা ফিরিয়ে আনা হচ্ছে…','Restoring your data…')); return; }
+      if(res==='restored'){ lgStatus(tx('আপনার ডেটা ফিরিয়ে আনা হচ্ছে…','Restoring your data…')); setTimeout(function(){ b.disabled=false; },8000); return; }
     }catch(e){ lgStatus(errMsg(e),true); b.disabled=false; return; }
-    b.disabled=false; $('lgPass').value='';
+    b.disabled=false; $('lgPass').value=''; $('lgPass').type='password'; try{ $('lgEye').innerHTML='<span class="bn">দেখান</span><span class="en">Show</span>'; }catch(e){}
     if(typeof loginContinue==='function') loginContinue();
     setTimeout(function(){ ui(); sync(); },1200);
   }
@@ -1373,6 +1389,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
       if(!confirm(tx('অ্যাকাউন্ট থেকে লগআউট করবেন? এই ফোনের ডেটা মুছবে না।','Log out of your account? Data on this phone stays.'))) return;
       setSes(null); _rem.call(LS,BASE); _rem.call(LS,DIRTY); idTok='';
       try{ localStorage.removeItem('loginDone_v1'); }catch(e){}
+      document.documentElement.classList.remove('hasUser','locked');
       var lk=$('lockOverlay'); if(lk) lk.style.display='none';
       var ls=$('loginScreen'); if(ls) ls.style.display='flex';
       var nm=$('loginNameInput'); if(nm) nm.value=''; try{ if(window.loginPicRefresh) loginPicRefresh(); }catch(e){}
@@ -6325,6 +6342,80 @@ run(); setTimeout(run,700); setTimeout(run,2200);
 })();
 </script>
 
+<style id="ftThemePick">
+/* theme circles (diagonal split) */
+#sec-settings .thWrap{display:flex;flex-wrap:wrap;gap:14px;padding:6px 6px 12px}
+#sec-settings .thWrap .thGroup{display:none}
+#sec-settings .thWrap .thGrid{display:contents}
+#sec-settings .thWrap .swatch{width:54px;height:54px;border-radius:50%;flex:none;overflow:hidden;position:relative;border:0;cursor:pointer;background:var(--sb,#f4f5f7) !important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);transform:none;transition:transform .15s,box-shadow .2s;-webkit-tap-highlight-color:transparent}
+#sec-settings .thWrap .swatch::before{display:none !important}
+#sec-settings .thWrap .swatch::after,#sec-settings .thWrap .swatch.active::after{content:"";display:block;position:absolute;inset:auto;top:auto;left:auto;right:0;bottom:0;margin:0;width:62%;height:62%;border-radius:100% 0 0 0;background:var(--sa,#2563eb);-webkit-mask:none;mask:none;filter:none}
+#sec-settings .thWrap .swatch.active{box-shadow:0 0 0 2.5px var(--card),0 0 0 5px var(--text);transform:none}
+#sec-settings .thWrap .swatch:active{transform:scale(.92)}
+/* wallpaper upload */
+#wpBox{margin-top:2px}
+#wpBox .wpRow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#wpBox .wpAdd{display:inline-flex;align-items:center;gap:12px;padding:8px 18px 8px 8px;border:1.5px dashed color-mix(in srgb,var(--muted) 45%,transparent);border-radius:22px;cursor:pointer;font-size:14px;font-weight:600;color:var(--text);-webkit-tap-highlight-color:transparent;transition:background .2s}
+#wpBox .wpAdd:active{background:color-mix(in srgb,var(--primary) 8%,transparent)}
+#wpBox .wpChip{width:40px;height:40px;border-radius:12px;flex:none;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--muted) 16%,var(--card)) center/cover no-repeat;color:var(--muted)}
+#wpBox .wpChip .mi{width:20px;height:20px}
+#wpBox .wpRm{border:1px solid var(--border);background:var(--card);color:var(--red);border-radius:20px;padding:9px 14px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+#wpBox .wpDim{display:flex;align-items:center;gap:12px;margin-top:12px;font-size:12.5px;font-weight:600;color:var(--muted)}
+#wpBox .wpDim input{flex:1;accent-color:var(--primary)}
+#wpBox .wpMsg{font-size:12.5px;font-weight:600;margin-top:8px;color:var(--red)}.wpMsg:empty{display:none}
+#lockOverlay .lockWp{position:fixed !important;inset:0;z-index:0 !important;display:none;background-size:cover;background-position:center;background-repeat:no-repeat;pointer-events:none}
+html.hasLockWp #lockOverlay .lockWp{display:block}
+html.hasLockWp #lockOverlay .lockBg,html.hasLockWp #lockOverlay .lkOrb{display:none !important}
+</style>
+<script>
+/* ===== Theme circles + custom wallpaper ===== */
+(function(){
+var WK='customWallpaper_v1',DK='wpDim_v1',$=function(i){return document.getElementById(i)};
+function T(b,e){var en=false;try{en=currentLang==='en'}catch(x){}return en?e:b}
+function get(k){try{return localStorage.getItem(k)||''}catch(e){return ''}}
+function put(k,v){try{if(v)localStorage.setItem(k,v);else localStorage.removeItem(k);return true}catch(e){return false}}
+function paint(){document.querySelectorAll('#sec-settings .swatch').forEach(function(s){
+  if(s.dataset.pk)return;var m=((s.style.background||s.style.backgroundImage||s.getAttribute('style')||'')+'').match(/#[0-9a-fA-F]{6}\b|rgba?\([^)]*\)/g);
+  if(m&&m.length>=2){s.style.setProperty('--sb',m[0]);s.style.setProperty('--sa',m[1]);s.dataset.pk='1'}})}
+paint();setTimeout(paint,800);setTimeout(paint,2300);
+var lo=$('lockOverlay'),layer=document.createElement('div');layer.className='lockWp';
+if(lo){var lb=$('lockBg');if(lb&&lb.parentNode===lo)lb.insertAdjacentElement('afterend',layer);else lo.insertBefore(layer,lo.firstChild)}
+function applyWp(){
+  var u=get(WK),d=parseInt(get(DK)||'35',10);if(isNaN(d))d=35;var de=document.documentElement;
+  if(u){var g='color-mix(in srgb,var(--bg) '+d+'%,transparent)';de.classList.add('hasLockWp');layer.style.backgroundImage='linear-gradient('+g+','+g+'),url("'+u+'")'}
+  else{de.classList.remove('hasLockWp');layer.style.backgroundImage=''}}
+applyWp();
+var row=$('themeRow');if(!row)return;
+var ui=document.createElement('div');ui.id='wpBox';row.insertAdjacentElement('afterend',ui);
+function msg(t){var m=$('wpMsg');if(m)m.textContent=t||''}
+function render(){
+  var u=get(WK),d=get(DK)||'35';
+  ui.innerHTML='<div class="wpRow"><label class="wpAdd" for="wpInput"><span class="wpChip" id="wpChip">'+(u?'':'<i class="mi" style="--m:var(--ic-image)"></i>')+'</span><span>'+(u?T('লক স্ক্রিনের ওয়ালপেপার বদলান','Change lock screen wallpaper'):T('লক স্ক্রিনের ওয়ালপেপার যোগ করুন','Add lock screen wallpaper'))+'</span></label>'
+   +(u?'<button type="button" class="wpRm" id="wpRm">'+T('সরিয়ে দিন','Remove')+'</button>':'')+'</div>'
+   +'<input type="file" id="wpInput" accept="image/*" hidden>'
+   +(u?'<div class="wpDim"><span>'+T('ঝাপসা','Dim')+'</span><input type="range" id="wpRange" min="0" max="80" value="'+d+'"></div>':'')
+   +'<div style="font-size:12px;color:var(--muted);margin-top:8px">'+T('এই ছবি শুধু লক স্ক্রিনে দেখাবে','This image shows on the lock screen only')+'</div>'
+   +'<div class="wpMsg" id="wpMsg"></div>';
+  if(u){var c=$('wpChip');if(c)c.style.backgroundImage='url("'+u+'")'}}
+function fit(img,max,q){var r=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*r);c.height=Math.round(img.height*r);c.getContext('2d').drawImage(img,0,0,c.width,c.height);return c.toDataURL('image/jpeg',q)}
+function load(f){
+  if(!f||!/^image\//.test(f.type)){msg(T('শুধু ছবি দিন','Please choose an image'));return}
+  var fr=new FileReader();
+  fr.onload=function(){var img=new Image();
+    img.onload=function(){var ok=false,s=[[1280,.82],[900,.75],[640,.7]];
+      for(var i=0;i<s.length&&!ok;i++){try{ok=put(WK,fit(img,s[i][0],s[i][1]))}catch(e){ok=false}}
+      if(!ok){msg(T('ছবিটি সংরক্ষণ করা যায়নি, ছোট ছবি দিন','Could not save this image, try a smaller one'));return}
+      applyWp();render()};
+    img.onerror=function(){msg(T('ছবিটি পড়া যায়নি','Could not read this image'))};img.src=fr.result};
+  fr.readAsDataURL(f)}
+ui.addEventListener('change',function(e){if(e.target.id==='wpInput'){load(e.target.files&&e.target.files[0]);e.target.value=''}});
+ui.addEventListener('input',function(e){if(e.target.id==='wpRange'){put(DK,e.target.value);applyWp()}});
+ui.addEventListener('click',function(e){if(e.target.closest('#wpRm')){put(WK,'');applyWp();render()}});
+render();
+var _al=window.applyLanguage;if(typeof _al==='function')window.applyLanguage=function(){var r=_al.apply(this,arguments);try{render()}catch(e){}return r};
+})();
+</script>
+
 <style id="ftReqCss">
 .rqSeg{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:4px;border-radius:14px;background:color-mix(in srgb,var(--muted) 14%,transparent);margin-bottom:10px}
 .rqSeg button{border:0;border-radius:11px;padding:10px 6px;font-weight:700;font-size:12.5px;background:transparent;color:var(--muted);cursor:pointer;font-family:inherit}
@@ -8054,12 +8145,39 @@ function adv(){
   const n=6, xs=[0,1,2,3,4,5], sx=15, sy=sum(E.map(v=>({amount:v}))), sxy=xs.reduce((a,x)=>a+x*E[x],0), slope=(n*sxy-sx*sy)/(n*55-sx*sx);
   let score=Math.round((sr==null?0:Math.min(Math.max(sr,0),30)/30)*35+(runway==null?(bal>0?25:0):Math.min(runway,90)/90*25)+(1-Math.min(dr,1))*20+(em==null?0:Math.min(Math.max(em,0),6)/6*20));
   const sc=score>=70?'var(--green)':score>=40?'var(--amber)':'var(--red)', lb=score>=70?Lg('ভালো','Good'):score>=40?Lg('মোটামুটি','Fair'):Lg('সতর্ক','Needs care');
+  /* --- daily spend allowance = available balance / days left in month (live) --- */
+  const spT=sum(T.filter(x=>x.date===today&&isExpenseLike(x))), dl=left+1, base=Math.max(0,bal+spT), allow=Math.floor(base/dl), rem=allow-spT;
+  const dpct=allow>0?Math.min(100,Math.round(spT/allow*100)):(spT>0?100:0), dover=spT>allow, dst=dover||base<=0?'over':(dpct>=80?'warn':'ok');
+  const nextAllow=dl>1?Math.floor(Math.max(0,bal)/(dl-1)):null;
+  let vd; if(bal<=0) vd=Lg('ব্যালেন্স শেষ — নতুন আয় আসা পর্যন্ত খরচ থামান','Balance is used up — pause spending until new income arrives');
+  else if(burn>allow) vd=Lg('আপনার গড় দৈনিক খরচ '+fmt(burn)+', সীমার চেয়ে '+fmt(burn-allow)+' বেশি — এভাবে চললে ব্যালেন্স প্রায় '+runway+' দিন চলবে, মাস পুরো হবে না','Your average daily spend is '+fmt(burn)+', '+fmt(burn-allow)+' above the limit — at this pace the balance lasts about '+runway+' days, not the whole month');
+  else vd=Lg('গড় দৈনিক খরচ '+fmt(burn)+' — এই গতিতে মাস শেষে প্রায় '+fmt(Math.max(0,bal-burn*dl))+' বাঁচবে','Average daily spend is '+fmt(burn)+' — at this pace about '+fmt(Math.max(0,bal-burn*dl))+' will be left at month end');
+  const hero='<div class="advDay s-'+dst+'"><div class="adH"><span>'+ic('target')+' '+Lg('আজকের খরচের সীমা','Today\'s spending limit')+'</span><em class="adLive"><i></i>'+Lg('লাইভ','Live')+'</em></div>'
+   +'<div class="adBig"><b>'+(base<=0?fmt(0):fmt(Math.abs(rem)))+'</b><small>'+(base<=0?Lg('আজ খরচ করার মতো ব্যালেন্স নেই','No balance left to spend today'):dover?Lg('আজকের সীমা ছাড়িয়েছেন','over today\'s limit'):Lg('আজ আর খরচ করতে পারবেন','you can still spend today'))+'</small></div>'
+   +'<div class="adBar"><i style="width:'+dpct+'%"></i></div>'
+   +'<div class="adRow"><div><small>'+Lg('ব্যালেন্স','Balance')+'</small><b>'+fmt(bal)+'</b></div><div><small>'+Lg('বাকি দিন (আজসহ)','Days left (incl. today)')+'</small><b>'+dl+'</b></div><div><small>'+Lg('দৈনিক সীমা','Daily limit')+'</small><b>'+fmt(allow)+'</b></div></div>'
+   +'<div class="adNote">'+Lg('হিসাব: ','Formula: ')+fmt(base)+' ÷ '+dl+Lg(' দিন',' days')+' = '+fmt(allow)+' · '+Lg('আজ খরচ ','spent today ')+fmt(spT)+'</div>'
+   +(nextAllow!=null&&bal>0?'<div class="adNote">'+Lg('আজ আর খরচ না করলে কাল থেকে দৈনিক ','If you stop spending today, daily limit from tomorrow: ')+fmt(nextAllow)+'</div>':'')
+   +'<div class="adNote adV">'+vd+'</div></div>';
+  if(!$('ftAdvDayCss')){ const st=document.createElement('style'); st.id='ftAdvDayCss'; st.textContent=
+   '.advDay{border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:10px;background:linear-gradient(160deg,color-mix(in srgb,var(--c0) 12%,var(--card)),var(--card));--c0:var(--green)}'
+   +'.advDay.s-warn{--c0:var(--amber)}.advDay.s-over{--c0:var(--red)}'
+   +'.advDay .adH{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:800}'
+   +'.advDay .adLive{display:inline-flex;align-items:center;gap:5px;font-style:normal;font-size:10.5px;font-weight:800;color:var(--c0);background:color-mix(in srgb,var(--c0) 14%,transparent);padding:3px 9px;border-radius:20px}'
+   +'.advDay .adLive i{width:7px;height:7px;border-radius:50%;background:var(--c0);animation:adPulse 1.6s infinite}'
+   +'@keyframes adPulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--c0) 55%,transparent)}100%{box-shadow:0 0 0 8px transparent}}'
+   +'.advDay .adBig{margin:10px 0 8px}.advDay .adBig b{display:block;font-size:30px;font-weight:800;line-height:1.1;color:var(--c0)}.advDay .adBig small{font-size:12.5px;color:var(--muted);font-weight:600}'
+   +'.advDay .adBar{height:8px;border-radius:8px;background:var(--border);overflow:hidden;margin-bottom:12px}.advDay .adBar i{display:block;height:100%;border-radius:8px;background:var(--c0);transition:width .5s}'
+   +'.advDay .adRow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}.advDay .adRow div{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:8px 6px;text-align:center}'
+   +'.advDay .adRow small{display:block;font-size:10.5px;color:var(--muted);font-weight:700}.advDay .adRow b{display:block;font-size:14px;font-weight:800;margin-top:2px}'
+   +'.advDay .adNote{font-size:12px;color:var(--muted);line-height:1.5;margin-top:4px}.advDay .adV{color:var(--text);font-weight:600;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)}';
+   document.head.appendChild(st); }
   const tile=(l,v,s2)=>'<div class="advT"><small>'+l+'</small><b>'+v+'</b><small>'+s2+'</small></div>';
-  let h=head+'<div class="advG"><div class="advT w"><small>'+ic('gauge')+' '+Lg('আর্থিক স্বাস্থ্য স্কোর','Financial health score')+'</small><b style="color:'+sc+'">'+score+'/100 · '+lb+'</b><div class="advBar"><i style="width:'+score+'%;background:'+sc+'"></i></div></div>'
+  let h=head+hero+'<div class="advG"><div class="advT w"><small>'+ic('gauge')+' '+Lg('আর্থিক স্বাস্থ্য স্কোর','Financial health score')+'</small><b style="color:'+sc+'">'+score+'/100 · '+lb+'</b><div class="advBar"><i style="width:'+score+'%;background:'+sc+'"></i></div></div>'
    +tile(Lg('সঞ্চয়ের হার','Savings rate'),sr==null?'—':sr+'%',Lg('এই মাসের আয় থেকে','of this month\'s income'))
    +tile(Lg('ব্যালেন্সে চলবে','Runway'),runway==null?'—':runway+Lg(' দিন',' days'),Lg('দৈনিক গড় ','avg ')+fmt(burn))
    +tile(Lg('মাস শেষে খরচ','Month-end spend'),fmt(proj),Lg('বর্তমান গতিতে','at current pace'))
-   +tile(Lg('দৈনিক নিরাপদ সীমা','Safe daily limit'),left>0?fmt(safe):'—',Lg('বাকি '+left+' দিন','for '+left+' days left'))
+   +tile(Lg('মাস শেষ হতে','Until month end'),dl+Lg(' দিন',' days'),Lg('আজসহ বাকি দিন','including today'))
    +tile(Lg('নিট সম্পদ','Net worth'),fmt(nw),Lg('ব্যালেন্স+সঞ্চয়+পাওনা−দেনা','balance+savings+owed−debt'))
    +tile(Lg('জরুরি তহবিল','Emergency fund'),em==null?'—':em.toFixed(1)+Lg(' মাস',' mo'),Lg('গড় মাসিক খরচের ভিত্তিতে','at avg monthly spend'))+'</div>';
   const mx=Math.max(1,...I,...E);
@@ -8080,6 +8198,8 @@ function adv(){
 }
 const _u=window.updateHome; window.updateHome=function(){ if(_u) _u.apply(this,arguments); try{adv();}catch(e){console.error(e);} };
 try{adv();}catch(e){}
+setInterval(function(){try{adv();}catch(e){}},30000);
+document.addEventListener('visibilitychange',function(){ if(!document.hidden){ try{adv();}catch(e){} } });
 })();
 </script>
 <script>
@@ -8194,17 +8314,24 @@ bell.addEventListener('click',openSheet);
 ov.addEventListener('click',e=>{ if(e.target===ov){ closeSheet(); return; } const a=e.target.closest('[data-a]'); if(a){ if(a.dataset.a==='read'){ log.forEach(x=>x.r=1); } else { log=[]; } jset(LK,log); badge(); render(); return; }
   const it=e.target.closest('.ntIt'); if(it){ const x=log[+it.dataset.i]; if(x){ x.r=1; jset(LK,log); badge(); open(x.type); } } });
 /* ---------- settings card ---------- */
-const box=document.createElement('div'); box.className='box'; box.id='ntBox';
+const box=document.createElement('details'); box.className='box setBox'; box.id='ntPrefBox'; box.dataset.pro='1';
+const bsum=document.createElement('summary');
+bsum.innerHTML='<span class="setIco" style="--c:#f59e0b">'+mi('bell')+'</span><div class="setTt"><h3></h3><small class="setSub"></small></div><span class="setPill"></span><svg viewBox="0 0 24 24" class="setChev"><path d="m9 6 6 6-6 6"/></svg>';
+const bbody=document.createElement('div'); bbody.className='setBody';
+box.appendChild(bsum); box.appendChild(bbody);
 const ROWS=[['msg','বন্ধুর নতুন মেসেজ','New friend messages'],['req','টাকার অনুরোধ','Money requests'],['rem','আমার রিমাইন্ডার','My reminders'],['loan','ধার ফেরতের তারিখ','Loan due dates'],['limit','দৈনিক খরচের সীমা','Daily spending limit'],['daily','প্রতিদিন হিসাব লেখার তাগিদ','Daily entry nudge'],['vib','ভাইব্রেশন','Vibration']];
+const NG=[['বন্ধু ও লেনদেন','Friends & requests',['msg','req']],['আর্থিক সতর্কতা','Money alerts',['loan','limit']],['রিমাইন্ডার ও তাগিদ','Reminders & nudges',['rem','daily','__time']],['ফিডব্যাক','Feedback',['vib']]];
 function status(){
   const p=perm(); return p==='granted'?'<b style="color:var(--green)">'+L('চালু আছে','Enabled')+'</b>':p==='denied'?'<b style="color:var(--red)">'+L('ব্লক করা আছে — ব্রাউজারের সাইট সেটিংস থেকে অনুমতি দিন','Blocked — allow it in the browser site settings')+'</b>':p==='unsupported'?'<b>'+L('এই ব্রাউজারে সিস্টেম নোটিফিকেশন নেই; অ্যাপের ভেতরের নোটিফিকেশন কাজ করবে','System notifications are not available here; in-app alerts still work')+'</b>':'<b>'+L('এখনো অনুমতি দেওয়া হয়নি','Permission not granted yet')+'</b>';
 }
 function drawBox(){
-  box.innerHTML='<h3>'+ic('bell')+' '+L('নোটিফিকেশন','Notifications')+'</h3><div class="st">'+L('সিস্টেম নোটিফিকেশন: ','System notifications: ')+status()+'<br>'+L('অ্যাপ খোলা বা ব্যাকগ্রাউন্ডে থাকলে মেসেজ ও রিমাইন্ডার ফোনের নোটিফিকেশনে আসবে। অ্যাপ পুরোপুরি বন্ধ থাকলে আসে না।','Alerts arrive while the app is open or in the background. They cannot arrive once it is fully closed.')+'</div>'
+  bsum.querySelector('h3').textContent=L('নোটিফিকেশন','Notifications');
+  bsum.querySelector('.setSub').textContent=L('মেসেজ, রিমাইন্ডার ও সতর্কতা','Messages, reminders & alerts');
+  bsum.querySelector('.setPill').textContent=perm()==='granted'?L('চালু','On'):perm()==='denied'?L('ব্লক','Blocked'):L('বন্ধ','Off');
+  bbody.innerHTML='<div class="st">'+L('সিস্টেম নোটিফিকেশন: ','System notifications: ')+status()+'<br>'+L('অ্যাপ খোলা বা ব্যাকগ্রাউন্ডে থাকলে মেসেজ ও রিমাইন্ডার ফোনের নোটিফিকেশনে আসবে। অ্যাপ পুরোপুরি বন্ধ থাকলে আসে না।','Alerts arrive while the app is open or in the background. They cannot arrive once it is fully closed.')+'</div>'
    +(perm()==='default'?'<button type="button" class="main" data-a="ask" style="margin:0 0 8px">'+L('নোটিফিকেশন চালু করুন','Turn on notifications')+'</button>':'')
-   +'<div class="ntRow"><span>'+L('ফোনের নোটিফিকেশন দেখান','Show system notifications')+'</span><input type="checkbox" data-k="sys"'+(P.sys?' checked':'')+'></div>'
-   +ROWS.map(r=>'<div class="ntRow"><span>'+L(r[1],r[2])+'</span><input type="checkbox" data-k="'+r[0]+'"'+(P[r[0]]?' checked':'')+'></div>').join('')
-   +'<div class="ntRow"><span>'+L('তাগিদের সময়','Nudge time')+'</span><input type="time" id="ntTime" value="'+P.dailyTime+'" style="width:auto"></div>'
+   +'<div class="ntSub">'+L('সাধারণ','General')+'</div><div class="ntRow"><span>'+L('ফোনের নোটিফিকেশন দেখান','Show system notifications')+'</span><input type="checkbox" data-k="sys"'+(P.sys?' checked':'')+'></div>'
+   +NG.map(g=>'<div class="ntSub">'+L(g[0],g[1])+'</div>'+g[2].map(k=>{ if(k==='__time') return '<div class="ntRow"><span>'+L('তাগিদের সময়','Nudge time')+'</span><input type="time" id="ntTime" value="'+P.dailyTime+'" style="width:auto"></div>'; const r=ROWS.find(x=>x[0]===k); return r?'<div class="ntRow"><span>'+L(r[1],r[2])+'</span><input type="checkbox" data-k="'+r[0]+'"'+(P[r[0]]?' checked':'')+'></div>':''; }).join('')).join('')
    +'<div class="two"><button type="button" class="typebtn" data-a="test">'+L('টেস্ট পাঠান','Send test')+'</button><button type="button" class="typebtn" data-a="open">'+L('নোটিফিকেশন দেখুন','Open inbox')+'</button></div>';
 }
 box.addEventListener('change',e=>{ const k=e.target.dataset&&e.target.dataset.k; if(k){ P[k]=e.target.checked; saveP(); } if(e.target.id==='ntTime'&&e.target.value){ P.dailyTime=e.target.value; saveP(); } });
@@ -8221,6 +8348,72 @@ setInterval(()=>{ try{ scan(); }catch(e){} },10000);
 document.addEventListener('visibilitychange',()=>{ badge(); if(!document.hidden) setTimeout(scan,600); });
 window.addEventListener('focus',()=>setTimeout(scan,600));
 window.ftNotify=notify;
+})();
+</script>
+
+<style id="ftSetCats">
+#sec-settings .ftSetGrp{margin:22px 4px 10px}
+#sec-settings .ftSetGrp:first-of-type{margin-top:14px}
+.ntSub,.ftSub{display:block;font-size:11.5px;font-weight:800;letter-spacing:.4px;color:var(--muted);margin:14px 0 2px}
+.ntSub:first-child,.ftSub:first-child{margin-top:2px}
+</style>
+<script>
+/* ===== FinTrack: settings arranged by category ===== */
+(function(){
+var sec=document.getElementById('sec-settings'); if(!sec) return;
+var bl=function(b,e){return '<span class="bn">'+b+'</span><span class="en">'+e+'</span>';};
+var CATS=[
+ {k:'acct',b:'প্রোফাইল ও অ্যাকাউন্ট',e:'Profile & account',m:['i:settings_profile','id:inviteBox','id:accountBox']},
+ {k:'look',b:'চেহারা ও ভাষা',e:'Appearance & language',m:['theme','i:settings_lang','i:settings_logo']},
+ {k:'money',b:'অর্থ ও বাজেট',e:'Money & budget',m:['i:settings_budget','i:settings_goal','id:spSetBox','i:settings_recurring','id:payBox']},
+ {k:'notif',b:'নোটিফিকেশন ও রিমাইন্ডার',e:'Notifications & reminders',m:['id:rmBox','id:ntPrefBox','id:ntBox']},
+ {k:'sec',b:'নিরাপত্তা ও প্রাইভেসি',e:'Security & privacy',m:['i:lock_heading','i:pin_heading','id:secPlusBox']},
+ {k:'app',b:'অ্যাপ পছন্দ ও উইজেট',e:'App preferences & widget',m:['id:prefPlusBox','id:wgSetBox']},
+ {k:'data',b:'ডেটা, ব্যাকআপ ও ক্লাউড',e:'Data, backup & cloud',m:['i:backup_heading','id:cloudSyncBox']},
+ {k:'help',b:'সহায়তা ও ডেভেলপার',e:'Support & developer',m:['i:contact_heading','id:devModeBox','i:dev_mode_title']}
+];
+var heads=CATS.map(function(c){var d=document.createElement('div'); d.className='setGroup ftSetGrp'; d.dataset.g=c.k; d.innerHTML=bl(c.b,c.e); return d;});
+function keys(b){
+  var k=[]; if(b.id) k.push('id:'+b.id);
+  var h=b.querySelector('summary h3[data-i18n], :scope > h3[data-i18n]'); if(h) k.push('i:'+h.getAttribute('data-i18n'));
+  if(b.dataset.pro==='theme') k.push('theme');
+  return k;
+}
+function place(b){
+  var ks=keys(b);
+  for(var c=0;c<CATS.length;c++){ for(var i=0;i<CATS[c].m.length;i++){ if(ks.indexOf(CATS[c].m[i])>-1) return [c,i]; } }
+  return [5,99];
+}
+function subs(){
+  function add(id,need,list,fix){
+    var body=document.querySelector('#'+id+' > .setBody'); if(!body||body.dataset.ftSub) return;
+    var rows=[].slice.call(body.querySelectorAll(':scope > label.ftRow')); if(rows.length<need) return;
+    if(fix) fix(body,rows);
+    list.forEach(function(s){ var d=document.createElement('div'); d.className='ftSub'; d.innerHTML=bl(s[1],s[2]); rows[s[0]].before(d); });
+    body.dataset.ftSub='1';
+  }
+  add('secPlusBox',4,[[0,'অ্যাপ লক','App lock'],[2,'প্রাইভেসি','Privacy'],[3,'ফিডব্যাক','Feedback']],function(body,rows){ var lb=body.querySelector(':scope > button.typebtn'); if(lb) rows[1].after(lb); });
+  add('prefPlusBox',3,[[0,'সংখ্যা ও ফরম্যাট','Numbers & format'],[2,'ব্যাকআপ','Backup']]);
+}
+var busy=false;
+function run(){
+  if(busy) return; busy=true;
+  try{
+    [].slice.call(sec.querySelectorAll(':scope > .setGroup:not(.ftSetGrp)')).forEach(function(e){e.remove();});
+    var boxes=[].slice.call(sec.children).filter(function(el){return el.matches('details.setBox, .box');});
+    var buckets=CATS.map(function(){return [];});
+    boxes.forEach(function(b){ var p=place(b); buckets[p[0]].push([p[1],b]); });
+    var want=[];
+    CATS.forEach(function(c,ci){ var a=buckets[ci]; if(!a.length) return; a.sort(function(x,y){return x[0]-y[0];}); want.push(heads[ci]); a.forEach(function(x){want.push(x[1]);}); });
+    var cur=[].slice.call(sec.children).filter(function(el){return want.indexOf(el)>-1;});
+    var same=cur.length===want.length&&cur.every(function(e,i){return e===want[i];});
+    if(!same){ var ref=sec.querySelector(':scope > .setHero'); want.forEach(function(el){ if(ref) ref.after(el); else sec.prepend(el); ref=el; }); }
+    subs();
+  }catch(e){ console.warn('settings cats',e); }
+  busy=false;
+}
+var t; new MutationObserver(function(){ clearTimeout(t); t=setTimeout(run,120); }).observe(sec,{childList:true});
+run(); setTimeout(run,900); setTimeout(run,2600);
 })();
 </script>
 </body>
