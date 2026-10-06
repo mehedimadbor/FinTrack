@@ -7122,6 +7122,16 @@ window.ftReqApi={
 .fcQ .fcNm button,.fcQ .fcMore{font:inherit;cursor:pointer;border:0;background:transparent;color:var(--primary);font-weight:800;font-size:12.5px;padding:4px 2px}
 .fcQ .fcMore{display:block;margin:0 0 6px}
 .fcQ .sm2 button{padding:6px 11px;font-size:12px}
+.fcTabs{display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x proximity;margin:0 -4px 10px;padding:2px 4px 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}.fcTabs::-webkit-scrollbar{display:none}
+.fcTabs button{flex:none;scroll-snap-align:center;display:flex;align-items:center;gap:6px;font:inherit;font-size:12.5px;font-weight:800;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:20px;padding:8px 13px;white-space:nowrap;transition:transform .12s,background .15s}
+.fcTabs button:active{transform:scale(.95)}.fcTabs button .mi{width:16px;height:16px}
+.fcTabs button.on{background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 4px 12px color-mix(in srgb,var(--primary) 30%,transparent)}
+.fcTabs i.sep{flex:none;width:1px;background:var(--border);margin:4px 2px}
+.fcTabs button.qa{background:transparent;color:var(--muted)}
+.fcFx{display:grid;gap:6px;margin:0 0 10px}
+.fcFx div{display:flex;align-items:center;gap:8px;font-size:12.5px;line-height:1.35;border-radius:12px;padding:8px 10px;background:color-mix(in srgb,var(--primary) 6%,var(--card));border:1px solid var(--border)}
+.fcFx div .mi{width:16px;height:16px;flex:none}.fcFx div b{font-weight:800}.fcFx div.up .mi{color:var(--green)}.fcFx div.dn .mi{color:var(--red)}
+.fcFx small{display:block;color:var(--muted);font-size:11.5px}
 .fcQ .split{border:1px dashed color-mix(in srgb,var(--primary) 45%,var(--border));border-radius:14px;padding:10px;margin-bottom:10px;background:color-mix(in srgb,var(--primary) 5%,var(--card))}
 .fcReq{align-self:stretch;border:1px solid color-mix(in srgb,var(--primary) 30%,var(--border));background:color-mix(in srgb,var(--primary) 7%,var(--card));border-radius:18px;padding:11px 12px;font-size:13.5px;line-height:1.45;margin:6px 0}
 .fcReq.me{margin-left:12%}.fcReq.them{margin-right:12%}
@@ -7284,6 +7294,9 @@ function build(){
   var fr=document.createElement('div'); fr.id='ftFrPane'; fr.style.display='none'; sec.appendChild(fr);
   $('fcT1').onclick=function(){ setPane('ai'); }; $('fcT2').onclick=function(){ setPane('fr'); };
   fr.addEventListener('click',onClick);
+  var sx=0, sy=0, sOk=false;
+  fr.addEventListener('touchstart',function(e){ var q=e.target.closest&&e.target.closest('.fcQ'); sOk=!!q&&!e.target.closest('input,select,textarea,.fcTabs,.fcChips'); if(sOk){ sx=e.touches[0].clientX; sy=e.touches[0].clientY; } },{passive:true});
+  fr.addEventListener('touchend',function(e){ if(!sOk||!formKind) return; sOk=false; var t=e.changedTouches[0], dx=t.clientX-sx, dy=t.clientY-sy; if(Math.abs(dx)>70&&Math.abs(dx)>Math.abs(dy)*1.8){ swipeKind(dx<0?1:-1); buzz(8); } },{passive:true});
   fr.addEventListener('input',onInput);
   fr.addEventListener('keydown',onKey);
   try{ if(window.I18N){ if(I18N.bn) I18N.bn.bn_chat='চ্যাট'; if(I18N.en) I18N.en.bn_chat='Chat'; } document.querySelectorAll('[data-i18n="bn_chat"]').forEach(function(l){ l.textContent=tx('চ্যাট','Chat'); }); }catch(e){}
@@ -7534,8 +7547,9 @@ function openForm(k){
   closeMenu();
   if(k==='nudge'){ nudgeBalance(); return; }
   var all=false, split=false; if(k==='repayall'){ k='repay'; all=true; } if(k==='split'){ k='loan'; split=true; }
-  if(formKind===k&&splitOn===split&&!all){ closeForm(); return; }
-  var th=load().th[cur]||{}, b=balFor(cur); formKind=k; splitOn=split;
+  var old=null;
+  if(formKind){ if(formKind===k&&splitOn===split&&!all) return; var ne=$('fcQNote'); old={a:($('fcQAmt')||{}).value,n:ne?ne.value:'',na:ne?ne.getAttribute('data-auto'):'',m:($('fcQMeth')||{}).value,sp:splitOn}; }
+  var th=load().th[cur]||{}, b=balFor(cur); formKind=k; splitOn=split; try{ localStorage.setItem('ftChatLastK',split?'split':k); }catch(e){}
   var who=th.name||th.un||th.email||'?', W=E(who);
   var mny=q.isMoney(k), nm=k==='repay'?(b.oweKey||q.linkName(cur)||who):k==='recv'?(b.getKey||q.linkName(cur)||who):mny?who:(q.linkName(cur)||b.getKey||b.oweKey||who);
   var title=split?tx('<i class="mi" style="--m:var(--ic-split)"></i> বিল ভাগ করুন','<i class="mi" style="--m:var(--ic-split)"></i> Split a bill'):k==='repay'?tx('<i class="mi" style="--m:var(--ic-undo)"></i> ধার শোধ করেছি','<i class="mi" style="--m:var(--ic-undo)"></i> I repaid a loan'):k==='ask'?tx('<i class="mi" style="--m:var(--ic-heart)"></i> টাকা চাই (ধার)','<i class="mi" style="--m:var(--ic-heart)"></i> Ask for money (loan)'):k==='recv'?tx('<i class="mi" style="--m:var(--ic-check-circle)"></i> শোধ পেয়েছি','<i class="mi" style="--m:var(--ic-check-circle)"></i> I got repaid'):k==='gift'?tx('<i class="mi" style="--m:var(--ic-gift)"></i> উপহার পাঠাই','<i class="mi" style="--m:var(--ic-gift)"></i> Send a gift'):k==='other'?tx('<i class="mi" style="--m:var(--ic-send)"></i> অন্যান্য টাকা পাঠাই','<i class="mi" style="--m:var(--ic-send)"></i> Send money (other)'):tx('<i class="mi" style="--m:var(--ic-coin)"></i> ধার দিয়েছি','<i class="mi" style="--m:var(--ic-coin)"></i> I lent money');
@@ -7548,14 +7562,15 @@ function openForm(k){
         :tx('আপনি '+W+' কে টাকা ধার দিয়েছেন। '+W+' গ্রহণ করলে দুজনের তালিকায় নিজে থেকে যোগ হবে।','You lent money to '+W+'. Once they accept, it is added to both lists.');
   var meths=q.methods(), F=q.F;
   var chips=[500,1000,2000,5000].map(function(a){ return '<button type="button" data-fq="'+a+'">'+F(a)+'</button>'; }).join('');
+  var lastS=q.sent().filter(function(z){ return z.toUid===cur&&z.kind===k&&z.status!=='cancelled'; }).pop();
+  if(lastS&&[500,1000,2000,5000].indexOf(+lastS.amount)<0&&!split) chips='<button type="button" data-fq="'+(+lastS.amount)+'">'+ic('undo')+' '+tx('আগের ','Last ')+F(+lastS.amount)+'</button>'+chips;
   if(k==='repay'&&b.owe>0) chips='<button type="button" data-fq="ALL">'+tx('সব বাকি ','All ')+F(b.owe)+'</button><button type="button" data-fq="HALF">'+tx('অর্ধেক ','Half ')+F(Math.round(b.owe/2))+'</button>'+chips;
   var notes=[['','বাজার','Groceries'],['','খাবার','Food'],['','যাতায়াত','Transport'],['','ভাড়া','Rent'],['','রিচার্জ','Recharge'],['','উপহার','Gift']].map(function(n){ return '<button type="button" data-nt="'+tx(n[1],n[2])+'">'+n[0]+' '+tx(n[1],n[2])+'</button>'; }).join('');
   host.style.display='';
-  host.innerHTML='<div class="fcQ"><div class="qt"><span>'+title+'</span><button type="button" data-fq2="x" style="border:0;background:transparent;font-size:18px;cursor:pointer;color:var(--muted)">✕</button></div>'
-    +'<p class="intro">'+intro+'</p>'
+  host.innerHTML='<div class="fcQ">'+tabsHtml(k,split,b)+'<div class="qt"><span>'+title+'</span><button type="button" data-fq2="x" style="border:0;background:transparent;font-size:18px;cursor:pointer;color:var(--muted)">✕</button></div>'
     +(split?'<div class="split"><label>'+tx('মোট বিল (৳)','Total bill (৳)')+'</label><input class="fcIn" id="fcQTot" type="number" inputmode="decimal" placeholder="৳ 0"><label>'+tx('কত জনে ভাগ (আপনিসহ)','Split between (including you)')+'</label><div class="fcChips sm2" style="margin-bottom:6px">'+[2,3,4,5,6].map(function(n){ return '<button type="button" data-sp="'+n+'"'+(n===2?' class="on"':'')+'>'+n+'</button>'; }).join('')+'</div><input type="hidden" id="fcQPpl" value="2"><div class="fcHint" id="fcQPer" style="margin:0"></div></div><label>'+tx('বন্ধুর ভাগ (৳)','Friend’s share (৳)')+'</label>':'')
     +'<input class="fcIn big" id="fcQAmt" type="number" inputmode="decimal" placeholder="৳ 0">'
-    +'<div class="cap" id="fcQCap"></div>'
+    +'<div class="cap" id="fcQCap"></div><div class="fcFx" id="fcFx"></div>'
     +(split?'':'<div class="fcChips sm2" style="margin-bottom:8px">'+chips+'</div>')
     +'<input class="fcIn" id="fcQNote" type="text" maxlength="120" placeholder="'+tx('নোট (ঐচ্ছিক)','Note (optional)')+'">'
     +'<div class="fcChips sm2" style="margin-bottom:8px">'+notes+'</div>'
@@ -7574,7 +7589,13 @@ function openForm(k){
   var pl2=$('fcPlus'); if(pl2) pl2.classList.add('on');
   if(k==='repay'){ var r=q.remainOwe(nm); if(r&&r.rem>0&&(all||b.owe>0)) $('fcQAmt').value=r.rem; }
   if(k==='recv'){ var r4=q.remainGet(nm); if(r4&&r4.rem>0&&b.get>0) $('fcQAmt').value=r4.rem; }
+  if(old){
+    if(old.a&&!split&&!old.sp&&$('fcQAmt')) $('fcQAmt').value=old.a;
+    if(old.n&&!old.na&&$('fcQNote')) $('fcQNote').value=old.n;
+    if(old.m&&$('fcQMeth')&&Array.prototype.some.call($('fcQMeth').options,function(o){ return o.value===old.m; })) $('fcQMeth').value=old.m;
+  }
   remHint(false); capUpd();
+  var ta=document.querySelector('#fcTabs .on'), tb=$('fcTabs'); if(ta&&tb) tb.scrollLeft=Math.max(0,ta.offsetLeft-(tb.clientWidth-ta.offsetWidth)/2);
   try{ host.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){}
   setTimeout(function(){ var a2=split?$('fcQTot'):$('fcQAmt'); if(a2&&!a2.value&&!TOUCH) a2.focus(); },60);
 }
@@ -7584,7 +7605,38 @@ function closeForm(){
 }
 function capUpd(){
   var c=$('fcQCap'), q=Q(), a=parseFloat(($('fcQAmt')||{}).value); if(!c||!q) return;
-  c.textContent=a>0?q.F(a):'';
+  c.textContent=a>0?q.F(a):''; fxUpd();
+}
+var TABS=[['loan','loan-out','ধার দিলাম','Lent'],['repay','undo','শোধ করলাম','Repaid'],['recv','check-circle','শোধ পেলাম','Got repaid'],['ask','loan-in','টাকা চাই','Ask'],['gift','gift','উপহার','Gift'],['other','send','অন্যান্য','Other'],['split','split','বিল ভাগ','Split']];
+function tabsHtml(k,split,b){
+  var cur2=split?'split':k, F=Q().F;
+  return '<div class="fcTabs" id="fcTabs" role="tablist">'+TABS.map(function(x){ return '<button type="button" role="tab" data-tk="'+x[0]+'" class="'+(x[0]===cur2?'on':'')+'">'+ic(x[1])+tx(x[2],x[3])+'</button>'; }).join('')
+    +'<i class="sep"></i>'+(b.get>0?'<button type="button" class="qa" data-mi="nudge">'+ic('bell')+tx('তাগাদা','Remind')+'</button>':'')
+    +'<button type="button" class="qa" data-mi="stmt">'+ic('clipboard')+tx('হিসাব শেয়ার','Statement')+'</button></div>';
+}
+/* live “what happens when they accept” preview, both sides */
+function fxUpd(){
+  var e=$('fcFx'), q=Q(); if(!e||!q||!formKind) return;
+  var a=parseFloat(($('fcQAmt')||{}).value); if(!(a>0)){ e.innerHTML=''; return; }
+  var F=q.F, th=load().th[cur]||{}, who=E(th.name||th.un||th.email||'?'), k=formKind, cat=($('fcQCat')||{}).value||'অন্যান্য';
+  var me,them;
+  if(k==='loan'){ me=['up','loan-out',tx('আপনার “পাবো” +'+F(a),'Your “To receive” +'+F(a))]; them=['dn','loan-in',tx('“দিতে হবে” +'+F(a),'“To pay” +'+F(a))]; }
+  else if(k==='repay'){ me=['dn','undo',tx('আপনার “দিতে হবে” −'+F(a),'Your “To pay” −'+F(a))]; them=['dn','undo',tx('“পাবো” −'+F(a),'“To receive” −'+F(a))]; }
+  else if(k==='recv'){ me=['dn','check-circle',tx('আপনার “পাবো” −'+F(a),'Your “To receive” −'+F(a))]; them=['dn','check-circle',tx('“দিতে হবে” −'+F(a),'“To pay” −'+F(a))]; }
+  else if(k==='ask'){ me=['dn','loan-in',tx('আপনার “দিতে হবে” +'+F(a),'Your “To pay” +'+F(a))]; them=['up','loan-out',tx('“পাবো” +'+F(a),'“To receive” +'+F(a))]; }
+  else if(k==='gift'){ me=['dn','gift',tx('আপনার খরচ −'+F(a)+' (উপহার)','Your expense '+F(a)+' (Gift)')]; them=['up','gift',tx('মূল ব্যালেন্সে আয় +'+F(a),'Main balance income +'+F(a))]; }
+  else{ me=['dn','send',tx('আপনার খরচ −'+F(a)+' ('+E(cat)+')','Your expense '+F(a)+' ('+E(cat)+')')]; them=['up','send',tx('মূল ব্যালেন্সে আয় +'+F(a),'Main balance income +'+F(a))]; }
+  e.innerHTML='<div class="'+me[0]+'">'+ic(me[1])+'<span><b>'+tx('আপনি','You')+':</b> '+me[2]+'</span></div><div class="'+them[0]+'">'+ic(them[1])+'<span><b>'+who+':</b> '+them[2]+'<small>'+tx('গ্রহণ করলেই কার্যকর হবে','Applies only after they accept')+'</small></span></div>';
+}
+function smartKind(){
+  var b=balFor(cur), lk=''; try{ lk=localStorage.getItem('ftChatLastK')||''; }catch(e){}
+  if(b.owe>0&&lk!=='gift'&&lk!=='other') return lk&&lk!=='split'&&lk!=='loan'?lk:'repay';
+  return TABS.some(function(x){ return x[0]===lk; })?lk:'loan';
+}
+function openSmart(){ if(formKind){ closeForm(); return; } var k=smartKind(); if(k==='split') openForm('split'); else openForm(k); }
+function swipeKind(dir){
+  var order=TABS.map(function(x){ return x[0]; }), c=splitOn?'split':formKind, i=order.indexOf(c); if(i<0) return;
+  var n=order[i+dir]; if(!n) return; openForm(n);
 }
 function splitCalc(){
   var q=Q(), tot=parseFloat(($('fcQTot')||{}).value), n=parseInt(($('fcQPpl')||{}).value,10)||2, per=$('fcQPer'); if(!q||!per) return;
@@ -7708,7 +7760,7 @@ function onClick(e){
   var a=t.closest('[data-a]'); if(a){
     var k=a.getAttribute('data-a');
     if(k==='back') closeConv();
-    else if(k==='menu') toggleMenu();
+    else if(k==='menu') openSmart();
     else if(k==='hm'){ var h=$('fcHm'); if(h) h.style.display=h.style.display==='none'?'':'none'; }
     return;
   }
@@ -7718,6 +7770,7 @@ function onClick(e){
     if(w==='del'&&confirm(tx('এই চ্যাট মুছে ফেলবেন? (শুধু আপনার ফোন থেকে মেসেজ মুছবে, লোন তালিকা অক্ষত থাকবে)','Delete this chat? (messages removed from your device only, loan list stays)'))){ var st=load(); delete st.th[cur]; save(st); closeConv(); }
     return;
   }
+  var tk=t.closest('[data-tk]'); if(tk){ openForm(tk.getAttribute('data-tk')); buzz(8); return; }
   var mi=t.closest('[data-mi]'); if(mi){ var k0=mi.getAttribute('data-mi'), am0=mi.getAttribute('data-amt'); if(k0==='stmt'){ closeMenu(); sendStatement(); return; } openForm(k0); if(am0){ var ti=$('fcQTot')||$('fcQAmt'); if(ti){ ti.value=am0; if(ti.id==='fcQTot') splitCalc(); else capUpd(); } } return; }
   var fl=t.closest('[data-flt]'); if(fl){ filt=fl.getAttribute('data-flt'); lastSig=''; renderConv(true); return; }
   var qr=t.closest('[data-qr]'); if(qr){ sendMsg(qr.getAttribute('data-qr')); return; }
@@ -7752,6 +7805,7 @@ function onInput(e){
   if(t.id==='fcInput'){ grow(t); setDraft(t.value); updQR(); }
   else if(t.id==='fcQNm') remHint(true);
   else if(t.id==='fcQAmt') capUpd();
+  else if(t.id==='fcQCat') fxUpd();
   else if(t.id==='fcQTot') splitCalc();
   else if(t.id==='fcQNote') t.removeAttribute('data-auto');
   else if(t.id==='fcSearch') applySearch(t.value);
