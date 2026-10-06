@@ -483,6 +483,20 @@ h1 [data-i18n="app_title"]{background:var(--grad); -webkit-background-clip:text;
 .heroDots{display:flex; justify-content:center; gap:6px;}
 .heroDots i{width:6px; height:6px; border-radius:6px; cursor:pointer; background:color-mix(in srgb,var(--text) 22%,transparent); transition:width .28s,background .28s;}
 .heroDots i.on{width:20px; background:var(--primary);}
+/* 2 cards per view; one swipe moves 2 cards */
+.heroTrack{gap:10px;}
+.hc{flex:0 0 calc((100% - 10px)/2); scroll-snap-align:none; padding:13px 12px 12px; min-height:112px; border-radius:22px; min-width:0;}
+.hc.snapA{scroll-snap-align:start;}
+.heroTrack[data-n="1"] .hc{flex-basis:100%;}
+.heroTrack{scroll-snap-stop:always;}
+.hc .hcTop{gap:6px;}
+.hc .hcIcon{width:26px; height:26px; border-radius:9px; flex:none;}
+.hc .hcIcon svg,.hc .hcEye svg{width:15px; height:15px;}
+.hc .hcLbl{font-size:12px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.hc .hcEye{width:28px; height:28px; flex:none;}
+.hc .hcVal{font-size:clamp(17px,5.2vw,22px); letter-spacing:-.4px; margin-top:10px; line-height:1.2;}
+.hc .hcSub{font-size:11px; line-height:1.3;}
+.heroTrack[data-n="1"] .hc .hcVal{font-size:31px;}
 
 /* Sticky tabs */
 .tabs{position:sticky; top:calc(6px + env(safe-area-inset-top,0px)); z-index:8; background:color-mix(in srgb,var(--card) 84%,transparent); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); margin:10px 0 12px;}
@@ -868,13 +882,11 @@ header.top{position:relative}
 .ntIt.un b::after{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--primary);margin-left:6px}
 .ntEmpty{text-align:center;color:var(--muted);padding:28px 0;font-size:13.5px}
 .ntRow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:14px}.ntRow:last-of-type{border-bottom:0}
-.ntRow input[type=checkbox]{width:46px;height:26px;appearance:none;-webkit-appearance:none;border-radius:20px;background:var(--border);position:relative;flex:none;cursor:pointer;margin:0;padding:0;transition:background .2s}
-.ntRow input[type=checkbox]::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
-.ntRow input[type=checkbox]:checked{background:var(--primary)}.ntRow input[type=checkbox]:checked::after{transform:translateX(20px)}
-.ntRow input[type=time]{border:1px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);padding:8px 10px;font:inherit;font-size:13.5px}
-#ntPrefBox .st{font-size:12.5px;color:var(--muted);margin:0 0 8px;line-height:1.55;padding:10px 12px;border-radius:14px;background:color-mix(in srgb,var(--primary) 6%,transparent)}#ntPrefBox .st b{color:var(--text)}
-#ntPrefBox .main{width:100%;border:0;border-radius:13px;padding:12px;font:inherit;font-weight:700;background:var(--primary);color:#fff;cursor:pointer}
-#ntPrefBox .two{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.ntRow input[type=checkbox]{width:44px;height:26px;appearance:none;-webkit-appearance:none;border-radius:13px;background:var(--border);position:relative;flex:none;cursor:pointer;transition:background .2s}
+.ntRow input[type=checkbox]::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s}
+.ntRow input[type=checkbox]:checked{background:var(--green)}.ntRow input[type=checkbox]:checked::after{transform:translateX(18px)}
+#ntBox .st{font-size:13px;color:var(--muted);margin:2px 0 10px;line-height:1.5}#ntBox .st b{color:var(--text)}
+#ntBox .two{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 </style>
 <style id="ftLoginV3">
 html body .loginScreen .loginBox>#lgTabs:not([style*="none"]){display:flex !important;order:5;gap:4px;padding:5px;margin:0 0 16px;border-radius:999px;background:color-mix(in srgb,var(--text) 7%,var(--card));border:1px solid var(--border)}
@@ -892,6 +904,60 @@ html body .loginScreen .lgGuest{border-color:color-mix(in srgb,var(--primary) 45
 </style>
 </head>
 <body>
+<style id="rsStyle">
+.rsOv{position:fixed;inset:0;z-index:2147483000;display:none;align-items:flex-end;justify-content:center;background:rgba(10,12,18,.55);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.rsOv.on{display:flex;animation:rsFade .18s ease both}
+.rsBox{width:100%;max-width:440px;box-sizing:border-box;background:var(--card);color:var(--text);border-radius:28px 28px 0 0;padding:22px 20px calc(20px + env(safe-area-inset-bottom,0px));box-shadow:0 -20px 50px -20px rgba(0,0,0,.5);animation:rsUp .26s cubic-bezier(.2,.9,.3,1) both;text-align:center;max-height:92vh;overflow-y:auto}
+@media(min-width:520px){.rsOv{align-items:center}.rsBox{border-radius:28px}}
+.rsIc{width:64px;height:64px;margin:0 auto 12px;border-radius:20px;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--primary) 14%,var(--card));color:var(--primary)}
+.rsIc.ok{background:var(--green-bg);color:var(--green)}
+.rsIc svg{width:30px;height:30px}
+.rsBox h3{margin:0 0 6px;font-size:19px;font-weight:800}
+.rsBox p{margin:0 0 16px;font-size:13.5px;line-height:1.55;color:var(--muted)}
+.rsBox p b{color:var(--text);word-break:break-all}
+.rsBox input.rsIn{width:100%;height:52px;box-sizing:border-box;border-radius:999px;border:1.5px solid transparent;padding:0 20px;font-size:15px;font-weight:500;background:color-mix(in srgb,var(--text) 6%,var(--card));color:var(--text);-webkit-text-fill-color:var(--text);outline:none;margin:0 0 10px;text-align:left}
+.rsBox input.rsIn:focus{border-color:var(--primary);box-shadow:0 0 0 4px color-mix(in srgb,var(--primary) 16%,transparent)}
+.rsMsg{min-height:0;font-size:12.5px;font-weight:600;margin:0 0 8px;padding:0;border-radius:12px;text-align:left}
+.rsMsg.bad{background:var(--red-bg);color:var(--red);padding:9px 12px}
+.rsBtn{width:100%;height:52px;border:0;border-radius:999px;font-size:15.5px;font-weight:800;color:#fff;cursor:pointer;background:linear-gradient(135deg,var(--primary),color-mix(in srgb,var(--primary) 60%,#7c3aed));box-shadow:0 12px 24px -10px color-mix(in srgb,var(--primary) 80%,transparent);font-family:inherit}
+.rsBtn:disabled{opacity:.6;pointer-events:none}
+.rsGhost{width:100%;height:46px;margin-top:8px;border:1.5px solid var(--border);border-radius:999px;background:transparent;color:var(--text);font-size:14.5px;font-weight:700;cursor:pointer;font-family:inherit}
+.rsGhost:disabled{opacity:.55;pointer-events:none}
+.rsTips{list-style:none;margin:0 0 16px;padding:12px 14px;border-radius:16px;background:color-mix(in srgb,var(--text) 5%,var(--card));text-align:left;font-size:13px;line-height:1.6;color:var(--muted)}
+.rsTips li{padding-left:22px;position:relative;margin:2px 0}
+.rsTips li::before{content:attr(data-n);position:absolute;left:0;top:1px;width:16px;height:16px;border-radius:50%;background:var(--primary);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1}
+@keyframes rsUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@keyframes rsFade{from{opacity:0}to{opacity:1}}
+/* login inputs: keep field colour + text readable on focus / autofill (dark & light) */
+html body .loginScreen .loginBox input.lgIn:focus,html body .loginScreen .loginBox input.lgIn:active,html body .loginScreen .loginBox input.lgIn.vOk:focus,html body .loginScreen .loginBox input.lgIn.vBad:focus{background-color:color-mix(in srgb,var(--text) 9%,var(--card)) !important;color:var(--text) !important;-webkit-text-fill-color:var(--text) !important;caret-color:var(--primary) !important}
+html body .loginScreen .loginBox input.lgIn:-webkit-autofill,html body .loginScreen .loginBox input.lgIn:-webkit-autofill:hover,html body .loginScreen .loginBox input.lgIn:-webkit-autofill:focus,html body .loginScreen .loginBox input.lgIn:-webkit-autofill:active{-webkit-box-shadow:0 0 0 1000px color-mix(in srgb,var(--text) 9%,var(--card)) inset !important;box-shadow:0 0 0 1000px color-mix(in srgb,var(--text) 9%,var(--card)) inset !important;-webkit-text-fill-color:var(--text) !important;caret-color:var(--primary) !important;transition:background-color 99999s ease-out 0s}
+</style>
+<div class="rsOv" id="rsOv" onclick="if(event.target===this)ftCloud.resetClose()">
+  <div class="rsBox" role="dialog" aria-modal="true" aria-labelledby="rsTitle">
+    <div id="rsStep1">
+      <div class="rsIc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="16" r="1.2" fill="currentColor"/></svg></div>
+      <h3 id="rsTitle"><span class="bn">পাসওয়ার্ড রিসেট করুন</span><span class="en">Reset your password</span></h3>
+      <p><span class="bn">আপনার অ্যাকাউন্টের ইমেইল দিন। আমরা একটি রিসেট লিংক পাঠাব, যেখানে ক্লিক করে নতুন পাসওয়ার্ড সেট করতে পারবেন।</span><span class="en">Enter your account email. We'll send you a link to set a new password.</span></p>
+      <input type="email" class="rsIn" id="rsEmail" placeholder="ইমেইল ঠিকানা / Email" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send">
+      <div class="rsMsg" id="rsMsg"></div>
+      <button type="button" class="rsBtn" id="rsSend" onclick="ftCloud.resetSend()"><span class="bn">রিসেট লিংক পাঠান</span><span class="en">Send reset link</span></button>
+      <button type="button" class="rsGhost" onclick="ftCloud.resetClose()"><span class="bn">বাতিল</span><span class="en">Cancel</span></button>
+    </div>
+    <div id="rsStep2" style="display:none">
+      <div class="rsIc ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></div>
+      <h3><span class="bn">ইমেইল চেক করুন</span><span class="en">Check your email</span></h3>
+      <p><span class="bn">রিসেট লিংক পাঠানো হয়েছে:</span><span class="en">We sent a reset link to:</span><br><b id="rsSentTo"></b></p>
+      <ul class="rsTips">
+        <li data-n="1"><span class="bn">ইমেইলের লিংকে ক্লিক করুন</span><span class="en">Open the link in the email</span></li>
+        <li data-n="2"><span class="bn">নতুন পাসওয়ার্ড সেট করুন</span><span class="en">Set a new password</span></li>
+        <li data-n="3"><span class="bn">এখানে ফিরে এসে লগইন করুন</span><span class="en">Come back here and log in</span></li>
+        <li data-n="!"><span class="bn">না পেলে Spam / Promotions ফোল্ডার দেখুন</span><span class="en">Not there? Check your Spam / Promotions folder</span></li>
+      </ul>
+      <button type="button" class="rsBtn" onclick="ftCloud.resetClose()"><span class="bn">লগইনে ফিরে যান</span><span class="en">Back to log in</span></button>
+      <button type="button" class="rsGhost" id="rsResend" onclick="ftCloud.resetSend()"></button>
+    </div>
+  </div>
+</div>
 <div class="loginScreen" id="loginScreen">
   <div class="lgCard">
   <div class="lgHero"><i class="lgBlob b1"></i><i class="lgBlob b2"></i>
@@ -1284,11 +1350,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
       }catch(e){ setBusy(false); pfErr(accErr(e,'change')); }
     }
   }
-  async function sheetForgot(){
-    var s=ses(), em=(s&&s.email)||(($('pf_em')||{}).value||'').trim();
-    if(!EM.test(em)) return pfErr(tx('আগে ইমেইল লিখুন','Enter your email first'));
-    try{ await authReq('sendOobCode',{requestType:'PASSWORD_RESET',email:em}); pfErr(''); toast(tx('রিসেট লিংক ইমেইলে পাঠানো হয়েছে','Reset link sent to your email')); }catch(e){ pfErr(errMsg(e)); }
-  }
+  function sheetForgot(){ var s=ses(); resetOpen((s&&s.email)||(($('pf_em')||{}).value||'').trim()); }
   /* ---- cloud sync: just an on/off switch ---- */
   function toggleSync(cb){
     if(!ses()){ cb.checked=false; var fe=$('pfe'); if(fe){ var dt=fe.closest('details'); if(dt) dt.open=true; setTimeout(function(){ try{ fe.scrollIntoView({behavior:'smooth',block:'center'}); fe.focus(); }catch(e){} },60); } toast(tx('ইমেইল ও পাসওয়ার্ড দিয়ে সংরক্ষণ করুন, তারপর সিঙ্ক চালু হবে','Enter email & password and Save to turn on sync')); return; }
@@ -1337,10 +1399,53 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     var i=$('lgPass'), show=i.type==='password'; i.type=show?'text':'password';
     $('lgEye').innerHTML=show?'<span class="bn">লুকান</span><span class="en">Hide</span>':'<span class="bn">দেখান</span><span class="en">Show</span>';
   }
-  async function loginReset(){
-    var em=($('lgEmail').value||'').trim(); if(!em){ lgStatus(tx('আগে ইমেইল লিখুন','Enter your email first'),true); return; }
-    try{ await authReq('sendOobCode',{requestType:'PASSWORD_RESET',email:em}); lgStatus(tx('পাসওয়ার্ড রিসেট লিংক ইমেইলে পাঠানো হয়েছে','Password reset link sent to your email')); }catch(e){ lgStatus(errMsg(e),true); }
+  function loginReset(){ resetOpen((($('lgEmail')||{}).value||'').trim()); }
+  /* ---- forgot password: reset sheet (email -> reset link, 60s resend cooldown) ---- */
+  var RS={t:0, ov:''}, RS_WAIT=60;
+  function rsLast(){ try{ return {at:+LS.getItem('ftResetAt')||0, em:LS.getItem('ftResetEm')||''}; }catch(e){ return {at:0,em:''}; } }
+  function rsMsg(m,bad){ var e=$('rsMsg'); if(!e) return; e.textContent=m||''; e.className='rsMsg'+(bad?' bad':''); }
+  function rsErr(e){
+    var m=String((e&&e.message)||e||'');
+    if(/EMAIL_NOT_FOUND/.test(m)) return tx('এই ইমেইলে কোনো অ্যাকাউন্ট পাওয়া যায়নি','No account found with this email');
+    if(/INVALID_EMAIL/.test(m)) return tx('ইমেইল ঠিকানাটি সঠিক নয়','This email address is not valid');
+    if(/TOO_MANY/.test(m)) return tx('অনেকবার চেষ্টা হয়েছে, কিছুক্ষণ পর আবার চেষ্টা করুন','Too many attempts, try again later');
+    if(/OPERATION_NOT_ALLOWED|PASSWORD_LOGIN_DISABLED/.test(m)) return tx('Firebase এ Email/Password লগইন চালু করা নেই','Email/Password sign-in is not enabled in Firebase');
+    return errMsg(e);
   }
+  function rsTick(){
+    var b=$('rsResend'); if(!b) return; var l=rsLast(), left=Math.ceil((l.at+RS_WAIT*1000-Date.now())/1000);
+    if(left>0){ b.disabled=true; b.textContent=tx('আবার পাঠান ('+left+'s)','Resend ('+left+'s)'); }
+    else { b.disabled=false; b.textContent=tx('আবার পাঠান','Resend email'); clearInterval(RS.t); }
+  }
+  function rsSent(em){
+    $('rsStep1').style.display='none'; $('rsStep2').style.display=''; $('rsSentTo').textContent=em;
+    clearInterval(RS.t); rsTick(); RS.t=setInterval(rsTick,1000);
+  }
+  function resetOpen(pre){
+    var s=ses(), em=String(pre||(($('lgEmail')||{}).value)||(s&&s.email)||'').trim();
+    $('rsEmail').value=em; $('rsStep1').style.display=''; $('rsStep2').style.display='none'; rsMsg('');
+    var b=$('rsSend'); if(b) b.disabled=false;
+    if(!$('rsOv').classList.contains('on')) RS.ov=document.body.style.overflow;
+    $('rsOv').classList.add('on'); document.body.style.overflow='hidden';
+    setTimeout(function(){ try{ $('rsEmail').focus(); }catch(e){} },160);
+  }
+  function resetClose(){ var o=$('rsOv'); if(!o) return; o.classList.remove('on'); document.body.style.overflow=RS.ov||''; clearInterval(RS.t); }
+  async function resetSend(){
+    var em=($('rsEmail').value||'').trim();
+    if(!em){ rsMsg(tx('আগে ইমেইল লিখুন','Enter your email first'),true); return; }
+    if(!EM.test(em)){ rsMsg(tx('সঠিক ইমেইল দিন','Enter a valid email'),true); return; }
+    if(!ok()){ rsMsg(tx('ক্লাউড এখনো সেট-আপ হয়নি','Cloud is not set up yet'),true); return; }
+    var l=rsLast(); if(l.em===em && Date.now()-l.at<RS_WAIT*1000){ rsSent(em); return; }
+    var b=$('rsSend'); b.disabled=true; rsMsg(tx('অপেক্ষা করুন…','Please wait…'));
+    try{
+      await authReq('sendOobCode',{requestType:'PASSWORD_RESET',email:em});
+      try{ LS.setItem('ftResetAt',String(Date.now())); LS.setItem('ftResetEm',em); }catch(e){}
+      rsMsg(''); rsSent(em);
+    }catch(e){ rsMsg(rsErr(e),true); }
+    finally{ b.disabled=false; }
+  }
+  (function(){ var i=$('rsEmail'); if(i) i.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); resetSend(); } });
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&$('rsOv')&&$('rsOv').classList.contains('on')) resetClose(); }); })();
   (function(){ var _c=$('loginCloud'), _p=$('loginPlain'), _t=$('lgTabs');
     if(ok()){ loginMode('up'); var _pw=$('lgPass'); if(_pw) _pw.addEventListener('keydown',function(e){ if(e.key==='Enter') loginSubmit(); }); }
     else{ if(_c) _c.style.display='none'; if(_t) _t.style.display='none'; if(_p) _p.style.display=''; }
@@ -1381,7 +1486,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   }
   window.ftCloud={
     _raw:function(){ return {ses:ses,token:token,call:call,CFG:CFG,ok:ok,errMsg:errMsg}; },
-    loginSubmit:loginSubmit, loginGoogle:loginGoogle, loginMode:loginMode, loginReset:loginReset, loginGuest:loginGuest, loginEye:loginEye,
+    loginSubmit:loginSubmit, loginGoogle:loginGoogle, loginMode:loginMode, loginReset:loginReset, resetOpen:resetOpen, resetSend:resetSend, resetClose:resetClose, loginGuest:loginGuest, loginEye:loginEye,
     edit:openSheet, profSave:profSave, pfTouch:pfTouch, pfEye:pfEye, sheetClose:sheetClose, sheetSave:sheetSave, sheetForgot:sheetForgot, eye:eyeToggle, toggle:toggleSync, refresh:function(){ ui(); },
     syncNow:function(){ sync(true); },
     setAuto:function(v){ _set.call(LS,AUTO,v?'1':'0'); if(v) schedule(); },
@@ -5479,16 +5584,21 @@ NAV.forEach(n=>$('devNav').appendChild(tog2(n[1],n[2],swKey(n[0]),'1',applyDash)
 /* ---------- Home swipe cards: each card can be switched on/off ---------- */
 const HERO=[['bal','মোট ব্যালেন্স','Total balance','.hc-bal'],['exp','মোট খরচ','Total expense','.hc-exp'],['loan','মোট লোন','Total loan','.hc-loan'],['save','মোট সঞ্চয়','Total savings','.hc-save']];
 const heroEl=$('hero'), heroTr=$('heroTrack'), heroDt=$('heroDots');
-const hstep=()=>{ const c=[...heroTr.children].find(x=>x.style.display!=='none'); return c?c.offsetWidth+10:1; };
+const visCards=()=>[...heroTr.children].filter(x=>x.style.display!=='none');
+const hstep=()=>{ const c=visCards()[0]; return c?(c.offsetWidth+10)*Math.min(2,visCards().length):1; };
+function markSnap(){ const v=visCards(); [...heroTr.children].forEach(x=>x.classList.remove('snapA')); v.forEach((c,k)=>c.classList.toggle('snapA',k%2===0)); heroTr.dataset.n=v.length; }
 function applyHero(){
-  const vis=[];
-  HERO.forEach(h=>{ const c=heroTr.querySelector(h[3]); if(!c) return; const off=ls('dash_hero_'+h[0]+'_v1','1')==='0'; c.style.display=off?'none':''; if(!off) vis.push(c); });
+  HERO.forEach(h=>{ const c=heroTr.querySelector(h[3]); if(!c) return; const off=ls('dash_hero_'+h[0]+'_v1','1')==='0'; c.style.display=off?'none':''; });
+  const vis=visCards();
   heroEl.style.display=vis.length?'':'none';
+  markSnap();
+  const pages=Math.ceil(vis.length/2);
   heroDt.innerHTML='';
-  vis.forEach((c,k)=>{ const i=document.createElement('i'); if(!k) i.className='on'; i.onclick=()=>heroTr.scrollTo({left:k*hstep(),behavior:'smooth'}); heroDt.appendChild(i); });
-  heroDt.style.display=vis.length>1?'':'none';
+  for(let k=0;k<pages;k++){ const i=document.createElement('i'); if(!k) i.className='on'; i.onclick=()=>heroTr.scrollTo({left:k*hstep(),behavior:'smooth'}); heroDt.appendChild(i); }
+  heroDt.style.display=pages>1?'':'none';
   heroTr.scrollLeft=0;
 }
+new MutationObserver(markSnap).observe(heroTr,{childList:true});
 heroTr.addEventListener('scroll',()=>requestAnimationFrame(()=>{ const d=[...heroDt.children]; if(!d.length) return; let i=Math.round(heroTr.scrollLeft/hstep()); i=Math.max(0,Math.min(d.length-1,i)); d.forEach((x,k)=>x.classList.toggle('on',k===i)); }),{passive:true});
 HERO.forEach(h=>$('devHero').appendChild(tog2(h[1]+' কার্ড',h[2]+' card','dash_hero_'+h[0]+'_v1','1',applyHero)));
 
@@ -6339,80 +6449,6 @@ function decorate(){
 }
 function run(){ try{ decorate(); }catch(e){ console.warn('settings pro',e); } }
 run(); setTimeout(run,700); setTimeout(run,2200);
-})();
-</script>
-
-<style id="ftThemePick">
-/* theme circles (diagonal split) */
-#sec-settings .thWrap{display:flex;flex-wrap:wrap;gap:14px;padding:6px 6px 12px}
-#sec-settings .thWrap .thGroup{display:none}
-#sec-settings .thWrap .thGrid{display:contents}
-#sec-settings .thWrap .swatch{width:54px;height:54px;border-radius:50%;flex:none;overflow:hidden;position:relative;border:0;cursor:pointer;background:var(--sb,#f4f5f7) !important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);transform:none;transition:transform .15s,box-shadow .2s;-webkit-tap-highlight-color:transparent}
-#sec-settings .thWrap .swatch::before{display:none !important}
-#sec-settings .thWrap .swatch::after,#sec-settings .thWrap .swatch.active::after{content:"";display:block;position:absolute;inset:auto;top:auto;left:auto;right:0;bottom:0;margin:0;width:62%;height:62%;border-radius:100% 0 0 0;background:var(--sa,#2563eb);-webkit-mask:none;mask:none;filter:none}
-#sec-settings .thWrap .swatch.active{box-shadow:0 0 0 2.5px var(--card),0 0 0 5px var(--text);transform:none}
-#sec-settings .thWrap .swatch:active{transform:scale(.92)}
-/* wallpaper upload */
-#wpBox{margin-top:2px}
-#wpBox .wpRow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-#wpBox .wpAdd{display:inline-flex;align-items:center;gap:12px;padding:8px 18px 8px 8px;border:1.5px dashed color-mix(in srgb,var(--muted) 45%,transparent);border-radius:22px;cursor:pointer;font-size:14px;font-weight:600;color:var(--text);-webkit-tap-highlight-color:transparent;transition:background .2s}
-#wpBox .wpAdd:active{background:color-mix(in srgb,var(--primary) 8%,transparent)}
-#wpBox .wpChip{width:40px;height:40px;border-radius:12px;flex:none;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--muted) 16%,var(--card)) center/cover no-repeat;color:var(--muted)}
-#wpBox .wpChip .mi{width:20px;height:20px}
-#wpBox .wpRm{border:1px solid var(--border);background:var(--card);color:var(--red);border-radius:20px;padding:9px 14px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
-#wpBox .wpDim{display:flex;align-items:center;gap:12px;margin-top:12px;font-size:12.5px;font-weight:600;color:var(--muted)}
-#wpBox .wpDim input{flex:1;accent-color:var(--primary)}
-#wpBox .wpMsg{font-size:12.5px;font-weight:600;margin-top:8px;color:var(--red)}.wpMsg:empty{display:none}
-#lockOverlay .lockWp{position:fixed !important;inset:0;z-index:0 !important;display:none;background-size:cover;background-position:center;background-repeat:no-repeat;pointer-events:none}
-html.hasLockWp #lockOverlay .lockWp{display:block}
-html.hasLockWp #lockOverlay .lockBg,html.hasLockWp #lockOverlay .lkOrb{display:none !important}
-</style>
-<script>
-/* ===== Theme circles + custom wallpaper ===== */
-(function(){
-var WK='customWallpaper_v1',DK='wpDim_v1',$=function(i){return document.getElementById(i)};
-function T(b,e){var en=false;try{en=currentLang==='en'}catch(x){}return en?e:b}
-function get(k){try{return localStorage.getItem(k)||''}catch(e){return ''}}
-function put(k,v){try{if(v)localStorage.setItem(k,v);else localStorage.removeItem(k);return true}catch(e){return false}}
-function paint(){document.querySelectorAll('#sec-settings .swatch').forEach(function(s){
-  if(s.dataset.pk)return;var m=((s.style.background||s.style.backgroundImage||s.getAttribute('style')||'')+'').match(/#[0-9a-fA-F]{6}\b|rgba?\([^)]*\)/g);
-  if(m&&m.length>=2){s.style.setProperty('--sb',m[0]);s.style.setProperty('--sa',m[1]);s.dataset.pk='1'}})}
-paint();setTimeout(paint,800);setTimeout(paint,2300);
-var lo=$('lockOverlay'),layer=document.createElement('div');layer.className='lockWp';
-if(lo){var lb=$('lockBg');if(lb&&lb.parentNode===lo)lb.insertAdjacentElement('afterend',layer);else lo.insertBefore(layer,lo.firstChild)}
-function applyWp(){
-  var u=get(WK),d=parseInt(get(DK)||'35',10);if(isNaN(d))d=35;var de=document.documentElement;
-  if(u){var g='color-mix(in srgb,var(--bg) '+d+'%,transparent)';de.classList.add('hasLockWp');layer.style.backgroundImage='linear-gradient('+g+','+g+'),url("'+u+'")'}
-  else{de.classList.remove('hasLockWp');layer.style.backgroundImage=''}}
-applyWp();
-var row=$('themeRow');if(!row)return;
-var ui=document.createElement('div');ui.id='wpBox';row.insertAdjacentElement('afterend',ui);
-function msg(t){var m=$('wpMsg');if(m)m.textContent=t||''}
-function render(){
-  var u=get(WK),d=get(DK)||'35';
-  ui.innerHTML='<div class="wpRow"><label class="wpAdd" for="wpInput"><span class="wpChip" id="wpChip">'+(u?'':'<i class="mi" style="--m:var(--ic-image)"></i>')+'</span><span>'+(u?T('লক স্ক্রিনের ওয়ালপেপার বদলান','Change lock screen wallpaper'):T('লক স্ক্রিনের ওয়ালপেপার যোগ করুন','Add lock screen wallpaper'))+'</span></label>'
-   +(u?'<button type="button" class="wpRm" id="wpRm">'+T('সরিয়ে দিন','Remove')+'</button>':'')+'</div>'
-   +'<input type="file" id="wpInput" accept="image/*" hidden>'
-   +(u?'<div class="wpDim"><span>'+T('ঝাপসা','Dim')+'</span><input type="range" id="wpRange" min="0" max="80" value="'+d+'"></div>':'')
-   +'<div style="font-size:12px;color:var(--muted);margin-top:8px">'+T('এই ছবি শুধু লক স্ক্রিনে দেখাবে','This image shows on the lock screen only')+'</div>'
-   +'<div class="wpMsg" id="wpMsg"></div>';
-  if(u){var c=$('wpChip');if(c)c.style.backgroundImage='url("'+u+'")'}}
-function fit(img,max,q){var r=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*r);c.height=Math.round(img.height*r);c.getContext('2d').drawImage(img,0,0,c.width,c.height);return c.toDataURL('image/jpeg',q)}
-function load(f){
-  if(!f||!/^image\//.test(f.type)){msg(T('শুধু ছবি দিন','Please choose an image'));return}
-  var fr=new FileReader();
-  fr.onload=function(){var img=new Image();
-    img.onload=function(){var ok=false,s=[[1280,.82],[900,.75],[640,.7]];
-      for(var i=0;i<s.length&&!ok;i++){try{ok=put(WK,fit(img,s[i][0],s[i][1]))}catch(e){ok=false}}
-      if(!ok){msg(T('ছবিটি সংরক্ষণ করা যায়নি, ছোট ছবি দিন','Could not save this image, try a smaller one'));return}
-      applyWp();render()};
-    img.onerror=function(){msg(T('ছবিটি পড়া যায়নি','Could not read this image'))};img.src=fr.result};
-  fr.readAsDataURL(f)}
-ui.addEventListener('change',function(e){if(e.target.id==='wpInput'){load(e.target.files&&e.target.files[0]);e.target.value=''}});
-ui.addEventListener('input',function(e){if(e.target.id==='wpRange'){put(DK,e.target.value);applyWp()}});
-ui.addEventListener('click',function(e){if(e.target.closest('#wpRm')){put(WK,'');applyWp();render()}});
-render();
-var _al=window.applyLanguage;if(typeof _al==='function')window.applyLanguage=function(){var r=_al.apply(this,arguments);try{render()}catch(e){}return r};
 })();
 </script>
 
@@ -8145,39 +8181,12 @@ function adv(){
   const n=6, xs=[0,1,2,3,4,5], sx=15, sy=sum(E.map(v=>({amount:v}))), sxy=xs.reduce((a,x)=>a+x*E[x],0), slope=(n*sxy-sx*sy)/(n*55-sx*sx);
   let score=Math.round((sr==null?0:Math.min(Math.max(sr,0),30)/30)*35+(runway==null?(bal>0?25:0):Math.min(runway,90)/90*25)+(1-Math.min(dr,1))*20+(em==null?0:Math.min(Math.max(em,0),6)/6*20));
   const sc=score>=70?'var(--green)':score>=40?'var(--amber)':'var(--red)', lb=score>=70?Lg('ভালো','Good'):score>=40?Lg('মোটামুটি','Fair'):Lg('সতর্ক','Needs care');
-  /* --- daily spend allowance = available balance / days left in month (live) --- */
-  const spT=sum(T.filter(x=>x.date===today&&isExpenseLike(x))), dl=left+1, base=Math.max(0,bal+spT), allow=Math.floor(base/dl), rem=allow-spT;
-  const dpct=allow>0?Math.min(100,Math.round(spT/allow*100)):(spT>0?100:0), dover=spT>allow, dst=dover||base<=0?'over':(dpct>=80?'warn':'ok');
-  const nextAllow=dl>1?Math.floor(Math.max(0,bal)/(dl-1)):null;
-  let vd; if(bal<=0) vd=Lg('ব্যালেন্স শেষ — নতুন আয় আসা পর্যন্ত খরচ থামান','Balance is used up — pause spending until new income arrives');
-  else if(burn>allow) vd=Lg('আপনার গড় দৈনিক খরচ '+fmt(burn)+', সীমার চেয়ে '+fmt(burn-allow)+' বেশি — এভাবে চললে ব্যালেন্স প্রায় '+runway+' দিন চলবে, মাস পুরো হবে না','Your average daily spend is '+fmt(burn)+', '+fmt(burn-allow)+' above the limit — at this pace the balance lasts about '+runway+' days, not the whole month');
-  else vd=Lg('গড় দৈনিক খরচ '+fmt(burn)+' — এই গতিতে মাস শেষে প্রায় '+fmt(Math.max(0,bal-burn*dl))+' বাঁচবে','Average daily spend is '+fmt(burn)+' — at this pace about '+fmt(Math.max(0,bal-burn*dl))+' will be left at month end');
-  const hero='<div class="advDay s-'+dst+'"><div class="adH"><span>'+ic('target')+' '+Lg('আজকের খরচের সীমা','Today\'s spending limit')+'</span><em class="adLive"><i></i>'+Lg('লাইভ','Live')+'</em></div>'
-   +'<div class="adBig"><b>'+(base<=0?fmt(0):fmt(Math.abs(rem)))+'</b><small>'+(base<=0?Lg('আজ খরচ করার মতো ব্যালেন্স নেই','No balance left to spend today'):dover?Lg('আজকের সীমা ছাড়িয়েছেন','over today\'s limit'):Lg('আজ আর খরচ করতে পারবেন','you can still spend today'))+'</small></div>'
-   +'<div class="adBar"><i style="width:'+dpct+'%"></i></div>'
-   +'<div class="adRow"><div><small>'+Lg('ব্যালেন্স','Balance')+'</small><b>'+fmt(bal)+'</b></div><div><small>'+Lg('বাকি দিন (আজসহ)','Days left (incl. today)')+'</small><b>'+dl+'</b></div><div><small>'+Lg('দৈনিক সীমা','Daily limit')+'</small><b>'+fmt(allow)+'</b></div></div>'
-   +'<div class="adNote">'+Lg('হিসাব: ','Formula: ')+fmt(base)+' ÷ '+dl+Lg(' দিন',' days')+' = '+fmt(allow)+' · '+Lg('আজ খরচ ','spent today ')+fmt(spT)+'</div>'
-   +(nextAllow!=null&&bal>0?'<div class="adNote">'+Lg('আজ আর খরচ না করলে কাল থেকে দৈনিক ','If you stop spending today, daily limit from tomorrow: ')+fmt(nextAllow)+'</div>':'')
-   +'<div class="adNote adV">'+vd+'</div></div>';
-  if(!$('ftAdvDayCss')){ const st=document.createElement('style'); st.id='ftAdvDayCss'; st.textContent=
-   '.advDay{border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:10px;background:linear-gradient(160deg,color-mix(in srgb,var(--c0) 12%,var(--card)),var(--card));--c0:var(--green)}'
-   +'.advDay.s-warn{--c0:var(--amber)}.advDay.s-over{--c0:var(--red)}'
-   +'.advDay .adH{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:800}'
-   +'.advDay .adLive{display:inline-flex;align-items:center;gap:5px;font-style:normal;font-size:10.5px;font-weight:800;color:var(--c0);background:color-mix(in srgb,var(--c0) 14%,transparent);padding:3px 9px;border-radius:20px}'
-   +'.advDay .adLive i{width:7px;height:7px;border-radius:50%;background:var(--c0);animation:adPulse 1.6s infinite}'
-   +'@keyframes adPulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--c0) 55%,transparent)}100%{box-shadow:0 0 0 8px transparent}}'
-   +'.advDay .adBig{margin:10px 0 8px}.advDay .adBig b{display:block;font-size:30px;font-weight:800;line-height:1.1;color:var(--c0)}.advDay .adBig small{font-size:12.5px;color:var(--muted);font-weight:600}'
-   +'.advDay .adBar{height:8px;border-radius:8px;background:var(--border);overflow:hidden;margin-bottom:12px}.advDay .adBar i{display:block;height:100%;border-radius:8px;background:var(--c0);transition:width .5s}'
-   +'.advDay .adRow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}.advDay .adRow div{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:8px 6px;text-align:center}'
-   +'.advDay .adRow small{display:block;font-size:10.5px;color:var(--muted);font-weight:700}.advDay .adRow b{display:block;font-size:14px;font-weight:800;margin-top:2px}'
-   +'.advDay .adNote{font-size:12px;color:var(--muted);line-height:1.5;margin-top:4px}.advDay .adV{color:var(--text);font-weight:600;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)}';
-   document.head.appendChild(st); }
   const tile=(l,v,s2)=>'<div class="advT"><small>'+l+'</small><b>'+v+'</b><small>'+s2+'</small></div>';
-  let h=head+hero+'<div class="advG"><div class="advT w"><small>'+ic('gauge')+' '+Lg('আর্থিক স্বাস্থ্য স্কোর','Financial health score')+'</small><b style="color:'+sc+'">'+score+'/100 · '+lb+'</b><div class="advBar"><i style="width:'+score+'%;background:'+sc+'"></i></div></div>'
+  let h=head+'<div class="advG"><div class="advT w"><small>'+ic('gauge')+' '+Lg('আর্থিক স্বাস্থ্য স্কোর','Financial health score')+'</small><b style="color:'+sc+'">'+score+'/100 · '+lb+'</b><div class="advBar"><i style="width:'+score+'%;background:'+sc+'"></i></div></div>'
    +tile(Lg('সঞ্চয়ের হার','Savings rate'),sr==null?'—':sr+'%',Lg('এই মাসের আয় থেকে','of this month\'s income'))
    +tile(Lg('ব্যালেন্সে চলবে','Runway'),runway==null?'—':runway+Lg(' দিন',' days'),Lg('দৈনিক গড় ','avg ')+fmt(burn))
    +tile(Lg('মাস শেষে খরচ','Month-end spend'),fmt(proj),Lg('বর্তমান গতিতে','at current pace'))
-   +tile(Lg('মাস শেষ হতে','Until month end'),dl+Lg(' দিন',' days'),Lg('আজসহ বাকি দিন','including today'))
+   +tile(Lg('দৈনিক নিরাপদ সীমা','Safe daily limit'),left>0?fmt(safe):'—',Lg('বাকি '+left+' দিন','for '+left+' days left'))
    +tile(Lg('নিট সম্পদ','Net worth'),fmt(nw),Lg('ব্যালেন্স+সঞ্চয়+পাওনা−দেনা','balance+savings+owed−debt'))
    +tile(Lg('জরুরি তহবিল','Emergency fund'),em==null?'—':em.toFixed(1)+Lg(' মাস',' mo'),Lg('গড় মাসিক খরচের ভিত্তিতে','at avg monthly spend'))+'</div>';
   const mx=Math.max(1,...I,...E);
@@ -8198,8 +8207,6 @@ function adv(){
 }
 const _u=window.updateHome; window.updateHome=function(){ if(_u) _u.apply(this,arguments); try{adv();}catch(e){console.error(e);} };
 try{adv();}catch(e){}
-setInterval(function(){try{adv();}catch(e){}},30000);
-document.addEventListener('visibilitychange',function(){ if(!document.hidden){ try{adv();}catch(e){} } });
 })();
 </script>
 <script>
@@ -8314,24 +8321,17 @@ bell.addEventListener('click',openSheet);
 ov.addEventListener('click',e=>{ if(e.target===ov){ closeSheet(); return; } const a=e.target.closest('[data-a]'); if(a){ if(a.dataset.a==='read'){ log.forEach(x=>x.r=1); } else { log=[]; } jset(LK,log); badge(); render(); return; }
   const it=e.target.closest('.ntIt'); if(it){ const x=log[+it.dataset.i]; if(x){ x.r=1; jset(LK,log); badge(); open(x.type); } } });
 /* ---------- settings card ---------- */
-const box=document.createElement('details'); box.className='box setBox'; box.id='ntPrefBox'; box.dataset.pro='1';
-const bsum=document.createElement('summary');
-bsum.innerHTML='<span class="setIco" style="--c:#f59e0b">'+mi('bell')+'</span><div class="setTt"><h3></h3><small class="setSub"></small></div><span class="setPill"></span><svg viewBox="0 0 24 24" class="setChev"><path d="m9 6 6 6-6 6"/></svg>';
-const bbody=document.createElement('div'); bbody.className='setBody';
-box.appendChild(bsum); box.appendChild(bbody);
+const box=document.createElement('div'); box.className='box'; box.id='ntBox';
 const ROWS=[['msg','বন্ধুর নতুন মেসেজ','New friend messages'],['req','টাকার অনুরোধ','Money requests'],['rem','আমার রিমাইন্ডার','My reminders'],['loan','ধার ফেরতের তারিখ','Loan due dates'],['limit','দৈনিক খরচের সীমা','Daily spending limit'],['daily','প্রতিদিন হিসাব লেখার তাগিদ','Daily entry nudge'],['vib','ভাইব্রেশন','Vibration']];
-const NG=[['বন্ধু ও লেনদেন','Friends & requests',['msg','req']],['আর্থিক সতর্কতা','Money alerts',['loan','limit']],['রিমাইন্ডার ও তাগিদ','Reminders & nudges',['rem','daily','__time']],['ফিডব্যাক','Feedback',['vib']]];
 function status(){
   const p=perm(); return p==='granted'?'<b style="color:var(--green)">'+L('চালু আছে','Enabled')+'</b>':p==='denied'?'<b style="color:var(--red)">'+L('ব্লক করা আছে — ব্রাউজারের সাইট সেটিংস থেকে অনুমতি দিন','Blocked — allow it in the browser site settings')+'</b>':p==='unsupported'?'<b>'+L('এই ব্রাউজারে সিস্টেম নোটিফিকেশন নেই; অ্যাপের ভেতরের নোটিফিকেশন কাজ করবে','System notifications are not available here; in-app alerts still work')+'</b>':'<b>'+L('এখনো অনুমতি দেওয়া হয়নি','Permission not granted yet')+'</b>';
 }
 function drawBox(){
-  bsum.querySelector('h3').textContent=L('নোটিফিকেশন','Notifications');
-  bsum.querySelector('.setSub').textContent=L('মেসেজ, রিমাইন্ডার ও সতর্কতা','Messages, reminders & alerts');
-  bsum.querySelector('.setPill').textContent=perm()==='granted'?L('চালু','On'):perm()==='denied'?L('ব্লক','Blocked'):L('বন্ধ','Off');
-  bbody.innerHTML='<div class="st">'+L('সিস্টেম নোটিফিকেশন: ','System notifications: ')+status()+'<br>'+L('অ্যাপ খোলা বা ব্যাকগ্রাউন্ডে থাকলে মেসেজ ও রিমাইন্ডার ফোনের নোটিফিকেশনে আসবে। অ্যাপ পুরোপুরি বন্ধ থাকলে আসে না।','Alerts arrive while the app is open or in the background. They cannot arrive once it is fully closed.')+'</div>'
+  box.innerHTML='<h3>'+ic('bell')+' '+L('নোটিফিকেশন','Notifications')+'</h3><div class="st">'+L('সিস্টেম নোটিফিকেশন: ','System notifications: ')+status()+'<br>'+L('অ্যাপ খোলা বা ব্যাকগ্রাউন্ডে থাকলে মেসেজ ও রিমাইন্ডার ফোনের নোটিফিকেশনে আসবে। অ্যাপ পুরোপুরি বন্ধ থাকলে আসে না।','Alerts arrive while the app is open or in the background. They cannot arrive once it is fully closed.')+'</div>'
    +(perm()==='default'?'<button type="button" class="main" data-a="ask" style="margin:0 0 8px">'+L('নোটিফিকেশন চালু করুন','Turn on notifications')+'</button>':'')
-   +'<div class="ntSub">'+L('সাধারণ','General')+'</div><div class="ntRow"><span>'+L('ফোনের নোটিফিকেশন দেখান','Show system notifications')+'</span><input type="checkbox" data-k="sys"'+(P.sys?' checked':'')+'></div>'
-   +NG.map(g=>'<div class="ntSub">'+L(g[0],g[1])+'</div>'+g[2].map(k=>{ if(k==='__time') return '<div class="ntRow"><span>'+L('তাগিদের সময়','Nudge time')+'</span><input type="time" id="ntTime" value="'+P.dailyTime+'" style="width:auto"></div>'; const r=ROWS.find(x=>x[0]===k); return r?'<div class="ntRow"><span>'+L(r[1],r[2])+'</span><input type="checkbox" data-k="'+r[0]+'"'+(P[r[0]]?' checked':'')+'></div>':''; }).join('')).join('')
+   +'<div class="ntRow"><span>'+L('ফোনের নোটিফিকেশন দেখান','Show system notifications')+'</span><input type="checkbox" data-k="sys"'+(P.sys?' checked':'')+'></div>'
+   +ROWS.map(r=>'<div class="ntRow"><span>'+L(r[1],r[2])+'</span><input type="checkbox" data-k="'+r[0]+'"'+(P[r[0]]?' checked':'')+'></div>').join('')
+   +'<div class="ntRow"><span>'+L('তাগিদের সময়','Nudge time')+'</span><input type="time" id="ntTime" value="'+P.dailyTime+'" style="width:auto"></div>'
    +'<div class="two"><button type="button" class="typebtn" data-a="test">'+L('টেস্ট পাঠান','Send test')+'</button><button type="button" class="typebtn" data-a="open">'+L('নোটিফিকেশন দেখুন','Open inbox')+'</button></div>';
 }
 box.addEventListener('change',e=>{ const k=e.target.dataset&&e.target.dataset.k; if(k){ P[k]=e.target.checked; saveP(); } if(e.target.id==='ntTime'&&e.target.value){ P.dailyTime=e.target.value; saveP(); } });
@@ -8348,72 +8348,6 @@ setInterval(()=>{ try{ scan(); }catch(e){} },10000);
 document.addEventListener('visibilitychange',()=>{ badge(); if(!document.hidden) setTimeout(scan,600); });
 window.addEventListener('focus',()=>setTimeout(scan,600));
 window.ftNotify=notify;
-})();
-</script>
-
-<style id="ftSetCats">
-#sec-settings .ftSetGrp{margin:22px 4px 10px}
-#sec-settings .ftSetGrp:first-of-type{margin-top:14px}
-.ntSub,.ftSub{display:block;font-size:11.5px;font-weight:800;letter-spacing:.4px;color:var(--muted);margin:14px 0 2px}
-.ntSub:first-child,.ftSub:first-child{margin-top:2px}
-</style>
-<script>
-/* ===== FinTrack: settings arranged by category ===== */
-(function(){
-var sec=document.getElementById('sec-settings'); if(!sec) return;
-var bl=function(b,e){return '<span class="bn">'+b+'</span><span class="en">'+e+'</span>';};
-var CATS=[
- {k:'acct',b:'প্রোফাইল ও অ্যাকাউন্ট',e:'Profile & account',m:['i:settings_profile','id:inviteBox','id:accountBox']},
- {k:'look',b:'চেহারা ও ভাষা',e:'Appearance & language',m:['theme','i:settings_lang','i:settings_logo']},
- {k:'money',b:'অর্থ ও বাজেট',e:'Money & budget',m:['i:settings_budget','i:settings_goal','id:spSetBox','i:settings_recurring','id:payBox']},
- {k:'notif',b:'নোটিফিকেশন ও রিমাইন্ডার',e:'Notifications & reminders',m:['id:rmBox','id:ntPrefBox','id:ntBox']},
- {k:'sec',b:'নিরাপত্তা ও প্রাইভেসি',e:'Security & privacy',m:['i:lock_heading','i:pin_heading','id:secPlusBox']},
- {k:'app',b:'অ্যাপ পছন্দ ও উইজেট',e:'App preferences & widget',m:['id:prefPlusBox','id:wgSetBox']},
- {k:'data',b:'ডেটা, ব্যাকআপ ও ক্লাউড',e:'Data, backup & cloud',m:['i:backup_heading','id:cloudSyncBox']},
- {k:'help',b:'সহায়তা ও ডেভেলপার',e:'Support & developer',m:['i:contact_heading','id:devModeBox','i:dev_mode_title']}
-];
-var heads=CATS.map(function(c){var d=document.createElement('div'); d.className='setGroup ftSetGrp'; d.dataset.g=c.k; d.innerHTML=bl(c.b,c.e); return d;});
-function keys(b){
-  var k=[]; if(b.id) k.push('id:'+b.id);
-  var h=b.querySelector('summary h3[data-i18n], :scope > h3[data-i18n]'); if(h) k.push('i:'+h.getAttribute('data-i18n'));
-  if(b.dataset.pro==='theme') k.push('theme');
-  return k;
-}
-function place(b){
-  var ks=keys(b);
-  for(var c=0;c<CATS.length;c++){ for(var i=0;i<CATS[c].m.length;i++){ if(ks.indexOf(CATS[c].m[i])>-1) return [c,i]; } }
-  return [5,99];
-}
-function subs(){
-  function add(id,need,list,fix){
-    var body=document.querySelector('#'+id+' > .setBody'); if(!body||body.dataset.ftSub) return;
-    var rows=[].slice.call(body.querySelectorAll(':scope > label.ftRow')); if(rows.length<need) return;
-    if(fix) fix(body,rows);
-    list.forEach(function(s){ var d=document.createElement('div'); d.className='ftSub'; d.innerHTML=bl(s[1],s[2]); rows[s[0]].before(d); });
-    body.dataset.ftSub='1';
-  }
-  add('secPlusBox',4,[[0,'অ্যাপ লক','App lock'],[2,'প্রাইভেসি','Privacy'],[3,'ফিডব্যাক','Feedback']],function(body,rows){ var lb=body.querySelector(':scope > button.typebtn'); if(lb) rows[1].after(lb); });
-  add('prefPlusBox',3,[[0,'সংখ্যা ও ফরম্যাট','Numbers & format'],[2,'ব্যাকআপ','Backup']]);
-}
-var busy=false;
-function run(){
-  if(busy) return; busy=true;
-  try{
-    [].slice.call(sec.querySelectorAll(':scope > .setGroup:not(.ftSetGrp)')).forEach(function(e){e.remove();});
-    var boxes=[].slice.call(sec.children).filter(function(el){return el.matches('details.setBox, .box');});
-    var buckets=CATS.map(function(){return [];});
-    boxes.forEach(function(b){ var p=place(b); buckets[p[0]].push([p[1],b]); });
-    var want=[];
-    CATS.forEach(function(c,ci){ var a=buckets[ci]; if(!a.length) return; a.sort(function(x,y){return x[0]-y[0];}); want.push(heads[ci]); a.forEach(function(x){want.push(x[1]);}); });
-    var cur=[].slice.call(sec.children).filter(function(el){return want.indexOf(el)>-1;});
-    var same=cur.length===want.length&&cur.every(function(e,i){return e===want[i];});
-    if(!same){ var ref=sec.querySelector(':scope > .setHero'); want.forEach(function(el){ if(ref) ref.after(el); else sec.prepend(el); ref=el; }); }
-    subs();
-  }catch(e){ console.warn('settings cats',e); }
-  busy=false;
-}
-var t; new MutationObserver(function(){ clearTimeout(t); t=setTimeout(run,120); }).observe(sec,{childList:true});
-run(); setTimeout(run,900); setTimeout(run,2600);
 })();
 </script>
 </body>
