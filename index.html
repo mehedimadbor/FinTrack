@@ -824,6 +824,11 @@ i.ti,b.ti{background:var(--green);} i.te,b.te{background:var(--red);}
 .advG{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}.advT{border:1px solid var(--border);border-radius:12px;padding:10px;background:var(--bg)}
 .advT small{display:block;font-size:11.5px;color:var(--muted);line-height:1.35}.advT b{font-size:17px}.advT.w{grid-column:1/3}
 .advBar{height:7px;border-radius:7px;background:var(--border);overflow:hidden;margin-top:6px}.advBar i{display:block;height:100%}
+.advDaily{border:1px solid color-mix(in srgb,var(--primary) 30%,var(--border));border-radius:16px;padding:13px 14px 12px;margin-bottom:12px;background:linear-gradient(160deg,color-mix(in srgb,var(--primary) 9%,var(--card)),var(--card))}
+.advDH{font-size:12.5px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:6px}
+.advDBig{font-size:30px;font-weight:900;letter-spacing:-.5px;margin:4px 0 2px;line-height:1.15}.advDBig small{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:0}
+.advDRow{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:6px 0;border-bottom:1px dashed var(--border)}.advDRow:last-of-type{border-bottom:0}.advDRow span{color:var(--muted)}.advDRow b{white-space:nowrap}
+.advDMsg{font-size:12.5px;font-weight:700;line-height:1.5;margin-top:8px}
 </style>
 <style id="ftLoginV2">
 html body .loginScreen:not([style*="none"]){display:flex !important;background:var(--bg) !important;flex-direction:column;align-items:center;justify-content:safe center !important;padding:calc(18px + env(safe-area-inset-top,0px)) 16px calc(18px + env(safe-area-inset-bottom,0px)) !important;background:radial-gradient(60% 40% at 100% 0%,color-mix(in srgb,var(--primary) 22%,transparent),transparent 70%),radial-gradient(55% 40% at 0% 100%,color-mix(in srgb,var(--green) 18%,transparent),transparent 70%),color-mix(in srgb,var(--primary) 12%,var(--bg)) !important;color:var(--text)}
@@ -885,8 +890,8 @@ header.top{position:relative}
 .ntRow input[type=checkbox]{width:44px;height:26px;appearance:none;-webkit-appearance:none;border-radius:13px;background:var(--border);position:relative;flex:none;cursor:pointer;transition:background .2s}
 .ntRow input[type=checkbox]::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s}
 .ntRow input[type=checkbox]:checked{background:var(--green)}.ntRow input[type=checkbox]:checked::after{transform:translateX(18px)}
-#ntBox .st{font-size:13px;color:var(--muted);margin:2px 0 10px;line-height:1.5}#ntBox .st b{color:var(--text)}
-#ntBox .two{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+#ntBox .st,#ntSetBox .st{font-size:13px;color:var(--muted);margin:2px 0 10px;line-height:1.5}#ntBox .st b,#ntSetBox .st b{color:var(--text)}
+#ntBox .two,#ntSetBox .two{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 </style>
 <style id="ftLoginV3">
 html body .loginScreen .loginBox>#lgTabs:not([style*="none"]){display:flex !important;order:5;gap:4px;padding:5px;margin:0 0 16px;border-radius:999px;background:color-mix(in srgb,var(--text) 7%,var(--card));border:1px solid var(--border)}
@@ -6382,6 +6387,15 @@ applyFeat();render();
 .thGrid .swatch.active{border-color:#fff;box-shadow:0 0 0 2.5px var(--primary),0 12px 22px -10px color-mix(in srgb,var(--primary) 70%,transparent);transform:translateY(-1px);}
 .thGrid .swatch.active::after{inset:auto;top:7px;right:7px;margin:0;width:20px;height:20px;}
 #swCustomBox{margin-top:4px;padding-top:14px;border-top:1px dashed var(--border);}
+/* round theme swatches (bg circle + accent wedge), 6 per row */
+#thWrap .thGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px 10px;margin:6px 2px 18px;}
+#thWrap .thGrid .swatch{width:100%;height:auto;aspect-ratio:1/1;border-radius:50%;position:relative;overflow:hidden;cursor:pointer;border:1px solid color-mix(in srgb,var(--text) 16%,transparent);box-shadow:none;transform:none;transition:transform .15s,box-shadow .2s;-webkit-tap-highlight-color:transparent;}
+#thWrap .thGrid .swatch:active{transform:scale(.92);}
+#thWrap .thGrid .swatch::before{display:none;}
+#thWrap .thGrid .swatch::after,#thWrap .thGrid .swatch.active::after{content:"";position:absolute;inset:auto;top:auto;left:auto;right:-9%;bottom:-9%;width:66%;height:66%;margin:0;border-radius:50%;background:var(--sa,var(--primary));-webkit-mask:none;mask:none;filter:none;}
+#thWrap .thGrid .swatch.active{border-color:transparent;transform:none;box-shadow:0 0 0 3px var(--card),0 0 0 5.5px var(--text);}
+#thWrap .thGroup{display:none;}
+.ftCat{scroll-margin-top:70px;}
 </style>
 
 <script>
@@ -6418,7 +6432,7 @@ function themes(){
   var L=[],D=[]; sw.forEach(function(s){ (lum(s.style.background)<.4?D:L).push(s); });
   var wrap=document.createElement('div'); wrap.id='thWrap'; wrap.className='thWrap';
   function grp(b,e,arr){ if(!arr.length) return; var h=document.createElement('div'); h.className='thGroup'; h.innerHTML=bl(b,e)+'<i>'+arr.length+'</i>'; var g=document.createElement('div'); g.className='thGrid'; arr.forEach(function(s){ g.appendChild(s); }); wrap.appendChild(h); wrap.appendChild(g); }
-  grp('হালকা থিম','Light themes',L); grp('ডার্ক থিম','Dark themes',D);
+  (function(){ var g=document.createElement('div'); g.className='thGrid'; L.concat(D).forEach(function(s){ var m=(s.style.background||'').match(/rgba?\([^)]*\)|#[0-9a-fA-F]{3,8}/g)||[]; if(m.length>1){ s.style.setProperty('--sa',m[m.length-1]); s.style.background=m[0]; } g.appendChild(s); }); wrap.appendChild(g); })();
   row.after(wrap);
   document.addEventListener('click',function(e){ if(e.target.closest('.swatch')) setTimeout(pill,30); });
   pill();
@@ -8182,7 +8196,18 @@ function adv(){
   let score=Math.round((sr==null?0:Math.min(Math.max(sr,0),30)/30)*35+(runway==null?(bal>0?25:0):Math.min(runway,90)/90*25)+(1-Math.min(dr,1))*20+(em==null?0:Math.min(Math.max(em,0),6)/6*20));
   const sc=score>=70?'var(--green)':score>=40?'var(--amber)':'var(--red)', lb=score>=70?Lg('ভালো','Good'):score>=40?Lg('মোটামুটি','Fair'):Lg('সতর্ক','Needs care');
   const tile=(l,v,s2)=>'<div class="advT"><small>'+l+'</small><b>'+v+'</b><small>'+s2+'</small></div>';
-  let h=head+'<div class="advG"><div class="advT w"><small>'+ic('gauge')+' '+Lg('আর্থিক স্বাস্থ্য স্কোর','Financial health score')+'</small><b style="color:'+sc+'">'+score+'/100 · '+lb+'</b><div class="advBar"><i style="width:'+score+'%;background:'+sc+'"></i></div></div>'
+  const dl=left+1, spT=sum(T.filter(x=>isExpenseLike(x)&&x.date===today)), startBal=Math.max(0,bal+spT), per30=startBal/30, perLeft=startBal/dl, remT=perLeft-spT, usedPct=perLeft>0?Math.min(100,spT/perLeft*100):(spT>0?100:0);
+  const dcol=remT<0?'var(--red)':usedPct>=80?'var(--amber)':'var(--green)';
+  const dmsg=startBal<=0&&spT<=0?Lg('ব্যালেন্স নেই — আয় বা জমা যোগ করুন','No balance left — add income or a deposit'):remT>=0?Lg('আজ আর '+fmt(remT)+' খরচ করতে পারবেন — এভাবে চললে বর্তমান ব্যালেন্সে মাস শেষ পর্যন্ত চলবে','You can still spend '+fmt(remT)+' today — at this pace your balance lasts to month end'):Lg('আজ সীমার চেয়ে '+fmt(-remT)+' বেশি খরচ হয়েছে — বাকি দিনগুলোতে একটু কম খরচ করুন','You are '+fmt(-remT)+' over today\'s limit — spend a little less on the remaining days');
+  const daily='<div class="advDaily"><div class="advDH">'+ic('gauge')+' '+Lg('আজ কত খরচ করতে পারবেন','How much you can spend today')+'</div>'
+    +'<div class="advDBig" style="color:'+dcol+'">'+fmt(perLeft)+'<small>'+Lg(' / আজকের সীমা',' / today\'s limit')+'</small></div>'
+    +'<div class="advBar"><i style="width:'+usedPct+'%;background:'+dcol+'"></i></div>'
+    +'<div class="advDRow"><span>'+Lg('আজ খরচ হয়েছে','Spent today')+'</span><b>'+fmt(spT)+'</b></div>'
+    +'<div class="advDRow"><span>'+Lg('আজ আর বাকি','Left for today')+'</span><b style="color:'+dcol+'">'+fmt(Math.max(0,remT))+'</b></div>'
+    +'<div class="advDRow"><span>'+Lg('ব্যালেন্স ÷ ৩০ দিন','Balance ÷ 30 days')+'</span><b>'+fmt(per30)+Lg(' /দিন',' /day')+'</b></div>'
+    +'<div class="advDRow"><span>'+Lg('ব্যালেন্স ÷ মাসের বাকি '+dl+' দিন','Balance ÷ '+dl+' days left in month')+'</span><b>'+fmt(perLeft)+Lg(' /দিন',' /day')+'</b></div>'
+    +'<div class="advDMsg" style="color:'+dcol+'">'+dmsg+'</div></div>';
+  let h=head+daily+'<div class="advG"><div class="advT w"><small>'+ic('gauge')+' '+Lg('আর্থিক স্বাস্থ্য স্কোর','Financial health score')+'</small><b style="color:'+sc+'">'+score+'/100 · '+lb+'</b><div class="advBar"><i style="width:'+score+'%;background:'+sc+'"></i></div></div>'
    +tile(Lg('সঞ্চয়ের হার','Savings rate'),sr==null?'—':sr+'%',Lg('এই মাসের আয় থেকে','of this month\'s income'))
    +tile(Lg('ব্যালেন্সে চলবে','Runway'),runway==null?'—':runway+Lg(' দিন',' days'),Lg('দৈনিক গড় ','avg ')+fmt(burn))
    +tile(Lg('মাস শেষে খরচ','Month-end spend'),fmt(proj),Lg('বর্তমান গতিতে','at current pace'))
@@ -8321,13 +8346,15 @@ bell.addEventListener('click',openSheet);
 ov.addEventListener('click',e=>{ if(e.target===ov){ closeSheet(); return; } const a=e.target.closest('[data-a]'); if(a){ if(a.dataset.a==='read'){ log.forEach(x=>x.r=1); } else { log=[]; } jset(LK,log); badge(); render(); return; }
   const it=e.target.closest('.ntIt'); if(it){ const x=log[+it.dataset.i]; if(x){ x.r=1; jset(LK,log); badge(); open(x.type); } } });
 /* ---------- settings card ---------- */
-const box=document.createElement('div'); box.className='box'; box.id='ntBox';
+const box=document.createElement('details'); box.className='box setBox'; box.id='ntSetBox'; box.dataset.pro='1';
+box.innerHTML='<summary><span class="setIco" style="--c:#f59e0b">'+ic('bell')+'</span><div class="setTt"><h3><span class="bn">নোটিফিকেশন অপশন</span><span class="en">Notification options</span></h3><small class="setSub"><span class="bn">কোন কোন অ্যালার্ট পাবেন তা ঠিক করুন</span><span class="en">Choose which alerts you get</span></small></div><svg viewBox="0 0 24 24" class="setChev"><path d="m9 6 6 6-6 6"/></svg></summary><div class="setBody"></div>';
+const ntBody=box.querySelector('.setBody');
 const ROWS=[['msg','বন্ধুর নতুন মেসেজ','New friend messages'],['req','টাকার অনুরোধ','Money requests'],['rem','আমার রিমাইন্ডার','My reminders'],['loan','ধার ফেরতের তারিখ','Loan due dates'],['limit','দৈনিক খরচের সীমা','Daily spending limit'],['daily','প্রতিদিন হিসাব লেখার তাগিদ','Daily entry nudge'],['vib','ভাইব্রেশন','Vibration']];
 function status(){
   const p=perm(); return p==='granted'?'<b style="color:var(--green)">'+L('চালু আছে','Enabled')+'</b>':p==='denied'?'<b style="color:var(--red)">'+L('ব্লক করা আছে — ব্রাউজারের সাইট সেটিংস থেকে অনুমতি দিন','Blocked — allow it in the browser site settings')+'</b>':p==='unsupported'?'<b>'+L('এই ব্রাউজারে সিস্টেম নোটিফিকেশন নেই; অ্যাপের ভেতরের নোটিফিকেশন কাজ করবে','System notifications are not available here; in-app alerts still work')+'</b>':'<b>'+L('এখনো অনুমতি দেওয়া হয়নি','Permission not granted yet')+'</b>';
 }
 function drawBox(){
-  box.innerHTML='<h3>'+ic('bell')+' '+L('নোটিফিকেশন','Notifications')+'</h3><div class="st">'+L('সিস্টেম নোটিফিকেশন: ','System notifications: ')+status()+'<br>'+L('অ্যাপ খোলা বা ব্যাকগ্রাউন্ডে থাকলে মেসেজ ও রিমাইন্ডার ফোনের নোটিফিকেশনে আসবে। অ্যাপ পুরোপুরি বন্ধ থাকলে আসে না।','Alerts arrive while the app is open or in the background. They cannot arrive once it is fully closed.')+'</div>'
+  ntBody.innerHTML='<div class="st">'+L('সিস্টেম নোটিফিকেশন: ','System notifications: ')+status()+'<br>'+L('অ্যাপ খোলা বা ব্যাকগ্রাউন্ডে থাকলে মেসেজ ও রিমাইন্ডার ফোনের নোটিফিকেশনে আসবে। অ্যাপ পুরোপুরি বন্ধ থাকলে আসে না।','Alerts arrive while the app is open or in the background. They cannot arrive once it is fully closed.')+'</div>'
    +(perm()==='default'?'<button type="button" class="main" data-a="ask" style="margin:0 0 8px">'+L('নোটিফিকেশন চালু করুন','Turn on notifications')+'</button>':'')
    +'<div class="ntRow"><span>'+L('ফোনের নোটিফিকেশন দেখান','Show system notifications')+'</span><input type="checkbox" data-k="sys"'+(P.sys?' checked':'')+'></div>'
    +ROWS.map(r=>'<div class="ntRow"><span>'+L(r[1],r[2])+'</span><input type="checkbox" data-k="'+r[0]+'"'+(P[r[0]]?' checked':'')+'></div>').join('')
@@ -8348,6 +8375,57 @@ setInterval(()=>{ try{ scan(); }catch(e){} },10000);
 document.addEventListener('visibilitychange',()=>{ badge(); if(!document.hidden) setTimeout(scan,600); });
 window.addEventListener('focus',()=>setTimeout(scan,600));
 window.ftNotify=notify;
+})();
+</script>
+
+<script>
+/* ===== Settings: all options grouped category-wise (idempotent, re-checks as other scripts add boxes) ===== */
+(function(){
+var sec=document.getElementById('sec-settings'); if(!sec) return;
+var bl=function(b,e){ return '<span class="bn">'+b+'</span><span class="en">'+e+'</span>'; };
+var CATS=[
+ ['look','চেহারা ও ভাষা','Appearance & language',['settings_theme','settings_lang','settings_logo']],
+ ['acct','অ্যাকাউন্ট ও প্রোফাইল','Account & profile',['settings_profile','inviteBox','accountBox']],
+ ['money','অর্থ ও বাজেট','Money & budget',['settings_budget','settings_goal','spSetBox','settings_recurring','payBox']],
+ ['remind','রিমাইন্ডার ও নোটিফিকেশন','Reminders & notifications',['rmBox','ntSetBox','ntBox']],
+ ['secu','নিরাপত্তা ও লক','Security & lock',['lock_heading','pin_heading','secPlusBox']],
+ ['data','ডেটা ও ব্যাকআপ','Data & backup',['cloudSyncBox','backup_heading']],
+ ['pref','অ্যাপ পছন্দ ও উইজেট','Preferences & widgets',['prefPlusBox','wgSetBox']],
+ ['help','সহায়তা ও ডেভেলপার','Support & developer',['contact_heading','devModeBox','dev_mode_title']]
+];
+var OTHER=['more','অন্যান্য','More',[]];
+function keyOf(d){ if(d.id) return d.id; var h=d.querySelector(':scope > summary h3'); return h&&h.getAttribute('data-i18n')||''; }
+function keysOf(d){ var k=[d.id]; var h=d.querySelector(':scope > summary h3'); if(h) k.push(h.getAttribute('data-i18n')||''); return k; }
+function arrange(){
+  try{
+    var dets=[].slice.call(sec.children).filter(function(n){ return n.matches&&n.matches('details.setBox'); });
+    if(!dets.length) return;
+    [].slice.call(sec.children).forEach(function(n){ if(n.classList&&n.classList.contains('setGroup')&&!n.classList.contains('ftCat')) n.remove(); });
+    var anchor=document.getElementById('ftCatAnchor');
+    if(!anchor){ anchor=document.createElement('div'); anchor.id='ftCatAnchor'; anchor.style.display='none'; dets[0].before(anchor); }
+    var cats=CATS.concat([OTHER]), buckets=cats.map(function(){ return []; });
+    dets.forEach(function(d){
+      var ks=keysOf(d), hit=-1;
+      for(var i=0;i<CATS.length&&hit<0;i++){ for(var j=0;j<ks.length;j++){ var p=CATS[i][3].indexOf(ks[j]); if(ks[j]&&p>-1){ hit=i; d._ftPos=p; break; } } }
+      if(hit<0){ hit=CATS.length; d._ftPos=99; }
+      buckets[hit].push(d);
+    });
+    var seq=[];
+    cats.forEach(function(c,i){
+      var b=buckets[i]; if(!b.length) return;
+      b.sort(function(x,y){ return x._ftPos-y._ftPos; });
+      var g=sec.querySelector('.ftCat[data-cat="'+c[0]+'"]');
+      if(!g){ g=document.createElement('div'); g.className='setGroup ftCat'; g.dataset.cat=c[0]; g.innerHTML=bl(c[1],c[2]); }
+      seq.push(g); b.forEach(function(d){ seq.push(d); });
+    });
+    [].slice.call(sec.querySelectorAll(':scope > .ftCat')).forEach(function(g){ if(seq.indexOf(g)<0) g.remove(); });
+    var ref=anchor;
+    seq.forEach(function(n){ if(ref.nextElementSibling!==n) ref.after(n); ref=n; });
+  }catch(e){ console.warn('settings categories',e); }
+}
+var t=0; function soon(){ clearTimeout(t); t=setTimeout(arrange,150); }
+new MutationObserver(soon).observe(sec,{childList:true});
+arrange(); [300,900,2500,5000].forEach(function(ms){ setTimeout(arrange,ms); });
 })();
 </script>
 </body>
