@@ -6669,6 +6669,7 @@ async function register(){
   var un=(localStorage.getItem('myUsername_v1')||'').trim();
   var rec={uid:s.uid,name:localStorage.getItem('myName_v1')||'',username:un,email:String(s.email).toLowerCase()};
   try{ var pic0=await window.ftPicThumb(); if(pic0) rec.pic=pic0; }catch(e){}
+  try{ rec.seen=(localStorage.getItem('ftShowSeen_v1')==='0')?0:Date.now(); }catch(e){}
   await db('directory/'+ek(s.email),{method:'PUT',headers:J,body:JSON.stringify(rec)});
   if(un){ try{ await db('usernames/'+ek(un),{method:'PUT',headers:J,body:JSON.stringify(rec)}); }catch(e){} }
 }
@@ -7168,6 +7169,13 @@ window.ftReqApi={
 .fcPvOv .nm{color:#fff;font-weight:800;font-size:17px;text-align:center}.fcPvOv .nm small{display:block;font-weight:600;font-size:12.5px;opacity:.75;margin-top:2px}
 .fcPvOv .x{position:absolute;top:calc(16px + env(safe-area-inset-top,0px));right:16px;width:42px;height:42px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;font-size:20px;cursor:pointer}
 @media (prefers-reduced-motion:reduce){.fcPvOv,.fcPvOv .im{animation:none}}
+.fcAv{position:relative}
+.fcAv.on::after{content:"";position:absolute;right:-1px;bottom:-1px;width:12px;height:12px;border-radius:50%;background:#22c55e;border:2px solid var(--card);box-shadow:0 0 0 0 rgba(34,197,94,.5);animation:fcPulse 2s infinite}
+@keyframes fcPulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.45)}70%,100%{box-shadow:0 0 0 7px rgba(34,197,94,0)}}
+.fcSt{display:inline-flex;align-items:center;gap:5px}.fcSt i{width:8px;height:8px;border-radius:50%;background:#22c55e;flex:none}.fcSt.off i{display:none}.fcSt.on{color:#16a34a;font-weight:700}
+.fcSw{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13.5px;font-weight:700}.fcSw small{display:block;color:var(--muted);font-weight:600;font-size:11.5px;margin-top:2px;line-height:1.35}
+.fcSw input{width:44px;height:26px;flex:none;accent-color:var(--primary)}
+@media (prefers-reduced-motion:reduce){.fcAv.on::after{animation:none}}
 .fcAv{width:42px;height:42px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:17px;color:#fff;background:var(--grad)}
 .fcRt{flex:1;min-width:0}.fcRt b{display:flex;justify-content:space-between;gap:8px;font-size:14.5px}.fcRt b span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fcRt b small{font-size:11px;color:var(--muted);font-weight:600;flex:none}
 .fcRt p{margin:3px 0 0;font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -7327,6 +7335,7 @@ async function register(){
   var s=R().ses(); if(!s||!s.email) return; var un=myUn();
   var rec={uid:s.uid,name:myName(),username:un,email:String(s.email).toLowerCase()};
   try{ var pic0=await window.ftPicThumb(); if(pic0) rec.pic=pic0; }catch(e){}
+  try{ rec.seen=(localStorage.getItem('ftShowSeen_v1')==='0')?0:Date.now(); }catch(e){}
   await db('directory/'+ek(s.email),{method:'PUT',headers:J,body:JSON.stringify(rec)});
   if(un){ try{ await db('usernames/'+ek(un),{method:'PUT',headers:J,body:JSON.stringify(rec)}); }catch(e){} }
   registered=true;
@@ -7359,8 +7368,53 @@ function snack(m,label,fn){
 }
 function buzz(n){ try{ if(navigator.vibrate) navigator.vibrate(n||12); }catch(e){} }
 var PICRE=/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]{20,60000}$/, picBusy=false;
+/* ---- active status (presence): heartbeat in directory/<email>/seen ---- */
+function seenOn(){ try{ return localStorage.getItem('ftShowSeen_v1')!=='0'; }catch(e){ return true; } }
+function seenOf(uid){ if(!seenOn()) return 0; var t=+(lsj('ftSeen_v1')[uid]||0); return t>0?Math.min(t,Date.now()):0; }
+function isOn(uid){ var t=seenOf(uid); return !!t&&Date.now()-t<150000; }
+function seenTxt(uid){
+  var t=seenOf(uid); if(!seenOn()) return {on:false,txt:''};
+  if(!t) return {on:false,txt:''};
+  var d=Date.now()-t, m=Math.floor(d/60000), now=new Date(), dt=new Date(t), L=bnL()?'bn-BD':'en-GB';
+  if(d<150000) return {on:true,txt:tx('এখন অ্যাকটিভ','Active now')};
+  var hm=dt.toLocaleTimeString(L,{hour:'numeric',minute:'2-digit'});
+  var y=new Date(now); y.setDate(y.getDate()-1);
+  var r=m<60?tx('শেষ অ্যাকটিভ '+m.toLocaleString(L)+' মিনিট আগে','Active '+m+' min ago')
+    :dt.toDateString()===now.toDateString()?tx('আজ '+hm+' এ শেষ অ্যাকটিভ','Last active today '+hm)
+    :dt.toDateString()===y.toDateString()?tx('গতকাল '+hm+' এ শেষ অ্যাকটিভ','Last active yesterday '+hm)
+    :tx(dt.toLocaleDateString(L,{day:'numeric',month:'short'})+' এ শেষ অ্যাকটিভ','Last active '+dt.toLocaleDateString(L,{day:'numeric',month:'short'}));
+  return {on:false,txt:r};
+}
+function stHtml(uid){ var st=seenTxt(uid); return st.txt?'<span class="fcSt'+(st.on?' on':' off')+'"><i></i>'+E(st.txt)+'</span>':''; }
+function paintSeen(){
+  Array.prototype.forEach.call(document.querySelectorAll('#ftFrPane .fcRow[data-open] .fcAv'),function(a){ var r=a.closest('.fcRow'); a.classList.toggle('on',isOn(r.getAttribute('data-open'))); });
+  if(cur){
+    var h=$('fcHdAv'); if(h) h.classList.toggle('on',isOn(cur));
+    var sb=$('fcHdSub'); if(sb){ var th=load().th[cur]||{}, s1=stHtml(cur), idt=th.un?'@'+th.un:th.email; sb.innerHTML=s1?(s1+(idt?' · '+E(idt):'')):E(idt||''); }
+  }
+}
+var lastBeat=0, seenBusy=false, tickN=0;
+async function beat(force){
+  if(!logged()||document.hidden&&!force) return; var now=Date.now(); if(!force&&now-lastBeat<50000) return; lastBeat=now;
+  var s=R().ses(); if(!s||!s.email) return;
+  try{ await db('directory/'+ek(s.email)+'/seen',{method:'PUT',headers:J,body:JSON.stringify(seenOn()?now:0)}); }catch(e){}
+}
+async function fetchSeen(){
+  if(seenBusy||!logged()||!seenOn()) return; seenBusy=true;
+  try{
+    var map=lsj('ftSeen_v1'), seenU={}, changed=false, list=(cur?[cur]:[]).concat(cur?[]:allUids()).filter(function(u){ if(seenU[u]) return false; seenU[u]=1; return true; }).slice(0,15);
+    for(var n=0;n<list.length;n++){
+      var u=list[n], i=info(u), em=i.email; if(!em) continue;
+      try{ var v=await db('directory/'+ek(em)+'/seen'); v=(typeof v==='number'&&v>0)?v:0; if(map[u]!==v){ map[u]=v; changed=true; } }catch(e){}
+    }
+    if(changed){ lss('ftSeen_v1',map); }
+    paintSeen();
+  }catch(e){}
+  seenBusy=false;
+}
+function presenceTick(){ tickN++; beat(false); if(document.hidden||pane!=='fr') return; if(cur||tickN%2===0) fetchSeen(); }
 function avPic(uid){ var c=lsj('ftAvCache_v1')[uid]; return c&&c.p&&PICRE.test(c.p)?c.p:''; }
-function av(uid,nm,id){ var p=avPic(uid); return p?'<div class="fcAv pic"'+(id?' id="'+id+'"':'')+' data-pv="'+E(uid)+'" style="background-image:url(\''+p+'\')" role="button" aria-label="photo"></div>':'<div class="fcAv"'+(id?' id="'+id+'"':'')+' style="background:'+avBg(uid)+'">'+E(String(nm||'?').charAt(0).toUpperCase())+'</div>'; }
+function av(uid,nm,id){ var p=avPic(uid), on=isOn(uid)?' on':''; return p?'<div class="fcAv pic'+on+'"'+(id?' id="'+id+'"':'')+' data-pv="'+E(uid)+'" style="background-image:url(\''+p+'\')" role="button" aria-label="photo"></div>':'<div class="fcAv'+on+'"'+(id?' id="'+id+'"':'')+' style="background:'+avBg(uid)+'">'+E(String(nm||'?').charAt(0).toUpperCase())+'</div>'; }
 function showPv(uid){
   var p=avPic(uid); if(!p) return; var i=info(uid), nm=i.name||i.un||i.email||'';
   var o=document.createElement('div'); o.className='fcPvOv'; o.innerHTML='<button type="button" class="x" aria-label="close">✕</button><div class="im" style="background-image:url(\''+p+'\')"></div><div class="nm">'+E(nm)+(i.un?'<small>@'+E(i.un)+'</small>':'')+'</div>';
@@ -7509,11 +7563,12 @@ function renderList(){
       +(un?'<em class="fcBdg" style="display:inline-flex">'+un+'</em>':'')+'</div>';
   });
   h+='</div>';
+  h+='<div class="fcCard"><label class="fcSw"><span>'+tx('অ্যাকটিভ স্ট্যাটাস দেখান','Show active status')+'<small>'+tx('চালু থাকলে বন্ধুরা আপনার অ্যাকটিভ থাকা ও শেষ অ্যাকটিভ সময় দেখবে, আপনিও তাদেরটা দেখবেন। বন্ধ করলে কেউ কারো স্ট্যাটাস দেখবে না।','When on, friends see when you are active or last active, and you see theirs. When off, neither side is shown.')+'</small></span><input type="checkbox" id="fcSeenTg"'+(seenOn()?' checked':'')+'></label></div>';
   var bk=Object.keys(lsj('ftChatBlock_v1'));
   if(bk.length) h+='<div class="fcCard"><h4><i class="mi" style="--m:var(--ic-ban)"></i> '+tx('ব্লক করা','Blocked')+'</h4>'+bk.map(function(u){ var i=info(u); return '<div class="fcRow" style="cursor:default">'+av(u,i.name||i.un||'?')+'<div class="fcRt"><b><span>'+E(i.name||i.un||i.email||u)+'</span></b></div><button type="button" class="fcGo" style="width:auto;padding:8px 14px;font-size:12.5px;box-shadow:none" data-unb="'+E(u)+'">'+tx('আনব্লক','Unblock')+'</button></div>'; }).join('')+'</div>';
   f.innerHTML=h;
   decorate(); if(oldTo&&$('fcTo')) $('fcTo').value=oldTo;
-  setTimeout(fetchPics,0);
+  setTimeout(fetchPics,0); setTimeout(fetchSeen,300);
   if(oldQ&&$('fcSearch')){ $('fcSearch').value=oldQ; applySearch(oldQ); }
 }
 function applySearch(v){ v=String(v||'').trim().toLowerCase(); Array.prototype.forEach.call(document.querySelectorAll('#ftFrPane .fcRow[data-name]'),function(r){ r.style.display=!v||r.getAttribute('data-name').indexOf(v)>=0?'':'none'; }); }
@@ -7666,7 +7721,7 @@ function renderConv(force){
   lastSig=sg;
   if(!hasShell){
     f.setAttribute('data-cur',cur); seen[cur]=seen[cur]||{}; jumpN=0;
-    f.innerHTML='<div class="fcCard"><div class="fcHd"><button type="button" class="hb" data-a="back">←</button>'+av(cur,nm,'fcHdAv')+'<div class="fcRt"><b>'+E(nm)+'</b><p>'+E(th.un?'@'+th.un:th.email)+'</p></div><button type="button" class="hb" data-a="hm" aria-label="menu">⋮</button><div class="fcDrop" id="fcHm" style="display:none"><button type="button" data-hm="find"><i class="mi" style="--m:var(--ic-search)"></i> '+tx('চ্যাটে খুঁজুন','Search chat')+'</button><button type="button" data-hm="pin"></button><button type="button" data-hm="block"><i class="mi" style="--m:var(--ic-ban)"></i> '+tx('ব্লক করুন','Block')+'</button><button type="button" class="dg" data-hm="del"><i class="mi" style="--m:var(--ic-trash)"></i> '+tx('চ্যাট মুছুন','Delete chat')+'</button></div></div>'
+    f.innerHTML='<div class="fcCard"><div class="fcHd"><button type="button" class="hb" data-a="back">←</button>'+av(cur,nm,'fcHdAv')+'<div class="fcRt"><b>'+E(nm)+'</b><p id="fcHdSub">'+(stHtml(cur)?stHtml(cur)+' · ':'')+E(th.un?'@'+th.un:th.email)+'</p></div><button type="button" class="hb" data-a="hm" aria-label="menu">⋮</button><div class="fcDrop" id="fcHm" style="display:none"><button type="button" data-hm="find"><i class="mi" style="--m:var(--ic-search)"></i> '+tx('চ্যাটে খুঁজুন','Search chat')+'</button><button type="button" data-hm="pin"></button><button type="button" data-hm="block"><i class="mi" style="--m:var(--ic-ban)"></i> '+tx('ব্লক করুন','Block')+'</button><button type="button" class="dg" data-hm="del"><i class="mi" style="--m:var(--ic-trash)"></i> '+tx('চ্যাট মুছুন','Delete chat')+'</button></div></div>'
       +'<div class="fcBal" id="fcBal"></div>'
       +'<div class="fcFindW" id="fcFindW" style="display:none"><input class="fcIn" id="fcFind" type="search" autocomplete="off" placeholder="'+tx('এই চ্যাটে খুঁজুন…','Search in this chat…')+'"></div>'
       +'<div class="fcSeg"><button type="button" data-flt="all">'+tx('সব','All')+'</button><button type="button" data-flt="money"><i class="mi" style="--m:var(--ic-coin)"></i> '+tx('লেনদেন','Money')+'</button></div>'
@@ -7967,7 +8022,7 @@ function openConv(uid){
   cur=uid; ensureTh(uid); var st=load(); replyTo=null; qry=''; divTs=0;
   if(st.th[uid]){ var th0=st.th[uid], un0=th0.unread||0; if(un0>0){ var tm0=th0.msgs.filter(function(m){ return !m.me; }), nx0=tm0[tm0.length-un0]; if(nx0) divTs=nx0.ts; } th0.unread=0; save(st); }
   var f=$('ftFrPane'); if(f) f.removeAttribute('data-cur');
-  filt='all'; lastSig=''; setPane('fr'); setBadge(); setTimeout(fetchPics,200);
+  filt='all'; lastSig=''; setPane('fr'); setBadge(); setTimeout(fetchPics,200); setTimeout(fetchSeen,100);
   setTimeout(function(){ var i=$('fcInput'); if(i&&!TOUCH) i.focus(); },60);
 }
 function closeConv(){ replyTo=null; qry=''; divTs=0; closeAct(); cur=null; lastSig=''; closeForm(); var f=$('ftFrPane'); if(f) f.removeAttribute('data-cur'); renderFr(); setBadge(); }
@@ -8035,6 +8090,7 @@ function onInput(e){
   else if(t.id==='fcQNm') remHint(true);
   else if(t.id==='fcQAmt') capUpd();
   else if(t.id==='fcQCat') fxUpd();
+  else if(t.id==='fcSeenTg'){ try{ localStorage.setItem('ftShowSeen_v1',t.checked?'1':'0'); }catch(e){} beat(true); if(t.checked) fetchSeen(); paintSeen(); renderList(); }
   else if(t.id==='fcFind'){ qry=t.value.trim(); lastSig=''; renderConv(true); }
   else if(t.id==='fcQTot') splitCalc();
   else if(t.id==='fcQNote') t.removeAttribute('data-auto');
@@ -8148,7 +8204,11 @@ setInterval(function(){
   try{ tick++; if(!logged()) return; var fast=pane==='fr'&&visible(); if(fast||tick%3===0) pull(); if(fast&&tick%2===0){ var q=Q(); if(q) q.refresh(); } }catch(e){}
 },5000);
 document.addEventListener('visibilitychange',function(){ if(!document.hidden) pull(); });
-window.addEventListener('focus',function(){ pull(); });
+window.addEventListener('focus',function(){ pull(); beat(true); });
+setInterval(presenceTick,30000);
+document.addEventListener('visibilitychange',function(){ if(document.hidden){ beat(true); } else { beat(true); if(pane==='fr') fetchSeen(); } });
+window.addEventListener('pagehide',function(){ beat(true); });
+setTimeout(function(){ beat(true); },3500);
 window.addEventListener('ftPicChanged',function(){ if(logged()) register().catch(function(){}); });
 window.ftChatApi={
   welcome:async function(uid,name,text){
