@@ -297,10 +297,65 @@ details.gsetup summary::-webkit-details-marker{display:none;}
 .chatinputrow button{flex:0 0 auto; padding:10px 16px; border:none; border-radius:10px; background:var(--primary); color:#fff; font-weight:600; cursor:pointer;}
 #printArea{display:none;}
 @media print{
-  body *{ display:none !important; }
-  #printArea, #printArea *{ display:block !important; }
-  #printArea{ position:static; color:#000; background:#fff; padding:10px; }
-  #printArea .prow{ display:flex !important; justify-content:space-between; border-bottom:1px solid #ccc; padding:4px 0; }
+  @page{size:A4; margin:0;}
+  *{-webkit-print-color-adjust:exact !important; print-color-adjust:exact !important;}
+  html,body{background:#fff !important; margin:0 !important; padding:0 !important; height:auto !important; min-height:0 !important; overflow:visible !important; position:static !important;}
+  body > *:not(#printArea){display:none !important;}
+  #printArea{
+    display:block !important; position:static !important; padding:0 !important; margin:0 !important;
+    --bg:#ffffff; --card:#ffffff; --text:#1a1c1e; --muted:#6b7280; --border:#e5e7eb;
+    --green:#16a34a; --red:#dc2626; --red-bg:#fee2e2; --amber:#d97706; --sh:none; --r:6px;
+    --primary:var(--pc,#2563eb); --grad:linear-gradient(135deg,var(--pc,#2563eb),var(--pd,#1d4ed8));
+    color:#1a1c1e; background:transparent;
+    font-family:'Segoe UI','Noto Sans Bengali','Hind Siliguri','Nirmala UI',system-ui,Arial,sans-serif; font-size:10pt; line-height:1.45;
+  }
+  /* FinTrack pad pieces (repeat on every page) */
+  #printArea .pd-topbar{position:fixed; left:0; right:0; top:0; height:3.2mm; background:var(--grad); z-index:2;}
+  #printArea .pd-botbar{position:fixed; left:0; right:0; bottom:0; height:3.2mm; background:var(--grad); z-index:2;}
+  #printArea .pd-wm{position:fixed; right:-22mm; bottom:22mm; width:125mm; height:125mm; color:var(--pc,#2563eb); opacity:.07; transform:rotate(-12deg); z-index:0;}
+  #printArea .pd-wm img{width:100%; height:100%; object-fit:contain;}
+  #printArea .pd-head{position:fixed; left:17.5mm; right:17.5mm; top:11mm; height:13mm; display:flex; align-items:center; justify-content:space-between; z-index:2;}
+  #printArea .pd-brand{display:flex; align-items:center; gap:3.2mm;}
+  #printArea .pd-tile{width:12mm; height:12mm; border-radius:3.4mm; background:var(--grad); display:flex; align-items:center; justify-content:center; overflow:hidden; color:#fff;}
+  #printArea .pd-tile svg{width:6.6mm; height:6.6mm;}
+  #printArea .pd-tile img{width:100%; height:100%; object-fit:cover;}
+  #printArea .pd-name{font-size:18pt; font-weight:800; letter-spacing:-.2pt; color:#1a1c1e; line-height:1;}
+  #printArea .pd-tag{font-size:7.5pt; color:#6b7280; margin-top:1.2mm; font-weight:500;}
+  #printArea .pd-who{text-align:right; font-size:8.5pt; color:#374151; line-height:1.5;}
+  #printArea .pd-who b{display:block; font-size:10pt; color:#1a1c1e;}
+  #printArea .pd-hr{position:fixed; left:17.5mm; right:17.5mm; top:28mm; height:.3mm; background:linear-gradient(90deg,var(--pc,#2563eb),#e5e7eb 70%); z-index:2;}
+  #printArea .pd-fr{position:fixed; left:17.5mm; right:17.5mm; top:279mm; height:.3mm; background:linear-gradient(90deg,#e5e7eb 30%,var(--pc,#2563eb)); z-index:2;}
+  #printArea .pd-foot{position:fixed; left:17.5mm; right:17.5mm; top:281mm; display:flex; justify-content:space-between; font-size:8pt; color:#6b7280; z-index:2;}
+  #printArea .pd-foot b{color:var(--pc,#2563eb); font-weight:700;}
+  /* flowing content with repeating spacers */
+  #printArea table.pd-flow{width:100%; border-collapse:collapse; position:relative; z-index:1;}
+  #printArea table.pd-flow thead{display:table-header-group;}
+  #printArea table.pd-flow tfoot{display:table-footer-group;}
+  #printArea .pd-sp-top{height:34mm;}
+  #printArea .pd-sp-bot{height:22mm;}
+  #printArea td.pd-body{padding:0 17.5mm; vertical-align:top;}
+  /* content */
+  #printArea h2{font-size:15pt; margin:0 0 3mm; color:var(--pc,#2563eb); font-weight:800; padding-bottom:2mm; border-bottom:.4mm solid var(--pc,#2563eb);}
+  #printArea h3{font-size:11pt; margin:5mm 0 2mm; color:var(--pc,#2563eb);}
+  #printArea p{margin:0 0 2mm;}
+  #printArea .prow{display:flex !important; justify-content:space-between; gap:12px; border-bottom:1px solid #e5e7eb; padding:1.2mm 0; font-size:9.5pt; break-inside:avoid;}
+  #printArea .pd-date{margin-top:6mm; font-size:8pt; color:#6b7280; text-align:right;}
+  #printArea .box{background:transparent !important; border:1px solid #e5e7eb !important; border-radius:2.5mm !important; box-shadow:none !important; padding:3mm 4mm !important; margin:0 0 3.5mm !important; animation:none !important; break-inside:avoid;}
+  #printArea .box h3{font-size:10.5pt; margin:0 0 2.5mm; display:block;}
+  #printArea .box h3::before{display:none !important;}
+  #printArea .sgrid{display:grid !important; grid-template-columns:repeat(4,1fr); gap:2mm;}
+  #printArea .scard{background:#f8fafc !important; border:1px solid #e5e7eb !important; border-radius:2mm !important; padding:2mm 2.5mm !important;}
+  #printArea .scard .l{font-size:7.5pt; color:#6b7280;}
+  #printArea .scard .v{font-size:11pt; font-weight:700;}
+  #printArea .verdict{border-radius:2mm !important; padding:2.5mm 3mm !important; font-size:10pt; margin-bottom:3mm; animation:none !important;}
+  #printArea .verdict.bad{background:#fee2e2 !important; color:#dc2626 !important;}
+  #printArea .verdict.good{background:#dcfce7 !important; color:#16a34a !important;}
+  #printArea .verdict.neutral{background:#f8fafc !important; color:#1a1c1e !important; border:1px solid #e5e7eb;}
+  #printArea .kv{display:flex !important; justify-content:space-between; gap:10px; padding:1.4mm 0 !important; border-bottom:1px solid #eef0f3; font-size:9.5pt;}
+  #printArea .catrow{display:flex !important; padding:1.4mm 0; font-size:9.5pt; border-bottom:1px solid #eef0f3; break-inside:avoid;}
+  #printArea .barbg{background:#e5e7eb !important; height:1.4mm !important; border-radius:1mm; margin-top:1mm; overflow:hidden;}
+  #printArea .barfg{background:var(--grad) !important; height:100%; border-radius:1mm;}
+  #printArea .empty{color:#6b7280; font-size:9.5pt;}
 }
 
 .askOverlay{position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px;}
@@ -3119,6 +3174,33 @@ function esc(s){
   return String(s ?? '').replace(/[&<>"'`]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'}[c]));
 }
 
+// ---- FinTrack custom print pad ----
+// থিমের রঙ, অ্যাপের লোগো (বা আপনার বসানো কাস্টম লোগো), প্রোফাইলের নাম/ফোন নিয়ে নিজে থেকে পেজ সাজায়।
+const PRINT_WALLET_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10V7a2 2 0 0 1 2-2h11"/><path d="M16 14h5"/></svg>';
+function printWithLetterhead(bodyHtml){
+  const root = getComputedStyle(document.documentElement);
+  const pc = (root.getPropertyValue('--primary')||'').trim() || '#2563eb';
+  const pd = (root.getPropertyValue('--primary-d')||'').trim() || pc;
+  let logo = ''; let name = '', phone = '';
+  try{ logo = safeImgUrl(localStorage.getItem('customLogo_v1')||''); name = localStorage.getItem('myName_v1')||''; phone = localStorage.getItem('myPhone_v1')||''; }catch(e){}
+  const appName = t('app_title') || 'FinTrack';
+  const tile = logo ? `<img src="${esc(logo)}" alt="">` : PRINT_WALLET_SVG;
+  const wm = logo ? `<img src="${esc(logo)}" alt="">` : PRINT_WALLET_SVG;
+  const who = (name||phone) ? `<div class="pd-who">${name?`<b>${esc(name)}</b>`:''}${phone?esc(phone):''}</div>` : '';
+  const html =
+    `<div class="pd-topbar"></div><div class="pd-botbar"></div><div class="pd-wm">${wm}</div>` +
+    `<div class="pd-head"><div class="pd-brand"><div class="pd-tile">${tile}</div><div><div class="pd-name">${esc(appName)}</div><div class="pd-tag">Smart Personal Accounting</div></div></div>${who}</div>` +
+    `<div class="pd-hr"></div><div class="pd-fr"></div>` +
+    `<div class="pd-foot"><span><b>${esc(appName)}</b> · ${esc(todayStr())}</span><span>${esc([name,phone].filter(Boolean).join(' · '))}</span></div>` +
+    `<table class="pd-flow"><thead><tr><td><div class="pd-sp-top"></div></td></tr></thead>` +
+    `<tbody><tr><td class="pd-body">${bodyHtml}</td></tr></tbody>` +
+    `<tfoot><tr><td><div class="pd-sp-bot"></div></td></tr></tfoot></table>`;
+  const pa = document.getElementById('printArea');
+  pa.style.setProperty('--pc', pc); pa.style.setProperty('--pd', pd);
+  pa.innerHTML = html;
+  window.print();
+}
+
 // ---- Print monthly report ----
 function printMonthlyReport(){
   const month = document.getElementById('filterMonth').value;
@@ -3147,8 +3229,7 @@ function printMonthlyReport(){
   if(!getEntries.length && !oweEntries.length){ html += `<p>${t('empty_no_one')}</p>`; }
   getEntries.forEach(([p,v])=>{ html += `<div class="prow"><span>${esc(p)} (${t('loan_people_owe_me')})</span><span>+${fmt(Math.abs(v))}</span></div>`; });
   oweEntries.forEach(([p,v])=>{ html += `<div class="prow"><span>${esc(p)} (${t('loan_people_i_owe')})</span><span>-${fmt(Math.abs(v))}</span></div>`; });
-  document.getElementById('printArea').innerHTML = html;
-  window.print();
+  printWithLetterhead(html);
 }
 
 // ---- Send money (quick loan_given) ----
@@ -3891,8 +3972,7 @@ function printReport(){
   const m = document.getElementById('reportMonth').value;
   const f = document.getElementById('reportFrom').value, to = document.getElementById('reportTo').value;
   const period = (f || to) ? `${f || '…'} → ${to || '…'}` : (m || t('hist_show_all'));
-  document.getElementById('printArea').innerHTML = `<h2>${esc(t('app_title'))} — ${esc(t('tab_report'))} (${esc(period)})</h2>` + document.getElementById('reportBody').innerHTML;
-  window.print();
+  printWithLetterhead(`<h2>${esc(t('tab_report'))} (${esc(period)})</h2>` + document.getElementById('reportBody').innerHTML);
 }
 
 // ---- Developer mode & notification popup ----
