@@ -10237,5 +10237,120 @@ window.ftAboutRestore=function(){
 };
 })();
 </script>
+<script>
+/* ===== FinTrack add-on: everything lands in the notification inbox + smarter Friends UI ===== */
+(function(){
+var bn=function(){try{return currentLang==='bn';}catch(e){return true;}}, L=function(b,e){return bn()?b:e;};
+function jg(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v;}catch(e){return d;}}
+function js(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+var IK='ftBridge_v1', B=jg(IK,{t:0,s:{}});
+if(!B.t){B.t=Date.now();js(IK,B);}
+function on(t){return jg('ftNotifPref_v1',{})[t]!==false;}
+function push(id,type,title,body,ts){
+  if(B.s[id]) return; B.s[id]=1;
+  var k=Object.keys(B.s); if(k.length>300) k.slice(0,100).forEach(function(x){delete B.s[x];});
+  js(IK,B);
+  if(ts&&ts<B.t-864e5) return;
+  if(!on(type)) return;
+  try{ if(window.ftNotify) window.ftNotify({id:id,type:type,title:title,body:body}); }catch(e){}
+}
+/* 1) admin SMS / bot notices -> inbox + phone notification */
+function admin(){
+  var f=jg('ft_tg_feed',{});
+  Object.keys(f).forEach(function(id){ var m=f[id]; if(!m||typeof m.text!=='string') return;
+    push('a:'+id,'admin',L('অ্যাডমিনের নোটিফিকেশন','Admin notification'),m.text.slice(0,300),m.ts); });
+}
+/* 2) friend requests (first message from someone not yet accepted) -> inbox + phone notification */
+function reqs(){
+  var st=jg('ftChat_v1',{th:{}}), ok=jg('ftChatOk_v1',{}), bl=jg('ftChatBlock_v1',{});
+  Object.keys(st.th||{}).forEach(function(u){
+    var th=st.th[u]; if(!th||!th.req||ok[u]||bl[u]) return;
+    var m=(th.msgs||[]).filter(function(x){return !x.me;}), l=m[m.length-1];
+    push('fr:'+u,'req',(th.name||th.un||th.email||L('নতুন ব্যবহারকারী','New user'))+L(' ফ্রেন্ড রিকোয়েস্ট পাঠিয়েছেন',' sent a friend request'),
+      l?String(l.t||'').slice(0,90):L('গ্রহণ করলে চ্যাট শুরু হবে','Accept to start chatting'),l&&l.ts);
+  });
+}
+/* 3) reminders: the inbox already logs them; tapping one opens the reminder popup too */
+document.addEventListener('click',function(e){
+  var it=e.target.closest&&e.target.closest('#ntList .ntIt'); if(!it) return;
+  var x=jg('ftNotifLog_v1',[])[+it.dataset.i];
+  if(x&&(x.type==='rem'||x.type==='loan')) setTimeout(function(){ var b=document.querySelector('#homeProfile .pfBadge'); if(b) b.click(); },250);
+},true);
+function tick(){ try{admin();}catch(e){} try{reqs();}catch(e){} }
+setTimeout(tick,3000); setInterval(tick,6000);
+document.addEventListener('visibilitychange',function(){ if(!document.hidden) setTimeout(tick,500); });
+
+/* ---------- smarter Friends UI ---------- */
+var css=document.createElement('style');
+css.textContent='#ftFrPane #fcSearch{display:none}'
++'#ftFrPane .fcCard{border-radius:22px;padding:14px;box-shadow:0 12px 30px -22px rgba(0,0,0,.5)}'
++'#ftFrPane .fcCard>h4{font-size:13px;font-weight:800;color:var(--muted);margin:0 0 10px}'
++'#ftFrPane .fcRow{border-radius:18px;padding:10px 12px;transition:transform .12s,background .15s}'
++'#ftFrPane .fcRow:active{transform:scale(.985)}'
++'#ftFrPane .fcRow.un{background:color-mix(in srgb,var(--primary) 9%,var(--card));box-shadow:inset 3px 0 0 var(--primary)}'
++'#ftFrPane .fcIn{border-radius:999px;padding:12px 16px}#ftFrPane .fcGo{border-radius:999px}'
++'#ftFrPane .fcBan{border-radius:18px}'
++'.frTools{margin:0 0 12px}'
++'.frSum{display:flex;border:1px solid var(--border);border-radius:20px;background:var(--card);overflow:hidden}'
++'.frSum button{flex:1;border:0;background:none;color:var(--text);font:inherit;padding:12px 4px 10px;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent}'
++'.frSum button+button{border-left:1px solid var(--border)}.frSum button:active{background:color-mix(in srgb,var(--c) 10%,transparent)}'
++'.frSum b{display:block;font-size:22px;line-height:1.1;font-weight:800;color:var(--c)}.frSum button.z b{color:var(--muted);opacity:.55}'
++'.frSum span{display:block;font-size:11.5px;color:var(--muted);font-weight:600;margin-top:3px}'
++'.frQ{position:relative;margin:10px 0 8px}.frQ svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--muted)}'
++'.frQ input{width:100%;box-sizing:border-box;border-radius:999px;padding:12px 16px 12px 42px;border:1px solid var(--border);background:var(--card);color:var(--text);font:inherit;font-size:14px}'
++'.frChips{display:flex;gap:4px;padding:4px;border-radius:16px;background:color-mix(in srgb,var(--muted) 14%,var(--card))}'
++'.frChips button{flex:1;border:0;border-radius:12px;padding:8px 4px;font:inherit;font-size:12.5px;font-weight:700;background:none;color:var(--muted);cursor:pointer}'
++'.frChips button.on{background:var(--card);color:var(--primary);box-shadow:0 2px 8px -3px rgba(0,0,0,.3)}'
++'#frNone{display:none;text-align:center;color:var(--muted);font-size:13px;padding:12px 0 0}';
+document.head.appendChild(css);
+var flt='all', qry='', obs=null, raf=0;
+function dg(s){return String(s).replace(/[০-৯]/g,function(d){return '০১২৩৪৫৬৭৮৯'.indexOf(d);});}
+function html(){
+  return '<div class="frSum">'
+   +'<button type="button" data-f="unread" style="--c:var(--primary)"><b id="frN1">0</b><span>'+L('অপঠিত চ্যাট','Unread chats')+'</span></button>'
+   +'<button type="button" data-g="req" style="--c:#f59e0b"><b id="frN2">0</b><span>'+L('ফ্রেন্ড রিকোয়েস্ট','Friend requests')+'</span></button>'
+   +'<button type="button" data-g="money" style="--c:var(--green)"><b id="frN3">0</b><span>'+L('টাকার অনুরোধ','Money requests')+'</span></button></div>'
+   +'<div class="frQ"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="frQ" type="search" autocomplete="off" placeholder="'+L('বন্ধুর নাম বা @ইউজারনেম খুঁজুন','Search name or @username')+'"></div>'
+   +'<div class="frChips"><button type="button" data-f="all">'+L('সব','All')+'</button><button type="button" data-f="unread">'+L('অপঠিত','Unread')+'</button><button type="button" data-f="pin">'+L('পিন করা','Pinned')+'</button></div>'
+   +'<div id="frNone">'+L('কিছু পাওয়া যায়নি','Nothing found')+'</div>';
+}
+function count(p,t){
+  var un=p.querySelectorAll('.fcRow.un[data-open]').length, rq=p.querySelectorAll('.fcRqRow').length, bnr=p.querySelector('.fcBan');
+  var mn=bnr?+((dg(bnr.textContent).match(/\d+/)||[0])[0]):0;
+  [un,rq,mn].forEach(function(n,i){ var e=t.querySelector('#frN'+(i+1)); e.textContent=n; e.parentNode.classList.toggle('z',!n); });
+}
+function apply(p,t){
+  var pin=jg('ftChatPin_v1',{}), q=qry.trim().toLowerCase(), shown=0, all=0;
+  p.querySelectorAll('.fcRow[data-open]').forEach(function(r){ all++;
+    var f=flt==='all'||(flt==='unread'&&r.classList.contains('un'))||(flt==='pin'&&pin[r.getAttribute('data-open')]);
+    var s=!q||(r.getAttribute('data-name')||'').indexOf(q)>=0;
+    r.style.display=f&&s?'':'none'; if(f&&s) shown++; });
+  t.querySelector('#frNone').style.display=all&&!shown?'block':'none';
+  t.querySelectorAll('.frChips [data-f]').forEach(function(b){ b.classList.toggle('on',b.dataset.f===flt); });
+}
+function wire(t,p){
+  t.addEventListener('click',function(e){
+    var b=e.target.closest('button[data-f],button[data-g]'); if(!b) return;
+    if(b.dataset.g==='req'){ var r=p.querySelector('.fcRqRow'); if(r) r.scrollIntoView({behavior:'smooth',block:'center'}); return; }
+    if(b.dataset.g==='money'){ var n=p.querySelector('.fcBan'); if(n) n.click(); return; }
+    flt=b.dataset.f; apply(p,t);
+  });
+  t.querySelector('#frQ').addEventListener('input',function(e){ qry=e.target.value; apply(p,t); });
+}
+function enhance(p){
+  var t=p.querySelector('#frTools');
+  if(!p.querySelector('#fcStart')){ if(t) t.remove(); return; }
+  var lg=bn()?'b':'e'; if(t&&t.dataset.l!==lg){ t.remove(); t=null; }
+  if(!t){ t=document.createElement('div'); t.id='frTools'; t.className='frTools'; t.dataset.l=lg; t.innerHTML=html(); p.insertBefore(t,p.firstChild); wire(t,p); t.querySelector('#frQ').value=qry; }
+  count(p,t); apply(p,t);
+}
+var iv=setInterval(function(){
+  var p=document.getElementById('ftFrPane'); if(!p) return; clearInterval(iv);
+  function run(){ obs.disconnect(); try{enhance(p);}catch(e){} obs.observe(p,{childList:true}); }
+  obs=new MutationObserver(function(){ if(!raf) raf=requestAnimationFrame(function(){ raf=0; run(); }); });
+  run();
+},600);
+})();
+</script>
 </body>
 </html>
