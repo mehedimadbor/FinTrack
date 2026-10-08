@@ -235,6 +235,7 @@ details.gsetup summary::-webkit-details-marker{display:none;}
 .loginBox input{border-radius:14px; padding:13px 14px;}
 .loginBox #loginNameInput,.loginBox #lgEmail{margin-top:0;}
 .loginBox #loginNameInput{margin-bottom:8px;}
+.loginBox #lgUser{margin-top:0;margin-bottom:8px;}
 .lgTabs{display:flex; gap:4px; padding:4px; border-radius:16px; background:rgba(0,0,0,.18); margin-bottom:12px;}
 .lgTab{flex:1; padding:9px 6px; border:none; border-radius:12px; background:transparent; color:#fff; font-weight:700; font-size:13.5px; cursor:pointer; transition:background .2s,color .2s;}
 .lgTab.on{background:#fff; color:var(--primary-d); box-shadow:0 4px 12px rgba(0,0,0,.18);}
@@ -1069,9 +1070,10 @@ html body .loginScreen .loginBox input.lgIn:-webkit-autofill,html body .loginScr
       <div class="lgAvLbl" id="lgAvLbl"><span class="bn">প্রোফাইল ছবি (ঐচ্ছিক)</span><span class="en">Profile photo (optional)</span></div>
       <button type="button" class="lgAvRm" id="lgAvRm" onclick="loginPicRemove()"><span class="bn">ছবি সরান</span><span class="en">Remove photo</span></button>
       <input type="text" class="lgIn lgInName" id="loginNameInput" data-i18n-ph="lg_ph_name" placeholder="আপনার নাম" autocomplete="name">
+      <input type="text" class="lgIn lgInName" id="lgUser" placeholder="ইউজারনেম (যেমন karim123)" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="24" enterkeyhint="next">
     </div>
     <div id="loginCloud">
-      <input type="email" class="lgIn lgInMail" id="lgEmail" data-i18n-ph="lg_ph_email" placeholder="ইমেইল ঠিকানা" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next">
+      <input type="text" inputmode="email" class="lgIn lgInMail" id="lgEmail" placeholder="ইমেইল ঠিকানা" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next">
       <div class="lgPw"><input type="password" class="lgIn lgInPass" id="lgPass" data-i18n-ph="lg_ph_pass" placeholder="পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)" autocomplete="new-password"><button type="button" class="lgEye" id="lgEye" onclick="ftCloud.loginEye()"><span class="bn">দেখান</span><span class="en">Show</span></button></div>
       <div class="lgLink" id="lgForgot" style="display:none;" onclick="ftCloud.loginReset()"><span class="bn">পাসওয়ার্ড ভুলে গেছেন?</span><span class="en">Forgot password?</span></div>
       <div class="lgStatus" id="lgStatus"></div>
@@ -1260,7 +1262,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   function acRefresh(){ var w=$('acWho'); if(!w) return; var s=ses(), n=''; try{ n=localStorage.getItem('myName_v1')||''; }catch(e){}
     w.textContent = s ? ((n?n+' · ':'')+(s.email||'')) : tx((n?n+' · ':'')+'গেস্ট (শুধু এই ফোনে)',(n?n+' · ':'')+'Guest (this phone only)'); }
   function ui(){
-    acRefresh(); profRefresh();
+    acRefresh(); profRefresh(); lgPh();
     var s=ses(), c=$('csAuto'); if(!c) return;
     var on=!!s&&auto(); c.checked=on;
     var sub=$('csSub');
@@ -1272,7 +1274,9 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   function errMsg(e){
     var m=String((e&&e.message)||e||'');
     if(/EMAIL_EXISTS/.test(m)) return tx('এই ইমেইলে আগেই অ্যাকাউন্ট আছে, লগইন করুন','This email already has an account, please sign in');
-    if(/INVALID_LOGIN|INVALID_PASSWORD|EMAIL_NOT_FOUND|INVALID_EMAIL|MISSING_PASSWORD/.test(m)) return tx('ইমেইল বা পাসওয়ার্ড ঠিক নয়','Wrong email or password');
+    if(/USERNAME_TAKEN/.test(m)) return tx('এই ইউজারনেম আগেই নেওয়া হয়ে গেছে, অন্য একটি বেছে নিন','This username is already taken, choose another');
+    if(/NO_PW_LOGIN/.test(m)) return tx('এই অ্যাকাউন্টে ইউজারনেম দিয়ে লগইন এখনো চালু হয়নি। একবার ইমেইল দিয়ে (Google হলে Google দিয়ে) লগইন করুন','Username login is not active for this account yet. Log in once with your email (or Google)');
+    if(/INVALID_LOGIN|INVALID_PASSWORD|EMAIL_NOT_FOUND|INVALID_EMAIL|MISSING_PASSWORD/.test(m)) return tx('ইমেইল/ইউজারনেম বা পাসওয়ার্ড ঠিক নয়','Wrong email/username or password');
     if(/WEAK_PASSWORD/.test(m)) return tx('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের দিন','Password must be at least 6 characters');
     if(/TOO_MANY/.test(m)) return tx('অনেকবার চেষ্টা হয়েছে, কিছুক্ষণ পর আবার চেষ্টা করুন','Too many attempts, try again later');
     if(/OPERATION_NOT_ALLOWED/.test(m)) return tx('Firebase এ Email/Password লগইন চালু করা নেই','Email/Password sign-in is not enabled in Firebase');
@@ -1291,6 +1295,64 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     var r=await call('https://securetoken.googleapis.com/v1/token?key='+encodeURIComponent(CFG.apiKey),{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'grant_type=refresh_token&refresh_token='+encodeURIComponent(s.rt)});
     var j=await r.json(); if(!r.ok) throw new Error((j.error&&j.error.message)||('HTTP '+r.status));
     idTok=j.id_token; idExp=Date.now()+(+j.expires_in||3600)*1000; if(j.refresh_token&&j.refresh_token!==s.rt){ s.rt=j.refresh_token; setSes(s); } return idTok;
+  }
+
+  /* ---- usernames: unique + public; the email is never stored in plain text anywhere public ---- */
+  var UNRE=/^[A-Za-z0-9_.]{3,24}$/, UNK='ftSyncUn_v1', claimMemo='', JH={'Content-Type':'application/json'};
+  function uk(v){ return String(v||'').trim().replace(/^@/,'').toLowerCase().replace(/\./g,',').replace(/[#$\[\]\/%]/g,'_'); }
+  async function rdb(path,opt,noAuth){
+    var base=String(CFG.dbUrl).replace(/\/+$/,''), url=base+'/'+path+'.json'+(noAuth?'':'?auth='+encodeURIComponent(await token()));
+    var r=await call(url,opt); if(!r.ok) throw new Error('HTTP '+r.status); return r.json();
+  }
+  function b64(u){ var s=''; for(var i=0;i<u.length;i++) s+=String.fromCharCode(u[i]); return btoa(s); }
+  function unb64(t){ var s=atob(t), u=new Uint8Array(s.length); for(var i=0;i<s.length;i++) u[i]=s.charCodeAt(i); return u; }
+  function hasCrypto(){ return !!(window.crypto&&crypto.subtle&&crypto.getRandomValues); }
+  async function deriveKey(pw,salt){
+    var km=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+    return crypto.subtle.deriveKey({name:'PBKDF2',salt:salt,iterations:150000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+  }
+  /* loginmap/<username> = {uid, salt, iv, ciphertext}: the email is AES-encrypted with the user's password, so a username alone reveals nothing */
+  async function lmPut(un,email,pw){
+    var s=ses(); un=String(un||'').replace(/^@/,''); if(!s||!UNRE.test(un)||!email||!pw||!hasCrypto()) return;
+    var salt=crypto.getRandomValues(new Uint8Array(16)), iv=crypto.getRandomValues(new Uint8Array(12)), key=await deriveKey(pw,salt);
+    var ct=await crypto.subtle.encrypt({name:'AES-GCM',iv:iv},key,new TextEncoder().encode(String(email).toLowerCase()));
+    await rdb('loginmap/'+uk(un),{method:'PUT',headers:JH,body:JSON.stringify({uid:s.uid,s:b64(salt),i:b64(iv),c:b64(new Uint8Array(ct)),t:Date.now()})});
+  }
+  async function lmGet(un,pw){
+    if(!hasCrypto()) throw new Error('INVALID_LOGIN');
+    var rec=await rdb('loginmap/'+uk(un),undefined,true);
+    if(!rec||!rec.uid) throw new Error('INVALID_LOGIN');
+    if(!rec.c) throw new Error('NO_PW_LOGIN');
+    try{ var key=await deriveKey(pw,unb64(rec.s)), pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(rec.i)},key,unb64(rec.c)); return new TextDecoder().decode(pt); }
+    catch(e){ throw new Error('INVALID_LOGIN'); }
+  }
+  async function unFree(un){ try{ var r=await rdb('loginmap/'+uk(un),undefined,true); return !(r&&r.uid); }catch(e){ return true; } }
+  async function claim(un){
+    var s=ses(); un=String(un||'').trim().replace(/^@/,''); if(!s||!UNRE.test(un)) return false;
+    var k=uk(un), memo=s.uid+':'+k; if(claimMemo===memo) return true;
+    var rec=await rdb('usernames/'+k); if(rec&&rec.uid&&rec.uid!==s.uid) return false;
+    var lm=null; try{ lm=await rdb('loginmap/'+k); }catch(e){}
+    if(lm&&lm.uid&&lm.uid!==s.uid) return false;
+    if(!rec||rec.uid!==s.uid) await rdb('usernames/'+k,{method:'PUT',headers:JH,body:JSON.stringify({uid:s.uid,username:un,name:lsGet('myName_v1')})});
+    if(!lm){ try{ await rdb('loginmap/'+k,{method:'PUT',headers:JH,body:JSON.stringify({uid:s.uid})}); }catch(e){} }
+    var old=lsGet(UNK); if(old&&uk(old)!==k){ try{ var ko=uk(old), r1=await rdb('usernames/'+ko); if(r1&&r1.uid===s.uid) await rdb('usernames/'+ko,{method:'DELETE'}); var l1=await rdb('loginmap/'+ko); if(l1&&l1.uid===s.uid) await rdb('loginmap/'+ko,{method:'DELETE'}); }catch(e){} }
+    _set.call(LS,UNK,un); claimMemo=memo;
+    if(LS.getItem('ftSyncDirClean_v1')!==s.uid){ try{ await rdb('directory/'+uk(s.email),{method:'DELETE'}); _set.call(LS,'ftSyncDirClean_v1',s.uid); }catch(e){} }
+    return true;
+  }
+  async function claimNew(un,idt,created){
+    var okc=false, ce=null; try{ okc=await claim(un); }catch(e){ ce=e; }
+    if(okc) return;
+    if(created){ try{ await authReq('delete',{idToken:idt}); }catch(e){} }
+    setSes(null); idTok=''; throw ce||new Error('USERNAME_TAKEN');
+  }
+  async function syncUnOnLogin(rem,em,pw){
+    var u=String((rem&&rem.data&&rem.data.myUsername_v1)||lsGet('myUsername_v1')||'').replace(/^@/,''); if(!UNRE.test(u)) return;
+    try{ if(await claim(u)) await lmPut(u,em,pw); }catch(e){}
+  }
+  function lgPh(){
+    var e=$('lgEmail'); if(e) e.placeholder=lgMode==='up'?tx('ইমেইল ঠিকানা','Email address'):tx('ইমেইল বা ইউজারনেম','Email or username');
+    var u=$('lgUser'); if(u) u.placeholder=tx('ইউজারনেম (যেমন karim123)','Username (e.g. karim123)');
   }
   async function dbUrl(path){ return String(CFG.dbUrl).replace(/\/+$/,'')+'/users/'+ses().uid+'/'+path+'.json?auth='+encodeURIComponent(await token()); }
   async function dbGet(path){ var r=await call(await dbUrl(path)+'&t='+Date.now(),{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }
@@ -1344,7 +1406,8 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   function toast(m){ var d=$('pfToast'); if(!d){ d=document.createElement('div'); d.id='pfToast'; d.className='pfToast'; document.body.appendChild(d); } d.textContent=m; d.classList.add('on'); clearTimeout(d._t); d._t=setTimeout(function(){ d.classList.remove('on'); },2600); }
   var pfDirty=false;
   function curVis(){ var w=$('pfCurWrap'); if(!w) return; var ss=ses(), em=(($('pfe')||{}).value||'').trim().toLowerCase(), pw=(($('pfw')||{}).value||'');
-    w.style.display=(ss&&((em&&em!==String(ss.email||'').toLowerCase())||pw))?'':'none'; }
+    var un=(($('pfu')||{}).value||'').trim().replace(/^@/,''), unc=!!(ss&&!ss.g&&un&&uk(un)!==uk(lsGet('myUsername_v1')));
+    w.style.display=(ss&&((em&&em!==String(ss.email||'').toLowerCase())||pw||unc))?'':'none'; }
   function pfTouch(){ pfDirty=true; var m=$('pfMsg'); if(m) m.textContent=''; curVis(); }
   function pfEye(id,b){ var i=$(id); if(!i) return; var h=i.type==='password'; i.type=h?'text':'password'; b.classList.toggle('on',h); }
   function profRefresh(){
@@ -1364,14 +1427,19 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     var nm=g('pfn').trim(), un=g('pfu').trim().replace(/^@/,''), ph=g('pfp').trim(), em=g('pfe').trim(), pw=g('pfw'), cur=g('pfc'), ss=ses();
     pfMsg('');
     if(!nm) return pfMsg(tx('নাম লিখুন','Enter your name'));
-    if(un&&!/^[A-Za-z0-9_.]{3,24}$/.test(un)) return pfMsg(tx('ইউজারনেম ৩–২৪ অক্ষরের হতে হবে (অক্ষর, সংখ্যা, _ বা .)','Username must be 3–24 characters (letters, numbers, _ or .)'));
+    if(un&&!UNRE.test(un)) return pfMsg(tx('ইউজারনেম ৩–২৪ অক্ষরের হতে হবে (অক্ষর, সংখ্যা, _ বা .)','Username must be 3–24 characters (letters, numbers, _ or .)'));
     if(ph&&!/^[0-9+\-\s]{6,16}$/.test(ph)) return pfMsg(tx('সঠিক মোবাইল নম্বর দিন','Enter a valid mobile number'));
     if(em&&!EM.test(em)) return pfMsg(tx('সঠিক ইমেইল দিন','Enter a valid email'));
     var emChg=!!(ss&&em&&em.toLowerCase()!==String(ss.email||'').toLowerCase()), newAcc=!ss&&(em||pw);
+    if((ss||newAcc)&&!un) return pfMsg(tx('ইউজারনেম দিন (অন্যরা আপনাকে ইউজারনেম দিয়েই খুঁজবে)','Enter a username (others find you by it)'));
+    var oldUn=lsGet('myUsername_v1').replace(/^@/,''), unChg=!!(ss&&uk(un)!==uk(oldUn)), needCur=!!(ss&&(emChg||pw||(unChg&&!ss.g)));
     if(newAcc){ if(!em) return pfMsg(tx('ইমেইল দিন','Enter your email')); if(pw.length<6) return pfMsg(tx('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের দিন','Password must be at least 6 characters')); if(!ok()) return pfMsg(tx('ক্লাউড অ্যাকাউন্ট এখনো চালু নেই','Cloud account is not set up yet')); }
     if(ss&&pw&&pw.length<6) return pfMsg(tx('নতুন পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের দিন','New password must be at least 6 characters'));
-    if(ss&&(emChg||pw)&&!cur) return pfMsg(tx('ইমেইল বা পাসওয়ার্ড বদলাতে বর্তমান পাসওয়ার্ড দিন','Enter your current password to change email or password'));
+    if(needCur&&!cur) return pfMsg(tx('ইমেইল, পাসওয়ার্ড বা ইউজারনেম বদলাতে বর্তমান পাসওয়ার্ড দিন','Enter your current password to change email, password or username'));
     pfBusy(true);
+    var r0=null;
+    if(needCur){ try{ r0=await authReq('signInWithPassword',{email:ss.email,password:cur,returnSecureToken:true}); }catch(e0){ pfBusy(false); return pfMsg(accErr(e0,'change')); } }
+    if(unChg){ var okc=false, ce=null; try{ okc=await claim(un); }catch(e1){ ce=e1; } if(!okc){ pfBusy(false); return pfMsg(errMsg(ce||new Error('USERNAME_TAKEN'))); } }
     try{ LS.setItem('myName_v1',nm); LS.setItem('myUsername_v1',un); LS.setItem('myPhone_v1',ph); }catch(e){}
     ['myNameInput','myUsernameInput','myPhoneInput'].forEach(function(id,i){ var h=$(id); if(h) h.value=[nm,un,ph][i]; });
     try{ if(typeof renderHomeProfile==='function') renderHomeProfile(); }catch(e){}
@@ -1383,22 +1451,34 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
         catch(e1){ if(/EMAIL_EXISTS/.test(String((e1&&e1.message)||e1))){ existed=true; j=await authReq('signInWithPassword',{email:em,password:pw,returnSecureToken:true}); } else throw e1; }
         idTok=j.idToken; idExp=Date.now()+(+j.expiresIn||3600)*1000;
         setSes({uid:j.localId,rt:j.refreshToken,email:j.email||em}); _set.call(LS,AUTO,'1');
+        var rem=null;
         if(existed){
-          var rem=null; try{ rem=await dbGet('backup'); }catch(e2){ setSes(null); idTok=''; throw e2; }
-          if(rem&&rem.data){ keepPrev(); toast(tx('আপনার ক্লাউড ডেটা ফিরিয়ে আনা হচ্ছে…','Restoring your cloud data…')); applyRemote(rem); return; }
+          try{ rem=await dbGet('backup'); }catch(e2){ setSes(null); idTok=''; throw e2; }
+          if(rem&&rem.data){ keepPrev(); toast(tx('আপনার ক্লাউড ডেটা ফিরিয়ে আনা হচ্ছে…','Restoring your cloud data…')); await syncUnOnLogin(rem,j.email||em,pw); applyRemote(rem); return; }
         }
+        await claimNew(un,j.idToken,!existed);
+        try{ await lmPut(un,j.email||em,pw); }catch(e4){}
         busy=true; try{ await push(); doneMsg(); }catch(e3){ status(errMsg(e3),true); } finally{ busy=false; }
         done=existed?tx('লগইন হয়েছে, ক্লাউড সিঙ্ক চালু','Signed in, cloud sync is on'):tx('অ্যাকাউন্ট তৈরি হয়েছে, ক্লাউড সিঙ্ক চালু','Account created, cloud sync is on');
       } else if(ss&&(emChg||pw)){
-        var r=await authReq('signInWithPassword',{email:ss.email,password:cur,returnSecureToken:true});
-        var body={idToken:r.idToken,returnSecureToken:true}; if(emChg) body.email=em; if(pw) body.password=pw;
+        var body={idToken:r0.idToken,returnSecureToken:true}; if(emChg) body.email=em; if(pw) body.password=pw;
         var u=await authReq('update',body);
-        if(emChg) ss.email=u.email||em; grabTok(u.idToken?u:r,ss); setSes(ss);
+        if(emChg) ss.email=u.email||em; grabTok(u.idToken?u:r0,ss); setSes(ss);
+        try{ await lmPut(un||oldUn,ss.email,pw||cur); }catch(e5){}
         done=emChg&&pw?tx('ইমেইল ও পাসওয়ার্ড বদলানো হয়েছে','Email and password updated'):emChg?tx('ইমেইল বদলানো হয়েছে','Email updated'):tx('পাসওয়ার্ড বদলানো হয়েছে','Password updated');
+      } else if(unChg&&r0){
+        grabTok(r0,ss); setSes(ss);
+        try{ await lmPut(un,ss.email,cur); }catch(e6){}
       }
       pfDirty=false; pfBusy(false); profRefresh(); ui(); toast(done);
     }catch(e){
-      pfBusy(false); pfMsg(tx('নাম, ইউজারনেম ও মোবাইল সংরক্ষিত হয়েছে, কিন্তু: ','Name, username & mobile saved, but: ')+accErr(e,(ss?'change':'')));
+      pfBusy(false);
+      if(/USERNAME_TAKEN/.test(String((e&&e.message)||e))){
+        try{ LS.setItem('myUsername_v1',oldUn); }catch(x){} var hh=$('myUsernameInput'); if(hh) hh.value=oldUn;
+        try{ if(typeof renderHomeProfile==='function') renderHomeProfile(); }catch(x){}
+        profRefresh(); ui(); return pfMsg(errMsg(e));
+      }
+      pfMsg(tx('নাম ও মোবাইল সংরক্ষিত হয়েছে, কিন্তু: ','Name & mobile saved, but: ')+accErr(e,(ss?'change':'')));
     }
   }
   function F(id,type,lbl,ph,val,ac){
@@ -1413,10 +1493,10 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     sh.mode=mode; sh.busy=false;
     var T='',H='',B=tx('সংরক্ষণ করুন','Save'),h='',fg=false;
     if(mode==='name'){ T=tx('নাম','Name'); h=F('v','text',tx('আপনার নাম','Your name'),tx('যেমন: করিম','e.g. Karim'),lsGet('myName_v1'),'name'); }
-    else if(mode==='username'){ T=tx('ইউজারনেম','Username'); H=tx('অক্ষর, সংখ্যা, _ ও . ব্যবহার করুন (৩–২৪ অক্ষর)।','Use letters, numbers, _ and . (3–24 characters).'); h=F('v','text',tx('ইউজারনেম','Username'),'karim123',lsGet('myUsername_v1').replace(/^@/,''),'username'); }
+    else if(mode==='username'){ T=tx('ইউজারনেম','Username'); H=tx('অক্ষর, সংখ্যা, _ ও . ব্যবহার করুন (৩–২৪ অক্ষর)।','Use letters, numbers, _ and . (3–24 characters).'); h=F('v','text',tx('ইউজারনেম','Username'),'karim123',lsGet('myUsername_v1').replace(/^@/,''),'username')+((s&&!s.g)?F('cur','password',tx('বর্তমান পাসওয়ার্ড (ইউজারনেম বদলাতে লাগবে)','Current password (needed to change username)'),'','','current-password'):''); }
     else if(mode==='phone'){ T=tx('মোবাইল নম্বর','Mobile number'); h=F('v','tel',tx('মোবাইল নম্বর','Mobile number'),'01XXXXXXXXX',lsGet('myPhone_v1'),'tel'); }
     else if(mode==='email'&&!s){ T=tx('ইমেইল ও পাসওয়ার্ড সেট করুন','Set email & password'); H=tx('এই ইমেইলে আগে থেকে ক্লাউড ডেটা থাকলে নিজে থেকেই ফিরিয়ে আনা হবে, না থাকলে নতুন অ্যাকাউন্ট খোলা হবে।','If this email already has cloud data it is restored automatically; otherwise a new account is created.'); B=tx('এগিয়ে যান','Continue'); fg=true;
-      h=F('em','email',tx('ইমেইল','Email'),'name@example.com','','email')+F('pw','password',tx('পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)','Password (min 6 characters)'),'','','new-password'); }
+      h=F('un','text',tx('ইউজারনেম','Username'),'karim123',lsGet('myUsername_v1').replace(/^@/,''),'username')+F('em','email',tx('ইমেইল','Email'),'name@example.com','','email')+F('pw','password',tx('পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)','Password (min 6 characters)'),'','','new-password'); }
     else if(mode==='email'){ T=tx('ইমেইল পরিবর্তন','Change email'); H=tx('বর্তমান ইমেইল: ','Current email: ')+s.email; B=tx('ইমেইল বদলান','Update email'); fg=true;
       h=F('em','email',tx('নতুন ইমেইল','New email'),'name@example.com','','email')+F('pw','password',tx('বর্তমান পাসওয়ার্ড','Current password'),'','','current-password'); }
     else { T=tx('পাসওয়ার্ড পরিবর্তন','Change password'); B=tx('পাসওয়ার্ড বদলান','Update password'); fg=true;
@@ -1447,11 +1527,29 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     var m=sh.mode, v=function(id){ var e=$('pf_'+id); return e?e.value:''; };
     pfErr('');
     if(m==='name'){ var n=v('v').trim(); if(!n) return pfErr(tx('নাম লিখুন','Enter your name')); saveField('myName_v1',n,'myNameInput'); sheetClose(); return toast(tx('নাম সংরক্ষিত হয়েছে','Name saved')); }
-    if(m==='username'){ var u=v('v').trim().replace(/^@/,''); if(u&&!/^[A-Za-z0-9_.]{3,24}$/.test(u)) return pfErr(tx('ইউজারনেম ৩–২৪ অক্ষরের হতে হবে (অক্ষর, সংখ্যা, _ বা .)','Username must be 3–24 characters (letters, numbers, _ or .)')); saveField('myUsername_v1',u,'myUsernameInput'); sheetClose(); return toast(tx('ইউজারনেম সংরক্ষিত হয়েছে','Username saved')); }
+    if(m==='username'){
+      var u=v('v').trim().replace(/^@/,''), sx=ses(), oldU=lsGet('myUsername_v1').replace(/^@/,'');
+      if(sx&&!u) return pfErr(tx('ইউজারনেম দিতে হবে','Username is required'));
+      if(u&&!UNRE.test(u)) return pfErr(tx('ইউজারনেম ৩–২৪ অক্ষরের হতে হবে (অক্ষর, সংখ্যা, _ বা .)','Username must be 3–24 characters (letters, numbers, _ or .)'));
+      if(sx&&u){
+        var keyChg=uk(u)!==uk(oldU), cpw=v('cur');
+        if(keyChg&&!sx.g&&!cpw) return pfErr(tx('বর্তমান পাসওয়ার্ড দিন','Enter your current password'));
+        setBusy(true);
+        try{
+          if(keyChg&&!sx.g){ var rr=await authReq('signInWithPassword',{email:sx.email,password:cpw,returnSecureToken:true}); grabTok(rr,sx); setSes(sx); }
+          if(!(await claim(u))) throw new Error('USERNAME_TAKEN');
+          saveField('myUsername_v1',u,'myUsernameInput');
+          if(keyChg&&!sx.g){ try{ await lmPut(u,sx.email,cpw); }catch(e9){} }
+          sh.busy=false; sheetClose(); return toast(tx('ইউজারনেম সংরক্ষিত হয়েছে','Username saved'));
+        }catch(e){ setBusy(false); return pfErr(accErr(e,'change')); }
+      }
+      saveField('myUsername_v1',u,'myUsernameInput'); sheetClose(); return toast(tx('ইউজারনেম সংরক্ষিত হয়েছে','Username saved'));
+    }
     if(m==='phone'){ var p=v('v').trim(); if(p&&!/^[0-9+\-\s]{6,16}$/.test(p)) return pfErr(tx('সঠিক মোবাইল নম্বর দিন','Enter a valid mobile number')); saveField('myPhone_v1',p,'myPhoneInput'); sheetClose(); return toast(tx('মোবাইল নম্বর সংরক্ষিত হয়েছে','Mobile number saved')); }
     var s=ses();
     if(m==='email'&&!s){
-      var em=v('em').trim(), pw=v('pw');
+      var un2=v('un').trim().replace(/^@/,''), em=v('em').trim(), pw=v('pw');
+      if(!UNRE.test(un2)) return pfErr(tx('ইউজারনেম ৩–২৪ অক্ষরের হতে হবে (অক্ষর, সংখ্যা, _ বা .)','Username must be 3–24 characters (letters, numbers, _ or .)'));
       if(!EM.test(em)) return pfErr(tx('সঠিক ইমেইল দিন','Enter a valid email'));
       if(pw.length<6) return pfErr(tx('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের দিন','Password must be at least 6 characters'));
       setBusy(true); var existed=false, j;
@@ -1465,8 +1563,11 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
         setSes({uid:j.localId,rt:j.refreshToken,email:j.email||em}); _set.call(LS,AUTO,'1');
         if(existed){
           var rem=null; try{ rem=await dbGet('backup'); }catch(e2){ setSes(null); idTok=''; throw e2; }
-          if(rem&&rem.data){ keepPrev(); sh.busy=false; sheetClose(); toast(tx('আপনার ডেটা ফিরিয়ে আনা হচ্ছে…','Restoring your data…')); applyRemote(rem); return; }
+          if(rem&&rem.data){ keepPrev(); sh.busy=false; sheetClose(); toast(tx('আপনার ডেটা ফিরিয়ে আনা হচ্ছে…','Restoring your data…')); await syncUnOnLogin(rem,j.email||em,pw); applyRemote(rem); return; }
         }
+        await claimNew(un2,j.idToken,!existed);
+        saveField('myUsername_v1',un2,'myUsernameInput');
+        try{ await lmPut(un2,j.email||em,pw); }catch(e8){}
         sh.busy=false; sheetClose(); ui();
         busy=true; try{ await push(); doneMsg(); }catch(e3){ status(errMsg(e3),true); } finally{ busy=false; }
         ui(); toast(existed?tx('লগইন হয়েছে, ক্লাউড সিঙ্ক চালু','Signed in, cloud sync is on'):tx('অ্যাকাউন্ট তৈরি হয়েছে, ক্লাউড সিঙ্ক চালু','Account created, cloud sync is on'));
@@ -1483,6 +1584,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
         var r=await authReq('signInWithPassword',{email:s.email,password:cp,returnSecureToken:true});
         var u2=await authReq('update',{idToken:r.idToken,email:ne,returnSecureToken:true});
         s.email=u2.email||ne; grabTok(u2.idToken?u2:r,s); setSes(s);
+        try{ var uq=lsGet('myUsername_v1').replace(/^@/,''); if(uq&&!s.g) await lmPut(uq,s.email,cp); }catch(e7){}
         sh.busy=false; sheetClose(); ui(); toast(tx('ইমেইল বদলানো হয়েছে','Email updated'));
       }catch(e){ setBusy(false); pfErr(accErr(e,'change')); }
       return;
@@ -1498,11 +1600,48 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
         var r2=await authReq('signInWithPassword',{email:s.email,password:cur,returnSecureToken:true});
         var u3=await authReq('update',{idToken:r2.idToken,password:nw,returnSecureToken:true});
         grabTok(u3.idToken?u3:r2,s); setSes(s);
+        try{ var uq2=lsGet('myUsername_v1').replace(/^@/,''); if(uq2&&!s.g) await lmPut(uq2,s.email,nw); }catch(e7){}
         sh.busy=false; sheetClose(); ui(); toast(tx('পাসওয়ার্ড বদলানো হয়েছে','Password updated'));
       }catch(e){ setBusy(false); pfErr(accErr(e,'change')); }
     }
   }
   function sheetForgot(){ var s=ses(); resetOpen((s&&s.email)||(($('pf_em')||{}).value||'').trim()); }
+
+  /* ---- mandatory username (existing accounts without one, Google sign-ups, or a name someone else already owns) ---- */
+  var ub=false;
+  function forceUn(hadOld){
+    var s=ses(); if(!s||!$('unOv')) return;
+    var old=lsGet('myUsername_v1').replace(/^@/,'');
+    $('unHint').textContent=hadOld?tx('এই ইউজারনেমটি অন্য একজন নিয়ে ফেলেছেন। নতুন একটি ইউজারনেম বেছে নিন।','Someone else already owns this username. Please choose a new one.')
+      :tx('অন্যরা এখন আপনাকে ইউজারনেম দিয়ে খুঁজবে, আপনার ইমেইল কাউকে দেখানো হয় না। একটি ইউজারনেম বেছে নিন (৩–২৪ অক্ষর: অক্ষর, সংখ্যা, _ বা .)।','Others now find you by username; your email is never shown. Choose a username (3–24 characters: letters, numbers, _ or .).');
+    $('unFields').innerHTML=F('unv','text',tx('ইউজারনেম','Username'),'karim123',hadOld?'':old,'username')+(s.g?'':F('unp','password',tx('পাসওয়ার্ড (ইউজারনেম দিয়ে লগইনের জন্য)','Password (for username login)'),'','','current-password'));
+    $('unErr').textContent=''; var sv=$('unSave'); sv.disabled=false;
+    $('unOv').classList.add('on'); document.body.style.overflow='hidden';
+    setTimeout(function(){ var i=$('pf_unv'); if(i) i.focus(); },160);
+  }
+  async function unSave(){
+    if(ub) return; var s=ses(); if(!s) return;
+    var er=function(m){ $('unErr').textContent=m||''; }, u=(($('pf_unv')||{}).value||'').trim().replace(/^@/,''), pw=s.g?'':(($('pf_unp')||{}).value||'');
+    er('');
+    if(!UNRE.test(u)) return er(tx('ইউজারনেম ৩–২৪ অক্ষরের হতে হবে (অক্ষর, সংখ্যা, _ বা .)','Username must be 3–24 characters (letters, numbers, _ or .)'));
+    if(!s.g&&!pw) return er(tx('পাসওয়ার্ড দিন','Enter your password'));
+    ub=true; var sv=$('unSave'); sv.disabled=true;
+    try{
+      if(!s.g){ var r=await authReq('signInWithPassword',{email:s.email,password:pw,returnSecureToken:true}); grabTok(r,s); setSes(s); }
+      if(!(await claim(u))) throw new Error('USERNAME_TAKEN');
+      saveField('myUsername_v1',u,'myUsernameInput');
+      if(!s.g){ try{ await lmPut(u,s.email,pw); }catch(e9){} }
+      $('unOv').classList.remove('on'); document.body.style.overflow='';
+      toast(tx('ইউজারনেম সংরক্ষিত হয়েছে','Username saved')); setTimeout(function(){ sync(); },400);
+    }catch(e){ er(accErr(e,'change')); }
+    ub=false; sv.disabled=false;
+  }
+  async function checkUn(){
+    if(!ses()||!ok()||lsGet('loginDone_v1')!=='true') return;
+    var u=lsGet('myUsername_v1').replace(/^@/,'');
+    if(UNRE.test(u)){ try{ if(await claim(u)) return; }catch(e){ return; } }
+    forceUn(!!u);
+  }
   /* ---- cloud sync: just an on/off switch ---- */
   function toggleSync(cb){
     if(!ses()){ cb.checked=false; var fe=$('pfe'); if(fe){ var dt=fe.closest('details'); if(dt) dt.open=true; setTimeout(function(){ try{ fe.scrollIntoView({behavior:'smooth',block:'center'}); fe.focus(); }catch(e){} },60); } toast(tx('ইমেইল ও পাসওয়ার্ড দিয়ে সংরক্ষণ করুন, তারপর সিঙ্ক চালু হবে','Enter email & password and Save to turn on sync')); return; }
@@ -1513,24 +1652,40 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   /* ---- login screen: create account (name+email+password) / log in / guest ---- */
   var lgMode='up', EM=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
   function lgStatus(m,bad){ var e=$('lgStatus'); if(!e) return; e.textContent=m||''; e.className='lgStatus'+(bad?' bad':''); }
-  async function loginAuth(kind,em,pw){
+  async function loginAuth(kind,em,pw,un){
     var j=await authReq(kind==='up'?'signUp':'signInWithPassword',{email:em,password:pw,returnSecureToken:true});
     idTok=j.idToken; idExp=Date.now()+(+j.expiresIn||3600)*1000;
     setSes({uid:j.localId,rt:j.refreshToken,email:j.email||em});
+    if(kind==='up'){
+      un=String(un||'').replace(/^@/,'');
+      await claimNew(un,j.idToken,true);
+      try{ LS.setItem('myUsername_v1',un); }catch(e){}
+      try{ await lmPut(un,j.email||em,pw); }catch(e){}
+      return 'new';
+    }
     var rem=null;
     try{ rem=await dbGet('backup'); }catch(e){ setSes(null); idTok=''; throw e; }
+    await syncUnOnLogin(rem,j.email||em,pw);
     if(rem&&rem.data&&applyRemote(rem)) return 'restored';
     return 'new';
   }
   async function loginSubmit(){
-    var up=lgMode==='up', nm=($('loginNameInput').value||'').trim(), em=($('lgEmail').value||'').trim(), pw=$('lgPass').value||'';
+    var up=lgMode==='up', nm=($('loginNameInput').value||'').trim(), un=(($('lgUser')||{}).value||'').trim().replace(/^@/,''), id=($('lgEmail').value||'').trim(), pw=$('lgPass').value||'';
+    var isMail=EM.test(id), asUser=!up&&!isMail&&/^@?[A-Za-z0-9_.]{3,24}$/.test(id);
     if(up&&!nm){ lgStatus(tx('আপনার নাম লিখুন','Enter your name'),true); return; }
-    if(!EM.test(em)){ lgStatus(tx('সঠিক ইমেইল দিন','Enter a valid email'),true); return; }
+    if(up&&!un){ lgStatus(tx('ইউজারনেম লিখুন','Enter a username'),true); return; }
+    if(up&&!UNRE.test(un)){ lgStatus(tx('ইউজারনেম ৩–২৪ অক্ষরের হতে হবে (অক্ষর, সংখ্যা, _ বা .)','Username must be 3–24 characters (letters, numbers, _ or .)'),true); return; }
+    if(up&&!isMail){ lgStatus(tx('সঠিক ইমেইল দিন','Enter a valid email'),true); return; }
+    if(!up&&!id){ lgStatus(tx('ইমেইল বা ইউজারনেম দিন','Enter your email or username'),true); return; }
+    if(!up&&!isMail&&!asUser){ lgStatus(tx('সঠিক ইমেইল বা ইউজারনেম দিন','Enter a valid email or username'),true); return; }
     if(!pw){ lgStatus(tx('পাসওয়ার্ড দিন','Enter your password'),true); return; }
     if(up&&pw.length<6){ lgStatus(tx('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের দিন','Password must be at least 6 characters'),true); return; }
     var b=$('lgBtn'); b.disabled=true; lgStatus(tx('অপেক্ষা করুন…','Please wait…'));
     try{
-      var res=await loginAuth(lgMode,em,pw);
+      var em=id;
+      if(up){ if(!(await unFree(un))) throw new Error('USERNAME_TAKEN'); }
+      else if(asUser){ em=await lmGet(id.replace(/^@/,''),pw); }
+      var res=await loginAuth(lgMode,em,pw,un);
       if(res==='restored'){ lgStatus(tx('আপনার ডেটা ফিরিয়ে আনা হচ্ছে…','Restoring your data…')); setTimeout(function(){ b.disabled=false; },8000); return; }
     }catch(e){ lgStatus(errMsg(e),true); b.disabled=false; return; }
     b.disabled=false; $('lgPass').value=''; $('lgPass').type='password'; try{ $('lgEye').innerHTML='<span class="bn">দেখান</span><span class="en">Show</span>'; }catch(e){}
@@ -1545,7 +1700,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     $('lgForgot').style.display=up?'none':'';
     $('lgPass').setAttribute('autocomplete',up?'new-password':'current-password');
     $('lgBtn').innerHTML=up?'<span class="bn">অ্যাকাউন্ট খুলুন</span><span class="en">Create account</span>':'<span class="bn">লগইন করুন</span><span class="en">Log in</span>';
-    lgStatus('');
+    lgStatus(''); lgPh();
   }
   function loginEye(){
     var i=$('lgPass'), show=i.type==='password'; i.type=show?'text':'password';
@@ -1616,13 +1771,16 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
       var j=await authReq('signInWithIdp',{postBody:'id_token='+encodeURIComponent(cred)+'&providerId=google.com',requestUri:/^https?:/.test(location.origin)?location.origin:'http://localhost',returnIdpCredential:true,returnSecureToken:true});
       if(j.needConfirmation||!j.idToken) throw new Error('GOOGLE_NEEDS_PASSWORD');
       idTok=j.idToken; idExp=Date.now()+(+j.expiresIn||3600)*1000;
-      setSes({uid:j.localId,rt:j.refreshToken,email:j.email||''});
+      setSes({uid:j.localId,rt:j.refreshToken,email:j.email||'',g:1});
       var rem=null; try{ rem=await dbGet('backup'); }catch(e){ setSes(null); idTok=''; throw e; }
       if(rem&&rem.data&&applyRemote(rem)){ lgStatus(tx('আপনার ডেটা ফিরিয়ে আনা হচ্ছে…','Restoring your data…')); return; }
-      var ni=$('loginNameInput'); if(ni&&!(ni.value||'').trim()&&!lsGet('myName_v1')) ni.value=j.displayName||String(j.email||'').split('@')[0];
+      var ni=$('loginNameInput'); if(ni&&!(ni.value||'').trim()&&!lsGet('myName_v1')) ni.value=j.displayName||'';
+      var pre=(($('lgUser')||{}).value||'').trim().replace(/^@/,'');
+      if(!lsGet('myUsername_v1')&&UNRE.test(pre)){ try{ if(await claim(pre)) LS.setItem('myUsername_v1',pre); }catch(e1){} }
     }catch(e){ lgStatus(gErr(e),true); return; }
     lgStatus('');
     if(typeof loginContinue==='function') loginContinue();
+    setTimeout(checkUn,300);
     setTimeout(function(){ ui(); sync(); },1200);
   }
   function gInit(){
@@ -1640,7 +1798,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     _raw:function(){ return {ses:ses,token:token,call:call,CFG:CFG,ok:ok,errMsg:errMsg}; },
     loginSubmit:loginSubmit, loginGoogle:loginGoogle, loginMode:loginMode, loginReset:loginReset, resetOpen:resetOpen, resetSend:resetSend, resetClose:resetClose, loginGuest:loginGuest, loginEye:loginEye,
     edit:openSheet, profSave:profSave, pfTouch:pfTouch, pfEye:pfEye, sheetClose:sheetClose, sheetSave:sheetSave, sheetForgot:sheetForgot, eye:eyeToggle, toggle:toggleSync, refresh:function(){ ui(); },
-    syncNow:function(){ sync(true); },
+    syncNow:function(){ sync(true); }, claim:claim, unSave:unSave, checkUn:checkUn,
     setAuto:function(v){ _set.call(LS,AUTO,v?'1':'0'); if(v) schedule(); },
     accountLogout:function(){
       if(!confirm(tx('অ্যাকাউন্ট থেকে লগআউট করবেন? এই ফোনের ডেটা মুছবে না।','Log out of your account? Data on this phone stays.'))) return;
@@ -1650,7 +1808,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
       var lk=$('lockOverlay'); if(lk) lk.style.display='none';
       var ls=$('loginScreen'); if(ls) ls.style.display='flex';
       var nm=$('loginNameInput'); if(nm) nm.value=''; try{ if(window.loginPicRefresh) loginPicRefresh(); }catch(e){}
-      var pw=$('lgPass'); if(pw) pw.value=''; var em=$('lgEmail'); if(em) em.value='';
+      var pw=$('lgPass'); if(pw) pw.value=''; var em=$('lgEmail'); if(em) em.value=''; var lu=$('lgUser'); if(lu) lu.value='';
       if(ok()) loginMode('in'); lgStatus('');
       ui(); window.scrollTo(0,0);
     },
@@ -1658,7 +1816,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     wipe:async function(){ if(!confirm(tx('ক্লাউড থেকে আপনার সব ডেটা মুছে যাবে। এই ফোনের ডেটা থাকবে। নিশ্চিত?','This deletes all your data from the cloud. Data on this phone stays. Sure?'))) return;
       try{ var r=await call(await dbUrl('backup'),{method:'DELETE'}); if(!r.ok) throw new Error('HTTP '+r.status); _rem.call(LS,BASE); _set.call(LS,DIRTY,'1'); status(tx('ক্লাউড ডেটা মুছে ফেলা হয়েছে','Cloud data deleted')); }catch(e){ status(errMsg(e),true); } }
   };
-  function init(){ ui(); try{ gInit(); }catch(e){} if(ses()&&ok()){ doneMsg(); setTimeout(function(){ if(auto()) sync(); },1500); } }
+  function init(){ ui(); try{ gInit(); }catch(e){} if(ses()&&ok()){ doneMsg(); setTimeout(function(){ if(auto()) sync(); },1500); setTimeout(checkUn,2200); } }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
   window.addEventListener('online',function(){ if(ses()&&auto()) sync(); });
   var lastVis=0; document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible'&&ses()&&auto()&&Date.now()-lastVis>60000){ lastVis=Date.now(); sync(); } });
@@ -6747,15 +6905,17 @@ function msg(m,bad){ var e=$('rqMsg'); if(!e) return; e.textContent=m||''; e.cla
 async function register(){
   var s=R().ses(); if(!s||!s.email) return;
   var un=(localStorage.getItem('myUsername_v1')||'').trim();
-  var rec={uid:s.uid,name:localStorage.getItem('myName_v1')||'',username:un,email:String(s.email).toLowerCase()};
+  var rec={uid:s.uid,name:localStorage.getItem('myName_v1')||'',username:String(un||'').replace(/^@/,'')};
+  if(!rec.username) return; try{ if(!(await ftCloud.claim(rec.username))) return; }catch(e){ return; }
   try{ var pic0=await window.ftPicThumb(); if(pic0) rec.pic=pic0; }catch(e){}
   try{ rec.seen=(localStorage.getItem('ftShowSeen_v1')==='0')?0:Date.now(); }catch(e){}
-  await db('directory/'+ek(s.email),{method:'PUT',headers:J,body:JSON.stringify(rec)});
-  if(un){ try{ await db('usernames/'+ek(un),{method:'PUT',headers:J,body:JSON.stringify(rec)}); }catch(e){} }
+  await db('directory/'+s.uid,{method:'PUT',headers:J,body:JSON.stringify(rec)});
+  try{ await db('usernames/'+ek(rec.username),{method:'PUT',headers:J,body:JSON.stringify(rec)}); }catch(e){}
 }
 async function find(q){
   q=String(q||'').trim(); if(!q) return null;
-  var rec=q.indexOf('@')>0 ? await db('directory/'+ek(q)) : await db('usernames/'+ek(q.replace(/^@/,'')));
+  if(q.indexOf('@')>0) return null;
+  var rec=await db('usernames/'+ek(q.replace(/^@/,''))); if(rec&&rec.email) delete rec.email;
   return rec&&rec.uid?rec:null;
 }
 /* ---- loan ledger helpers (read the same data the Loan tab uses) ---- */
@@ -6830,9 +6990,9 @@ function kindTxt(k,name,amt){
 }
 function defName(it){
   var l=linkName(it.fromUid); if(l) return l;
-  var m=maps(), nm=it.fromName||it.fromEmail||'';
-  if(it.kind==='repay'){ var k=pos(m.getMap,nm)||pos(m.getMap,it.fromEmail); if(k) return k; }
-  else if(it.kind==='recv'){ var k3=pos(m.oweMap,nm)||pos(m.oweMap,it.fromEmail); if(k3) return k3; }
+  var m=maps(), nm=it.fromName||(it.fromUn?'@'+it.fromUn:'')||'';
+  if(it.kind==='repay'){ var k=pos(m.getMap,nm); if(k) return k; }
+  else if(it.kind==='recv'){ var k3=pos(m.oweMap,nm); if(k3) return k3; }
   else{ var a=anyName(nm); if(a) return a; }
   return nm;
 }
@@ -6842,10 +7002,10 @@ function renderInbox(force){
   if(!force&&s===sig&&el.children.length) return; sig=s;
   if(!inbox.length){ el.innerHTML='<div class="rqEmpty">'+tx('কোনো নতুন অনুরোধ নেই','No new requests')+'</div>'; return; }
   el.innerHTML=inbox.map(function(it){
-    var nm=E(it.fromName||it.fromEmail||'?'), dv=edits[it.id]!==undefined?edits[it.id]:defName(it);
+    var nm=E(it.fromName||(it.fromUn?'@'+it.fromUn:'')||'?'), dv=edits[it.id]!==undefined?edits[it.id]:defName(it);
     var lst=it.kind==='repay'?'rqPplGet':it.kind==='recv'?'rqPplOwe':'rqPplAll';
     return '<div class="rqItem"><div class="rqTop"><span>'+F(it.amount)+'</span><span class="rqSt p">'+tx('অপেক্ষমাণ','Pending')+'</span></div>'
-      +'<div class="rqSm">'+kindTxt(it.kind,nm,it.amount)+(it.due?'<br>'+tx('ফেরতের তারিখ: ','Due: ')+E(it.due):'')+(it.method?'<br>'+tx('মাধ্যম: ','Method: ')+E(it.method)+(it.payTo?' ('+E(it.payTo)+')':''):'')+(it.note?'<br>“'+E(it.note)+'”':'')+'<br>'+E(it.fromEmail||'')+'</div>'
+      +'<div class="rqSm">'+kindTxt(it.kind,nm,it.amount)+(it.due?'<br>'+tx('ফেরতের তারিখ: ','Due: ')+E(it.due):'')+(it.method?'<br>'+tx('মাধ্যম: ','Method: ')+E(it.method)+(it.payTo?' ('+E(it.payTo)+')':''):'')+(it.note?'<br>“'+E(it.note)+'”':'')+'<br>'+(it.fromUn?'@'+E(it.fromUn):'')+'</div>'
       +'<label class="rqLb">'+tx(it.kind==='repay'?'কার পাওনা কমবে (আপনার তালিকার নাম)':it.kind==='recv'?'কার বাকি কমবে (আপনার তালিকার নাম)':'আপনার লোন তালিকায় যে নামে থাকবে','Name in your loan list')+'</label>'
       +'<input class="rqIn" data-nm="'+E(it.id)+'" list="'+lst+'" value="'+E(dv)+'">'
       +'<div class="rqAct"><button class="rqY" data-rq="y" data-id="'+E(it.id)+'">'+tx('গ্রহণ করুন','Accept')+'</button><button class="rqN" data-rq="n" data-id="'+E(it.id)+'">'+tx('বাতিল','Decline')+'</button></div></div>';
@@ -6904,7 +7064,7 @@ async function act(id,yes){
   busy=true;
   try{
     await db('requests/'+s.uid+'/'+id,{method:'PATCH',headers:J,body:JSON.stringify({status:yes?'accepted':'declined',respondedAt:Date.now()})});
-    if(yes){ kindApply(it.kind,'r',+it.amount,nm,it.note,it.due,{}); saveLink(it.fromUid,nm,it.fromEmail,''); }
+    if(yes){ kindApply(it.kind,'r',+it.amount,nm,it.note,it.due,{}); saveLink(it.fromUid,nm,'',it.fromUn||''); }
     inbox=inbox.filter(function(x){return x.id!==id;}); delete edits[id]; allReq.forEach(function(x){ if(x.id===id) x.status=yes?'accepted':'declined'; }); fire(); renderInbox(); setPill();
     msg(yes?acceptMsg(it.kind):tx('অনুরোধ বাতিল করা হয়েছে','Request declined'));
   }catch(e){ msg(R().errMsg(e),true); }
@@ -6927,13 +7087,13 @@ async function cancelReq(rid){
 async function send(){
   if(busy) return; var s=R().ses(); if(!s) return;
   var q=$('rqTo').value.trim(), nm0=$('rqPer').value.trim(), amt=parseFloat($('rqAmt').value), note=$('rqNote').value.trim(), due=(kind!=='repay'&&$('rqDue').value)||null;
-  if(!q){ msg(tx('ইমেইল বা ইউজারনেম লিখুন','Enter an email or username'),true); return; }
+  if(!q){ msg(tx('ইউজারনেম লিখুন','Enter a username'),true); return; }
   if(!amt||amt<=0){ msg(tx('সঠিক পরিমাণ লিখুন','Enter a valid amount'),true); return; }
   busy=true; var b=$('rqSend'); if(b) b.disabled=true; msg(tx('পাঠানো হচ্ছে…','Sending…'));
   try{
     try{ await register(); }catch(e){}
     var to=await find(q);
-    if(!to){ msg(tx('এই ইমেইল/ইউজারনেমে কোনো FinTrack ইউজার পাওয়া যায়নি','No FinTrack user found with that email/username'),true); }
+    if(!to){ msg(tx('এই ইউজারনেমে কোনো FinTrack ইউজার পাওয়া যায়নি','No FinTrack user found with that username'),true); }
     else if(to.uid===s.uid){ msg(tx('নিজেকে অনুরোধ পাঠানো যাবে না','You cannot send a request to yourself'),true); }
     else{
       var nm=nm0||linkName(to.uid)||'';
@@ -6943,13 +7103,13 @@ async function send(){
         if(amt>r.rem){ msg(tx('বাকির চেয়ে বেশি শোধ দেখানো যাবে না। বাকি আছে ','You can not repay more than what is left. Remaining ')+F(Math.max(r.rem,0)),true); busy=false; if(b) b.disabled=false; return; }
         nm=r.key;
       }else{ nm=anyName(nm)||nm||to.name||q; }
-      var me=localStorage.getItem('myName_v1')||String(s.email).split('@')[0];
-      var body={fromUid:s.uid,fromName:me,fromEmail:s.email,kind:kind,amount:amt,note:note,date:todayStr(),status:'pending',ts:Date.now()};
+      var me=localStorage.getItem('myName_v1')||(localStorage.getItem('myUsername_v1')||'').replace(/^@/,'')||'User';
+      var body={fromUid:s.uid,fromName:me,fromUn:(localStorage.getItem('myUsername_v1')||'').replace(/^@/,''),kind:kind,amount:amt,note:note,date:todayStr(),status:'pending',ts:Date.now()};
       if(due) body.due=due;
       var mt=methodInfo(); if(mt.label){ body.method=mt.label; if(kind==='ask'&&mt.payTo) body.payTo=mt.payTo; }
       var rs=await db('requests/'+to.uid,{method:'POST',headers:J,body:JSON.stringify(body)});
       var arr=getSent(); arr.push({rid:rs.name,toUid:to.uid,toName:nm,person:nm,kind:kind,amount:amt,note:note,due:due,status:'pending',applied:0,ts:body.ts}); setSent(arr);
-      saveLink(to.uid,nm,to.email||'',to.username||'');
+      saveLink(to.uid,nm,'',to.username||'');
       $('rqTo').value=''; $('rqPer').value=''; $('rqAmt').value=''; $('rqNote').value=''; $('rqDue').value=''; updateRem(); heroUp();
       msg(tx('অনুরোধ পাঠানো হয়েছে। অপর পক্ষ গ্রহণ করলেই আপনার লোন তালিকায় নিজে থেকে এন্ট্রি হবে।','Request sent. Once they accept, your loan list updates automatically.')); renderSent();
     }
@@ -6966,7 +7126,7 @@ function updateRem(){
 }
 function onPick(){
   var nm=$('rqPer').value.trim(), l=linkByName(nm), to=$('rqTo');
-  if(l&&to&&!to.value.trim()) to.value=l.un?('@'+l.un):(l.email||'');
+  if(l&&to&&!to.value.trim()) to.value=l.un?('@'+l.un):'';
   if(kind==='repay'){ var r=remainOwe(nm), a=$('rqAmt'); if(r&&r.rem>0&&a&&!a.value) a.value=r.rem; }
   updateRem();
 }
@@ -7034,7 +7194,7 @@ function showReqPop(){
   var list=inbox.slice(), top=list.slice(0,5), more=list.length-top.length;
   list.forEach(function(x){ announced[x.id]=1; }); needPop=false;
   var rows=top.map(function(it){
-    var nm=E(it.fromName||it.fromEmail||'?');
+    var nm=E(it.fromName||(it.fromUn?'@'+it.fromUn:'')||'?');
     return '<div class="rmRow"><span class="rmChip" style="--c:'+(rp?'#22c55e':'#f59e0b')+'">'+(typeof mi==='function'?mi(rp?'undo':'loan-in'):'')+'</span>'
       +'<div class="rmTx"><b>'+nm+' — '+F(it.amount)+'</b><small>'+kindWho(it.kind)+(it.due?' · '+tx('ফেরত: ','Due: ')+E(it.due):'')+(it.note?' · “'+E(it.note)+'”':'')+'</small></div></div>';
   }).join('');
@@ -7070,7 +7230,7 @@ function build(){
   '<div id="rqGate" class="rqCard"><p class="rqHint">'+bl('অনুরোধ পাঠাতে ও পেতে অ্যাকাউন্টে লগইন করা থাকতে হবে। গেস্ট মোডে এই ফিচার চলে না। QR ট্যাব লগইন ছাড়াও চলবে।','Log in to send or receive requests (not available in guest mode). The QR tab works without login.')+'</p></div>',
   '<div id="rqPSend" class="rqCard"><div id="rqMain" style="display:none">',
   '<div class="rqChips"><button type="button" id="rqK1" class="on">'+bl('ধার দিয়েছি','I lent')+'</button><button type="button" id="rqK2">'+bl('শোধ করেছি','I repaid')+'</button><button type="button" id="rqK3">'+bl('টাকা চাই','Ask money')+'</button></div>',
-  '<input class="rqIn" id="rqTo" type="text" autocapitalize="none" autocomplete="off" placeholder="'+tx('@ইউজারনেম বা ইমেইল','@username or email')+'">',
+  '<input class="rqIn" id="rqTo" type="text" autocapitalize="none" autocomplete="off" placeholder="'+tx('@ইউজারনেম','@username')+'">',
   '<input class="rqIn" id="rqPer" type="text" autocomplete="off" list="rqPplAll" placeholder="'+tx('লোন তালিকায় নাম (ঐচ্ছিক)','Name in your loan list (optional)')+'">',
   '<input class="rqIn" id="rqAmt" type="number" inputmode="decimal" placeholder="'+tx('পরিমাণ (৳)','Amount (৳)')+'">',
   '<div class="rqQ">'+[500,1000,2000,5000].map(function(a){ return '<button type="button" data-q="'+a+'">'+F(a)+'</button>'; }).join('')+'</div>',
@@ -7151,16 +7311,16 @@ async function apiSend(to,o){
       if(!r3) return {ok:false,msg:tx('“পাবো” তালিকা থেকে যার শোধ পেয়েছেন তার নাম বেছে নিন','Pick who repaid you from your “To receive” list')};
       if(amt>r3.rem) return {ok:false,msg:tx('বাকির চেয়ে বেশি শোধ দেখানো যাবে না। বাকি আছে ','You can not record more than what is left. Remaining ')+F(Math.max(r3.rem,0))};
       nm=r3.key;
-    }else if(isMoneyK(kd)){ nm=linkName(to.uid)||to.name||to.username||to.email||nm||'?'; }
-    else{ nm=anyName(nm)||nm||to.name||to.username||to.email||'?'; }
-    var me=localStorage.getItem('myName_v1')||String(s.email).split('@')[0];
-    var body={fromUid:s.uid,fromName:me,fromEmail:s.email,kind:kd,amount:amt,note:note,date:todayStr(),status:'pending',ts:Date.now()};
+    }else if(isMoneyK(kd)){ nm=linkName(to.uid)||to.name||to.username||nm||'?'; }
+    else{ nm=anyName(nm)||nm||to.name||to.username||'?'; }
+    var me=localStorage.getItem('myName_v1')||(localStorage.getItem('myUsername_v1')||'').replace(/^@/,'')||'User';
+    var body={fromUid:s.uid,fromName:me,fromUn:(localStorage.getItem('myUsername_v1')||'').replace(/^@/,''),kind:kd,amount:amt,note:note,date:todayStr(),status:'pending',ts:Date.now()};
     if(due) body.due=due;
     var cat=(isMoneyK(kd)&&String(o.cat||'').trim())||''; if(kd==='gift') cat='উপহার'; if(cat) body.cat=cat;
     if(o.method){ body.method=o.method; if(kd==='ask'&&o.payTo) body.payTo=o.payTo; }
     var rs=await db('requests/'+to.uid,{method:'POST',headers:J,body:JSON.stringify(body)});
     var arr=getSent(); arr.push({rid:rs.name,toUid:to.uid,toName:nm,person:nm,kind:kd,amount:amt,note:note,due:due,cat:cat,method:o.method||'',status:'pending',applied:0,ts:body.ts}); setSent(arr);
-    saveLink(to.uid,nm,to.email||'',to.username||'');
+    saveLink(to.uid,nm,'',to.username||'');
     try{ updateRem(); heroUp(); renderSent(); }catch(e){}
     fire();
     return {ok:true,rid:rs.name,msg:tx('অনুরোধ পাঠানো হয়েছে। অপর পক্ষ গ্রহণ করলেই এন্ট্রি যোগ হবে।','Request sent. The entry is added once they accept.')};
@@ -7179,7 +7339,7 @@ async function apiAct(id,yes,name,src){
   busy=true;
   try{
     await db('requests/'+s.uid+'/'+id,{method:'PATCH',headers:J,body:JSON.stringify({status:yes?'accepted':'declined',respondedAt:Date.now()})});
-    if(yes){ kindApply(it.kind,'r',+it.amount,nm,it.note,it.due,{src:String(src||'').trim()}); saveLink(it.fromUid,nm,it.fromEmail,''); }
+    if(yes){ kindApply(it.kind,'r',+it.amount,nm,it.note,it.due,{src:String(src||'').trim()}); saveLink(it.fromUid,nm,'',it.fromUn||''); }
     inbox=inbox.filter(function(x){return x.id!==id;}); delete edits[id];
     allReq.forEach(function(x){ if(x.id===id) x.status=yes?'accepted':'declined'; });
     try{ renderInbox(); setPill(); }catch(e){}
@@ -7200,6 +7360,18 @@ window.ftReqApi={
 };
 })();
 </script>
+<div class="pfOv" id="unOv" style="z-index:9800">
+  <div class="pfSheet" role="dialog" aria-modal="true" aria-labelledby="unTitle">
+    <div class="pfGrab"></div>
+    <div class="pfTitle" id="unTitle"><span class="bn">ইউজারনেম বেছে নিন</span><span class="en">Choose a username</span></div>
+    <div class="pfHint" id="unHint" style="display:block"></div>
+    <div id="unFields"></div>
+    <div class="pfErr" id="unErr" role="alert"></div>
+    <div class="pfBtns">
+      <button type="button" class="pfSave" id="unSave" onclick="ftCloud.unSave()"><span class="bn">সংরক্ষণ করুন</span><span class="en">Save</span></button>
+    </div>
+  </div>
+</div>
 <div class="pfOv" id="pfOv" onclick="if(event.target===this)ftCloud.sheetClose()">
   <div class="pfSheet" role="dialog" aria-modal="true" aria-labelledby="pfTitle">
     <div class="pfGrab"></div>
@@ -7219,6 +7391,7 @@ window.ftReqApi={
   function rf(){ try{ ftCloud.refresh(); }catch(e){} }
   ['langBnBtn','langEnBtn'].forEach(function(id){ var b=document.getElementById(id); if(b) b.addEventListener('click',function(){ setTimeout(rf,60); }); });
   try{ if(typeof renderHomeProfile==='function'){ var _r=renderHomeProfile; renderHomeProfile=function(){ var x=_r.apply(this,arguments); rf(); return x; }; } }catch(e){}
+  var _uo=document.getElementById('unOv'); if(_uo) _uo.addEventListener('keydown',function(e){ if(e.key==='Enter'&&e.target&&e.target.tagName==='INPUT'){ e.preventDefault(); ftCloud.unSave(); } });
   document.getElementById('pfOv').addEventListener('keydown',function(e){
     if(e.key==='Enter' && e.target && e.target.tagName==='INPUT'){ e.preventDefault(); ftCloud.sheetSave(); }
     if(e.key==='Escape') ftCloud.sheetClose();
@@ -7396,7 +7569,7 @@ var KEY='ftChat_v1', J={'Content-Type':'application/json'}, TOUCH=/Android|iPhon
 var pane='ai', cur=null, busy=false, pulling=false, needPop=false, tick=0, registered=false, lastSig='', edits={}, formKind=null, splitOn=false, filt='all', seen={}, jumpN=0, lastErr=null;
 function E(v){ return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 function ek(v){ return String(v||'').trim().toLowerCase().replace(/\./g,',').replace(/[#$\[\]\/%]/g,'_'); }
-function load(){ try{ var o=JSON.parse(localStorage.getItem(KEY)||'null'); if(o&&o.th) return o; }catch(e){} return {th:{}}; }
+function load(){ try{ var o=JSON.parse(localStorage.getItem(KEY)||'null'); if(o&&o.th){ Object.keys(o.th).forEach(function(k){ if(o.th[k]&&o.th[k].email) o.th[k].email=''; }); return o; } }catch(e){} return {th:{}}; }
 function save(o){ try{ Object.keys(o.th).forEach(function(k){ var m=o.th[k].msgs; if(m.length>150) o.th[k].msgs=m.slice(-150); }); localStorage.setItem(KEY,JSON.stringify(o)); }catch(e){} }
 function lsj(k){ try{ return JSON.parse(localStorage.getItem(k)||'{}')||{}; }catch(e){ return {}; } }
 function lss(k,o){ try{ localStorage.setItem(k,JSON.stringify(o)); }catch(e){} }
@@ -7447,7 +7620,7 @@ async function acceptReq(uid){
   setOk(uid); var st=load(), th=st.th[uid]; if(th){ th.req=0; save(st); }
   toast(tx(rqName(uid)+' কে গ্রহণ করা হয়েছে','Accepted '+rqName(uid)));
   if(cur===uid){ lastSig=''; renderConv(true); } else if(pane==='fr'&&!cur) renderList(); setBadge();
-  try{ var s=R().ses(); await db('chat/'+uid,{method:'POST',headers:J,body:JSON.stringify({fromUid:s.uid,fromName:myName()||String(s.email).split('@')[0],fromEmail:s.email,fromUn:myUn(),text:'',rx:{to:'__acc',k:'ok'},ts:Date.now()})}); }catch(e){}
+  try{ var s=R().ses(); await db('chat/'+uid,{method:'POST',headers:J,body:JSON.stringify({fromUid:s.uid,fromName:myName()||myUn()||'User',fromUn:myUn(),text:'',rx:{to:'__acc',k:'ok'},ts:Date.now()})}); }catch(e){}
 }
 function declineReq(uid){
   var st=load(); delete st.th[uid]; save(st); toast(tx('অনুরোধ মুছে ফেলা হয়েছে','Request deleted'));
@@ -7466,16 +7639,18 @@ async function db(path,opt){
 }
 async function register(){
   var s=R().ses(); if(!s||!s.email) return; var un=myUn();
-  var rec={uid:s.uid,name:myName(),username:un,email:String(s.email).toLowerCase()};
+  var rec={uid:s.uid,name:myName(),username:String(un||'').replace(/^@/,'')};
+  if(!rec.username) return; try{ if(!(await ftCloud.claim(rec.username))) return; }catch(e){ return; }
   try{ var pic0=await window.ftPicThumb(); if(pic0) rec.pic=pic0; }catch(e){}
   try{ rec.seen=(localStorage.getItem('ftShowSeen_v1')==='0')?0:Date.now(); }catch(e){}
-  await db('directory/'+ek(s.email),{method:'PUT',headers:J,body:JSON.stringify(rec)});
-  if(un){ try{ await db('usernames/'+ek(un),{method:'PUT',headers:J,body:JSON.stringify(rec)}); }catch(e){} }
+  await db('directory/'+s.uid,{method:'PUT',headers:J,body:JSON.stringify(rec)});
+  try{ await db('usernames/'+ek(rec.username),{method:'PUT',headers:J,body:JSON.stringify(rec)}); }catch(e){}
   registered=true;
 }
 async function find(q){
   q=String(q||'').trim(); if(!q) return null;
-  var rec=q.indexOf('@')>0 ? await db('directory/'+ek(q)) : await db('usernames/'+ek(q.replace(/^@/,'')));
+  if(q.indexOf('@')>0) return null;
+  var rec=await db('usernames/'+ek(q.replace(/^@/,''))); if(rec&&rec.email) delete rec.email;
   return rec&&rec.uid?rec:null;
 }
 function tm(ts,short){
@@ -7523,22 +7698,22 @@ function paintSeen(){
   Array.prototype.forEach.call(document.querySelectorAll('#ftFrPane .fcRow[data-open] .fcAv'),function(a){ var r=a.closest('.fcRow'); a.classList.toggle('on',isOn(r.getAttribute('data-open'))); });
   if(cur){
     var h=$('fcHdAv'); if(h) h.classList.toggle('on',isOn(cur));
-    var sb=$('fcHdSub'); if(sb){ var th=load().th[cur]||{}, s1=stHtml(cur), idt=th.un?'@'+th.un:th.email; sb.innerHTML=s1?(s1+(idt?' · '+E(idt):'')):E(idt||''); }
+    var sb=$('fcHdSub'); if(sb){ var th=load().th[cur]||{}, s1=stHtml(cur), idt=th.un?'@'+th.un:''; sb.innerHTML=s1?(s1+(idt?' · '+E(idt):'')):E(idt||''); }
   }
 }
 var lastBeat=0, seenBusy=false, tickN=0;
 async function beat(force){
   if(!logged()||document.hidden&&!force) return; var now=Date.now(); if(!force&&now-lastBeat<50000) return; lastBeat=now;
   var s=R().ses(); if(!s||!s.email) return;
-  try{ await db('directory/'+ek(s.email)+'/seen',{method:'PUT',headers:J,body:JSON.stringify(seenOn()?now:0)}); }catch(e){}
+  try{ await db('directory/'+s.uid+'/seen',{method:'PUT',headers:J,body:JSON.stringify(seenOn()?now:0)}); }catch(e){}
 }
 async function fetchSeen(){
   if(seenBusy||!logged()||!seenOn()) return; seenBusy=true;
   try{
     var map=lsj('ftSeen_v1'), seenU={}, changed=false, list=(cur?[cur]:[]).concat(cur?[]:allUids()).filter(function(u){ if(seenU[u]) return false; seenU[u]=1; return true; }).slice(0,15);
     for(var n=0;n<list.length;n++){
-      var u=list[n], i=info(u), em=i.email; if(!em) continue;
-      try{ var v=await db('directory/'+ek(em)+'/seen'); v=(typeof v==='number'&&v>0)?v:0; if(map[u]!==v){ map[u]=v; changed=true; } }catch(e){}
+      var u=list[n];
+      try{ var v=await db('directory/'+u+'/seen'); v=(typeof v==='number'&&v>0)?v:0; if(map[u]!==v){ map[u]=v; changed=true; } }catch(e){}
     }
     if(changed){ lss('ftSeen_v1',map); }
     paintSeen();
@@ -7559,8 +7734,8 @@ async function fetchPics(){
     var cache=lsj('ftAvCache_v1'), now=Date.now(), changed=false, seenU={}, list=allUids().concat(cur?[cur]:[]).filter(function(u){ if(seenU[u]) return false; seenU[u]=1; return true; }).slice(0,14);
     for(var n=0;n<list.length;n++){
       var u=list[n], c=cache[u]; if(c&&now-c.t<216e5) continue;
-      var i=info(u), q=i.email||(i.un?'@'+i.un:''); if(!q) continue;
-      try{ var rec=await find(q); var pc=rec&&typeof rec.pic==='string'&&PICRE.test(rec.pic)?rec.pic:''; if(rec&&rec.uid&&rec.uid!==u) continue; if((c&&c.p||'')!==pc) changed=true; cache[u]={p:pc,t:now}; }catch(e){}
+      var i=info(u), q=i.un?'@'+i.un:'';
+      try{ var rec=q?await find(q):await db('directory/'+u); var pc=rec&&typeof rec.pic==='string'&&PICRE.test(rec.pic)?rec.pic:''; if(rec&&rec.uid&&rec.uid!==u) continue; if((c&&c.p||'')!==pc) changed=true; cache[u]={p:pc,t:now}; }catch(e){}
     }
     lss('ftAvCache_v1',cache);
     if(changed){ if(cur){ var h=$('fcHdAv'); if(h){ var th=load().th[cur]||{}; h.outerHTML=av(cur,th.name||th.un||th.email||'?','fcHdAv'); } } else if(pane==='fr') renderList(); }
@@ -7585,10 +7760,10 @@ function items(uid){
   return arr.concat(reqItems(uid)).sort(function(a,b){ return a.ts-b.ts; });
 }
 function info(uid){
-  var th=load().th[uid]||{}, links=lsj('ftReqLink_v1'), o={name:th.name||'',email:th.email||'',un:th.un||''};
-  var l=links[uid]||{}; o.name=o.name||l.name||''; o.email=o.email||l.email||''; o.un=o.un||l.un||'';
+  var th=load().th[uid]||{}, links=lsj('ftReqLink_v1'), o={name:th.name||'',email:'',un:th.un||''};
+  var l=links[uid]||{}; o.name=o.name||l.name||''; o.un=o.un||l.un||'';
   var q=Q(); if(q){
-    q.inboxAll().forEach(function(it){ if(it.fromUid===uid){ o.name=o.name||it.fromName||''; o.email=o.email||it.fromEmail||''; } });
+    q.inboxAll().forEach(function(it){ if(it.fromUid===uid){ o.name=o.name||it.fromName||''; o.un=o.un||it.fromUn||''; } });
     q.sent().forEach(function(it){ if(it.toUid===uid){ o.name=o.name||it.toName||''; } });
   }
   return o;
@@ -7596,7 +7771,7 @@ function info(uid){
 function ensureTh(uid){
   var st=load(), i=info(uid);
   if(!st.th[uid]) st.th[uid]={name:i.name,email:i.email,un:i.un,msgs:[],unread:0,last:0};
-  else{ var th=st.th[uid]; th.name=th.name||i.name; th.email=th.email||i.email; th.un=th.un||i.un; }
+  else{ var th=st.th[uid]; th.name=th.name||i.name; th.email=''; th.un=th.un||i.un; }
   save(st); return st.th[uid];
 }
 function allUids(){
@@ -7680,12 +7855,12 @@ function renderList(){
   var qq=Q(), pn=qq?qq.inbox().length:0;
   var h=(pn?'<div class="fcBan" data-ban="1"><span><i class="mi" style="--m:var(--ic-coin)"></i> '+tx(pn+' টি টাকার অনুরোধ আপনার সিদ্ধান্তের অপেক্ষায়',pn+' money request'+(pn>1?'s':'')+' waiting for you')+'</span><i>›</i></div>':'')
     +reqListHtml(st)+'<div class="fcCard"><h4>'+tx('নতুন চ্যাট শুরু করুন','Start a new chat')+'</h4>'
-    +'<input class="fcIn" id="fcTo" type="text" autocapitalize="none" autocomplete="off" placeholder="'+tx('@ইউজারনেম বা ইমেইল','@username or email')+'">'
+    +'<input class="fcIn" id="fcTo" type="text" autocapitalize="none" autocomplete="off" placeholder="'+tx('@ইউজারনেম','@username')+'">'
     +(sug.length?'<div class="fcChips">'+sug.slice(0,8).map(function(u){ return '<button type="button" data-sug="'+E(u)+'">'+E(links[u].name)+'</button>'; }).join('')+'</div>':'')
     +'<button type="button" class="fcGo" id="fcStart">'+tx('চ্যাট শুরু করুন','Start chat')+'</button><div class="fcErr" id="fcErr"></div></div>';
   h+='<div class="fcCard"><h4>'+tx('আমার চ্যাট','My chats')+'</h4>';
   if(ids.length>=4) h+='<input class="fcIn fcSearch" id="fcSearch" type="search" autocomplete="off" placeholder="'+tx('নাম দিয়ে খুঁজুন','Search by name')+'">';
-  if(!ids.length) h+='<div class="fcEmpty">'+tx('এখনো কোনো চ্যাট নেই। ইউজারনেম বা ইমেইল দিয়ে কাউকে খুঁজে মেসেজ বা টাকার অনুরোধ পাঠান।','No chats yet. Find someone by username or email and send a message or money request.')+'</div>';
+  if(!ids.length) h+='<div class="fcEmpty">'+tx('এখনো কোনো চ্যাট নেই। ইউজারনেম দিয়ে কাউকে খুঁজে মেসেজ বা টাকার অনুরোধ পাঠান।','No chats yet. Find someone by username and send a message or money request.')+'</div>';
   ids.forEach(function(x){
     var u=x.u, th=st.th[u]||{}, i=info(u), nm=i.name||i.un||i.email||'?', lm=x.its[x.its.length-1], un=(th.unread||0)+pendingFrom(u), pv='', pr=null;
     if(x.pd){ var pl=Q().inbox().filter(function(y){ return y.fromUid===u; }); pr=pl[pl.length-1]; }
@@ -7720,7 +7895,7 @@ function reqCard(x,pin,isNew){
   var head=q.kindLbl(kd), mny=q.isMoney(kd), kic={gift:'gift',other:'send',recv:'check-circle',repay:'undo',ask:'loan-in',loan:'loan-out'}[kd]||'coin';
   var line;
   if(me) line=kd==='gift'?tx('আপনি '+F(r.amount)+' উপহার পাঠিয়েছেন','You sent a gift of '+F(r.amount)):kd==='other'?tx('আপনি '+F(r.amount)+' পাঠিয়েছেন','You sent '+F(r.amount)):kd==='recv'?tx('আপনি '+F(r.amount)+' শোধ পেয়েছেন বলে জানিয়েছেন','You said you received '+F(r.amount)+' as repayment'):kd==='repay'?tx('আপনি '+F(r.amount)+' শোধ করেছেন বলে জানিয়েছেন','You said you repaid '+F(r.amount)):kd==='ask'?tx('আপনি '+F(r.amount)+' ধার চেয়েছেন','You asked for a loan of '+F(r.amount)):tx('আপনি '+F(r.amount)+' ধার দিয়েছেন বলে জানিয়েছেন','You said you lent '+F(r.amount));
-  else line=E(q.kindTxt(kd,r.fromName||r.fromEmail||'?',r.amount));
+  else line=E(q.kindTxt(kd,r.fromName||(r.fromUn?'@'+r.fromUn:'')||'?',r.amount));
   var pc=st==='accepted'?'a':(st==='declined'||st==='cancelled')?'d':'p';
   var pt=st==='accepted'?(me?tx('গ্রহণ করেছে','Accepted'):tx('গ্রহণ করেছেন','Accepted')):st==='declined'?(me?tx('প্রত্যাখ্যান করেছে','Declined'):tx('বাতিল করেছেন','Declined')):st==='cancelled'?tx('বাতিল','Cancelled'):(me?tx('অপেক্ষমাণ','Pending'):tx('সিদ্ধান্ত দিন','Respond'));
   var h='<div class="fcReq '+(me?'me':'them')+(isNew?' pop':'')+'"><div class="rt"><span><i class="mi" style="--m:var(--ic-'+kic+')"></i> '+head+' · '+F(r.amount)+'</span><span class="fcPill '+pc+'">'+pt+'</span></div>'
@@ -7856,7 +8031,7 @@ function renderConv(force){
   lastSig=sg;
   if(!hasShell){
     f.setAttribute('data-cur',cur); seen[cur]=seen[cur]||{}; jumpN=0;
-    f.innerHTML='<div class="fcCard"><div class="fcHd"><button type="button" class="hb" data-a="back">←</button>'+av(cur,nm,'fcHdAv')+'<div class="fcRt"><b>'+E(nm)+'</b><p id="fcHdSub">'+(stHtml(cur)?stHtml(cur)+' · ':'')+E(th.un?'@'+th.un:th.email)+'</p></div><button type="button" class="hb" data-a="hm" aria-label="menu">⋮</button><div class="fcDrop" id="fcHm" style="display:none"><button type="button" data-hm="find"><i class="mi" style="--m:var(--ic-search)"></i> '+tx('চ্যাটে খুঁজুন','Search chat')+'</button><button type="button" data-hm="pin"></button><button type="button" data-hm="block"><i class="mi" style="--m:var(--ic-ban)"></i> '+tx('ব্লক করুন','Block')+'</button><button type="button" class="dg" data-hm="del"><i class="mi" style="--m:var(--ic-trash)"></i> '+tx('চ্যাট মুছুন','Delete chat')+'</button></div></div>'
+    f.innerHTML='<div class="fcCard"><div class="fcHd"><button type="button" class="hb" data-a="back">←</button>'+av(cur,nm,'fcHdAv')+'<div class="fcRt"><b>'+E(nm)+'</b><p id="fcHdSub">'+(stHtml(cur)?stHtml(cur)+' · ':'')+E(th.un?'@'+th.un:'')+'</p></div><button type="button" class="hb" data-a="hm" aria-label="menu">⋮</button><div class="fcDrop" id="fcHm" style="display:none"><button type="button" data-hm="find"><i class="mi" style="--m:var(--ic-search)"></i> '+tx('চ্যাটে খুঁজুন','Search chat')+'</button><button type="button" data-hm="pin"></button><button type="button" data-hm="block"><i class="mi" style="--m:var(--ic-ban)"></i> '+tx('ব্লক করুন','Block')+'</button><button type="button" class="dg" data-hm="del"><i class="mi" style="--m:var(--ic-trash)"></i> '+tx('চ্যাট মুছুন','Delete chat')+'</button></div></div>'
       +'<div class="fcBal" id="fcBal"></div>'
       +'<div class="fcFindW" id="fcFindW" style="display:none"><input class="fcIn" id="fcFind" type="search" autocomplete="off" placeholder="'+tx('এই চ্যাটে খুঁজুন…','Search in this chat…')+'"></div>'
       +'<div class="fcSeg"><button type="button" data-flt="all">'+tx('সব','All')+'</button><button type="button" data-flt="money"><i class="mi" style="--m:var(--ic-coin)"></i> '+tx('লেনদেন','Money')+'</button></div>'
@@ -8029,7 +8204,7 @@ async function postMsg(text,re){
   var s=R().ses(); if(!s||!cur) return false; var to=cur, ts=Date.now(), lid='p'+ts+Math.random().toString(36).slice(2,6), ok=false;
   ensureTh(to); var st=load(), th=st.th[to]; th.msgs.push({id:lid,me:1,t:String(text).slice(0,1000),ts:ts,st:'s',re:re||undefined}); th.last=ts; save(st);
   if(cur===to) renderConv(true);
-  var body={fromUid:s.uid,fromName:myName()||String(s.email).split('@')[0],fromEmail:s.email,fromUn:myUn(),text:String(text).slice(0,1000),ts:ts};
+  var body={fromUid:s.uid,fromName:myName()||myUn()||'User',fromUn:myUn(),text:String(text).slice(0,1000),ts:ts};
   if(re) body.re=re;
   try{
     var rs=await db('chat/'+to,{method:'POST',headers:J,body:JSON.stringify(body)});
@@ -8143,7 +8318,7 @@ function showAct(rid){
 async function sendReact(rid,k){
   var s=R().ses(), st=load(), th=st.th[cur], m=th&&th.msgs.filter(function(x){ return x.id===rid; })[0]; if(!s||!m) return;
   m.rx=m.rx||{}; var nk=m.rx.me===k?'':k; if(nk) m.rx.me=nk; else delete m.rx.me; save(st); renderConv(true); buzz(8);
-  try{ await db('chat/'+cur,{method:'POST',headers:J,body:JSON.stringify({fromUid:s.uid,fromName:myName()||String(s.email).split('@')[0],fromEmail:s.email,fromUn:myUn(),text:'',rx:{to:mid(m),k:nk},ts:Date.now()})}); }catch(e){ toast(tx('রিয়্যাকশন পাঠানো যায়নি','Could not send reaction')); }
+  try{ await db('chat/'+cur,{method:'POST',headers:J,body:JSON.stringify({fromUid:s.uid,fromName:myName()||myUn()||'User',fromUn:myUn(),text:'',rx:{to:mid(m),k:nk},ts:Date.now()})}); }catch(e){ toast(tx('রিয়্যাকশন পাঠানো যায়নি','Could not send reaction')); }
 }
 function actClick(e){
   var ov=e.target.closest&&e.target.closest('#fcActOv'); if(!ov) return;
@@ -8245,17 +8420,17 @@ function onKey(e){
 }
 async function startChat(){
   if(busy) return; var q=($('fcTo')||{}).value; q=String(q||'').trim(); var s=R().ses(); if(!s) return;
-  if(!q){ fcMsg(tx('ইমেইল বা ইউজারনেম লিখুন','Enter an email or username')); return; }
+  if(!q){ fcMsg(tx('ইউজারনেম লিখুন','Enter a username')); return; }
   busy=true; var b=$('fcStart'); if(b) b.disabled=true; fcMsg(tx('খোঁজা হচ্ছে…','Searching…'));
   try{
     try{ await register(); }catch(e){}
     var to=await find(q);
-    if(!to) fcMsg(tx('এই ইমেইল/ইউজারনেমে কোনো FinTrack ইউজার পাওয়া যায়নি','No FinTrack user found with that email/username'));
+    if(!to) fcMsg(tx('এই ইউজারনেমে কোনো FinTrack ইউজার পাওয়া যায়নি','No FinTrack user found with that username'));
     else if(to.uid===s.uid) fcMsg(tx('নিজেকে মেসেজ পাঠানো যাবে না','You cannot message yourself'));
     else{
       if(blocked(to.uid)){ var bo=lsj('ftChatBlock_v1'); delete bo[to.uid]; lss('ftChatBlock_v1',bo); }
       var st=load(), th=st.th[to.uid]||(st.th[to.uid]={name:'',email:'',un:'',msgs:[],unread:0,last:0});
-      th.name=to.name||th.name||to.username||q; th.email=to.email||th.email; th.un=to.username||th.un; save(st);
+      th.name=to.name||th.name||to.username||q; th.email=''; th.un=to.username||th.un; save(st);
       busy=false; openConv(to.uid); return;
     }
   }catch(e){ fcMsg(sendErr(e)); }
@@ -8276,7 +8451,7 @@ async function pull(){
         if(x.rx&&x.rx.to==='__inv') setOk(x.fromUid);
         if(x.rx&&x.rx.to&&x.rx.to!=='__inv'){ var tg=findM(st.th[x.fromUid],String(x.rx.to)); if(tg){ tg.rx=tg.rx||{}; if(x.rx.k&&RXI[x.rx.k]) tg.rx.them=x.rx.k; else delete tg.rx.them; got++; } return; }
         var th=st.th[x.fromUid]||(st.th[x.fromUid]={name:'',email:'',un:'',msgs:[],unread:0,last:0});
-        if(x.fromName) th.name=x.fromName; if(x.fromEmail) th.email=x.fromEmail; if(x.fromUn) th.un=x.fromUn;
+        if(x.fromName) th.name=x.fromName; if(x.fromUn) th.un=x.fromUn;
         if(th.msgs.some(function(y){ return y.id===k; })) return;
         if(isOk(x.fromUid)){ setOk(x.fromUid); th.req=0; } else th.req=1;
         th.msgs.push({id:k,me:0,t:x.text.slice(0,1000),ts:x.ts||Date.now(),re:(x.re&&x.re.id&&typeof x.re.t==='string')?{id:String(x.re.id),t:x.re.t.slice(0,120),w:x.re.w==='me'?'them':'me'}:undefined}); th.last=Math.max(th.last||0,x.ts||0); got++;
@@ -8363,7 +8538,7 @@ window.ftChatApi={
     ensureTh(uid); var st=load(), t=st.th[uid]; if(name&&!t.name) t.name=name;
     var ts=Date.now(), lid='p'+ts+Math.random().toString(36).slice(2,6), tt=String(text).slice(0,1000);
     t.msgs.push({id:lid,me:1,t:tt,ts:ts,st:'s'}); t.last=ts; save(st);
-    var body={fromUid:s.uid,fromName:myName()||String(s.email).split('@')[0],fromEmail:s.email,fromUn:myUn(),text:tt,ts:ts};
+    var body={fromUid:s.uid,fromName:myName()||myUn()||'User',fromUn:myUn(),text:tt,ts:ts};
     try{
       var rs; try{ var b2={}; Object.keys(body).forEach(function(k){ b2[k]=body[k]; }); b2.rx={to:'__inv',k:'ok'}; rs=await db('chat/'+uid,{method:'POST',headers:J,body:JSON.stringify(b2)}); }catch(e0){ rs=await db('chat/'+uid,{method:'POST',headers:J,body:JSON.stringify(body)}); }
       var s2=load(), t2=s2.th[uid], m=t2&&t2.msgs.filter(function(x){ return x.id===lid; })[0]; if(m){ m.id='o'+rs.name; delete m.st; save(s2); }
@@ -8817,12 +8992,13 @@ function strength(){
   stg.querySelector('small').innerHTML='<b style="color:'+cols[n]+'">'+lb[n]+'</b>'+(tip?' · '+tip:'');
 }
 pw.addEventListener('input',strength);
-const okMail=v=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
-em.addEventListener('input',()=>{ const v=em.value.trim(); em.classList.toggle('vOk',okMail(v)); if(okMail(v)) em.classList.remove('vBad'); });
-em.addEventListener('blur',()=>{ const v=em.value.trim(); em.classList.toggle('vBad',!!v&&!okMail(v)); });
+const okMail=v=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v), okId=v=>okMail(v)||(mode()==='in'&&/^@?[A-Za-z0-9_.]{3,24}$/.test(v));
+em.addEventListener('input',()=>{ const v=em.value.trim(); em.classList.toggle('vOk',okId(v)); if(okId(v)) em.classList.remove('vBad'); });
+em.addEventListener('blur',()=>{ const v=em.value.trim(); em.classList.toggle('vBad',!!v&&!okId(v)); });
 function capsCk(e){ const on=e.getModifierState&&e.getModifierState('CapsLock'); caps.classList.toggle('on',!!on); caps.textContent=on?L('Caps Lock চালু আছে','Caps Lock is on'):''; }
 pw.addEventListener('keyup',capsCk); pw.addEventListener('blur',()=>caps.classList.remove('on'));
-[nm,em].forEach((el,i)=>el&&el.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); (i===0?em:pw).focus(); } }));
+[nm,em].forEach((el,i)=>el&&el.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); (i===0?($('lgUser')||em):pw).focus(); } }));
+const _lu=$('lgUser'); if(_lu) _lu.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); em.focus(); } });
 btn.addEventListener('click',()=>{ try{ const v=em.value.trim(); if(okMail(v)) localStorage.setItem('ftLastEmail_v1',v); }catch(e){} },true);
 new MutationObserver(()=>{ const s=$('lgStatus'); if(s&&s.classList.contains('bad')&&card){ card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); if(navigator.vibrate) navigator.vibrate([12,40,12]); } }).observe($('lgStatus'),{attributes:true,attributeFilter:['class']});
 })();
@@ -8871,7 +9047,7 @@ function scan(first){
       N({id:'m:'+m.id,type:'msg',title:th.name||th.un||th.email||L('বন্ধু','Friend'),body:String(m.t||'').slice(0,90)}); }); });
   }catch(e){}
   try{ const q=window.ftReqApi; if(q&&q.ready()){ q.inbox().forEach(r=>{ if(seen['q:'+r.id]) return;
-      N({id:'q:'+r.id,type:'req',title:(r.fromName||r.fromEmail||'?')+' — '+fm(r.amount),body:(window.ftReqApi&&ftReqApi.kindWho?ftReqApi.kindWho(r.kind):L('আপনাকে ধার দিয়েছেন','Lent you money'))}); }); }
+      N({id:'q:'+r.id,type:'req',title:(r.fromName||(r.fromUn?'@'+r.fromUn:'')||'?')+' — '+fm(r.amount),body:(window.ftReqApi&&ftReqApi.kindWho?ftReqApi.kindWho(r.kind):L('আপনাকে ধার দিয়েছেন','Lent you money'))}); }); }
   }catch(e){}
   try{ const td=todayStr(), nt=nowTime(), now=Date.now(); (data.reminders||[]).forEach(r=>{ if(r.done) return; const t=r.time||'09:00', due=r.date<td||(r.date===td&&t<=nt); if(!due||(r.snz&&r.snz>now)) return;
       N({id:'r:'+r.id+':'+r.date+':'+(r.time||''),type:'rem',title:r.title,body:L('রিমাইন্ডারের সময় হয়েছে','Reminder is due')+(r.amount?' · '+fm(r.amount):'')}); }); }catch(e){}
@@ -9433,7 +9609,7 @@ function ownCard(){
 function privHtml(i){ return '<div class="ppHead"><div class="ppAv" style="--r:var(--primary)">'+avatar(i.name,i.pic)+'</div><div class="ppNm">'+esc(i.name||L('নাম নেই','No name'))+'</div>'+(i.un?'<div class="ppUn">@'+esc(i.un)+'</div>':'')+'</div><div class="ppCard"><div class="ppNote">'+L('এই ইউজারের স্কিল ও ব্যাজ প্রাইভেট। তবে চাইলে মেসেজ পাঠাতে পারেন।','This user keeps skills and badges private. You can still send a message.')+'</div></div>'; }
 function findHtml(){
   if(viewed){ const r=R(), me=r&&r.ses&&r.ses()?r.ses().uid:'', msgBtn=viewed.uid&&viewed.uid!==me?`<button class="main" style="width:100%;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;" onclick="ppMsg('${esc(viewed.uid)}')">${ic('pp-msg',18)} ${L('মেসেজ পাঠান','Send message')}</button>`:''; return `<button class="ppBack" onclick="ppBack()">${ic('pp-back',16)} ${L('সার্চে ফিরুন','Back to search')}</button>`+msgBtn+(viewed.p?profHtml(viewed):privHtml(viewed)); }
-  return `<button class="ppBack" onclick="ppPane('me')">${ic('pp-back',16)} ${L('আমার প্রোফাইল','My profile')}</button><div class="ppSearch"><input type="text" id="ppQ" placeholder="${L('ইউজারনেম বা ইমেইল লিখে খুঁজুন','Search by username or email')}" value="${esc(q)}" autocapitalize="none" autocomplete="off" spellcheck="false" oninput="ppQin(this.value)" onkeydown="if(event.key==='Enter')ppSearch()"><button class="main" onclick="ppSearch()" aria-label="search">${ic('pp-search',18)}</button></div><div id="ppRes">${resHtml()}</div>`;
+  return `<button class="ppBack" onclick="ppPane('me')">${ic('pp-back',16)} ${L('আমার প্রোফাইল','My profile')}</button><div class="ppSearch"><input type="text" id="ppQ" placeholder="${L('ইউজারনেম লিখে খুঁজুন','Search by username')}" value="${esc(q)}" autocapitalize="none" autocomplete="off" spellcheck="false" oninput="ppQin(this.value)" onkeydown="if(event.key==='Enter')ppSearch()"><button class="main" onclick="ppSearch()" aria-label="search">${ic('pp-search',18)}</button></div><div id="ppRes">${resHtml()}</div>`;
 }
 function resHtml(){
   if(busy) return `<div class="cgEmpty">${L('খোঁজা হচ্ছে…','Searching…')}</div>`;
@@ -9473,8 +9649,8 @@ async function search(){
   const k=ek(raw); busy=true; renderRes();
   try{
     let list=[];
-    if(raw.indexOf('@')>0){ const dr=await db('directory/'+k); if(dr&&dr.uid) list=[{key:ek(dr.username||k),rec:{uid:dr.uid,name:dr.name,username:dr.username||'',pic:dr.pic}}]; }
-    else try{
+    if(raw.indexOf('@')>0){ msg=L('ইমেইল দিয়ে খোঁজা যায় না, ইউজারনেম লিখুন।','Email search is not available. Type a username.'); msgBad=true; busy=false; renderRes(); return; }
+    try{
       const o=await db('usernames',undefined,'orderBy='+encodeURIComponent('"$key"')+'&startAt='+encodeURIComponent('"'+k+'"')+'&endAt='+encodeURIComponent('"'+k+'\uf8ff"')+'&limitToFirst=12');
       list=Object.keys(o||{}).map(x=>({key:x,rec:o[x]}));
     }catch(e){
@@ -9506,7 +9682,7 @@ window.ppGoSearch=()=>{ pane='find'; viewed=null; results=[]; msg=''; sel=''; tr
 window.ppMsg=uid=>{
   try{
     const m=JSON.parse(localStorage.getItem('ftReqLink_v1')||'{}')||{}, o=m[uid]||{};
-    m[uid]={name:(viewed&&viewed.name)||o.name||'',email:o.email||'',un:(viewed&&viewed.un)||o.un||''};
+    m[uid]={name:(viewed&&viewed.name)||o.name||'',email:'',un:(viewed&&viewed.un)||o.un||''};
     localStorage.setItem('ftReqLink_v1',JSON.stringify(m));
   }catch(e){}
   if(window.ftChatOpen) window.ftChatOpen([uid]); else if(window.toast) window.toast(L('মেসেজ চালু করতে ক্লাউড অ্যাকাউন্টে লগইন করুন।','Log in to your cloud account to send messages.'));
@@ -9621,7 +9797,7 @@ function avatar(){ const im=$('setAvImg'), tx=($('setAvTxt')&&$('setAvTxt').text
 let lastSig='', deep=false, retTab=null;
 function banner(){
   const w=who(), el=$('ftBan'); if(!el) return;
-  el.innerHTML='<div class="ftBanAv">'+avatar()+'</div><div class="ftBanTx"><b>'+(w.name?L('হ্যালো ','Hello ')+esc(w.name):L('স্বাগতম','Welcome'))+'</b><span>'+esc(w.email||(w.un?'@'+w.un:L('প্রোফাইল ও অ্যাকাউন্ট','Profile & account')))+'</span></div>'+CHEV;
+  el.innerHTML='<div class="ftBanAv">'+avatar()+'</div><div class="ftBanTx"><b>'+(w.name?L('হ্যালো ','Hello ')+esc(w.name):L('স্বাগতম','Welcome'))+'</b><span>'+esc(w.un?'@'+w.un:(w.email||L('প্রোফাইল ও অ্যাকাউন্ট','Profile & account')))+'</span></div>'+CHEV;
 }
 function build(force){
   let host=$('ftSetList');
@@ -9677,7 +9853,7 @@ function fillMenu(){
   const w=who(), c=cur(), det=sec.classList.contains('ftDetail')?kOf(dets().find(d=>d.classList.contains('ftShow'))||sec):'';
   const lg=$('headerLogoEl'), logo=$('mnLogo'); if(lg&&logo) logo.innerHTML=lg.innerHTML;
   const nm=document.querySelector('[data-i18n="app_title"]'); if(nm&&$('mnName')) $('mnName').textContent=nm.textContent;
-  let h='<div class="mnPro" data-a="tab" data-k="profile"><div class="av">'+avatar()+'</div><div class="tx"><b>'+(w.name?esc(w.name):L('আমার প্রোফাইল','My profile'))+'</b><span>'+(w.on?'<i></i>':'')+esc(w.email||(w.un?'@'+w.un:L('প্রোফাইল দেখুন','View profile')))+'</span></div>'+CHEV+'</div>';
+  let h='<div class="mnPro" data-a="tab" data-k="profile"><div class="av">'+avatar()+'</div><div class="tx"><b>'+(w.name?esc(w.name):L('আমার প্রোফাইল','My profile'))+'</b><span>'+(w.on?'<i></i>':'')+esc(w.un?'@'+w.un:(w.email||L('প্রোফাইল দেখুন','View profile')))+'</span></div>'+CHEV+'</div>';
   const mv=dets().filter(isMoved).map(d=>{ const ch=chipOf(d), k=kOf(d); return tile('mset',k,ch.c,ch.i,titleHtml(d),det&&det===k); });
   const mvHtml=mv.length?'<div class="mnSec">'+L('অর্থ ও বাজেট','Money & budget')+'</div><div class="mnGrid">'+mv.join('')+'</div>':'';
   TABS.forEach(g=>{
