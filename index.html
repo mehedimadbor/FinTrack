@@ -9138,10 +9138,10 @@ new MutationObserver(()=>{ const s=$('lgStatus'); if(s&&s.classList.contains('ba
 const $=id=>document.getElementById(id), bn=()=>currentLang==='bn', L=(b,e)=>bn()?b:e, ic=n=>'<i class="mi" style="--m:var(--ic-'+n+')"></i>';
 const PK='ftNotifPref_v1', LK='ftNotifLog_v1', SK='ftNotifSeen_v1', IK='ftNotifInit_v1';
 const jget=(k,d)=>{ try{ const v=JSON.parse(localStorage.getItem(k)); return v==null?d:v; }catch(e){ return d; } }, jset=(k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} };
-const DEF={sys:true,vib:true,msg:true,req:true,rem:true,loan:true,limit:true,daily:false,dailyTime:'21:00'};
+const DEF={sys:true,vib:true,msg:true,req:true,status:true,rem:true,loan:true,limit:true,daily:false,dailyTime:'21:00'};
 const P=Object.assign({},DEF,jget(PK,{})); let log=jget(LK,[]), seen=jget(SK,{}), init=jget(IK,{});
 const saveP=()=>jset(PK,P), esc2=x=>String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const ICON={msg:'message',req:'loan-in',rem:'bell',loan:'clock',limit:'alert',daily:'calendar',test:'bell'}, GO={msg:'chat',req:'chat',rem:'dash',loan:'loan',limit:'dash',daily:'add',test:'dash'};
+const ICON={status:'user',msg:'message',req:'loan-in',rem:'bell',loan:'clock',limit:'alert',daily:'calendar',test:'bell'}, GO={msg:'chat',req:'chat',rem:'dash',loan:'loan',limit:'dash',daily:'add',test:'dash'};
 const supported=()=>'Notification' in window, perm=()=>supported()?Notification.permission:'unsupported';
 function unread(){ return log.filter(x=>!x.r).length; }
 function badge(){
@@ -9151,19 +9151,21 @@ function badge(){
 function sys(o){
   if(!P.sys||perm()!=='granted') return;
   const opt={body:o.body,tag:o.id,renotify:false};
-  try{ const n=new Notification(o.title,opt); n.onclick=()=>{ try{ window.focus(); }catch(e){} open(o.type); n.close(); }; }
+  try{ const n=new Notification(o.title,opt); n.onclick=()=>{ try{ window.focus(); }catch(e){} open(o.type,o); n.close(); }; }
   catch(e){ try{ navigator.serviceWorker.getRegistration().then(r=>r&&r.showNotification(o.title,opt)); }catch(_){} }
 }
 function notify(o){
   if(o.id&&seen[o.id]) return false; if(o.id) seen[o.id]=Date.now();
   const keys=Object.keys(seen); if(keys.length>400){ keys.sort((a,b)=>seen[a]-seen[b]).slice(0,150).forEach(k=>delete seen[k]); } jset(SK,seen);
-  log.unshift({id:o.id,t:o.title,b:o.body,type:o.type,ts:Date.now(),r:0}); log=log.slice(0,60); jset(LK,log); badge(); render();
+  log.unshift({id:o.id,t:o.title,b:o.body,type:o.type,u:o.uid||'',ts:Date.now(),r:0}); log=log.slice(0,60); jset(LK,log); badge(); render();
   if(document.hidden){ sys(o); } else { try{ toast(o.title+(o.body?' — '+o.body:'')); }catch(e){} }
   if(P.vib&&navigator.vibrate){ try{ navigator.vibrate([90,50,90]); }catch(e){} }
   return true;
 }
-function open(type){
-  closeSheet(); try{ activateTab(GO[type]||'dash'); }catch(e){}
+function open(type,ref){
+  closeSheet();
+  if(type==='status'){ const u=ref&&(ref.uid||ref.u); if(u&&window.ftStatusView){ try{ window.ftStatusView(u); }catch(e){} } else { try{ activateTab('friends'); }catch(e){} } return; }
+  try{ activateTab(GO[type]||'dash'); }catch(e){}
   if(type==='req'&&window.ftFrIn){ try{ activateTab('friends'); }catch(e){} return; }
   if(type==='msg'||type==='req'){ try{ const b=$('fcT2'); if(b) b.click(); }catch(e){} }
 }
@@ -9204,12 +9206,12 @@ function openSheet(){ render(); ov.classList.add('on'); }
 function closeSheet(){ ov.classList.remove('on'); }
 bell.addEventListener('click',openSheet);
 ov.addEventListener('click',e=>{ if(e.target===ov){ closeSheet(); return; } const a=e.target.closest('[data-a]'); if(a){ if(a.dataset.a==='read'){ log.forEach(x=>x.r=1); } else { log=[]; } jset(LK,log); badge(); render(); return; }
-  const it=e.target.closest('.ntIt'); if(it){ const x=log[+it.dataset.i]; if(x){ x.r=1; jset(LK,log); badge(); open(x.type); } } });
+  const it=e.target.closest('.ntIt'); if(it){ const x=log[+it.dataset.i]; if(x){ x.r=1; jset(LK,log); badge(); open(x.type,x); } } });
 /* ---------- settings card ---------- */
 const box=document.createElement('details'); box.className='box setBox'; box.id='ntSetBox'; box.dataset.pro='1';
 box.innerHTML='<summary><span class="setIco" style="--c:#f59e0b">'+ic('bell')+'</span><div class="setTt"><h3><span class="bn">নোটিফিকেশন অপশন</span><span class="en">Notification options</span></h3><small class="setSub"><span class="bn">কোন কোন অ্যালার্ট পাবেন তা ঠিক করুন</span><span class="en">Choose which alerts you get</span></small></div><svg viewBox="0 0 24 24" class="setChev"><path d="m9 6 6 6-6 6"/></svg></summary><div class="setBody"></div>';
 const ntBody=box.querySelector('.setBody');
-const ROWS=[['msg','বন্ধুর নতুন মেসেজ','New friend messages'],['req','টাকার অনুরোধ','Money requests'],['rem','আমার রিমাইন্ডার','My reminders'],['loan','ধার ফেরতের তারিখ','Loan due dates'],['limit','দৈনিক খরচের সীমা','Daily spending limit'],['daily','প্রতিদিন হিসাব লেখার তাগিদ','Daily entry nudge'],['vib','ভাইব্রেশন','Vibration']];
+const ROWS=[['msg','বন্ধুর নতুন মেসেজ','New friend messages'],['status','বন্ধুর নতুন স্ট্যাটাস','Friends\' new status'],['req','টাকার অনুরোধ','Money requests'],['rem','আমার রিমাইন্ডার','My reminders'],['loan','ধার ফেরতের তারিখ','Loan due dates'],['limit','দৈনিক খরচের সীমা','Daily spending limit'],['daily','প্রতিদিন হিসাব লেখার তাগিদ','Daily entry nudge'],['vib','ভাইব্রেশন','Vibration']];
 function status(){
   const p=perm(); return p==='granted'?'<b style="color:var(--green)">'+L('চালু আছে','Enabled')+'</b>':p==='denied'?'<b style="color:var(--red)">'+L('ব্লক করা আছে — ব্রাউজারের সাইট সেটিংস থেকে অনুমতি দিন','Blocked — allow it in the browser site settings')+'</b>':p==='unsupported'?'<b>'+L('এই ব্রাউজারে সিস্টেম নোটিফিকেশন নেই; অ্যাপের ভেতরের নোটিফিকেশন কাজ করবে','System notifications are not available here; in-app alerts still work')+'</b>':'<b>'+L('এখনো অনুমতি দেওয়া হয়নি','Permission not granted yet')+'</b>';
 }
@@ -10336,7 +10338,7 @@ async function poll(){
       if(pr.req!==false&&window.ftNotify) Object.keys(ni).forEach(u=>{ const q=ni[u], who=q.n||q.u||L('কেউ','Someone');
         ftNotify({id:'frq:'+u+':'+(q.t||0),type:'req',title:who+L(' আপনাকে বন্ধুর অনুরোধ পাঠিয়েছেন',' sent you a friend request'),body:q.u?'@'+q.u:L('গ্রহণ করতে বন্ধু ট্যাবে যান','Open Friends to accept')}); }); }catch(e){}
     const ch=JSON.stringify([ni,no,nf])!==JSON.stringify([S.inc,S.out,S.fr]);
-    window.ftFrIn=Object.keys(ni).length;
+    window.ftFrIn=Object.keys(ni).length; window.ftFrInfo=nf;
     S={inc:ni,out:no,fr:nf}; loaded=true; approve();
     if(active()) markSeen(); setBlink();
     if(ch){ if(active()) render(); fire(); }
@@ -10685,6 +10687,20 @@ async function view(u){
 async function wipe(){ await lset(null); var u=me(); meta[u]={v:null,at:Date.now()}; if(u){ try{ await db('status/'+u,{method:'DELETE'}); await db('statusMeta/'+u,{method:'DELETE'}); }catch(e){} } sched(); }
 /* auto delete after 24h (local + cloud), owner side */
 async function sweep(){ try{ var l=await lget(); if(l&&l.exp<=Date.now()) await wipe(); else if(!l&&me()){ var v=await db('statusMeta/'+me()).catch(function(){return null;}); if(v&&+v.exp<=Date.now()) await wipe(); } }catch(e){} }
+window.ftStatusView=function(u){ if(!active(u)){ meta[u]=null; ensure([u]).then(function(){ view(u); }); } else view(u); };
+var NK='ftStNotified_v1', scanning=false;
+function nmap(){try{return JSON.parse(localStorage.getItem(NK))||{};}catch(e){return {};}}
+async function scanFriends(){
+  if(scanning||!me()||document.hidden) return; var fr=window.ftFrInfo||{}, us=Object.keys(fr).slice(0,40); if(!us.length) return; scanning=true;
+  try{ var pr={}; try{pr=JSON.parse(localStorage.getItem('ftNotifPref_v1'))||{};}catch(e){}
+    var nm=nmap(), now=Date.now(), ch=false;
+    await Promise.all(us.map(async function(u){ try{ var v=await db('statusMeta/'+u); meta[u]={v:(v&&typeof v==='object'&&+v.exp>now)?v:null,at:Date.now()};
+      var m=meta[u].v; if(m&&nm[u]!==m.t){ nm[u]=m.t; ch=true;
+        if(pr.status!==false&&window.ftNotify){ var who=fr[u].n||fr[u].u||L('বন্ধু','A friend');
+          ftNotify({id:'st:'+u+':'+m.t,uid:u,type:'status',title:who+L(' একটি স্ট্যাটাস দিয়েছেন',' posted a status'),body:m.c?String(m.c).slice(0,80):L('দেখতে ট্যাপ করুন','Tap to view')}); } } }catch(e){} }));
+    if(ch){ var ks=Object.keys(nm); if(ks.length>200) ks.slice(0,80).forEach(function(k){delete nm[k];}); try{localStorage.setItem(NK,JSON.stringify(nm));}catch(e){} sched(); }
+  }catch(e){} scanning=false; }
+setInterval(scanFriends,30000); setTimeout(scanFriends,6000); document.addEventListener('visibilitychange',function(){ if(!document.hidden) setTimeout(scanFriends,800); }); window.addEventListener('ftFrChange',function(){ setTimeout(scanFriends,500); });
 document.addEventListener('click',function(e){
   var a=e.target.closest&&e.target.closest('.stAdd,.stBtn'); if(a){ e.preventDefault(); e.stopPropagation(); var u=me(); if(!u){toastM(L('স্ট্যাটাস দিতে ক্লাউড অ্যাকাউন্টে লগইন করুন (সেটিংস → অ্যাকাউন্ট)','Log in to your cloud account to post a status'));return;} if(a.classList.contains('stAdd')&&active(u)) view(u); else pick(); return; }
   var r=e.target.closest&&e.target.closest('.stRing'); if(r&&r.dataset.stu&&!e.target.closest('.stOv')){ e.preventDefault(); e.stopPropagation(); view(r.dataset.stu); }
