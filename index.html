@@ -574,7 +574,7 @@ h1 [data-i18n="app_title"]{background:var(--grad); -webkit-background-clip:text;
 
 /* Boxes */
 .box{border:1px solid color-mix(in srgb,var(--border) 70%,transparent);}
-.section.active .box{animation:ftIn .42s ease both;}
+
 .section.active .box:nth-child(2){animation-delay:.05s;} .section.active .box:nth-child(3){animation-delay:.1s;} .section.active .box:nth-child(4){animation-delay:.15s;}
 
 /* ===== Smarter floating nav ===== */
@@ -652,7 +652,7 @@ details.setBox>summary h3::before{display:none;}
 .setChev{width:22px; height:22px; flex:none; stroke:var(--muted); fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; transition:transform .25s;}
 details.setBox[open]>summary .setChev{transform:rotate(90deg);}
 details.setBox[open]>summary{border-bottom:1px solid var(--border);}
-.setBody{padding:6px 16px 16px; animation:ftIn .3s ease both;}
+.setBody{padding:6px 16px 16px;}
 .setBody h3[style]::before{display:none;}
 .setBody .typebtn{min-height:44px; display:flex; align-items:center; justify-content:center;}
 .themerow{display:grid; grid-template-columns:repeat(4,1fr); gap:10px;}
@@ -990,6 +990,15 @@ html body .loginScreen .lgGuest{border-color:color-mix(in srgb,var(--primary) 45
 .lgSwitch a{display:inline-block;margin-left:6px;padding:7px 16px;border:0 !important;border-radius:999px;background:color-mix(in srgb,var(--primary) 14%,var(--card));color:var(--primary) !important;font-weight:800;-webkit-tap-highlight-color:transparent}
 .loginScreen .lgTitle>span,.loginScreen #lgUpOnly{animation:lgIn .28s ease both}
 @keyframes lgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+
+<style id="ftStableV1">
+/* flicker/glitch fixes: promote fixed bars to their own layer, no double-fade, calmer motion */
+.bottomnav,header.top,.tabs{-webkit-backface-visibility:hidden;backface-visibility:hidden;}
+html,body{-webkit-text-size-adjust:100%;text-size-adjust:100%;overscroll-behavior-y:none;}
+.section:not(.active){animation:none !important;}
+img{image-rendering:auto;}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;scroll-behavior:auto !important;}}
 </style>
 </head>
 <body>
@@ -6858,7 +6867,7 @@ run(); setTimeout(run,700); setTimeout(run,2200);
 .loanPayBtn.loanReqBtn{background:transparent;color:var(--primary);border:1.5px solid var(--primary);box-shadow:none}
 .person>div:last-child{flex-wrap:wrap;justify-content:flex-end;row-gap:6px}
 .tab{position:relative;}
-.tab.rqHas::after{content:"";position:absolute;top:5px;right:6px;width:9px;height:9px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 2px var(--card),0 0 0 0 rgba(239,68,68,.7);animation:rqBlink 1.1s ease-in-out infinite;pointer-events:none}
+.tab.rqHas::after{content:"";position:absolute;top:5px;right:6px;width:9px;height:9px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 2px var(--card),0 0 0 0 rgba(239,68,68,.7);pointer-events:none}
 @keyframes rqBlink{0%,100%{opacity:1;transform:scale(1);box-shadow:0 0 0 2px var(--card),0 0 0 0 rgba(239,68,68,.65)}50%{opacity:.25;transform:scale(.8);box-shadow:0 0 0 2px var(--card),0 0 0 6px rgba(239,68,68,0)}}
 @media (prefers-reduced-motion:reduce){.tab.rqHas::after{animation:none}}
 #rqBox .setBody .typebtn{border-radius:13px;font-weight:700;border:1.5px solid color-mix(in srgb,var(--primary) 30%,var(--border));}
@@ -7564,7 +7573,7 @@ window.ftReqApi={
 .fcSnack.on{pointer-events:auto}
 .fcSnack button{font:inherit;font-weight:900;border:0;background:rgba(255,255,255,.18);color:inherit;border-radius:10px;padding:6px 12px;cursor:pointer}
 #bottomNav .bnbtn[data-bn="chat"]{position:relative}
-#bottomNav .bnbtn.fcHas::after{content:"";position:absolute;top:6px;left:calc(50% + 7px);width:9px;height:9px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 2px var(--card);animation:fcBlink 1.1s ease-in-out infinite;pointer-events:none}
+#bottomNav .bnbtn.fcHas::after{content:"";position:absolute;top:6px;left:calc(50% + 7px);width:9px;height:9px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 2px var(--card);pointer-events:none}
 @keyframes fcBlink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.25;transform:scale(.8)}}
 @media (prefers-reduced-motion:reduce){#bottomNav .bnbtn.fcHas::after{animation:none}.pop,.fcQ,.fcMenu,.fcDrop,.fcJump{animation:none}.fcLog{scroll-behavior:auto}}
 </style>
@@ -8640,7 +8649,7 @@ window.ftInvite={
   copy:function(){ if(!need()) return; copyTxt(link()); },
   wa:function(){ if(!need()) return; window.open('https://wa.me/?text='+encodeURIComponent(msgText()+' '+link()),'_blank','noopener'); }
 };
-function render(){ var i=$('invLink'); if(!i) return; var s=sess(); i.value=link(); i.placeholder=tx('অ্যাকাউন্ট খুললে লিংক এখানে দেখাবে','Your link appears here once you have an account'); var h=$('invHint'); if(h) h.style.display=s?'none':''; }
+function render(){ var i=$('invLink'); if(!i) return; var s=sess(); var lk=link(); if(i.value!==lk) i.value=lk; var ph=tx('অ্যাকাউন্ট খুললে লিংক এখানে দেখাবে','Your link appears here once you have an account'); if(i.placeholder!==ph) i.placeholder=ph; var h=$('invHint'); if(h){ var d=s?'none':''; if(h.style.display!==d) h.style.display=d; } }
 capture(); banner();
 if(pend()){ try{ var ls0=$('loginScreen'); if(ls0&&getComputedStyle(ls0).display!=='none') ftCloud.loginMode('up'); }catch(e){} }
 render(); setTimeout(process,1500);
@@ -8751,7 +8760,7 @@ function hm(t){try{return new Date(t).toLocaleTimeString();}catch(e){return '';}
 function diag(){var e=$('ntStat'); if(!e) return; var n=Object.keys(Feed()).length,u=Q().length,c=cloud(),se=null; try{se=c&&c.ses();}catch(x){}
   var L=['ver: '+D.ver,'mode: '+(broadcast()?'broadcast':'single-phone (ADMIN_EMAIL empty)'),'login: '+(se?(se.email||'yes'):'guest / not logged in')+(isAdmin()?'  [ADMIN]':'  [user]'),'feed fetch: '+D.fetch+(D.at?'  @'+hm(D.at):''),'notices in feed: '+n+'   unread here: '+u];
   if(isAdmin()){ L.push('bot polling: '+D.tg); L.push('relay to firebase: '+D.relay); }
-  e.textContent=L.join('\n'); }
+  var _dt=L.join('\n'); if(e.textContent!==_dt) e.textContent=_dt; }
 
 function prog(on){
   var p=$('smsProg'); if(!p) return;
@@ -8786,7 +8795,7 @@ function arm(){
 }
 function show(){
   var st=$('pfStage'); if(!st) return; var q=Q();
-  if(!q.length){ if(auto){clearTimeout(auto);auto=null;prog(false);} st.dataset.state='profile'; shownId=null; return; }
+  if(!q.length){ if(auto){clearTimeout(auto);auto=null;prog(false);} if(st.dataset.state!=='profile') st.dataset.state='profile'; shownId=null; return; }
   if(gap) return;
   if(st.dataset.state==='sms'&&shownId===q[0].id){ $('smsPos').textContent=posTxt(q.length); return; }
   fill(q[0],q.length); st.dataset.state='sms'; arm();
@@ -10018,7 +10027,7 @@ if(!addBtn()) setTimeout(addBtn,600);
 <style id="ftFrStyle">
 #ftChatTop{display:none!important;}
 #bottomNav .bnbtn[data-bn="friends"]{position:relative;}
-#bottomNav .bnbtn.frHas::after{content:"";position:absolute;top:6px;left:calc(50% + 7px);width:9px;height:9px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 2px var(--card);animation:fcBlink 1.1s ease-in-out infinite;pointer-events:none;}
+#bottomNav .bnbtn.frHas::after{content:"";position:absolute;top:6px;left:calc(50% + 7px);width:9px;height:9px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 2px var(--card);pointer-events:none;}
 #bottomNav .bnbtn[data-bn="challenge"] .lbl{font-size:9.5px;}
 #sec-friends .frHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
 #sec-friends .frHead h3{margin:0;font-size:20px;color:var(--text);}
@@ -10089,7 +10098,7 @@ async function poll(){
     S={inc:ni,out:no,fr:nf}; loaded=true; approve();
     if(active()) markSeen(); setBlink();
     if(ch){ if(active()) render(); fire(); }
-  }catch(e){ const x=String(e&&e.message||e); err=/HTTP 40[13]/.test(x)?'rules':(x==='LOGIN'?'':'net'); if(active()) render(); }
+  }catch(e){ const x=String(e&&e.message||e); var ne=/HTTP 40[13]/.test(x)?'rules':(x==='LOGIN'?'':'net'); var chg=ne!==err; err=ne; if(chg&&active()) render(); }
   busy=false;
 }
 const nm=o=>o.n||o.u||L('নাম নেই','No name');
