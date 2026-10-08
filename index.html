@@ -10311,7 +10311,7 @@ const myN=()=>LS.getItem('myName_v1')||'', myU=()=>(LS.getItem('myUsername_v1')|
 const jl=(k,d)=>{ try{ const v=JSON.parse(LS.getItem(k)||'null'); return v==null?d:v; }catch(e){ return d; } };
 const js=(k,v)=>{ try{ LS.setItem(k,JSON.stringify(v)); }catch(e){} };
 const uidOk=u=>/^[A-Za-z0-9_-]{6,64}$/.test(u);
-const RULES='"friendReq": {\n  "$to": {\n    ".read": "auth != null && auth.uid === $to",\n    "$from": { ".write": "auth != null && (auth.uid === $from || auth.uid === $to)" }\n  }\n},\n"friendSent": {\n  "$a": {\n    ".read": "auth != null && auth.uid === $a",\n    "$b": { ".write": "auth != null && (auth.uid === $a || (auth.uid === $b && !newData.exists()))" }\n  }\n},\n"friends": {\n  "$a": {\n    ".read": "auth != null && auth.uid === $a",\n    "$b": { ".write": "auth != null && (auth.uid === $a || (auth.uid === $b && (!newData.exists() || root.child(\'friendReq\').child($b).child($a).exists())))" }\n  }\n},\n"statusMeta": {\n  "$u": {\n    ".read": "auth != null && data.child(\'exp\').val() > now",\n    ".write": "auth != null && auth.uid === $u"\n  }\n},\n"status": {\n  "$u": {\n    ".read": "auth != null && data.child(\'exp\').val() > now",\n    ".write": "auth != null && auth.uid === $u"\n  }\n}';
+const RULES='"friendReq": {\n  "$to": {\n    ".read": "auth != null && auth.uid === $to",\n    "$from": { ".write": "auth != null && (auth.uid === $from || auth.uid === $to)" }\n  }\n},\n"friendSent": {\n  "$a": {\n    ".read": "auth != null && auth.uid === $a",\n    "$b": { ".write": "auth != null && (auth.uid === $a || (auth.uid === $b && !newData.exists()))" }\n  }\n},\n"friends": {\n  "$a": {\n    ".read": "auth != null && auth.uid === $a",\n    "$b": { ".write": "auth != null && (auth.uid === $a || (auth.uid === $b && (!newData.exists() || root.child(\'friendReq\').child($b).child($a).exists())))" }\n  }\n},\n"statusMeta": {\n  "$u": {\n    ".read": "auth != null && data.child(\'exp\').val() > now",\n    ".write": "auth != null && auth.uid === $u"\n  }\n},\n"status": {\n  "$u": {\n    ".read": "auth != null && data.child(\'exp\').val() > now",\n    ".write": "auth != null && auth.uid === $u"\n  }\n},\n"statusViews": {\n  "$o": {\n    ".read": "auth != null && auth.uid === $o",\n    ".write": "auth != null && auth.uid === $o",\n    "$v": { ".write": "auth != null && auth.uid === $v" }\n  }\n}';
 async function db(path,opt){ const r=R(); if(!r||!r.ok()||!r.ses()) throw new Error('LOGIN'); const base=String(r.CFG.dbUrl).replace(/\/+$/,''), tk=await r.token(); const res=await r.call(base+'/'+path+'.json?auth='+encodeURIComponent(tk),opt); if(!res.ok) throw new Error('HTTP '+res.status); return res.json(); }
 const put=(p,o)=>db(p,{method:'PUT',headers:J,body:JSON.stringify(o)}), del=p=>db(p,{method:'DELETE'});
 let S={inc:{},out:{},fr:{}}, err='', busy=false, loaded=false, tick=0;
@@ -10633,6 +10633,15 @@ async function decorate(){
   var ch=await ensure(uids.filter(function(x,i,a){return a.indexOf(x)===i;})); var sn=seen();
   els.forEach(function(el){var u=uidOf(el), m=u&&active(u), own=u&&u===me();
     el.classList.toggle('stRing',!!m); el.classList.toggle('seen',!!(m&&!own&&sn[u]===m.t)); if(m) el.dataset.stu=u; else delete el.dataset.stu;
+    var sf=!!(m&&!own&&sn[u]===m.t), tg=el.querySelector(':scope>.stTag');
+    if(m&&!(own&&el.matches('.ppAv'))){ var tt=own?L('আপনার','Yours'):sf?L('দেখা','Seen'):L('স্ট্যাটাস','STORY'); if(!tg){tg=document.createElement('span');tg.className='stTag';el.appendChild(tg);} if(tg.textContent!==tt) tg.textContent=tt; tg.classList.toggle('seen',sf); } else if(tg) tg.remove();
+    if(el.matches('.ppAv')){ var bd=el.closest('.ppBody'), bn2=bd&&bd.querySelector(':scope>.stBanner');
+      if(m&&bd){ var hrs=Math.max(0,Math.ceil((m.exp-Date.now())/36e5)), mins=Math.max(1,Math.floor((Date.now()-m.t)/6e4)), ag=mins<60?mins+L(' মিনিট আগে','m ago'):Math.floor(mins/60)+L(' ঘণ্টা আগে','h ago');
+        var bt=own?L('আপনার স্ট্যাটাস চলছে · ','Your status is live · ')+hrs+L(' ঘণ্টা বাকি','h left'):L('স্ট্যাটাস দিয়েছেন · ','Posted a status · ')+ag;
+        if(!bn2){ bn2=document.createElement('button'); bn2.type='button'; bn2.className='stBanner'; bn2.innerHTML='<i class="stDot"></i><span class="stTx"></span><b></b>'; var tp=bd.querySelector(':scope>.ppTop'); bd.insertBefore(bn2,tp?tp.nextSibling:bd.firstChild); }
+        bn2.dataset.stu=u; bn2.classList.toggle('seen',sf); var tx=bn2.querySelector('.stTx'), bb=bn2.querySelector('b'), bl=sf?L('আবার দেখুন','Watch again'):L('দেখুন','View');
+        if(tx.textContent!==bt) tx.textContent=bt; if(bb.textContent!==bl) bb.textContent=bl; }
+      else if(bn2) bn2.remove(); }
     var add=el.querySelector(':scope>.stAdd');
     if(el.matches('.ppAv')&&el.dataset.own==='1'){ if(!add){add=document.createElement('button');add.type='button';add.className='stAdd';add.setAttribute('aria-label','status');add.textContent='+';el.appendChild(add);}
       var top=el.parentNode; if(top&&!top.querySelector('.stBtn')){var sb=document.createElement('button');sb.type='button';sb.className='stBtn';sb.textContent=L('+ স্ট্যাটাস','+ Status');top.insertBefore(sb,el.nextSibling);} }
@@ -10661,12 +10670,14 @@ async function prep(f){
   ov.querySelector('.stGo').onclick=async function(){var b=this; b.disabled=true; b.textContent='…';
     var cap=ov.querySelector('input').value.trim(), t=Date.now(), exp=t+HOUR, m={t:t,exp:exp,k:isV?'v':'i',c:cap};
     await lset({d:d,t:t,exp:exp,k:m.k,c:cap});
-    try{ await db('status/'+me(),{method:'PUT',headers:J,body:JSON.stringify({d:d,exp:exp})}); await db('statusMeta/'+me(),{method:'PUT',headers:J,body:JSON.stringify(m)});
+    try{ await db('statusViews/'+me(),{method:'DELETE'}).catch(function(){}); await db('status/'+me(),{method:'PUT',headers:J,body:JSON.stringify({d:d,exp:exp})}); await db('statusMeta/'+me(),{method:'PUT',headers:J,body:JSON.stringify(m)});
       meta[me()]={v:m,at:Date.now()}; toastM(L('স্ট্যাটাস পোস্ট হয়েছে (২৪ ঘণ্টা)','Status posted (24h)')); }
     catch(e){ meta[me()]={v:m,at:Date.now()}; toastM(/HTTP 40[13]/.test(String(e.message))?L('সার্ভারে অনুমতি নেই — Firebase Rules-এ status নিয়ম যোগ করুন (নিচে দেখুন)','Server refused — add the status rules in Firebase Rules'):L('আপলোড হয়নি, শুধু আপনি দেখতে পাবেন','Upload failed, only you can see it')); }
     ov.remove(); sched();};}
 /* ---- viewer ---- */
-var vcur=null;
+var vcur=null, RX=['❤️','😂','😮','😢','🔥','👍'], RXK='ftStRx_v1';
+function myN(){try{return localStorage.getItem('myName_v1')||'';}catch(e){return '';}} function myU(){try{return (localStorage.getItem('myUsername_v1')||'').replace(/^@/,'');}catch(e){return '';}}
+function rxm(){try{return JSON.parse(localStorage.getItem(RXK))||{};}catch(e){return {};}}
 async function view(u){
   var m=active(u); if(!m) return; var own=u===me(), data=null;
   if(own){var l=await lget(); if(l&&l.exp>Date.now()) data=l.d;}
@@ -10674,17 +10685,30 @@ async function view(u){
   if(!data||!/^data:(image\/(jpeg|png|webp|gif)|video\/(mp4|webm|quicktime));base64,[A-Za-z0-9+\/=]+$/.test(data)){toastM(L('স্ট্যাটাস লোড করা যায়নি','Could not load status'));return;}
   var nm=own?L('আপনার স্ট্যাটাস','Your status'):'', left=Math.max(0,Math.ceil((m.exp-Date.now())/36e5));
   var ov=document.createElement('div'); ov.className='stOv stView';
-  ov.innerHTML='<div class="stProg"><i></i></div><div class="stHd"><b>'+esc(nm)+'</b><span>'+left+L(' ঘণ্টা বাকি','h left')+'</span><button type="button" class="stNo">✕</button></div><div class="stPv">'+(m.k==='v'?'<video src="'+data+'" playsinline autoplay></video>':'<img alt="" src="'+data+'">')+'</div>'+(m.c?'<div class="stCap">'+esc(m.c)+'</div>':'')+(own?'<div class="stBar"><button type="button" class="stDel">'+L('মুছে ফেলুন','Delete')+'</button><button type="button" class="stNew">'+L('নতুন স্ট্যাটাস','New status')+'</button></div>':'');
+  ov.innerHTML='<div class="stProg"><i></i></div><div class="stHd"><b>'+esc(nm)+'</b><span>'+left+L(' ঘণ্টা বাকি','h left')+'</span><button type="button" class="stNo">✕</button></div><div class="stPv">'+(m.k==='v'?'<video src="'+data+'" playsinline autoplay></video>':'<img alt="" src="'+data+'">')+'</div>'+(m.c?'<div class="stCap">'+esc(m.c)+'</div>':'')+(!own?'<div class="stRx">'+RX.map(function(x){return '<button type="button" data-r="'+x+'">'+x+'</button>';}).join('')+'</div>':'')+(own?'<div class="stBar"><button type="button" class="stViews">👁 <span>0</span></button><button type="button" class="stDel">'+L('মুছে ফেলুন','Delete')+'</button><button type="button" class="stNew">'+L('নতুন স্ট্যাটাস','New status')+'</button></div>':'');
   document.body.appendChild(ov); vcur=ov; var bar=ov.querySelector('.stProg i'), vd=ov.querySelector('video'), tm=0;
-  function close(){clearTimeout(tm); if(vd) vd.pause(); ov.remove(); vcur=null; sched();}
+  function close(){clearTimeout(tm); clearInterval(ov._iv); if(vd) vd.pause(); ov.remove(); vcur=null; sched();}
   if(!own){var s=seen(); s[u]=m.t; try{localStorage.setItem(seenK,JSON.stringify(s));}catch(e){}}
   if(vd){ vd.onended=close; vd.ontimeupdate=function(){ if(vd.duration) bar.style.width=(vd.currentTime/vd.duration*100)+'%'; }; }
   else { bar.style.transition='width 6s linear'; requestAnimationFrame(function(){requestAnimationFrame(function(){bar.style.width='100%';});}); tm=setTimeout(close,6000); }
-  ov.onclick=function(e){ if(e.target.closest('.stBar')) return; close(); };
+  ov.onclick=function(e){ if(e.target.closest('.stBar,.stRx,.stSheet')) return; close(); };
   ov.querySelector('.stNo').onclick=close;
-  if(own){ ov.querySelector('.stDel').onclick=async function(){ close(); await wipe(); toastM(L('স্ট্যাটাস মুছে গেছে','Status deleted')); };
+  if(!own){ var me0=me(), rm=rxm(), cur=(rm[u]&&rm[u].t===m.t)?rm[u].r:''; var rb=[].slice.call(ov.querySelectorAll('.stRx button'));
+    function mark(){ rb.forEach(function(b){ b.classList.toggle('on',b.dataset.r===cur); }); } mark();
+    function send(patch){ var base={n:myN()||myU()||'?',u:myU(),t:Date.now(),s:m.t}; return db('statusViews/'+u+'/'+me0,{method:'PATCH',headers:J,body:JSON.stringify(Object.assign(base,patch))}).catch(function(){}); }
+    send(cur?{r:cur}:{});
+    rb.forEach(function(b){ b.onclick=function(){ cur=(cur===b.dataset.r)?'':b.dataset.r; var x=rxm(); x[u]={t:m.t,r:cur}; try{localStorage.setItem(RXK,JSON.stringify(x));}catch(e){} mark(); send({r:cur||null}); toastM(cur?L('রিয়্যাক্ট পাঠানো হয়েছে ','Reaction sent ')+cur:L('রিয়্যাকশন সরানো হয়েছে','Reaction removed')); }; }); }
+  if(own){ var vb=ov.querySelector('.stViews'), vs=ov.querySelector('.stViews span'), sheet=null, lst=[];
+    function ago2(t){ var mi=Math.max(1,Math.floor((Date.now()-t)/6e4)); return mi<60?mi+L(' মিনিট আগে','m ago'):Math.floor(mi/60)+L(' ঘণ্টা আগে','h ago'); }
+    function paint(){ vs.textContent=lst.length; if(!sheet) return; var cnt={}; lst.forEach(function(x){ if(x.r) cnt[x.r]=(cnt[x.r]||0)+1; });
+      var sm=Object.keys(cnt).map(function(k){return '<span>'+k+' '+cnt[k]+'</span>';}).join('');
+      sheet.innerHTML='<div class="stSh"><div class="stShH"><b>👁 '+lst.length+L(' জন দেখেছেন',' views')+'</b><button type="button" class="stShX">✕</button></div>'+(sm?'<div class="stRxS">'+sm+'</div>':'')+'<div class="stShL">'+(lst.length?lst.map(function(x){ return '<div class="stV"><div class="stVa">'+esc((String(x.n||x.u||'?').trim()[0]||'?').toUpperCase())+'</div><div class="stVt"><b>'+esc(x.n||x.u||'?')+'</b><small>'+(x.u?'@'+esc(x.u)+' · ':'')+ago2(x.t)+'</small></div>'+(x.r?'<span class="stVr">'+x.r+'</span>':'')+'</div>'; }).join(''):'<div class="stEmpty">'+L('এখনো কেউ দেখেনি','No views yet')+'</div>')+'</div></div>'; sheet.querySelector('.stShX').onclick=function(){ sheet.remove(); sheet=null; }; }
+    async function loadV(){ try{ var v=await db('statusViews/'+me()); lst=Object.keys(v||{}).map(function(k){return v[k];}).filter(function(x){return x&&x.s===m.t;}).sort(function(a,b){return b.t-a.t;}); }catch(e){} paint(); }
+    loadV(); ov._iv=setInterval(loadV,12000);
+    vb.onclick=function(){ clearTimeout(tm); if(vd) vd.pause(); bar.style.transition='none'; if(!sheet){ sheet=document.createElement('div'); sheet.className='stSheet'; ov.appendChild(sheet); } paint(); };
+    ov.querySelector('.stDel').onclick=async function(){ close(); await wipe(); toastM(L('স্ট্যাটাস মুছে গেছে','Status deleted')); };
     ov.querySelector('.stNew').onclick=function(){ close(); pick(); }; } }
-async function wipe(){ await lset(null); var u=me(); meta[u]={v:null,at:Date.now()}; if(u){ try{ await db('status/'+u,{method:'DELETE'}); await db('statusMeta/'+u,{method:'DELETE'}); }catch(e){} } sched(); }
+async function wipe(){ await lset(null); var u=me(); meta[u]={v:null,at:Date.now()}; if(u){ try{ await db('status/'+u,{method:'DELETE'}); await db('statusMeta/'+u,{method:'DELETE'}); await db('statusViews/'+u,{method:'DELETE'}); }catch(e){} } sched(); }
 /* auto delete after 24h (local + cloud), owner side */
 async function sweep(){ try{ var l=await lget(); if(l&&l.exp<=Date.now()) await wipe(); else if(!l&&me()){ var v=await db('statusMeta/'+me()).catch(function(){return null;}); if(v&&+v.exp<=Date.now()) await wipe(); } }catch(e){} }
 window.ftStatusView=function(u){ if(!active(u)){ meta[u]=null; ensure([u]).then(function(){ view(u); }); } else view(u); };
@@ -10702,6 +10726,7 @@ async function scanFriends(){
   }catch(e){} scanning=false; }
 setInterval(scanFriends,30000); setTimeout(scanFriends,6000); document.addEventListener('visibilitychange',function(){ if(!document.hidden) setTimeout(scanFriends,800); }); window.addEventListener('ftFrChange',function(){ setTimeout(scanFriends,500); });
 document.addEventListener('click',function(e){
+  var bnr=e.target.closest&&e.target.closest('.stBanner'); if(bnr&&bnr.dataset.stu){ e.preventDefault(); e.stopPropagation(); view(bnr.dataset.stu); return; }
   var a=e.target.closest&&e.target.closest('.stAdd,.stBtn'); if(a){ e.preventDefault(); e.stopPropagation(); var u=me(); if(!u){toastM(L('স্ট্যাটাস দিতে ক্লাউড অ্যাকাউন্টে লগইন করুন (সেটিংস → অ্যাকাউন্ট)','Log in to your cloud account to post a status'));return;} if(a.classList.contains('stAdd')&&active(u)) view(u); else pick(); return; }
   var r=e.target.closest&&e.target.closest('.stRing'); if(r&&r.dataset.stu&&!e.target.closest('.stOv')){ e.preventDefault(); e.stopPropagation(); view(r.dataset.stu); }
 },true);
@@ -10710,9 +10735,19 @@ setTimeout(function(){watch();sweep();sched();},2500);
 var css=document.createElement('style'); css.textContent='@property --stA{syntax:"<angle>";inherits:false;initial-value:0deg}@keyframes stSpin{to{--stA:360deg}}'
 +'html body .stRing{position:relative;overflow:visible!important;cursor:pointer}html body .stRing>img{border-radius:inherit}'
 +'html body .stRing::before{content:"";position:absolute;inset:-6px;border-radius:inherit;padding:3px;background:conic-gradient(from var(--stA),#f59e0b,#ef4444,#d946ef,#6366f1,#06b6d4,#10b981,#f59e0b);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:stSpin 3s linear infinite;filter:drop-shadow(0 0 7px rgba(217,70,239,.65));pointer-events:none;z-index:2}'
++'html body .stTag{position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);z-index:4;padding:2px 8px;border-radius:10px;font:800 9.5px/1.3 inherit;letter-spacing:.3px;white-space:nowrap;color:#fff;background:linear-gradient(135deg,#f59e0b,#ef4444 55%,#d946ef);border:2px solid var(--card);box-shadow:0 4px 10px -3px rgba(217,70,239,.7);pointer-events:none}html body .stTag.seen{background:#94a3b8;box-shadow:none}'
++'html body .stBanner{position:relative;display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;margin:12px 0 2px;padding:11px 14px;border:0;border-radius:18px;font:inherit;text-align:left;color:#fff;cursor:pointer;background:linear-gradient(120deg,#f59e0b,#ef4444 45%,#d946ef 75%,#6366f1);background-size:200% 100%;animation:stSlide 4s linear infinite;box-shadow:0 12px 24px -14px #d946ef}'
++'html body .stBanner.seen{animation:none;background:linear-gradient(120deg,#64748b,#94a3b8);box-shadow:none}'
++'html body .stBanner .stDot{width:10px;height:10px;border-radius:50%;background:#fff;flex:none;box-shadow:0 0 0 0 rgba(255,255,255,.8);animation:stPulse 1.6s infinite}html body .stBanner.seen .stDot{animation:none;opacity:.7}'
++'html body .stBanner .stTx{flex:1;min-width:0;font-weight:700;font-size:13px;line-height:1.35}html body .stBanner b{flex:none;font-size:12px;padding:5px 12px;border-radius:12px;background:rgba(255,255,255,.25)}'
++'@keyframes stSlide{to{background-position:200% 0}}@keyframes stPulse{70%{box-shadow:0 0 0 8px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}'
 +'html body .stRing.seen::before{animation:none;background:rgba(148,163,184,.55);filter:none}'
 +'html body .stBtn{margin:46px 0 0 auto;height:40px;border:0;border-radius:20px;padding:0 14px;font:inherit;font-weight:700;font-size:13px;color:var(--primary);background:color-mix(in srgb,var(--primary) 12%,transparent);cursor:pointer;white-space:nowrap}'
 +'html body .stAdd{position:absolute;right:-6px;bottom:-6px;width:28px;height:28px;border-radius:50%;border:3px solid var(--card);background:var(--primary);color:#fff;font:800 18px/1 inherit;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;z-index:3;box-shadow:0 6px 12px -4px var(--primary)}'
++'.stRx{position:absolute;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;gap:8px;padding:0 12px;z-index:3}.stRx button{width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.5);font-size:22px;padding:0;transition:transform .12s}.stRx button:active{transform:scale(1.25)}.stRx button.on{background:rgba(255,255,255,.28);border-color:#fff;transform:scale(1.12)}'
++'.stViews{background:rgba(255,255,255,.18)!important;margin-right:auto}.stSheet{position:absolute;inset:0;z-index:5;background:rgba(0,0,0,.55);display:flex;align-items:flex-end}.stSh{width:100%;max-height:70%;display:flex;flex-direction:column;background:#16161d;border-radius:24px 24px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom,0px))}'
++'.stShH{display:flex;align-items:center;justify-content:space-between;font-size:16px}.stShX{background:rgba(255,255,255,.12);color:#fff;border:0;border-radius:50%;width:32px;height:32px}.stRxS{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 2px}.stRxS span{padding:5px 11px;border-radius:14px;background:rgba(255,255,255,.12);font-size:14px;font-weight:700}'
++'.stShL{overflow-y:auto;margin-top:8px}.stV{display:flex;align-items:center;gap:11px;padding:9px 2px;border-top:1px solid rgba(255,255,255,.08)}.stVa{width:40px;height:40px;border-radius:14px;flex:none;display:flex;align-items:center;justify-content:center;font-weight:800;background:linear-gradient(135deg,#6366f1,#d946ef);color:#fff}.stVt{flex:1;min-width:0}.stVt b{display:block;font-size:14px}.stVt small{opacity:.65;font-size:11.5px}.stVr{font-size:24px}.stEmpty{text-align:center;opacity:.6;padding:22px 0}'
 +'.stOv{position:fixed;inset:0;z-index:100000;background:#000;display:flex;flex-direction:column;color:#fff}.stOv .stPv{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}.stOv .stPv img,.stOv .stPv video{max-width:100%;max-height:100%;object-fit:contain}'
 +'.stProg{position:absolute;left:12px;right:12px;top:calc(10px + env(safe-area-inset-top,0px));height:3px;border-radius:3px;background:rgba(255,255,255,.3);z-index:2}.stProg i{display:block;height:100%;width:0;border-radius:3px;background:#fff}'
 +'.stHd{position:absolute;left:14px;right:14px;top:calc(22px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:10px;z-index:2;text-shadow:0 1px 4px #000}.stHd span{opacity:.8;font-size:12px;margin-right:auto}.stHd b{font-size:15px}.stHd .stNo{background:rgba(0,0,0,.45);color:#fff;border:0;border-radius:50%;width:34px;height:34px;font-size:16px}'
