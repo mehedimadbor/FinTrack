@@ -9527,16 +9527,22 @@ document.addEventListener('visibilitychange',()=>{ if(!document.hidden) check();
 .ppCovBtns button{width:34px;height:34px;border-radius:50%;border:0;background:rgba(0,0,0,.45);color:#fff;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;}
 .ppCovBtns .cgIc{margin:0;vertical-align:0;}
 .ppBody{padding:0 16px 16px;}
-.ppTop{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:-42px;}
+.ppTop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-top:-42px;}
 #sec-profile .ppHead .ppAv{width:84px;height:84px;border-radius:24px;margin:0;padding:0;background:var(--card);border:4px solid var(--card);box-shadow:0 0 0 2px var(--r,var(--primary));flex:none;position:relative;z-index:1;}
 #sec-profile .ppHead .ppAv>div{border-radius:19px;border:0;font-size:32px;}
-.ppAct{display:inline-flex;align-items:center;gap:7px;border:0;border-radius:22px;padding:10px 20px;margin-bottom:4px;font:inherit;font-weight:700;font-size:13.5px;background:var(--primary);color:#fff;cursor:pointer;}
+.ppAct{display:inline-flex;align-items:center;justify-content:center;gap:7px;box-sizing:border-box;height:40px;border:0;border-radius:20px;padding:0 18px;margin:46px 0 0;font:inherit;font-weight:700;font-size:13.5px;line-height:1;white-space:nowrap;background:var(--primary);color:#fff;cursor:pointer;flex:none;box-shadow:0 8px 16px -10px var(--primary);}
+.ppAct:active{transform:scale(.97);}
 .ppAct .cgIc{margin:0;vertical-align:0;}
 #sec-profile .ppHead .ppNm{margin-top:10px;font-size:20px;}
 #sec-profile .ppHead .ppChips{justify-content:flex-start;}
-.ppSoc{display:flex;gap:8px;margin-top:10px;}
-.ppSl{width:34px;height:34px;border-radius:50%;background:var(--bg);color:var(--text);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;text-decoration:none;}
+.ppSoc{display:flex;gap:9px;margin-top:12px;flex-wrap:wrap;}
+.ppSl{--c:var(--primary);width:38px;height:38px;border-radius:13px;background:color-mix(in srgb,var(--c) 12%,var(--card));color:var(--c);border:1px solid color-mix(in srgb,var(--c) 28%,transparent);display:flex;align-items:center;justify-content:center;text-decoration:none;transition:transform .15s,box-shadow .15s;-webkit-tap-highlight-color:transparent;}
+.ppSl:active{transform:scale(.92);} .ppSl:hover{box-shadow:0 6px 14px -8px var(--c);}
 .ppSl .cgIc{margin:0;vertical-align:0;}
+.ppReqBn{border-radius:20px;padding:14px;margin-bottom:10px;background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 16%,var(--card)),color-mix(in srgb,var(--primary) 5%,var(--card)));border:1px solid color-mix(in srgb,var(--primary) 30%,transparent);}
+.ppReqBn .t{display:flex;gap:11px;align-items:flex-start;} .ppReqBn .ic{width:38px;height:38px;border-radius:13px;flex:none;display:flex;align-items:center;justify-content:center;background:var(--primary);color:#fff;}
+.ppReqBn .ic .cgIc{margin:0;vertical-align:0;} .ppReqBn b{display:block;font-size:14px;color:var(--text);line-height:1.35;} .ppReqBn small{display:block;font-size:12px;line-height:1.45;color:var(--muted);margin-top:3px;}
+.ppReqBn .b{display:flex;gap:8px;margin-top:12px;} .ppReqBn .b button{flex:1;height:40px;border-radius:14px;border:1px solid var(--border);background:var(--card);color:var(--text);font:inherit;font-weight:700;font-size:13.5px;cursor:pointer;} .ppReqBn .b button.y{background:var(--primary);border-color:transparent;color:#fff;}
 .ppSf{display:block;margin-bottom:8px;font-size:12px;color:var(--muted);} .ppSf span{display:flex;align-items:center;gap:6px;margin-bottom:3px;}
 .ppSf input{width:100%;margin:0;box-sizing:border-box;}
 .ppSet{margin-top:12px;display:flex;flex-direction:column;gap:12px;}
@@ -9568,10 +9574,10 @@ document.addEventListener('visibilitychange',()=>{ if(!document.hidden) check();
 <symbol id="pp-bars" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="12" width="4" height="8" rx="1.2" fill="currentColor" fill-opacity=".22"/><rect x="10" y="7.5" width="4" height="12.5" rx="1.2" fill="currentColor" fill-opacity=".22"/><rect x="15.5" y="4" width="4" height="16" rx="1.2" fill="currentColor" fill-opacity=".22"/></symbol>
 <symbol id="pp-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 6-6 6 6 6"/></symbol>
 <symbol id="pp-msg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5h14a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2h-6.3L8 20.5V17H5a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2Z" fill="currentColor" fill-opacity=".2"/><path d="M8 9.5h8M8 12.8h5"/></symbol>
-<symbol id="pp-fb" viewBox="0 0 24 24" fill="currentColor"><path d="M14 8.2h2.6V4.6H14a3.8 3.8 0 0 0-3.8 3.8V11H7.6v3.6h2.6V20h3.6v-5.4h2.6l.5-3.6h-3.1V8.9c0-.4.3-.7.6-.7Z"/></symbol>
-<symbol id="pp-ig" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="4.5"/><circle cx="12" cy="12" r="3.6"/><circle cx="16.6" cy="7.4" r=".8" fill="currentColor"/></symbol>
-<symbol id="pp-tg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20.5 4 3.5 10.8l5.3 2 1.5 5.4 3.2-3.5 4.6 3.3Z" fill="currentColor" fill-opacity=".2"/></symbol>
-<symbol id="pp-wa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.6a8.4 8.4 0 0 0-7.2 12.7L3.6 20.4l4.2-1.1A8.4 8.4 0 1 0 12 3.6Z"/><path d="M9.2 8.6c0 3.4 2.8 6.2 6.2 6.2l1-1.5-2-1-1 .8c-.8-.4-1.5-1.1-1.9-1.9l.8-1-1-2Z" fill="currentColor"/></symbol>
+<symbol id="pp-fb" viewBox="0 0 24 24" fill="currentColor"><path d="M13.6 21v-7.8h2.6l.4-3.1h-3V8.2c0-.9.3-1.5 1.6-1.5h1.6V3.9c-.3 0-1.2-.1-2.4-.1-2.4 0-4 1.4-4 4.1v2.2H7.7v3.1h2.7V21Z"/></symbol>
+<symbol id="pp-ig" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></symbol>
+<symbol id="pp-tg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><path d="M21.2 4.1 2.9 11.2c-1 .4-1 1.1-.2 1.3l4.6 1.4 1.8 5.5c.2.6.4.8.9.8.4 0 .6-.2.9-.5l2.2-2.1 4.5 3.3c.8.5 1.4.2 1.6-.8l3-14.2c.3-1.2-.4-1.8-1.5-1.3Z" fill="currentColor" fill-opacity=".22"/><path d="m8.9 14.2 9.1-6.6c.4-.3.8-.1.5.2l-7.3 7.1-.3 3.3"/></symbol>
+<symbol id="pp-wa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><path d="M12 3.4a8.5 8.5 0 0 0-7.3 12.8l-1.1 4.2 4.3-1.1A8.5 8.5 0 1 0 12 3.4Z" fill="currentColor" fill-opacity=".16"/><path d="M9.1 8c-.3.4-.6.9-.5 1.6.3 1.8 2.6 4.5 5 5.2.8.2 1.4-.1 1.8-.6l.3-.8-1.9-1-.9.7c-.9-.4-1.9-1.4-2.3-2.3l.8-.9-.9-1.9Z" fill="currentColor" stroke="none"/></symbol>
 <symbol id="pp-cam" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5a2 2 0 0 1 2-2h1.8l1.4-2h5.6l1.4 2H18a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" fill="currentColor" fill-opacity=".2"/><circle cx="12" cy="12.6" r="3.2"/></symbol>
 <symbol id="pp-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m7 7 10 10M17 7 7 17"/></symbol>
 <symbol id="pp-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3.5 10.5 14M21 3.5l-6.6 17-3.9-6.5L4 10.1Z" fill="currentColor" fill-opacity=".2"/></symbol>
@@ -9637,7 +9643,8 @@ const LK='ftProfLock_v1';
 const mySoc=()=>{ try{ return cleanSoc(JSON.parse(localStorage.getItem('mySocial_v1')||'{}')); }catch(e){ return {}; } };
 function cleanSoc(o){ o=o||{}; const r={}; ['fb','ig','tg','wa'].forEach(k=>{ const v=String(o[k]||'').trim().slice(0,80); if(v) r[k]=v; }); return r; }
 function socUrl(k,v){ v=String(v||'').trim(); if(!v) return ''; if(/^https?:\/\//i.test(v)) return v; v=v.replace(/^@/,''); if(k==='wa'){ v=v.replace(/\D/g,''); return v?'https://wa.me/'+v:''; } return 'https://'+({fb:'facebook.com/',ig:'instagram.com/',tg:'t.me/'})[k]+encodeURIComponent(v); }
-function socHtml(soc){ if(!soc) return ''; const h=['fb','ig','tg','wa'].map(k=>{ const u=socUrl(k,soc[k]); return u?'<a class="ppSl" href="'+esc(u)+'" target="_blank" rel="noopener noreferrer" aria-label="'+k+'">'+ic('pp-'+k,17)+'</a>':''; }).join(''); return h?'<div class="ppSoc">'+h+'</div>':''; }
+const SOCC={fb:'#1877f2',ig:'#e1306c',tg:'#229ed9',wa:'#25d366'}, SOCN={fb:'Facebook',ig:'Instagram',tg:'Telegram',wa:'WhatsApp'};
+function socHtml(soc){ if(!soc) return ''; const h=['fb','ig','tg','wa'].map(k=>{ const u=socUrl(k,soc[k]); return u?'<a class="ppSl" style="--c:'+SOCC[k]+'" href="'+esc(u)+'" target="_blank" rel="noopener noreferrer" aria-label="'+SOCN[k]+'" title="'+SOCN[k]+'">'+ic('pp-'+k,20)+'</a>':''; }).join(''); return h?'<div class="ppSoc">'+h+'</div>':''; }
 function frAct(info){
   const F=window.ftFr, u=esc(info.uid||''); if(!F||!info.uid||info.uid===meUid()) return '';
   const st=F.state(info.uid), g='style="background:var(--bg);color:var(--text);border:1px solid var(--border)"';
@@ -9647,7 +9654,7 @@ function frAct(info){
   return '<button type="button" class="ppAct" onclick="ftFr.add(\''+u+'\')">'+ic('pp-user',16)+' '+L('বন্ধু যোগ করুন','Add friend')+'</button>';
 }
 function hdr(info,own,col,chips){
-  const cv=okPic(info.cv)?info.cv:'', lk=!!info.lk&&!own;
+  const cv=okPic(info.cv)?info.cv:'', lk=!!info.lk&&!own&&!info.rq;
   const cb=own?'<div class="ppCovBtns"><button type="button" aria-label="cover" onclick="document.getElementById(\'ppCvIn\').click()">'+ic('pp-cam',17)+'</button>'+(cv?'<button type="button" aria-label="remove" onclick="ppCvDel()">'+ic('pp-x',16)+'</button>':'')+'</div><input type="file" id="ppCvIn" accept="image/*" style="display:none" onchange="ppCover(this)">':'';
   const act=own?'<button type="button" class="ppAct" onclick="activateTab(\'settings\')">'+ic('pp-user',16)+' '+L('এডিট','Edit')+'</button>':frAct(info);
   const txt=lk?'':'<div class="ppNm">'+esc(info.name||L('নাম নেই','No name'))+'</div>'+(info.un?'<div class="ppUn">@'+esc(info.un)+'</div>':'')+socHtml(info.soc)+(chips?'<div class="ppChips">'+chips+'</div>':'');
@@ -9679,7 +9686,7 @@ function profHtml(info){
   <div class="ppCard"><h4>${ic('cg-medal',18)} ${L('ব্যাজ','Badges')} <span style="margin-left:auto;font-weight:600;color:var(--muted);font-size:12px;">${nb(n)}/${nb(BAD.length)}</span></h4><div class="ppBadges">${bd}</div>${inf}</div>`;
 }
 /* ---------- state ---------- */
-let pane='me', viewed=null, results=[], found={}, q='', msg='', msgBad=false, busy=false, sel='', pubSt={k:'',t:''}, lastSig='', timer=null;
+let seeds={}, fromFr=false, pane='me', viewed=null, results=[], found={}, q='', msg='', msgBad=false, busy=false, sel='', pubSt={k:'',t:''}, lastSig='', timer=null;
 function ownCard(){
   const on=localStorage.getItem(PUB)!=='0', k=pubSt.k;
   let note='';
@@ -9702,7 +9709,9 @@ function ownCard(){
 }
 function privHtml(i){ if(i.lk) return hdr(i,false,'var(--primary)','')+'<div class="ppCard"><div class="ppNote" style="text-align:center">'+ic('pp-lock',14)+' '+L('এই প্রোফাইল লক করা আছে।','This profile is locked.')+'</div></div>'; return hdr(i,false,'var(--primary)','')+'<div class="ppCard"><div class="ppNote">'+L('এই ইউজারের স্কিল ও ব্যাজ প্রাইভেট। তবে চাইলে মেসেজ পাঠাতে পারেন।','This user keeps skills and badges private. You can still send a message.')+'</div></div>'; }
 function findHtml(){
-  if(viewed){ const r=R(), me=r&&r.ses&&r.ses()?r.ses().uid:'', msgBtn=viewed.uid&&viewed.uid!==me?`<button class="main" style="width:100%;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;" onclick="ppMsg('${esc(viewed.uid)}')">${ic('pp-msg',18)} ${L('মেসেজ পাঠান','Send message')}</button>`:''; return `<button class="ppBack" onclick="ppBack()">${ic('pp-back',16)} ${L('সার্চে ফিরুন','Back to search')}</button>`+(viewed.p?profHtml(viewed):privHtml(viewed)); }
+  if(viewed){ const r=R(), me=r&&r.ses&&r.ses()?r.ses().uid:'', msgBtn=viewed.uid&&viewed.uid!==me?`<button class="main" style="width:100%;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;" onclick="ppMsg('${esc(viewed.uid)}')">${ic('pp-msg',18)} ${L('মেসেজ পাঠান','Send message')}</button>`:''; const st0=viewed.uid&&window.ftFr?ftFr.state(viewed.uid):'', who=esc(viewed.name||viewed.un||L('এই ইউজার','This user'));
+    const bnr=st0==='in'?'<div class="ppReqBn"><div class="t"><span class="ic">'+ic('pp-user',20)+'</span><div><b>'+L(who+' আপনাকে বন্ধুর অনুরোধ পাঠিয়েছেন',who+' sent you a friend request')+'</b><small>'+L('গ্রহণ করলে আপনারা একে অপরকে মেসেজ ও টাকার অনুরোধ পাঠাতে পারবেন।','Accept to message each other and send money requests.')+'</small></div></div><div class="b"><button type="button" class="y" onclick="ftFr.accept(\''+esc(viewed.uid)+'\')">'+L('গ্রহণ করুন','Accept')+'</button><button type="button" onclick="ftFr.decline(\''+esc(viewed.uid)+'\')">'+L('বাতিল','Decline')+'</button></div></div>':(st0==='sent'?'<div class="ppReqBn sent"><div class="t"><span class="ic">'+ic('pp-send',20)+'</span><div><b>'+L('আপনার অনুরোধ পাঠানো হয়েছে','Your request was sent')+'</b><small>'+L('উনি গ্রহণ করলে বন্ধু তালিকায় যোগ হবে।','They will appear in your friends once they accept.')+'</small></div></div></div>':'');
+    return `<button class="ppBack" onclick="ppBack()">${ic('pp-back',16)} ${fromFr?L('বন্ধু ট্যাবে ফিরুন','Back to friends'):L('সার্চে ফিরুন','Back to search')}</button>`+bnr+(viewed.p?profHtml(viewed):privHtml(viewed)); }
   return `<button class="ppBack" onclick="ppPane('me')">${ic('pp-back',16)} ${L('আমার প্রোফাইল','My profile')}</button><div class="ppSearch"><input type="text" id="ppQ" placeholder="${L('ইউজারনেম লিখে খুঁজুন','Search by username')}" value="${esc(q)}" autocapitalize="none" autocomplete="off" spellcheck="false" oninput="ppQin(this.value)" onkeydown="if(event.key==='Enter')ppSearch()"><button class="main" onclick="ppSearch()" aria-label="search">${ic('pp-search',18)}</button></div><div id="ppRes">${resHtml()}</div>`;
 }
 function resHtml(){
@@ -9761,21 +9770,21 @@ async function search(){
   busy=false; renderRes();
 }
 async function open(uid){
-  const f=found[uid]||{}; busy=true; results=[]; msg=''; renderRes();
+  const f=found[uid]||seeds[uid]||{}, rq=seeds[uid]?1:0; busy=true; results=[]; msg=''; renderRes();
   try{
     const rec=await db('profiles/'+uid);
     busy=false;
-    if(rec&&rec.lk){ viewed={uid,name:'',un:'',pic:okPic(rec.pic)?rec.pic:f.pic||'',cv:okPic(rec.cv)?rec.cv:'',lk:1,p:null}; sel=''; renderTab(); window.scrollTo(0,0); return; }
-    if(!rec||!rec.p){ viewed={uid,name:f.name||'',un:f.username||'',pic:f.pic||'',cv:rec&&okPic(rec.cv)?rec.cv:'',p:null}; sel=''; renderTab(); window.scrollTo(0,0); return; }
-    viewed={uid,name:String(rec.n||f.name||'').slice(0,60),un:String(rec.u||f.username||'').slice(0,40),pic:okPic(rec.pic)?rec.pic:f.pic||'',cv:okPic(rec.cv)?rec.cv:'',soc:cleanSoc(rec.soc),p:clean(rec.p)}; sel=''; renderTab(); window.scrollTo(0,0);
-  }catch(e){ busy=false; msgBad=true; msg=L('প্রোফাইল আনা যায়নি।','Could not load profile.'); results=[f]; renderRes(); }
+    if(rec&&rec.lk){ viewed={uid,name:rq?(f.name||''):'',un:rq?(f.username||''):'',pic:okPic(rec.pic)?rec.pic:f.pic||'',cv:okPic(rec.cv)?rec.cv:'',lk:1,rq,p:null}; sel=''; renderTab(); window.scrollTo(0,0); return; }
+    if(!rec||!rec.p){ viewed={uid,name:f.name||'',un:f.username||'',pic:f.pic||'',cv:rec&&okPic(rec.cv)?rec.cv:'',rq,p:null}; sel=''; renderTab(); window.scrollTo(0,0); return; }
+    viewed={uid,name:String(rec.n||f.name||'').slice(0,60),un:String(rec.u||f.username||'').slice(0,40),pic:okPic(rec.pic)?rec.pic:f.pic||'',cv:okPic(rec.cv)?rec.cv:'',soc:cleanSoc(rec.soc),rq,p:clean(rec.p)}; sel=''; renderTab(); window.scrollTo(0,0);
+  }catch(e){ busy=false; if(rq){ viewed={uid,name:f.name||'',un:f.username||'',pic:f.pic||'',cv:'',rq,p:null}; sel=''; renderTab(); return; } msgBad=true; msg=L('প্রোফাইল আনা যায়নি।','Could not load profile.'); results=[f]; renderRes(); }
 }
 /* ---------- actions ---------- */
-window.ppPane=k=>{ pane=k; viewed=null; sel=''; renderTab(); };
+window.ppPane=k=>{ fromFr=false; pane=k; viewed=null; sel=''; renderTab(); };
 window.ppBadge=id=>{ sel=sel===id?'':id; renderTab(); };
 window.ppQin=v=>{ q=v; };
 window.ppSearch=()=>search();
-window.ppGoSearch=()=>{ pane='find'; viewed=null; results=[]; msg=''; sel=''; try{ activateTab('profile'); }catch(e){} renderTab(); setTimeout(()=>{ const e=$('ppQ'); if(e) e.focus(); },80); };
+window.ppGoSearch=()=>{ fromFr=false; pane='find'; viewed=null; results=[]; msg=''; sel=''; try{ activateTab('profile'); }catch(e){} renderTab(); setTimeout(()=>{ const e=$('ppQ'); if(e) e.focus(); },80); };
 window.ppMsg=uid=>{
   try{
     const m=JSON.parse(localStorage.getItem('ftReqLink_v1')||'{}')||{}, o=m[uid]||{};
@@ -9784,9 +9793,9 @@ window.ppMsg=uid=>{
   }catch(e){}
   if(window.ftChatOpen) window.ftChatOpen([uid]); else if(window.toast) window.toast(L('মেসেজ চালু করতে ক্লাউড অ্যাকাউন্টে লগইন করুন।','Log in to your cloud account to send messages.'));
 };
-window.ppOpen=uid=>open(uid);
+window.ppOpen=uid=>{ fromFr=false; open(uid); };
 window.ppViewed=()=>viewed;
-window.ppView=uid=>{ pane='find'; viewed=null; results=[]; msg=''; sel=''; try{ activateTab('profile'); }catch(e){} renderTab(); open(uid); };
+window.ppView=(uid,seed)=>{ if(seed) seeds[uid]=seed; else delete seeds[uid]; fromFr=!!seed; pane='find'; viewed=null; results=[]; msg=''; sel=''; try{ activateTab('profile'); }catch(e){} renderTab(); open(uid); };
 window.addEventListener('ftFrChange',()=>{ try{ const e=$('sec-profile'); if(e&&e.classList.contains('active')) renderTab(); }catch(x){} });
 window.ppLock=on=>{ try{ localStorage.setItem(LK,on?'1':'0'); }catch(e){} lastSig=''; renderTab(); pub(true); };
 window.ppSocSave=()=>{ const o={}; ['fb','ig','tg','wa'].forEach(k=>{ const e=$('ppS_'+k); if(e) o[k]=e.value; }); try{ localStorage.setItem('mySocial_v1',JSON.stringify(cleanSoc(o))); }catch(e){} lastSig=''; try{ document.activeElement.blur(); }catch(e){} renderTab(); pub(true); if(window.toast) window.toast(L('সেভ হয়েছে','Saved')); };
@@ -9796,7 +9805,7 @@ window.ppCover=inp=>{ const f=inp.files&&inp.files[0]; inp.value=''; if(!f) retu
     try{ localStorage.setItem('myCoverPic_v1',u); }catch(er){} lastSig=''; renderTab(); pub(true); }; im.src=ev.target.result; };
   rd.readAsDataURL(f); };
 window.ppCvDel=()=>{ try{ localStorage.removeItem('myCoverPic_v1'); }catch(e){} lastSig=''; renderTab(); pub(true); };
-window.ppBack=()=>{ viewed=null; sel=''; renderTab(); const e=$('ppQ'); if(e) e.focus(); };
+window.ppBack=()=>{ viewed=null; sel=''; if(fromFr){ fromFr=false; try{ if(window.ftFrBack) ftFrBack(); }catch(e){} return; } renderTab(); const e=$('ppQ'); if(e) e.focus(); };
 window.ppPub=on=>{
   try{ localStorage.setItem(PUB,on?'1':'0'); }catch(e){}
   if(on){ lastSig=''; pubSt={k:'',t:''}; pub(true); }
@@ -10021,6 +10030,24 @@ if(!addBtn()) setTimeout(addBtn,600);
 #sec-friends .frTx{flex:1;min-width:0;} #sec-friends .frTx b{display:block;font-size:14px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;} #sec-friends .frTx span{font-size:12px;color:var(--muted);}
 #sec-friends .frB{border:0;border-radius:16px;padding:8px 12px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;background:var(--bg);color:var(--text);border:1px solid var(--border);}
 #sec-friends .frB.y{background:var(--primary);color:#fff;border-color:transparent;}
+#sec-friends .frHead h3{font-size:22px;font-weight:800;letter-spacing:.2px;}
+#sec-friends .frFind{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 15px;border-radius:19px;box-shadow:0 8px 16px -10px var(--primary);}
+#sec-friends .frCard{border-radius:22px;padding:14px;box-shadow:0 10px 26px -20px rgba(0,0,0,.35);}
+#sec-friends .frCard h4{font-size:14px;font-weight:800;gap:8px;} #sec-friends .frCard h4 svg{color:var(--primary);}
+#sec-friends .frN{min-width:20px;text-align:center;line-height:18px;}
+#sec-friends .frSub{margin:-2px 0 10px;font-size:12px;line-height:1.5;color:var(--muted);}
+#sec-friends .frIn{background:linear-gradient(180deg,color-mix(in srgb,var(--primary) 9%,var(--card)),var(--card) 65%);border-color:color-mix(in srgb,var(--primary) 26%,var(--border));}
+#sec-friends .frMain{flex:1;min-width:0;display:flex;align-items:center;gap:11px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+#sec-friends .frAv{overflow:hidden;} #sec-friends .frAv img{width:100%;height:100%;object-fit:cover;display:block;}
+#sec-friends .frAv.big{width:54px;height:54px;border-radius:18px;font-size:21px;box-shadow:0 0 0 2px var(--card),0 0 0 4px color-mix(in srgb,var(--primary) 45%,transparent);}
+#sec-friends .frReq{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:12px;margin-top:10px;} #sec-friends .frReq:first-of-type{margin-top:0;}
+#sec-friends .frReq .frMain:active{opacity:.7;}
+#sec-friends .frReq .frTx b{font-size:15px;} #sec-friends .frWhen{display:block;font-style:normal;font-size:11px;color:var(--muted);margin-top:2px;}
+#sec-friends .frGo{display:inline-flex;align-items:center;gap:2px;flex:none;font-size:12px;font-weight:700;color:var(--primary);padding:6px 6px 6px 10px;border-radius:14px;background:color-mix(in srgb,var(--primary) 10%,transparent);}
+#sec-friends .frReqB{display:flex;gap:8px;margin-top:12px;}
+#sec-friends .frReqB .frB{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:40px;padding:0 10px;border-radius:14px;font-size:13.5px;}
+#sec-friends .frReqB .frB.y{box-shadow:0 8px 16px -10px var(--primary);}
+#sec-friends .frB:active{transform:scale(.97);}
 #sec-friends .frEm{font-size:12.5px;color:var(--muted);line-height:1.5;padding:6px 2px;}
 #sec-friends .frRules{margin:8px 0;padding:10px;border-radius:12px;background:var(--bg);font-size:11px;line-height:1.45;white-space:pre-wrap;word-break:break-all;color:var(--text);}
 </style>
@@ -10040,7 +10067,9 @@ const RULES='"friendReq": {\n  "$to": {\n    ".read": "auth != null && auth.uid 
 async function db(path,opt){ const r=R(); if(!r||!r.ok()||!r.ses()) throw new Error('LOGIN'); const base=String(r.CFG.dbUrl).replace(/\/+$/,''), tk=await r.token(); const res=await r.call(base+'/'+path+'.json?auth='+encodeURIComponent(tk),opt); if(!res.ok) throw new Error('HTTP '+res.status); return res.json(); }
 const put=(p,o)=>db(p,{method:'PUT',headers:J,body:JSON.stringify(o)}), del=p=>db(p,{method:'DELETE'});
 let S={inc:{},out:{},fr:{}}, err='', busy=false, loaded=false, tick=0;
-function clean(o){ const r={}; Object.keys(o||{}).forEach(k=>{ const v=o[k]; if(uidOk(k)&&v&&typeof v==='object') r[k]={n:String(v.n||'').slice(0,60),u:String(v.u||'').slice(0,40),t:+v.t||0}; }); return r; }
+const okp=s=>typeof s==='string'&&s.length<60000&&/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/.test(s);
+const myPic=async()=>{ try{ const p=window.ftPicThumb?await window.ftPicThumb():''; return okp(p)?p:''; }catch(e){ return ''; } };
+function clean(o){ const r={}; Object.keys(o||{}).forEach(k=>{ const v=o[k]; if(uidOk(k)&&v&&typeof v==='object') r[k]={n:String(v.n||'').slice(0,60),u:String(v.u||'').slice(0,40),pic:okp(v.pic)?v.pic:'',t:+v.t||0}; }); return r; }
 const active=()=>{ const e=$('sec-friends'); return !!(e&&e.classList.contains('active')); };
 const fire=()=>{ try{ window.dispatchEvent(new Event('ftFrChange')); }catch(e){} };
 function setBlink(){ const b=document.querySelector('#bottomNav .bnbtn[data-bn="friends"]'); if(!b) return; const sf=jl('ftFrSeenF_v1',[]), sr=jl('ftFrSeenR_v1',[]); const n=Object.keys(S.fr).filter(u=>sf.indexOf(u)<0).length+Object.keys(S.inc).filter(u=>sr.indexOf(u)<0).length; b.classList.toggle('frHas',n>0&&!active()); }
@@ -10064,32 +10093,35 @@ async function poll(){
   busy=false;
 }
 const nm=o=>o.n||o.u||L('নাম নেই','No name');
-const av=o=>E((String(nm(o)).trim()[0]||'?').toUpperCase());
-function row(u,o,btns){ return '<div class="frRow"><div class="frAv">'+av(o)+'</div><div class="frTx"><b>'+E(nm(o))+'</b><span>'+(o.u?'@'+E(o.u):'')+'</span></div>'+btns+'</div>'; }
+const av=o=>okp(o.pic)?'<img alt="" src="'+o.pic+'">':E((String(nm(o)).trim()[0]||'?').toUpperCase());
+function row(u,o,btns){ return '<div class="frRow"><div class="frMain" data-fa="pf" data-u="'+E(u)+'"><div class="frAv">'+av(o)+'</div><div class="frTx"><b>'+E(nm(o))+'</b><span>'+(o.u?'@'+E(o.u):'')+'</span></div></div>'+btns+'</div>'; }
+const nbn=x=>L(String(x).replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]),String(x));
+const ago=t=>{ if(!t) return ''; const s=Math.floor((Date.now()-t)/1000); if(s<60) return L('এইমাত্র','just now'); const m=Math.floor(s/60); if(m<60) return nbn(m)+L(' মিনিট আগে',' min ago'); const h=Math.floor(m/60); if(h<24) return nbn(h)+L(' ঘণ্টা আগে',' h ago'); return nbn(Math.floor(h/24))+L(' দিন আগে',' d ago'); };
+const SV={user:'<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.4" r="3.8"/><path d="M4.8 20c.6-3.6 3.6-5.6 7.2-5.6s6.6 2 7.2 5.6"/></svg>',check:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',x:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m7 7 10 10M17 7 7 17"/></svg>',chev:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9.5 6 6 6-6 6"/></svg>',search:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>',send:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3.5 10.5 14M21 3.5l-6.6 17-3.9-6.5L4 10.1Z"/></svg>'};
 function render(){
   const e=$('sec-friends'); if(!e) return;
   const bt=(a,u,l,y)=>'<button type="button" class="frB'+(y?' y':'')+'" data-fa="'+a+'" data-u="'+E(u)+'">'+l+'</button>';
-  let h='<div class="frHead"><h3>'+L('বন্ধু','Friends')+'</h3><button type="button" class="frB y" data-fa="find">'+L('ইউজার খুঁজুন','Find users')+'</button></div>';
+  let h='<div class="frHead"><h3>'+L('বন্ধু','Friends')+'</h3><button type="button" class="frB y frFind" data-fa="find">'+SV.search+' '+L('ইউজার খুঁজুন','Find users')+'</button></div>';
   if(!me()){ e.innerHTML=h+'<div class="frCard"><div class="frEm">'+L('বন্ধু যোগ করতে ক্লাউড অ্যাকাউন্টে লগইন করুন (সেটিংস → অ্যাকাউন্ট)। গেস্ট মোডে এই ফিচার চলে না।','Log in to your cloud account to add friends. Not available in guest mode.')+'</div></div>'; return; }
   if(err==='rules') h+='<div class="frCard"><div class="frEm" style="color:#ef4444">'+L('সার্ভারে অনুমতি নেই। Firebase Rules-এর মূল "rules" অবজেক্টের ভেতরে নিচের অংশ যোগ করুন।','Server refused. Add this inside the main "rules" object in Firebase Rules.')+'</div><div class="frRules" id="frRules">'+E(RULES)+'</div><button type="button" class="frB y" data-fa="copy">'+L('Rules কপি করুন','Copy rules')+'</button></div>';
   else if(err==='net') h+='<div class="frCard"><div class="frEm">'+L('লোড করা যায়নি, আবার চেষ্টা হচ্ছে…','Could not load, retrying…')+'</div></div>';
   const I=Object.keys(S.inc), O=Object.keys(S.out), F=Object.keys(S.fr).sort((a,b)=>nm(S.fr[a]).localeCompare(nm(S.fr[b])));
-  if(I.length) h+='<div class="frCard"><h4>'+L('বন্ধুর অনুরোধ','Friend requests')+' <span class="frN">'+I.length+'</span></h4>'+I.map(u=>row(u,S.inc[u],bt('acc',u,L('গ্রহণ','Accept'),1)+bt('dec',u,L('বাতিল','Decline')))).join('')+'</div>';
-  if(O.length) h+='<div class="frCard"><h4>'+L('পাঠানো অনুরোধ','Sent requests')+'</h4>'+O.map(u=>row(u,S.out[u],bt('can',u,L('বাতিল','Cancel')))).join('')+'</div>';
+  if(I.length) h+='<div class="frCard frIn"><h4>'+SV.user+' '+L('বন্ধুর অনুরোধ','Friend requests')+' <span class="frN">'+I.length+'</span></h4><p class="frSub">'+L('কার্ডে ট্যাপ করে প্রোফাইল দেখুন। প্রোফাইল প্রাইভেট হলেও কে অনুরোধ পাঠিয়েছে এখানে দেখা যাবে।','Tap a card to view the profile. You can always see who sent the request, even if their profile is private.')+'</p>'+I.sort((a,b)=>(S.inc[b].t||0)-(S.inc[a].t||0)).map(u=>{ const o=S.inc[u]; return '<div class="frReq"><div class="frMain" data-fa="pf" data-u="'+E(u)+'"><div class="frAv big">'+av(o)+'</div><div class="frTx"><b>'+E(nm(o))+'</b><span>'+(o.u?'@'+E(o.u):'')+'</span><em class="frWhen">'+ago(o.t)+'</em></div><span class="frGo">'+L('প্রোফাইল','Profile')+SV.chev+'</span></div><div class="frReqB"><button type="button" class="frB y" data-fa="acc" data-u="'+E(u)+'">'+SV.check+' '+L('গ্রহণ করুন','Accept')+'</button><button type="button" class="frB" data-fa="dec" data-u="'+E(u)+'">'+SV.x+' '+L('বাতিল','Decline')+'</button></div></div>'; }).join('')+'</div>';
+  if(O.length) h+='<div class="frCard"><h4>'+SV.send+' '+L('পাঠানো অনুরোধ','Sent requests')+'</h4>'+O.map(u=>row(u,S.out[u],bt('can',u,L('বাতিল','Cancel')))).join('')+'</div>';
   h+='<div class="frCard"><h4>'+L('আমার বন্ধু','My friends')+' ('+F.length+')</h4>'+(F.length?F.map(u=>row(u,S.fr[u],bt('msg',u,L('মেসেজ','Message'),1)+bt('pf',u,L('প্রোফাইল','Profile'))+bt('rm',u,'✕'))).join(''):'<div class="frEm">'+L('এখনো কোনো বন্ধু নেই। “ইউজার খুঁজুন” চেপে ইউজারনেম দিয়ে খুঁজুন, প্রোফাইল খুলে “বন্ধু যোগ করুন” চাপুন। অনুরোধ গ্রহণ হলে এখানে যোগ হবে।','No friends yet. Tap “Find users”, open a profile and tap “Add friend”. They appear here once accepted.')+'</div>')+'</div>';
   e.innerHTML=h;
 }
-function nameOf(u){ try{ const v=window.ppViewed&&ppViewed(); if(v&&v.uid===u) return {n:v.name||'',u:v.un||''}; }catch(e){} return {n:'',u:''}; }
+function nameOf(u){ try{ const v=window.ppViewed&&ppViewed(); if(v&&v.uid===u) return {n:v.name||'',u:v.un||'',pic:okp(v.pic)?v.pic:''}; }catch(e){} return {n:'',u:'',pic:''}; }
 async function run(fn,okMsg){ try{ await fn(); if(okMsg&&window.toast) toast(okMsg); }catch(e){ if(window.toast) toast(/HTTP 40[13]/.test(String(e.message))?L('Firebase Rules-এ অনুমতি নেই, বন্ধু ট্যাবে দেখুন','Firebase rules refused, see Friends tab'):L('হয়নি, আবার চেষ্টা করুন','Failed, try again')); if(/HTTP 40[13]/.test(String(e&&e.message))){ err='rules'; } } render(); fire(); setBlink(); }
 const API={
   state:u=>S.fr[u]?'friend':S.inc[u]?'in':S.out[u]?'sent':'none',
-  add:u=>run(async()=>{ const m=me(); if(!m||u===m) throw new Error('x'); const o=nameOf(u), t=Date.now(); await put('friendReq/'+u+'/'+m,{n:myN(),u:myU(),t}); await put('friendSent/'+m+'/'+u,{n:o.n,u:o.u,t}); S.out[u]={n:o.n,u:o.u,t}; },L('বন্ধুর অনুরোধ পাঠানো হয়েছে','Friend request sent')),
+  add:u=>run(async()=>{ const m=me(); if(!m||u===m) throw new Error('x'); const o=nameOf(u), t=Date.now(), mp=await myPic(); await put('friendReq/'+u+'/'+m,{n:myN(),u:myU(),pic:mp,t}); await put('friendSent/'+m+'/'+u,{n:o.n,u:o.u,pic:o.pic,t}); S.out[u]={n:o.n,u:o.u,pic:o.pic,t}; },L('বন্ধুর অনুরোধ পাঠানো হয়েছে','Friend request sent')),
   cancel:u=>run(async()=>{ const m=me(); await del('friendReq/'+u+'/'+m); await del('friendSent/'+m+'/'+u); delete S.out[u]; }),
-  accept:u=>run(async()=>{ const m=me(), q=S.inc[u]; if(!q) return; await put('friends/'+m+'/'+u,{n:q.n,u:q.u,t:Date.now()}); await put('friends/'+u+'/'+m,{n:myN(),u:myU(),t:Date.now()}); await del('friendReq/'+m+'/'+u); del('friendSent/'+u+'/'+m).catch(()=>{}); delete S.inc[u]; S.fr[u]=q; approve(); markSeen(); },L('এখন আপনারা বন্ধু','You are now friends')),
+  accept:u=>run(async()=>{ const m=me(), q=S.inc[u]; if(!q) return; const mp=await myPic(); await put('friends/'+m+'/'+u,{n:q.n,u:q.u,pic:q.pic||'',t:Date.now()}); await put('friends/'+u+'/'+m,{n:myN(),u:myU(),pic:mp,t:Date.now()}); await del('friendReq/'+m+'/'+u); del('friendSent/'+u+'/'+m).catch(()=>{}); delete S.inc[u]; S.fr[u]=q; approve(); markSeen(); },L('এখন আপনারা বন্ধু','You are now friends')),
   decline:u=>run(async()=>{ const m=me(); await del('friendReq/'+m+'/'+u); del('friendSent/'+u+'/'+m).catch(()=>{}); delete S.inc[u]; }),
   remove:u=>{ if(!confirm(L('এই বন্ধুকে সরিয়ে দেবেন?','Remove this friend?'))) return; run(async()=>{ const m=me(); await del('friends/'+m+'/'+u); del('friends/'+u+'/'+m).catch(()=>{}); delete S.fr[u]; const ok=jl('ftFrOk_v1',{}); delete ok[u]; js('ftFrOk_v1',ok); }); },
   msg:u=>{ try{ if(window.ftChatApi&&ftChatApi.ok) ftChatApi.ok(u); }catch(e){} if(window.ftChatOpen) ftChatOpen([u]); },
-  profile:u=>{ if(window.ppView) ppView(u); }
+  profile:u=>{ const o=S.inc[u]||S.out[u]||S.fr[u]||{}; if(window.ppView) ppView(u,{name:o.n||'',username:o.u||'',pic:o.pic||''}); }
 };
 window.ftFr=API;
 window.ftFrBack=()=>{ try{ activateTab('friends'); }catch(e){} };
