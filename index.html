@@ -10876,5 +10876,30 @@ document.head.appendChild(css);
 setTimeout(function(){try{paint();}catch(e){}},400);
 })();
 </script>
+<style id="ftStab">
+/* ===== FinTrack stability fix v2: mobile GPU/compositing glitches (Chrome/Brave Android) ===== */
+/* 1) body height:100% made sticky bars + backgrounds stop after one screen -> let page grow */
+html{height:auto !important; min-height:100%; max-width:100%;}
+body{height:auto !important; min-height:100vh; min-height:100dvh; max-width:100%; overflow-x:clip;}
+/* 2) no backdrop blur anywhere (main cause of missing/cut tiles on mobile GPUs) */
+*,*::before,*::after{-webkit-backdrop-filter:none !important; backdrop-filter:none !important;}
+/* 3) no extra GPU layers on persistent UI */
+.bottomnav,.tabs,header.top{transform:none !important; -webkit-transform:none !important; will-change:auto !important; contain:none !important;}
+/* 4) section animation: opacity only (transform on a parent breaks fixed/sticky children) */
+.section.active{animation:ftFade .2s ease both !important;}
+@keyframes ftFade{from{opacity:0}to{opacity:1}}
+/* 5) glass themes: replace background-attachment:fixed with a fixed layer */
+html[data-theme^="glass"],html[data-theme^="glass"] body{background:transparent !important; background-attachment:scroll !important;}
+html[data-theme^="glass"]::before{content:""; position:fixed; left:0; top:0; right:0; bottom:0; z-index:-1; background:var(--gbg); pointer-events:none;}
+/* 6) solid bars so content never shows through while scrolling */
+.tabs{background:var(--card) !important;}
+.bottomnav{background:var(--card) !important;}
+/* 7) hidden full-screen/fixed layers must not stay composited when closed */
+#ftMnOv:not(.on),#ftAbOv:not(.on){visibility:hidden; transition:opacity .25s,visibility 0s linear .25s !important;}
+#ftMn:not(.on){visibility:hidden; box-shadow:none !important; transition:transform .3s cubic-bezier(.22,1,.36,1),visibility 0s linear .3s !important;}
+#toast:not(.on),.pfToast:not(.on){visibility:hidden;}
+/* 8) lock-screen blur layers only exist while locked */
+html:not(.locked) .lockOverlay .lkOrb,html:not(.locked) .lockOverlay .lockBg{display:none !important;}
+</style>
 </body>
 </html>
