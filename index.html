@@ -10,9 +10,11 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="FinTrack">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232563eb'/%3E%3Crect x='28' y='38' width='44' height='30' rx='7' fill='none' stroke='white' stroke-width='5'/%3E%3Cpath d='M28 46V36a6 6 0 0 1 6-6h28' fill='none' stroke='white' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M58 53h14' stroke='white' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
-<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22FinTrack%22%2C%22short_name%22%3A%22FinTrack%22%2C%22display%22%3A%22standalone%22%2C%22start_url%22%3A%22.%22%2C%22background_color%22%3A%22%23f4f5f7%22%2C%22theme_color%22%3A%22%232563eb%22%7D">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
 <title>FinTrack</title>
+<script>window.__ftIP=null;window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__ftIP=e;try{window.dispatchEvent(new Event('ftInstallReady'));}catch(_){}});</script>
 <script>try{var d=document.documentElement;if(localStorage.getItem("loginDone_v1")==="true")d.classList.add("hasUser");var th=localStorage.getItem("appTheme_v1");if(th)d.setAttribute("data-theme",th);d.classList.add("booting");setTimeout(function(){d.classList.remove("booting")},2500)}catch(e){}</script>
 <script>try{var L=localStorage,D=document.documentElement;if(L.getItem("loginDone_v1")==="true"&&(L.getItem("appPinEnabled_v1")==="true"||(L.getItem("appLockEnabled_v1")==="true"&&L.getItem("appLockCredId_v1")&&window.PublicKeyCredential&&navigator.credentials)))D.classList.add("locked")}catch(e){}</script>
 <style id="ftLockV2">
@@ -2284,6 +2286,12 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
       <button type="button" class="typebtn" onclick="ftInvite.wa()">WhatsApp</button>
     </div>
     <div class="invHint" id="invHint"><span class="bn">ইনভাইট লিংক পেতে আগে অ্যাকাউন্ট খুলুন বা লগইন করুন (গেস্ট মোডে চ্যাট চলে না)।</span><span class="en">Create an account or log in to get your invite link (chat does not work in guest mode).</span></div>
+  </div>
+  <div class="box" id="installBox">
+    <h3><span class="bn">অ্যাপ ইনস্টল করুন</span><span class="en">Install the app</span></h3>
+    <p style="font-size:12.5px; color:var(--muted); margin:0 0 10px;"><span class="bn">হোম স্ক্রিনে অ্যাপ হিসেবে যোগ করুন — এক ট্যাপে ইনস্টল, দ্রুত খোলে, ফুল-স্ক্রিনে চলে।</span><span class="en">Add FinTrack to your home screen as an app. One tap to install, opens fast, runs full screen.</span></p>
+    <div id="ftInSt" class="invHint" style="display:block; margin-bottom:10px;"></div>
+    <button type="button" class="typebtn sel" id="ftInBtn" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="ftInstall.open()"><i class="mi" style="--m:var(--ic-download); width:18px; height:18px; flex:none;"></i><span class="bn">এখনই ইনস্টল করুন</span><span class="en">Install now</span></button>
   </div>
   <div class="box" id="ntBox">
     <h3><span class="bn">নোটিফিকেশন স্ট্যাটাস</span><span class="en">Notification status</span></h3>
@@ -4983,7 +4991,7 @@ if(devUnlocked){
   const ICONS={settings_theme:['palette','#8b5cf6'],settings_lang:['globe','#0ea5e9'],settings_profile:['user','#2563eb'],backup_heading:['cloud','#14b8a6'],
     settings_budget:['target','#f97316'],settings_goal:['flag','#eab308'],settings_recurring:['repeat','#06b6d4'],settings_logo:['image','#ec4899'],
     lock_heading:['lock','#64748b'],pin_heading:['key','#ef4444'],contact_heading:['message','#22c55e'],dev_heading:['settings','#475569'],dev_mode_title:['settings','#7c3aed']}
-  const ICON_ID={inviteBox:['share','#10b981'],ntBox:['bell','#f59e0b'],spSetBox:['bank','#6366f1'],wgSetBox:['bolt','#f59e0b'],accountBox:['power','#ef4444']};;
+  const ICON_ID={installBox:['download','#16a34a'],inviteBox:['share','#10b981'],ntBox:['bell','#f59e0b'],spSetBox:['bank','#6366f1'],wgSetBox:['bolt','#f59e0b'],accountBox:['power','#ef4444']};;
   document.querySelectorAll('#sec-settings > .box').forEach(box=>{
     const h=box.querySelector(':scope > h3'); if(!h) return;
     const key=h.getAttribute('data-i18n')||'', ic=ICON_ID[box.id]||ICONS[key]||['settings','#64748b'];
@@ -9305,7 +9313,7 @@ var CATS=[
  ['remind','রিমাইন্ডার ও নোটিফিকেশন','Reminders & notifications',['rmBox','ntSetBox','ntBox']],
  ['secu','নিরাপত্তা ও লক','Security & lock',['lock_heading','pin_heading','secPlusBox']],
  ['data','ডেটা ও ব্যাকআপ','Data & backup',['cloudSyncBox','backup_heading']],
- ['pref','অ্যাপ পছন্দ ও উইজেট','Preferences & widgets',['prefPlusBox','wgSetBox']],
+ ['pref','অ্যাপ পছন্দ ও উইজেট','Preferences & widgets',['installBox','prefPlusBox','wgSetBox']],
  ['help','সহায়তা ও ডেভেলপার','Support & developer',['contact_heading','devModeBox','dev_mode_title']]
 ];
 var OTHER=['more','অন্যান্য','More',[]];
@@ -10194,7 +10202,7 @@ const okPic=s=>typeof s==='string'&&/^data:image\/(png|jpe?g|webp|gif);base64,[A
 const CHEV='<svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>';
 const SUB={
  settings_theme:['লাইট/ডার্ক মোড ও রঙ','Light, dark & colours'],settings_lang:['বাংলা বা English','Bangla or English'],settings_logo:['অ্যাপের লোগো বদলান','Change the app logo'],
- settings_profile:['নাম, ছবি, ইউজারনেম ও ইমেইল','Name, photo, username & email'],inviteBox:['বন্ধুদের ইনভাইট ও রেফারেল','Invite friends & referrals'],accountBox:['অ্যাকাউন্ট থেকে সাইন আউট','Sign out of your account'],
+ settings_profile:['নাম, ছবি, ইউজারনেম ও ইমেইল','Name, photo, username & email'],inviteBox:['বন্ধুদের ইনভাইট ও রেফারেল','Invite friends & referrals'],installBox:['হোম স্ক্রিনে অ্যাপ হিসেবে যোগ করুন','Add to your home screen'],accountBox:['অ্যাকাউন্ট থেকে সাইন আউট','Sign out of your account'],
  settings_budget:['খাতভিত্তিক মাসিক সীমা','Monthly limits by category'],settings_goal:['সঞ্চয়ের লক্ষ্য ঠিক করুন','Set your savings goal'],spSetBox:['নিয়মিত সঞ্চয় পরিকল্পনা','Regular savings plan'],
  settings_recurring:['স্বয়ংক্রিয় নিয়মিত এন্ট্রি','Automatic recurring entries'],rmBox:['রিমাইন্ডার সেট করুন','Set reminders'],ntSetBox:['নোটিফিকেশন পছন্দ','Notification preferences'],ntBox:['নোটিফিকেশনের অবস্থা','Notification status'],
  lock_heading:['ফিঙ্গারপ্রিন্ট দিয়ে লক','Lock with fingerprint'],pin_heading:['পিন দিয়ে অ্যাপ লক','Lock the app with a PIN'],secPlusBox:['অতিরিক্ত নিরাপত্তা','Extra security'],
@@ -10279,7 +10287,7 @@ function fillMenu(){
     if(items.length) h+='<div class="mnSec">'+L(g[1],g[2])+'</div><div class="mnGrid">'+items.join('')+'</div>';
     if(g[0]==='money') h+=mvHtml;
   });
-  const FT=tile('tab','settings','#64748b',icon('settings'),L('সেটিংস','Settings'),c==='settings'&&!det)+tile('about','about','#8b5cf6','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.2M12 7.8h.01"/></svg>',L('অ্যাপ সম্পর্কে','About'),false);
+  const FT=tile('tab','settings','#64748b',icon('settings'),L('সেটিংস','Settings'),c==='settings'&&!det)+tile('about','about','#8b5cf6','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.2M12 7.8h.01"/></svg>',L('অ্যাপ সম্পর্কে','About'),false)+((window.ftInstall&&!window.ftInstall.installed())?tile('install','install','#16a34a',icon('download'),L('অ্যাপ ইনস্টল','Install app'),false):'');
   $('mnBody').innerHTML=h+'<div class="mnSec">'+L('আরও','More')+'</div><div class="mnGrid">'+FT+'</div>';
   $('mnFt').innerHTML='';
 }
@@ -10298,6 +10306,7 @@ function onMenu(e){
     else if(a==='set') window.ftSetOpen(k);
     else if(a==='search'&&window.ppGoSearch) window.ppGoSearch();
  else if(a==='about'&&window.ftAbout) window.ftAbout();
+    else if(a==='install'&&window.ftInstall) window.ftInstall.open();
     window.scrollTo(0,0);
   },60);
 }
@@ -10901,5 +10910,190 @@ html[data-theme^="glass"]::before{content:""; position:fixed; left:0; top:0; rig
 /* 8) lock-screen blur layers only exist while locked */
 html:not(.locked) .lockOverlay .lkOrb,html:not(.locked) .lockOverlay .lockBg{display:none !important;}
 </style>
+<style id="ftInCss">
+#ftInPg{position:fixed;left:0;top:0;right:0;bottom:0;z-index:9350;display:none;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--gpanel,var(--bg));color:var(--text);padding:calc(14px + env(safe-area-inset-top,0px)) 14px calc(30px + env(safe-area-inset-bottom,0px));font-family:inherit}
+#ftInPg.on{display:block}
+#ftInPg .ipW{max-width:520px;margin:0 auto}
+#ftInPg .ipTop{display:flex;align-items:center;gap:14px;margin:4px 0 16px}
+#ftInPg .ipBack{flex:none;width:44px;height:44px;border-radius:50%;border:1px solid var(--border);background:color-mix(in srgb,var(--primary) 14%,var(--card));color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+#ftInPg .ipBack svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#ftInPg .ipTop h2{margin:0;font-size:22px;font-weight:800;line-height:1.2;color:var(--text)}
+#ftInPg .ipTop p{margin:3px 0 0;font-size:13px;color:var(--muted)}
+#ftInPg .ipOuter{border:1px solid var(--border);background:color-mix(in srgb,var(--card) 70%,transparent);border-radius:26px;padding:16px}
+#ftInPg .ipHd{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;margin:2px 4px 12px;color:var(--text)}
+#ftInPg .ipHd svg{width:18px;height:18px;stroke:var(--muted);fill:none;stroke-width:1.8;stroke-linecap:round}
+#ftInPg .ipCard{border:1px solid var(--border);background:var(--card);border-radius:22px;padding:16px;margin-bottom:12px}
+#ftInPg .ipCard.rec{border-color:color-mix(in srgb,#22c55e 55%,var(--border));background:linear-gradient(160deg,color-mix(in srgb,#22c55e 10%,var(--card)),var(--card))}
+#ftInPg .ipT{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:800;margin:0 0 12px;color:var(--text)}
+#ftInPg .ipBadge{font-size:11px;font-weight:700;color:#16a34a;background:color-mix(in srgb,#22c55e 18%,transparent);padding:3px 10px;border-radius:20px}
+#ftInPg .ipLi{display:flex;align-items:flex-start;gap:12px;font-size:14px;line-height:1.45;margin:0 0 10px;color:var(--text)}
+#ftInPg .ipLi svg{flex:none;width:19px;height:19px;margin-top:1px;stroke:var(--primary);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#ftInPg .ipMiss{font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--muted);margin:14px 0 8px;text-transform:uppercase}
+#ftInPg .ipChips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+#ftInPg .ipChip{font-size:12.5px;padding:7px 14px;border-radius:20px;background:color-mix(in srgb,var(--text) 8%,transparent);color:var(--muted)}
+#ftInPg .ipBtn{width:100%;height:54px;border:0;border-radius:27px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:16px;font-weight:800;font-family:inherit;cursor:pointer;margin-top:6px}
+#ftInPg .ipBtn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#ftInPg .ipBtn.g{background:#22c55e;color:#06260f}
+#ftInPg .ipBtn.p{background:var(--primary);color:#fff}
+#ftInPg .ipBtn.d{background:color-mix(in srgb,var(--text) 12%,var(--card));color:var(--muted)}
+#ftInPg .ipSt{font-size:12.5px;color:var(--muted);text-align:center;margin:10px 4px 0;line-height:1.5}
+#ftInPg .ipHelp{margin-top:12px;border-top:1px dashed var(--border);padding-top:12px;font-size:13.5px;display:none}
+#ftInPg .ipHelp.on{display:block}
+#ftInPg .ipHelp ol{margin:6px 0 10px;padding-left:20px;line-height:1.75}
+#ftInPg .ipDiag{font-size:12px;color:var(--muted);line-height:1.7}
+</style>
+<script>
+/* ===== Install page (like the reference) + one-tap web-app install ===== */
+(function(){
+  /* If you have an Android APK, put its link here and the "Android app" card appears */
+  var APK={url:'',version:'',size:''};
+
+  function bn(){ try{ return currentLang==='bn'; }catch(e){ return true; } }
+  function L(b,e){ return bn()?b:e; }
+  function toast(m){ try{ if(window.toast) window.toast(m); }catch(e){} }
+  function installed(){ try{ return window.matchMedia('(display-mode: standalone)').matches||window.matchMedia('(display-mode: fullscreen)').matches||window.navigator.standalone===true; }catch(e){ return false; } }
+  var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  var isBrave=!!(navigator.brave);
+  var web=/^https?:$/.test(location.protocol);
+
+  /* ---------- manifest safety net: if manifest.webmanifest is not uploaded, build one in the browser ---------- */
+  function rr(x,X,Y,W,H,R){ x.beginPath(); x.moveTo(X+R,Y); x.arcTo(X+W,Y,X+W,Y+H,R); x.arcTo(X+W,Y+H,X,Y+H,R); x.arcTo(X,Y+H,X,Y,R); x.arcTo(X,Y,X+W,Y,R); x.closePath(); }
+  function iconData(sz){
+    var c=document.createElement('canvas'); c.width=c.height=sz; var x=c.getContext('2d'), k=sz/100;
+    x.fillStyle='#2563eb'; rr(x,0,0,sz,sz,22*k); x.fill();
+    x.strokeStyle='#fff'; x.lineWidth=5*k; x.lineCap='round'; x.lineJoin='round';
+    rr(x,28*k,38*k,44*k,30*k,7*k); x.stroke();
+    x.beginPath(); x.moveTo(28*k,46*k); x.lineTo(28*k,36*k); x.arcTo(28*k,30*k,34*k,30*k,6*k); x.lineTo(62*k,30*k); x.stroke();
+    x.beginPath(); x.moveTo(58*k,53*k); x.lineTo(72*k,53*k); x.stroke();
+    return c.toDataURL('image/png');
+  }
+  function fallbackManifest(){
+    try{
+      var base=location.href.split('#')[0].split('?')[0].replace(/[^\/]*$/,'');
+      var m={name:'FinTrack',short_name:'FinTrack',id:base,start_url:base,scope:base,display:'standalone',orientation:'portrait',background_color:'#f4f5f7',theme_color:'#2563eb',
+        icons:[{src:iconData(192),sizes:'192x192',type:'image/png',purpose:'any'},{src:iconData(512),sizes:'512x512',type:'image/png',purpose:'any'}]};
+      var u=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/manifest+json'}));
+      var l=document.querySelector('link[rel="manifest"]'); if(!l){ l=document.createElement('link'); l.rel='manifest'; document.head.appendChild(l); }
+      l.setAttribute('href',u); window.__ftManifest='generated';
+    }catch(e){}
+  }
+  window.__ftManifest='file';
+  if(web){ try{ fetch('manifest.webmanifest',{cache:'no-store'}).then(function(r){ if(!r.ok) throw 0; return r.json(); }).catch(function(){ fallbackManifest(); }); }catch(e){ fallbackManifest(); } }
+
+  /* ---------- service worker ---------- */
+  try{ if('serviceWorker' in navigator&&web){ window.addEventListener('load',function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); }); } }catch(e){}
+
+  /* ---------- page ---------- */
+  var I={
+    back:'<svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>',
+    help:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.7 9.5a2.4 2.4 0 1 1 3.4 2.2c-.7.4-1.1.9-1.1 1.8M12 16.8h.01"/></svg>',
+    bolt:'<svg viewBox="0 0 24 24"><path d="M13 3 5 13.5h6L10 21l8-10.5h-6z"/></svg>',
+    bell:'<svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0"/></svg>',
+    dl:'<svg viewBox="0 0 24 24"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>',
+    sync:'<svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.5-3.5L4 9M4 5v4h4M4 13a8 8 0 0 0 14.5 3.5L20 15M20 19v-4h-4"/></svg>',
+    pc:'<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="11" rx="2"/><path d="M2 20h20"/></svg>',
+    ph:'<svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg>',
+    wifi:'<svg viewBox="0 0 24 24"><path d="M3 9a14 14 0 0 1 18 0M6 12.5a9 9 0 0 1 12 0M9 16a4.5 4.5 0 0 1 6 0M12 19.5h.01"/></svg>',
+    rocket:'<svg viewBox="0 0 24 24"><path d="M12 3c3.5 2 5 5.5 5 9l-2 3H9l-2-3c0-3.5 1.5-7 5-9zM9 15l-2 4 3-1M15 15l2 4-3-1M12 9.5h.01"/></svg>'
+  };
+  function li(ic,t){ return '<div class="ipLi">'+ic+'<span>'+t+'</span></div>'; }
+  function render(){
+    var pg=document.getElementById('ftInPg'); if(!pg) return;
+    var ok=installed(), ready=!!window.__ftIP, h='';
+    h+='<div class="ipW"><div class="ipTop"><button type="button" class="ipBack" data-a="back" aria-label="Back">'+I.back+'</button><div><h2>'+L('অ্যাপ ইনস্টল করুন','Install the app')+'</h2><p>'+L('ওয়েব অ্যাপ — হোম স্ক্রিন থেকে এক ট্যাপে খোলে','Web app. Opens from your home screen in one tap')+'</p></div></div>';
+    h+='<div class="ipOuter"><div class="ipHd">'+L('অ্যাপ ইনস্টল করুন','Install the app')+I.help+'</div>';
+    if(APK.url){
+      h+='<div class="ipCard rec"><div class="ipT">'+L('Android অ্যাপ','Android app')+'<span class="ipBadge">'+L('সুপারিশকৃত','Recommended')+'</span></div>'
+        +li(I.bolt,L('আরও দ্রুত ও মসৃণভাবে চলে','Faster and smoother performance'))
+        +li(I.bell,L('বিল ও রিমাইন্ডার নোটিফিকেশন ঠিকমতো আসে','Bill and reminder notifications that always arrive'))
+        +li(I.rocket,L('ফুল-স্ক্রিনে অ্যাপের মতো খোলে','Opens full screen like a real app'))
+        +'<a class="ipBtn g" style="text-decoration:none" href="'+APK.url+'" download>'+I.dl+'<span>'+L('APK ডাউনলোড','Download APK')+(APK.version?' · '+APK.version:'')+(APK.size?' · '+APK.size:'')+'</span></a></div>';
+    }
+    h+='<div class="ipCard"><div class="ipT">'+L('ওয়েব অ্যাপ','Web app')+'</div>'
+      +li(I.dl,L('এক ট্যাপে ইনস্টল — কিছু অনুমতি লাগে না','Installs in one tap, nothing to allow'))
+      +li(I.sync,L('নিজে নিজেই আপডেট হয়, সবসময় নতুন ভার্সন','Updates itself; always the newest version'))
+      +li(I.pc,L('যেকোনো ফোন বা কম্পিউটারে একই অ্যাপ','The same app on any phone or computer'))
+      +li(I.wifi,L('ইন্টারনেট ছাড়াও খোলে','Opens even offline'));
+    if(ok) h+='<button type="button" class="ipBtn d" data-a="done">'+I.ph+'<span>'+L('ইতিমধ্যে ইনস্টল করা আছে ✓','Already installed ✓')+'</span></button>';
+    else h+='<button type="button" class="ipBtn p" data-a="install">'+I.ph+'<span>'+L('ওয়েব অ্যাপ ইনস্টল করুন','Install web app')+'</span></button>';
+    h+='<div class="ipSt" id="ipSt">'+(ok?'':(ready?L('⚡ প্রস্তুত — বাটনে ট্যাপ করলেই ইনস্টল হবে।','⚡ Ready. Tap the button to install.'):L('বাটনে ট্যাপ করুন — ইনস্টল না হলে নিচে ধাপ দেখাবে।','Tap the button. If it does not install, steps will show below.')))+'</div>';
+    h+='<div class="ipHelp" id="ipHelp"></div></div></div></div>';
+    pg.innerHTML=h;
+  }
+  function help(){
+    var el=document.getElementById('ipHelp'); if(!el) return;
+    var steps;
+    if(isIOS) steps=bn()?['Safari-তে নিচের <b>Share</b> বাটনে ট্যাপ করুন','<b>Add to Home Screen</b> বেছে নিন','<b>Add</b> চাপুন']:['Tap the <b>Share</b> button in Safari','Choose <b>Add to Home Screen</b>','Tap <b>Add</b>'];
+    else steps=bn()?['ব্রাউজারের উপরে ডানের <b>⋮</b> মেনুতে ট্যাপ করুন','<b>Install app</b> / <b>Add to Home screen</b> বেছে নিন','<b>Install</b> চাপুন']:['Open the browser <b>⋮</b> menu (top right)','Choose <b>Install app</b> / <b>Add to Home screen</b>','Tap <b>Install</b>'];
+    el.innerHTML='<b>'+L('ম্যানুয়ালি ইনস্টল করুন','Install manually')+'</b>'+(isBrave?'<div class="ipDiag">'+L('Brave-এ মেনু থেকেই ইনস্টল করতে হয়।','On Brave, install from the menu.')+'</div>':'')+'<ol>'+steps.map(function(s){return '<li>'+s+'</li>';}).join('')+'</ol><div class="ipDiag" id="ipDiag">…</div>';
+    el.classList.add('on');
+    diag();
+  }
+  function diag(){
+    var d=document.getElementById('ipDiag'); if(!d) return;
+    var rows=[[web&&(location.protocol==='https:'||location.hostname==='localhost'),L('HTTPS লিংক','HTTPS link')]];
+    var done=function(){ d.innerHTML=rows.map(function(r){return (r[0]?'✅ ':'❌ ')+r[1];}).join('<br>')+(rows.some(function(r){return !r[0];})?'<br><b>'+L('❌ থাকলে অ্যাপ সরাসরি ইনস্টল হবে না — ফাইলগুলো (manifest, sw.js, icon) index.html-এর সাথে একই ফোল্ডারে আপলোড করুন।','If any ❌ shows, direct install will not work. Upload manifest, sw.js and icons next to index.html.')+'</b>':''); };
+    var mp=web?fetch('manifest.webmanifest',{cache:'no-store'}).then(function(r){ rows.push([r.ok,'manifest.webmanifest']); }).catch(function(){ rows.push([false,'manifest.webmanifest']); }):Promise.resolve(rows.push([false,'manifest.webmanifest']));
+    var sp=(web&&navigator.serviceWorker)?navigator.serviceWorker.getRegistration().then(function(r){ rows.push([!!r,L('সার্ভিস ওয়ার্কার (sw.js)','Service worker (sw.js)')]); }).catch(function(){ rows.push([false,'sw.js']); }):Promise.resolve(rows.push([false,'sw.js']));
+    Promise.all([mp,sp]).then(done);
+  }
+  function run(){
+    if(installed()){ toast(L('অ্যাপটি ইতিমধ্যে ইনস্টল করা আছে','App is already installed')); return; }
+    var ev=window.__ftIP;
+    if(ev&&ev.prompt){
+      try{
+        ev.prompt();
+        ev.userChoice.then(function(c){
+          window.__ftIP=null;
+          if(c&&c.outcome==='accepted') toast(L('ইনস্টল হচ্ছে… হোম স্ক্রিনে অ্যাপ পাবেন','Installing… find the app on your home screen'));
+          else { render(); help(); }
+        }).catch(function(){});
+      }catch(e){ window.__ftIP=null; help(); }
+      return;
+    }
+    help();
+    var st=document.getElementById('ipSt'); if(st) st.textContent=L('এই ব্রাউজার সরাসরি ইনস্টল-পপআপ দেয়নি — নিচের ধাপে ইনস্টল করুন।','This browser did not give the direct prompt. Use the steps below.');
+    var el=document.getElementById('ipHelp'); if(el&&el.scrollIntoView) setTimeout(function(){ try{ el.scrollIntoView({behavior:'smooth',block:'nearest'}); }catch(e){} },60);
+  }
+  function ensure(){
+    var pg=document.getElementById('ftInPg');
+    if(!pg){
+      pg=document.createElement('div'); pg.id='ftInPg';
+      pg.addEventListener('click',function(e){ var b=e.target.closest('[data-a]'); if(!b) return; var a=b.dataset.a; if(a==='back') close(); else if(a==='install') run(); else if(a==='done') toast(L('অ্যাপটি ইতিমধ্যে ইনস্টল করা আছে','App is already installed')); });
+      document.body.appendChild(pg);
+    }
+    return pg;
+  }
+  var pushed=false;
+  function open(){
+    var pg=ensure(); render(); pg.classList.add('on'); pg.scrollTop=0;
+    try{ history.pushState({ftIn:1},''); pushed=true; }catch(e){}
+  }
+  function close(){
+    var pg=document.getElementById('ftInPg'); if(!pg||!pg.classList.contains('on')) return;
+    if(pushed){ pushed=false; try{ history.back(); return; }catch(e){} }
+    pg.classList.remove('on');
+  }
+  window.addEventListener('popstate',function(){ var pg=document.getElementById('ftInPg'); if(pg&&pg.classList.contains('on')){ pushed=false; pg.classList.remove('on'); } });
+  window.addEventListener('ftInstallReady',function(){ var pg=document.getElementById('ftInPg'); if(pg&&pg.classList.contains('on')&&!installed()){ var st=document.getElementById('ipSt'); if(st) st.textContent=L('⚡ প্রস্তুত — বাটনে ট্যাপ করলেই ইনস্টল হবে।','⚡ Ready. Tap the button to install.'); } paintBox(); });
+  window.addEventListener('appinstalled',function(){ window.__ftIP=null; toast(L('অ্যাপ ইনস্টল হয়েছে ✅','App installed ✅')); var pg=document.getElementById('ftInPg'); if(pg&&pg.classList.contains('on')) render(); paintBox(); });
+
+  /* small status line inside the Settings box */
+  function paintBox(){
+    var st=document.getElementById('ftInSt'), bt=document.getElementById('ftInBtn');
+    if(st) st.textContent=installed()?L('✅ অ্যাপটি ইতিমধ্যে ইনস্টল করা আছে।','✅ The app is already installed.'):(window.__ftIP?L('⚡ ইনস্টলের জন্য প্রস্তুত।','⚡ Ready to install.'):L('বাটনে ট্যাপ করলে ইনস্টল পেজ খুলবে।','Tap the button to open the install page.'));
+    if(bt) bt.style.display=installed()?'none':'flex';
+  }
+  setInterval(paintBox,2500); paintBox();
+
+  window.ftInstall={open:open,run:run,installed:installed,ready:function(){return !!window.__ftIP;}};
+
+  /* Settings row opens the install page */
+  document.addEventListener('click',function(e){
+    var r=e.target.closest&&e.target.closest('.ftRow[data-k="installBox"]');
+    if(r){ e.stopImmediatePropagation(); e.preventDefault(); open(); }
+  },true);
+})();
+</script>
 </body>
 </html>
