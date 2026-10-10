@@ -6900,7 +6900,8 @@ const GL=[
  ['glass-frost','Glass Frost','#0f172a','rgba(15,23,42,.72)','rgba(255,255,255,.72)','rgba(255,255,255,.75)','#2563eb','#1d4ed8','radial-gradient(60% 45% at 10% 10%,#bfdbfe 0,transparent 70%),radial-gradient(55% 45% at 95% 25%,#fbcfe8 0,transparent 70%),radial-gradient(60% 50% at 40% 100%,#a7f3d0 0,transparent 70%),#eef4ff',0],
  ['glass-sunset','Glass Sunset','#ffffff','rgba(255,255,255,.84)','rgba(36,14,32,.5)','rgba(255,255,255,.24)','#fb923c','#f97316','radial-gradient(60% 45% at 85% 8%,#f97316 0,transparent 70%),radial-gradient(55% 45% at 5% 35%,#db2777 0,transparent 70%),radial-gradient(60% 50% at 60% 100%,#6d28d9 0,transparent 70%),#1a0b14',1],
  ['glass-ocean','Glass Ocean','#ffffff','rgba(255,255,255,.84)','rgba(6,22,38,.5)','rgba(255,255,255,.22)','#22d3ee','#06b6d4','radial-gradient(60% 45% at 10% 10%,#0ea5e9 0,transparent 70%),radial-gradient(55% 45% at 95% 40%,#14b8a6 0,transparent 70%),radial-gradient(60% 50% at 30% 100%,#4f46e5 0,transparent 70%),#04111c',1],
- ['glass-mint','Glass Mint','#052e1f','rgba(5,46,31,.74)','rgba(255,255,255,.72)','rgba(255,255,255,.75)','#059669','#047857','radial-gradient(60% 45% at 90% 8%,#a7f3d0 0,transparent 70%),radial-gradient(55% 45% at 5% 40%,#bae6fd 0,transparent 70%),radial-gradient(60% 50% at 60% 100%,#fde68a 0,transparent 70%),#f0fdf8',0]
+ ['glass-mint','Glass Mint','#052e1f','rgba(5,46,31,.74)','rgba(255,255,255,.72)','rgba(255,255,255,.75)','#059669','#047857','radial-gradient(60% 45% at 90% 8%,#a7f3d0 0,transparent 70%),radial-gradient(55% 45% at 5% 40%,#bae6fd 0,transparent 70%),radial-gradient(60% 50% at 60% 100%,#fde68a 0,transparent 70%),#f0fdf8',0],
+ ['glass-black-yellow','Transparent Black-Yellow','#ffffff','rgba(255,255,255,.74)','rgba(0,0,0,.40)','rgba(250,204,21,.30)','#facc15','#eab308','radial-gradient(60% 45% at 88% 4%,rgba(250,204,21,.60) 0,transparent 70%),radial-gradient(55% 40% at 4% 50%,rgba(250,204,21,.22) 0,transparent 70%),radial-gradient(60% 40% at 70% 100%,rgba(250,204,21,.28) 0,transparent 70%),#050505',1,'#000000']
 ];
 let glassCss='';
 GL.forEach(g=>{ const dk=g[9]; glassCss+=`:root[data-theme="${g[0]}"]{--bg:${dk?'rgba(12,14,32,.62)':'rgba(255,255,255,.6)'};--card:${g[4]};--text:${g[2]};--muted:${g[3]};--border:${g[5]};--primary:${g[6]};--primary-d:${g[7]};--gbg:${g[8]};--gpanel:${dk?'rgba(14,16,34,.93)':'rgba(246,250,255,.95)'};color-scheme:${dk?'dark':'light'};--sh:0 10px 34px rgba(${dk?'0,0,0,.35':'31,41,90,.14'});${dk?GD:G}}\n`; });
@@ -6923,10 +6924,19 @@ glassCss+=`html[data-theme^="glass"],html[data-theme^="glass"] body{background:v
 let css='';
 T.forEach(t=>{ css+=`:root[data-theme="${t[0]}"]{--bg:${t[2]};--card:${t[3]};--text:${t[4]};--muted:${t[5]};--border:${t[6]};--primary:${t[7]};--primary-d:${t[8]};${t[9]?GD:G}${t[9]?'--sh:0 1px 0 rgba(255,255,255,.04) inset,0 10px 28px rgba(0,0,0,.45);':''}}\n`; });
 css+='.swSub{font-size:12.5px;font-weight:700;margin:14px 0 6px}.swCustom{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.swCustom input[type=color]{width:46px;height:38px;padding:0;border:1px solid var(--border);border-radius:10px;background:var(--card);cursor:pointer}.swCustom button{padding:8px 14px;border-radius:20px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit}';
+
+/* ---- black / yellow / red themes ---- */
+css+=`:root[data-theme="black-yellow-red"]{--bg:#000000;--card:#0c0c0c;--text:#fff6d1;--muted:#b89f3c;--border:#3b2d05;--primary:#facc15;--primary-d:#e11d2e;--green:#facc15;--green-bg:#2a2203;--red:#ff3b30;--red-bg:#2e0807;--amber:#facc15;--amber-bg:#2a2203;color-scheme:dark;--sh:0 1px 0 rgba(250,204,21,.06) inset,0 10px 28px rgba(0,0,0,.6);}
+:root[data-theme="black-yellow-red"] input,:root[data-theme="black-yellow-red"] select,:root[data-theme="black-yellow-red"] textarea{background:#080808;color:var(--text);border-color:var(--border)}
+:root[data-theme="glass-black-yellow"],:root[data-theme="black-yellow-red"]{--grad:linear-gradient(135deg,#facc15,#eab308)}
+:root[data-theme="black-yellow-red"]{--grad:linear-gradient(135deg,#facc15,#e11d2e)}
+:root[data-theme="glass-black-yellow"] :is(#fcSend,#ftChatTop button.on,.card.bal,.chip.on,.devTab.on,.fcAct .rxr button.on,.fcAv,.fcBal .bl button,.fcChips button.on,.fcGo,.fcJump,.fcMsg.me,.fcPlus.on,.fcQ .qb button.go,.fcTabs button.on,.ftBan,.loanPayBtn,.lockAvatarWrap span,.mnLogo,.mnPro .av,.pfAvatar span,.rqGo,.rqTop2 button.on,.setHero,.tab.active,.typebtn.main,.main,.ppAct),:root[data-theme="black-yellow-red"] :is(#fcSend,#ftChatTop button.on,.card.bal,.chip.on,.devTab.on,.fcAct .rxr button.on,.fcAv,.fcBal .bl button,.fcChips button.on,.fcGo,.fcJump,.fcMsg.me,.fcPlus.on,.fcQ .qb button.go,.fcTabs button.on,.ftBan,.loanPayBtn,.lockAvatarWrap span,.mnLogo,.mnPro .av,.pfAvatar span,.rqGo,.rqTop2 button.on,.setHero,.tab.active,.typebtn.main,.main,.ppAct){color:#111 !important}
+:root[data-theme="glass-black-yellow"] :is(.card.bal,.ftBan,.setHero,.main,.ppAct,.tab.active) *,:root[data-theme="black-yellow-red"] :is(.card.bal,.ftBan,.setHero,.main,.ppAct,.tab.active) *{color:inherit}
+`;
 css+=glassCss; const st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
 GL.forEach(g=>{
   const s=document.createElement('div'); s.className='swatch'; s.dataset.theme=g[0]; s.title=g[1];
-  s.style.background='linear-gradient(135deg,'+(g[9]?'#1b1740':'#dbeafe')+','+g[6]+')';
+  s.style.background='linear-gradient(135deg,'+(g[10]||(g[9]?'#1b1740':'#dbeafe'))+','+g[6]+')';
   s.addEventListener('click',()=>applyTheme(g[0])); row.appendChild(s);
 });
 T.forEach(t=>{
@@ -6934,6 +6944,9 @@ T.forEach(t=>{
   s.style.background='linear-gradient(135deg,'+t[2]+','+t[7]+')';
   s.addEventListener('click',()=>applyTheme(t[0])); row.appendChild(s);
 });
+(function(){ const s=document.createElement('div'); s.className='swatch'; s.dataset.theme='black-yellow-red'; s.title='Black-Yellow-Red';
+  s.style.background='linear-gradient(135deg,#000000 0%,#000000 38%,#facc15 38%,#facc15 68%,#e11d2e 68%)';
+  s.addEventListener('click',()=>applyTheme('black-yellow-red')); row.appendChild(s); })();
 try{ applyTheme(localStorage.getItem('appTheme_v1')||''); }catch(e){}
 
 /* custom accent color (works on top of any theme) */
@@ -10225,6 +10238,7 @@ if(!document.getElementById('skCss')){ const st=document.createElement('style');
 document.head.appendChild(st); }
 function clean(p){ p=p||{}; const c=p.comp||{}; return {xp:clamp(p.xp,1e6),played:clamp(p.played,1e5),wins:clamp(p.wins,1e5),streak:clamp(p.streak,1e5),bs:clamp(p.bs,1e5),sw:clamp(p.sw,1e5),nw:clamp(p.nw,1e5),mw:clamp(p.mw,1e5),comp:{sv:clamp(c.sv,100),sp:clamp(c.sp,100),tr:clamp(c.tr,100),ch:clamp(c.ch,100)},skill:clamp(((+c.tr||0)+(+c.ch||0))/2,100)}; }
 const okPic=s=>typeof s==='string'&&/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/.test(s)&&s.length<60000;
+const okLoc=s=>typeof s==='string'&&/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/.test(s)&&s.length<4000000;
 const myUn=()=>{ try{ return (localStorage.getItem('myUsername_v1')||'').trim().replace(/^@/,''); }catch(e){ return ''; } };
 const myName=()=>{ try{ return localStorage.getItem('myName_v1')||''; }catch(e){ return ''; } };
 const myPic=()=>{ try{ return localStorage.getItem('myProfilePic_v1')||''; }catch(e){ return ''; } };
@@ -10245,11 +10259,11 @@ function frAct(info){
   return '<button type="button" class="ppAct" onclick="ftFr.add(\''+u+'\')">'+ic('pp-user',16)+' '+L('বন্ধু যোগ করুন','Add friend')+'</button>';
 }
 function hdr(info,own,col,chips){
-  const cv=okPic(info.cv)?info.cv:'', lk=!!info.lk&&!own&&!info.rq;
+  const cv=(okPic(info.cv)||(own&&okLoc(info.cv)))?info.cv:'', lk=!!info.lk&&!own&&!info.rq;
   const cb=own?'<div class="ppCovBtns"><button type="button" aria-label="cover" onclick="document.getElementById(\'ppCvIn\').click()">'+ic('pp-cam',17)+'</button>'+(cv?'<button type="button" aria-label="remove" onclick="ppCvDel()">'+ic('pp-x',16)+'</button>':'')+'</div><input type="file" id="ppCvIn" accept="image/*" style="display:none" onchange="ppCover(this)">':'';
   const act=own?'<button type="button" class="ppAct" onclick="activateTab(\'settings\')">'+ic('pp-user',16)+' '+L('এডিট','Edit')+'</button>':frAct(info);
   const txt=lk?'':'<div class="ppNm">'+esc(info.name||L('নাম নেই','No name'))+'</div>'+(info.un?'<div class="ppUn">@'+esc(info.un)+'</div>':'')+socHtml(info.soc)+(chips?'<div class="ppChips">'+chips+'</div>':'');
-  return '<div class="ppHead" style="--r:'+col+'"><div class="ppCov"'+(cv?' style="background-image:url(\''+cv+'\')"':'')+'>'+cb+'</div><div class="ppBody"><div class="ppTop"><div class="ppAv" data-su="'+esc(info.uid||'')+'" data-own="'+(own?1:0)+'">'+avatar(lk?'':info.name,info.pic)+'</div>'+act+'</div>'+txt+'</div></div>';
+  return '<div class="ppHead" style="--r:'+col+'"><div class="ppCov"'+(cv?' style="background-image:url(\''+cv+'\')"':'')+'>'+cb+'</div><div class="ppBody"><div class="ppTop"><div class="ppAv" data-su="'+esc(info.uid||'')+'" data-own="'+(own?1:0)+'">'+avatar(lk?'':info.name,info.pic,own)+'</div>'+act+'</div>'+txt+'</div></div>';
 }
 function socCard(){
   const s=mySoc();
@@ -10259,7 +10273,7 @@ function socCard(){
 function renderSet(){ const b=$('ppSetBox'); if(!b) return; const a=document.activeElement; if(a&&b.contains(a)&&a.tagName==='INPUT'&&a.type==='text') return; b.innerHTML='<div class="ppSet">'+ownCard()+socCard()+'</div>'; }
 
 /* ---------- profile view ---------- */
-function avatar(name,pic){ return '<div>'+(okPic(pic)?'<img alt="" src="'+pic+'">':esc((String(name||'?').trim()[0]||'?').toUpperCase()))+'</div>'; }
+function avatar(name,pic,own){ return '<div>'+((okPic(pic)||(own&&okLoc(pic)))?'<img alt="" src="'+pic+'">':esc((String(name||'?').trim()[0]||'?').toUpperCase()))+'</div>'; }
 function profHtml(info){
   const p=info.p, l=lvOf(p.xp), s=skOf(p.skill), n=BAD.filter(b=>b[7](p)).length, rate=p.played?Math.round(p.wins/p.played*100):0;
   const rk=SK.map((k,j)=>`<div class="ppRkS${j<=s.i?' on':''}${j===s.i?' cur':''}" style="--c:${k[3]}"><span class="d">${ic('cg-lv'+(j+1),18)}</span><span class="n">${L(k[1],k[2])}</span></div>`).join('');
@@ -11753,6 +11767,59 @@ html:not(.locked) .lockOverlay .lkOrb,html:not(.locked) .lockOverlay .lockBg{dis
     }
   }
   window.ftCrop={open:open};
+})();
+</script>
+
+<script id="popYellowTheme">
+(function(){
+var N='yellow-pop', S='html:root[data-theme="'+N+'"]';
+var D=['#fcSend','#ftChatTop button.on','.card.bal','.chip.on','.devTab.on','.fcAct .rxr button.on','.fcAv','.fcBal .bl button','.fcChips button.on','.fcGo','.fcJump','.fcMsg.me','.fcPlus.on','.fcQ .qb button.go','.fcTabs button.on','.ftBan','.loanPayBtn','.lockAvatarWrap span','.mnLogo','.mnPro .av','.pfAvatar span','.rqGo','.rqTop2 button.on','.setHero','.tab.active','.typebtn.sel','.typebtn.main','.main','.ppAct'].map(function(x){return S+' '+x}).join(',');
+var css=S+'{--bg:#000000;--card:#2b2b2b;--text:#ffffff;--muted:#a9a9a9;--border:#3a3a3a;--primary:#ffd92e;--primary-d:#f2c200;--grad:linear-gradient(135deg,#ffe24f,#ffd21a);--green:#ffd92e;--green-bg:#3a3200;--red:#ff3d3d;--red-bg:#3a1212;--amber:#ffd92e;--amber-bg:#3a3200;--sh:none;color-scheme:dark}\n'
++S+' body,'+S+' header.top{background:#000}\n'
++S+' .box,'+S+' .card.exp{background:var(--card);border-color:transparent;box-shadow:none}\n'
++S+' input,'+S+' select,'+S+' textarea{background:#141414;color:#fff;border-color:#3a3a3a}\n'
++S+' header.top .iconBtn{background:#2b2b2b;color:#ffd92e;border-color:transparent;box-shadow:none}\n'
+/* big yellow profile panel */
++S+' .profileBar{background:#ffd92e !important;border:none !important;border-radius:30px;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}\n'
++S+' .profileBar .pfHello,'+S+' .profileBar .pfSub{color:#111 !important;opacity:.75}\n'
++S+' .profileBar .pfName{color:#111 !important}\n'
++S+' .profileBar button,'+S+' .profileBar .pfGo{background:#111 !important;color:#ffd92e !important;border-color:transparent !important;box-shadow:none !important}\n'
++S+' .pfAvatar{background:#111 !important}\n'
++S+' .pfAvatar::before{background:#111}\n'
++S+' .pfAvatar img,'+S+' .pfAvatar span{border-color:#111}\n'
++S+' .pfAvatar::after{background:#ff3d3d;border-color:#ffd92e}\n'
+/* hero cards: yellow / red / gray */
++S+' .hc-bal{background:#ffd92e !important;--hcs:rgba(255,217,46,.25)}\n'
++S+' .hc-bal .hcLbl,'+S+' .hc-bal .hcVal,'+S+' .hc-bal .hcSub,'+S+' .hc-bal .hcEye{color:#111 !important}\n'
++S+' .hc-bal .hcIcon{background:#111}\n'
++S+' .hc-bal .hcIcon svg{stroke:#ffd92e}\n'
++S+' .hc-bal .hcEye svg{stroke:#111}\n'
++S+' .hc-bal::before,'+S+' .hc-bal::after{background:rgba(0,0,0,.07)}\n'
++S+' .hc-exp{background:#ff3d3d !important;--hcs:rgba(255,61,61,.25)}\n'
++S+' .hc-loan,'+S+' .hc-save{background:#2b2b2b !important;--hcs:rgba(0,0,0,.4)}\n'
++S+' .hc-loan .hcIcon,'+S+' .hc-save .hcIcon{background:#ffd92e}\n'
++S+' .hc-loan .hcIcon svg,'+S+' .hc-save .hcIcon svg{stroke:#111}\n'
+/* tabs + bottom nav */
++S+' .tabs{background:#2b2b2b;border:none;border-radius:26px;box-shadow:none}\n'
++S+' .tab{color:#d6d6d6}\n'
++S+' .tab.active{background:#ffd92e;box-shadow:none}\n'
++S+' .bottomnav{background:#2b2b2b !important;border:none !important;border-radius:34px;box-shadow:0 12px 30px rgba(0,0,0,.6)}\n'
++S+' .bnbtn{color:#ffd92e}\n'
++S+' .bnbtn.active::before{background:rgba(255,217,46,.18) !important}\n'
++S+' .bnbtn.fab .fabcircle{background:#ffffff !important;box-shadow:0 0 0 6px #000,0 10px 24px rgba(0,0,0,.5) !important}\n'
++S+' .fab .fabcircle svg{stroke:#111 !important}\n'
+/* dark text on every yellow surface */
++D+'{color:#111 !important}\n'
++S+' .card.bal *,'+S+' .ftBan *,'+S+' .setHero *{color:inherit}\n';
+var st=document.createElement('style'); st.id='popYellowCss'; st.textContent=css; document.head.appendChild(st);
+function add(){
+  var row=document.getElementById('themeRow'); if(!row||row.querySelector('[data-theme="'+N+'"]')) return;
+  var sw=document.createElement('div'); sw.className='swatch'; sw.dataset.theme=N; sw.title='Yellow Pop';
+  sw.style.background='linear-gradient(135deg,#000000 0%,#000000 34%,#ffd92e 34%,#ffd92e 68%,#ff3d3d 68%)';
+  sw.addEventListener('click',function(){ applyTheme(N); }); row.appendChild(sw);
+  try{ applyTheme(localStorage.getItem('appTheme_v1')||''); }catch(e){}
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',add); else add();
 })();
 </script>
 </body>
