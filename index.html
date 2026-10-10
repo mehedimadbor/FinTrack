@@ -9996,7 +9996,7 @@ function profHtml(info){
   <div class="ppCard"><h4>${ic('cg-medal',18)} ${L('ব্যাজ','Badges')} <span class="ppCnt">${nb(n)}/${nb(BAD.length)}</span></h4><div class="ppBadges">${bd}</div>${inf}</div>`;
 }
 /* ---------- state ---------- */
-let seeds={}, fromFr=false, pane='me', viewed=null, results=[], found={}, q='', msg='', msgBad=false, busy=false, sel='', pubSt={k:'',t:''}, lastSig='', timer=null;
+let keepPane=false, seeds={}, fromFr=false, pane='me', viewed=null, results=[], found={}, q='', msg='', msgBad=false, busy=false, sel='', pubSt={k:'',t:''}, lastSig='', timer=null;
 function ownCard(){
   const on=localStorage.getItem(PUB)!=='0', k=pubSt.k;
   let note='';
@@ -10094,7 +10094,7 @@ window.ppPane=k=>{ fromFr=false; pane=k; viewed=null; sel=''; renderTab(); };
 window.ppBadge=id=>{ sel=sel===id?'':id; renderTab(); };
 window.ppQin=v=>{ q=v; };
 window.ppSearch=()=>search();
-window.ppGoSearch=()=>{ fromFr=false; pane='find'; viewed=null; results=[]; msg=''; sel=''; try{ activateTab('profile'); }catch(e){} renderTab(); setTimeout(()=>{ const e=$('ppQ'); if(e) e.focus(); },80); };
+window.ppGoSearch=()=>{ fromFr=false; pane='find'; viewed=null; results=[]; msg=''; sel=''; keepPane=true; try{ activateTab('profile'); }catch(e){} keepPane=false; renderTab(); setTimeout(()=>{ const e=$('ppQ'); if(e) e.focus(); },80); };
 window.ppMsg=uid=>{
   try{
     const m=JSON.parse(localStorage.getItem('ftReqLink_v1')||'{}')||{}, o=m[uid]||{};
@@ -10105,7 +10105,7 @@ window.ppMsg=uid=>{
 };
 window.ppOpen=uid=>{ fromFr=false; open(uid); };
 window.ppViewed=()=>viewed;
-window.ppView=(uid,seed)=>{ if(seed) seeds[uid]=seed; else delete seeds[uid]; fromFr=!!seed; pane='find'; viewed=null; results=[]; msg=''; sel=''; try{ activateTab('profile'); }catch(e){} renderTab(); open(uid); };
+window.ppView=(uid,seed)=>{ if(seed) seeds[uid]=seed; else delete seeds[uid]; fromFr=!!seed; pane='find'; viewed=null; results=[]; msg=''; sel=''; keepPane=true; try{ activateTab('profile'); }catch(e){} keepPane=false; renderTab(); open(uid); };
 window.addEventListener('ftFrChange',()=>{ try{ const e=$('sec-profile'); if(e&&e.classList.contains('active')) renderTab(); }catch(x){} });
 window.ppLock=on=>{ try{ localStorage.setItem(LK,on?'1':'0'); }catch(e){} lastSig=''; renderTab(); pub(true); };
 window.ppSocSave=()=>{ const o={}; ['fb','ig','tg','wa'].forEach(k=>{ const e=$('ppS_'+k); if(e) o[k]=e.value; }); try{ localStorage.setItem('mySocial_v1',JSON.stringify(cleanSoc(o))); }catch(e){} lastSig=''; try{ document.activeElement.blur(); }catch(e){} renderTab(); pub(true); if(window.toast) window.toast(L('সেভ হয়েছে','Saved')); };
@@ -10129,7 +10129,7 @@ window.ppCopy=()=>{ const e=$('ppRules'); if(!e) return; const t=e.textContent; 
 
 /* ---------- hooks + tab ---------- */
 const _sd=window.saveData; window.saveData=function(){ const x=_sd.apply(this,arguments); sched(); return x; };
-const _at=window.activateTab; window.activateTab=function(n){ const r=_at.apply(this,arguments); if(n==='profile'){ renderTab(); window.scrollTo(0,0); pub(false); } return r; };
+const _at=window.activateTab; window.activateTab=function(n){ const r=_at.apply(this,arguments); if(n==='profile'){ if(!keepPane){ pane='me'; viewed=null; sel=''; fromFr=false; results=[]; msg=''; try{ if(document.activeElement&&document.activeElement.blur) document.activeElement.blur(); }catch(e){} } renderTab(); window.scrollTo(0,0); pub(false); } return r; };
 const _al=window.applyLanguage; if(_al) window.applyLanguage=function(){ const r=_al.apply(this,arguments); try{ renderTab(); }catch(e){} return r; };
 const sec=document.createElement('div'); sec.className='section'; sec.id='sec-profile';
 const st=$('sec-settings'); if(st) st.parentNode.insertBefore(sec,st);
