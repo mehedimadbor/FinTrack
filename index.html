@@ -2348,7 +2348,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   </div>
   <div class="box">
     <h3 data-i18n="settings_recurring">নিয়মিত এন্ট্রি</h3>
-    <p style="font-size:12.5px; color:var(--muted); margin:0 0 8px;" data-i18n="recurring_note">বাসা ভাড়া, বেতন, বিলের মতো যা প্রতি মাসে আসে/যায় সেটা একবার সেট করুন — নির্দিষ্ট তারিখে অ্যাপ খুললেই নিজে থেকে যোগ হয়ে যাবে। (সেট করার সময় ওই মাসের তারিখ পার হয়ে গেলে, পরের মাস থেকে শুরু হবে।)</p>
+    <p style="font-size:12.5px; color:var(--muted); margin:0 0 8px;" data-i18n="recurring_note">বাসা ভাড়া, বেতন, বিলের মতো যা প্রতি মাসে আসে/যায় সেটা একবার সেট করুন — নির্দিষ্ট তারিখ ও সময়ে নিজে থেকে যোগ হয়ে যাবে (অ্যাপ খোলা থাকলে ঠিক সময়ে, বন্ধ থাকলে পরের বার খুললেই)। (সেট করার সময় ওই মাসের তারিখ ও সময় পার হয়ে গেলে, পরের মাস থেকে শুরু হবে।)</p>
     <label data-i18n="lbl_rec_type">ধরন</label>
     <select id="recType" onchange="recTypeChange()">
       <option value="expense" data-i18n="type_expense">খরচ</option>
@@ -2362,6 +2362,8 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     <input type="number" id="recAmount" placeholder="0">
     <label data-i18n="lbl_rec_day">প্রতি মাসের কত তারিখে (১–৩১)</label>
     <input type="number" id="recDay" min="1" max="31" placeholder="5">
+    <label data-i18n="lbl_rec_time">কোন সময়ে এন্ট্রি হবে</label>
+    <input type="time" id="recTime" value="09:00">
     <label data-i18n="lbl_rec_note">নোট (যেমন: বাসা ভাড়া)</label>
     <input type="text" id="recNote">
     <button class="typebtn" style="width:100%; margin-top:8px;" onclick="addRecurring()" data-i18n="btn_rec_add">যোগ করুন</button>
@@ -2602,8 +2604,8 @@ const I18N = {
     limit_over:'আজকের সীমা ছাড়িয়ে গেছে', limit_left:'আজ আর খরচ করতে পারবেন ', lbl_daily_limit:'দৈনিক খরচের সীমা (টাকা)',
     lbl_due:'ফেরতের তারিখ (ঐচ্ছিক)', dash_remind_heading:'লোনের রিমাইন্ডার', rem_get:'ফেরত পাবেন', rem_owe:'ফেরত দিতে হবে',
     rem_overdue:'দিন আগে তারিখ পার হয়েছে', rem_today:'আজই ফেরতের তারিখ', rem_soon:'দিন পরে', rem_popup_title:'লোন ফেরতের রিমাইন্ডার',
-    settings_recurring:'নিয়মিত এন্ট্রি', recurring_note:'বাসা ভাড়া, বেতন, বিলের মতো যা প্রতি মাসে আসে/যায় সেটা একবার সেট করুন — নির্দিষ্ট তারিখে অ্যাপ খুললেই নিজে থেকে যোগ হয়ে যাবে। (সেট করার সময় ওই মাসের তারিখ পার হয়ে গেলে, পরের মাস থেকে শুরু হবে।)',
-    lbl_rec_type:'ধরন', lbl_rec_amount:'পরিমাণ (টাকা)', lbl_rec_day:'প্রতি মাসের কত তারিখে (১–৩১)', lbl_rec_note:'নোট (যেমন: বাসা ভাড়া)',
+    settings_recurring:'নিয়মিত এন্ট্রি', recurring_note:'বাসা ভাড়া, বেতন, বিলের মতো যা প্রতি মাসে আসে/যায় সেটা একবার সেট করুন — নির্দিষ্ট তারিখ ও সময়ে নিজে থেকে যোগ হয়ে যাবে (অ্যাপ খোলা থাকলে ঠিক সময়ে, বন্ধ থাকলে পরের বার খুললেই)। (সেট করার সময় ওই মাসের তারিখ ও সময় পার হয়ে গেলে, পরের মাস থেকে শুরু হবে।)',
+    lbl_rec_type:'ধরন', lbl_rec_amount:'পরিমাণ (টাকা)', lbl_rec_day:'প্রতি মাসের কত তারিখে (১–৩১)', lbl_rec_time:'কোন সময়ে এন্ট্রি হবে', rec_auto_added:'নিয়মিত এন্ট্রি যোগ হয়েছে', lbl_rec_note:'নোট (যেমন: বাসা ভাড়া)',
     btn_rec_add:'যোগ করুন', rec_empty:'কোনো নিয়মিত এন্ট্রি নেই', rec_added:'নিয়মিত এন্ট্রি যোগ হয়েছে।', rec_need:'সঠিক পরিমাণ দিন।',
     rec_every:'প্রতি মাসের', rec_day_suffix:'তারিখে',
     btn_loan_paid:'পরিশোধ', btn_loan_req:'অনুরোধে', btn_loan_received:'পেলাম', loan_pay_title:'লোন পরিশোধ', loan_recv_title:'টাকা ফেরত পেলাম',
@@ -2728,8 +2730,8 @@ const I18N = {
     limit_over:"Daily limit exceeded", limit_left:'You can still spend today: ', lbl_daily_limit:'Daily spending limit (Taka)',
     lbl_due:'Due date (optional)', dash_remind_heading:'Loan Reminders', rem_get:'to receive', rem_owe:'to pay back',
     rem_overdue:'days overdue', rem_today:'due today', rem_soon:'days left', rem_popup_title:'Loan due reminder',
-    settings_recurring:'Recurring Entries', recurring_note:"Set things that repeat every month (rent, salary, bills) once — they're added automatically when you open the app on that date. (If the date has already passed this month when you set it, it starts next month.)",
-    lbl_rec_type:'Type', lbl_rec_amount:'Amount (Taka)', lbl_rec_day:'Day of month (1–31)', lbl_rec_note:'Note (e.g. House rent)',
+    settings_recurring:'Recurring Entries', recurring_note:"Set things that repeat every month (rent, salary, bills) once — they're added automatically on that date and time (right on time if the app is open, otherwise the next time you open it). (If the date and time have already passed this month when you set it, it starts next month.)",
+    lbl_rec_type:'Type', lbl_rec_amount:'Amount (Taka)', lbl_rec_day:'Day of month (1–31)', lbl_rec_time:'Entry time', rec_auto_added:'Recurring entry added', lbl_rec_note:'Note (e.g. House rent)',
     btn_rec_add:'Add', rec_empty:'No recurring entries', rec_added:'Recurring entry added.', rec_need:'Enter a valid amount.',
     rec_every:'every month on day', rec_day_suffix:'',
     btn_loan_paid:'Paid', btn_loan_req:'Via request', btn_loan_received:'Received', loan_pay_title:'Pay loan', loan_recv_title:'Money received',
@@ -4196,6 +4198,8 @@ function recTypeChange(){
   document.getElementById('recSrcWrap').style.display = ty==='deposit' ? 'block' : 'none';
   document.getElementById('recAccWrap').style.display = ty==='save_to_account' ? 'block' : 'none';
 }
+function recTimeLbl(tm){ const p=String(tm||'').split(':'), h=+p[0], m=+p[1]; if(!isFinite(h)||!isFinite(m)) return ''; return ((h%12)||12)+':'+String(m).padStart(2,'0')+' '+(h<12?'AM':'PM'); }
+function nowHM(){ const d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
 function effDay(day){
   const now = new Date();
   const dim = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
@@ -4209,7 +4213,7 @@ function refreshRecurringUI(){
   const box = document.getElementById('recList');
   if(!data.recurring.length){ box.innerHTML = `<div class="empty">${t('rec_empty')}</div>`; return; }
   box.innerHTML = data.recurring.map(r=>{
-    const lbl = `${t(TYPE_META[r.type].label)} ${fmt(r.amount)} · ${esc(r.category||r.source||r.account||'')} · ${t('rec_every')} ${r.day} ${t('rec_day_suffix')}${r.note?' · '+esc(r.note):''}`;
+    const lbl = `${t(TYPE_META[r.type].label)} ${fmt(r.amount)} · ${esc(r.category||r.source||r.account||'')} · ${t('rec_every')} ${r.day} ${t('rec_day_suffix')}${r.time?' · '+recTimeLbl(r.time):''}${r.note?' · '+esc(r.note):''}`;
     return `<div class="kv"><span>${lbl}</span><button class="del" onclick="deleteRecurring('${r.id}')" aria-label="Delete">${mi('x')}</button></div>`;
   }).join('');
 }
@@ -4218,16 +4222,17 @@ function addRecurring(){
   const amount = parseFloat(document.getElementById('recAmount').value);
   const day = Math.min(31, Math.max(1, parseInt(document.getElementById('recDay').value) || 1));
   if(!amount || amount <= 0){ alert(t('rec_need')); return; }
+  let time = (document.getElementById('recTime')||{}).value || '09:00'; if(!/^\d{2}:\d{2}$/.test(time)) time = '09:00';
   const r = {
     id: Date.now()+'-'+Math.random().toString(36).slice(2,7),
-    type, amount, day,
+    type, amount, day, time,
     category: type==='expense' ? document.getElementById('recCat').value : null,
     source: type==='deposit' ? document.getElementById('recSrc').value : null,
     account: type==='save_to_account' ? document.getElementById('recAcc').value : null,
     note: document.getElementById('recNote').value.trim(),
     lastMonth: null
   };
-  if(new Date().getDate() >= effDay(day)) r.lastMonth = todayStr().slice(0,7);
+  { const dn = new Date().getDate(), ed = effDay(day); if(dn > ed || (dn === ed && nowHM() >= time)) r.lastMonth = todayStr().slice(0,7); }
   data.recurring.push(r);
   saveData();
   document.getElementById('recAmount').value = '';
@@ -4241,22 +4246,33 @@ function deleteRecurring(id){
   refreshRecurringUI();
 }
 function applyRecurring(){
-  const mk=todayStr().slice(0,7), dNow=+todayStr().slice(8,10); let changed=false;
+  const mk=todayStr().slice(0,7), dNow=+todayStr().slice(8,10); let changed=false, added=0;
   data.recurring.forEach(r=>{
     let [y,m]=(r.lastMonth||mk).split('-').map(Number);
     if(r.lastMonth && ++m>12){m=1;y++;}
     for(let n=0;n<12;n++){
       const cur=y+'-'+String(m).padStart(2,'0'); if(cur>mk) break;
       const eff=Math.min(r.day,new Date(y,m,0).getDate());
-      if(cur===mk && dNow<eff) break;
+      if(cur===mk && (dNow<eff || (dNow===eff && nowHM()<(r.time||'00:00')))) break;
       data.transactions.push({id:Date.now()+'-'+Math.random().toString(36).slice(2,7)+n, type:r.type, amount:r.amount, category:r.category||null, source:r.source||null,
-        person:null, account:r.account||null, due:null, note:('\u{1F501} '+(r.note||'')).trim(), date:cur+'-'+String(eff).padStart(2,'0'), time:'09:00'});
-      r.lastMonth=cur; changed=true;
+        person:null, account:r.account||null, due:null, note:('\u{1F501} '+(r.note||'')).trim(), date:cur+'-'+String(eff).padStart(2,'0'), time:r.time||'09:00'});
+      r.lastMonth=cur; changed=true; added++;
       if(++m>12){m=1;y++;}
     }
   });
   if(changed) saveData();
+  return added;
 }
+/* while the app is open, add due recurring entries right at their set time */
+function recTick(){
+  let n=0; try{ n=applyRecurring(); }catch(e){}
+  if(!n) return;
+  ['renderDash','renderHistory','renderAccounts','renderLoans','refreshRecurringUI'].forEach(f=>{ try{ if(typeof window[f]==='function') window[f](); }catch(e){} });
+  try{ toast(t('rec_auto_added')+(n>1?' ('+n+')':'')); }catch(e){}
+}
+setInterval(recTick,20000);
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) recTick(); });
+window.addEventListener('focus',recTick);
 
 function setReportRange(kind){
   const from = document.getElementById('reportFrom'), to = document.getElementById('reportTo'), m = document.getElementById('reportMonth');
