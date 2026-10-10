@@ -1688,7 +1688,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     $('unHint').textContent=hadOld?tx('এই ইউজারনেমটি অন্য একজন নিয়ে ফেলেছেন। নতুন একটি ইউজারনেম বেছে নিন।','Someone else already owns this username. Please choose a new one.')
       :tx('অন্যরা এখন আপনাকে ইউজারনেম দিয়ে খুঁজবে, আপনার ইমেইল কাউকে দেখানো হয় না। একটি ইউজারনেম বেছে নিন (৩–২৪ অক্ষর: অক্ষর, সংখ্যা, _ বা .)।','Others now find you by username; your email is never shown. Choose a username (3–24 characters: letters, numbers, _ or .).');
     $('unFields').innerHTML=F('unv','text',tx('ইউজারনেম','Username'),'karim123',hadOld?'':old,'username')+(s.g?'':F('unp','password',tx('পাসওয়ার্ড (ইউজারনেম দিয়ে লগইনের জন্য)','Password (for username login)'),'','','current-password'));
-    $('unErr').textContent=''; var sv=$('unSave'); sv.disabled=false;
+    $('unErr').textContent=''; var sv=$('unSave'); sv.disabled=false; var uf=$('unForgot'); if(uf) uf.style.display=s.g?'none':'';
     $('unOv').classList.add('on'); document.body.style.overflow='hidden';
     setTimeout(function(){ var i=$('pf_unv'); if(i) i.focus(); },160);
   }
@@ -7554,6 +7554,7 @@ window.ftReqApi={
     <div class="pfHint" id="unHint" style="display:block"></div>
     <div id="unFields"></div>
     <div class="pfErr" id="unErr" role="alert"></div>
+    <div class="pfForgot" id="unForgot" style="display:none" onclick="ftCloud.sheetForgot()"><span class="bn">পাসওয়ার্ড ভুলে গেছেন?</span><span class="en">Forgot password?</span></div>
     <div class="pfBtns">
       <button type="button" class="pfSave" id="unSave" onclick="ftCloud.unSave()"><span class="bn">সংরক্ষণ করুন</span><span class="en">Save</span></button>
     </div>
@@ -10741,12 +10742,30 @@ function pick(){ if(!me()){ toastM(L('স্ট্যাটাস দিতে �
 function openSrc(){
   if(document.querySelector('.stSrcW')) return;
   var w=document.createElement('div'); w.className='stSrcW';
-  w.innerHTML='<div class="stSrc"><div class="stSrcH"><b>'+L('স্ট্যাটাস দিন','Create status')+'</b><button type="button" class="stNo2">✕</button></div><div class="stSrcG">'
-   +'<button type="button" data-s="gal"><i>🖼️</i><span>'+L('ছবি / ভিডিও','Photo / Video')+'</span></button>'
-   +'<button type="button" data-s="cam"><i>📸</i><span>'+L('ক্যামেরা','Camera')+'</span></button>'
-   +'<button type="button" data-s="txt"><i>✍️</i><span>'+L('টেক্সট','Text')+'</span></button>'
-   +'<button type="button" data-s="mus"><i>🎵</i><span>'+L('মিউজিক','Music')+'</span></button></div>'
-   +'<p>'+L('ছবি ১০৮০px · ভিডিও ৩০ সেকেন্ড/৩MB · মিউজিক ৬০ সেকেন্ড/১.৮MB · সর্বোচ্চ ৫ স্লাইড','Photo 1080px · video 30s/3MB · music 60s/1.8MB · up to 5 slides')+'</p></div>';
+  var SV=function(b,n){ return '<svg viewBox="0 0 24 24" width="'+(n||24)+'" height="'+(n||24)+'" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+b+'</svg>'; };
+  var IC={
+    gal:'<rect x="3" y="4" width="18" height="16" rx="3.5"/><circle cx="9" cy="9.5" r="1.7"/><path d="M21 15.5l-4.6-4.6a1.5 1.5 0 0 0-2.1 0L6 19"/>',
+    cam:'<path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.3a1 1 0 0 0 .8-.4l.9-1.2a1 1 0 0 1 .8-.4h3.4a1 1 0 0 1 .8.4l.9 1.2a1 1 0 0 0 .8.4h1.3A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12.5" r="3.3"/>',
+    txt:'<path d="M5 7V5.5h14V7"/><path d="M12 5.5V19"/><path d="M9 19h6"/>',
+    mus:'<path d="M9 18V6.2a1 1 0 0 1 .8-1l8-1.7a1 1 0 0 1 1.2 1V16"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/><path d="M9 9.5l10-2.1"/>',
+    x:'<path d="M6 6l12 12M18 6L6 18"/>',
+    img:'<rect x="3" y="4" width="18" height="16" rx="3.5"/><circle cx="9" cy="9.5" r="1.7"/><path d="M21 15.5l-4.6-4.6a1.5 1.5 0 0 0-2.1 0L6 19"/>',
+    vid:'<rect x="3" y="6" width="13" height="12" rx="3"/><path d="M16 10.5l5-2.8v8.6l-5-2.8"/>',
+    stack:'<path d="M12 4l9 4.5-9 4.5-9-4.5z"/><path d="M3 12.5l9 4.5 9-4.5"/><path d="M3 16.5l9 4.5 9-4.5"/>'
+  };
+  var tile=function(k,c,t,sub){ return '<button type="button" data-s="'+k+'" class="stT stT_'+k+'"><i class="stIc">'+SV(IC[k],26)+'</i><span class="stTx"><b>'+t+'</b><small>'+sub+'</small></span></button>'; };
+  var chip=function(k,t){ return '<span class="stCp">'+SV(IC[k],14)+t+'</span>'; };
+  w.innerHTML='<div class="stSrc" role="dialog" aria-modal="true"><div class="stGrab"></div>'
+   +'<div class="stSrcH"><div class="stSrcT"><b>'+L('স্ট্যাটাস দিন','Create status')+'</b><small>'+L('কী শেয়ার করতে চান বেছে নিন','Choose what you want to share')+'</small></div><button type="button" class="stNo2" aria-label="Close">'+SV(IC.x,18)+'</button></div>'
+   +'<div class="stSrcG">'
+   +tile('gal','',L('ছবি / ভিডিও','Photo / Video'),L('গ্যালারি থেকে','From gallery'))
+   +tile('cam','',L('ক্যামেরা','Camera'),L('এখনই তুলুন','Capture now'))
+   +tile('txt','',L('টেক্সট','Text'),L('রঙিন লেখা','Colourful text'))
+   +tile('mus','',L('মিউজিক','Music'),L('অডিও যোগ করুন','Add audio'))
+   +'</div>'
+   +'<div class="stLim"><div class="stLimT">'+L('সীমা','Limits')+'</div><div class="stCps">'
+   +chip('img',L('ছবি ১০৮০px','Photo 1080px'))+chip('vid',L('ভিডিও ৩০সে · ৩MB','Video 30s · 3MB'))+chip('mus',L('মিউজিক ৬০সে · ১.৮MB','Music 60s · 1.8MB'))+chip('stack',L('সর্বোচ্চ ৫ স্লাইড','Up to 5 slides'))
+   +'</div></div></div>';
   document.body.appendChild(w);
   function shut(){ w.remove(); }
   w.onclick=function(e){ if(e.target===w||e.target.closest('.stNo2')){ shut(); return; }
@@ -10967,9 +10986,13 @@ var css=document.createElement('style'); css.textContent='@property --stA{syntax
 
 css.textContent+='html body .stAdd{font-size:17px;font-weight:800;line-height:1;font-family:inherit}html body .pfAvatar>.stAdd{width:22px;height:22px;right:-3px;bottom:-3px;border-width:2.5px;font-size:15px;z-index:5}html body .pfAvatar.hasAdd::after{display:none}'
 +'html body .pfAvatar.stRing{background:conic-gradient(#f59e0b,#ef4444,#d946ef,#6366f1,#f59e0b);padding:3px}html body .pfAvatar.stRing::before{inset:3px;padding:0;background:var(--card);-webkit-mask:none;mask:none;animation:none;filter:none;z-index:auto}'
-+'.stSrcW{position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,.5);display:flex;align-items:flex-end}.stSrc{width:100%;background:var(--card,#fff);color:var(--text,#111);border-radius:26px 26px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px));animation:stUp .22s ease-out}@keyframes stUp{from{transform:translateY(40px);opacity:0}}'
-+'.stSrcH{display:flex;align-items:center;justify-content:space-between;font-size:17px;margin-bottom:12px}.stNo2{width:34px;height:34px;border-radius:50%;border:0;background:color-mix(in srgb,var(--text,#111) 8%,transparent);color:inherit;font-size:15px}'
-+'.stSrcG{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stSrcG button{border:0;border-radius:18px;padding:14px 4px 10px;background:color-mix(in srgb,var(--primary,#16a34a) 10%,var(--card,#fff));color:inherit;font:inherit;font-size:12px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:6px}.stSrcG i{font-style:normal;font-size:28px}.stSrc p{margin:12px 2px 0;font-size:11.5px;opacity:.65;line-height:1.5}'
++'.stSrcW{position:fixed;inset:0;z-index:100001;background:rgba(8,12,24,.55);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center}.stSrc{width:100%;max-width:560px;background:var(--card,#fff);color:var(--text,#111);border-radius:28px 28px 0 0;padding:8px 18px calc(20px + env(safe-area-inset-bottom,0px));box-shadow:0 -12px 40px rgba(0,0,0,.22);animation:stUp .26s cubic-bezier(.2,.8,.2,1)}@keyframes stUp{from{transform:translateY(46px);opacity:0}}'
++'.stGrab{width:40px;height:4.5px;border-radius:9px;background:color-mix(in srgb,var(--text,#111) 20%,transparent);margin:2px auto 14px}'
++'.stSrcH{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.stSrcT b{display:block;font-size:19px;font-weight:800;letter-spacing:-.2px}.stSrcT small{display:block;font-size:12.5px;opacity:.6;margin-top:2px}.stNo2{width:36px;height:36px;border-radius:50%;border:0;background:color-mix(in srgb,var(--text,#111) 8%,transparent);color:inherit;display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer;transition:transform .12s}.stNo2:active{transform:scale(.9)}'
++'.stSrcG{display:grid;grid-template-columns:1fr 1fr;gap:11px}.stT{--g1:#6366f1;--g2:#8b5cf6;border:1px solid color-mix(in srgb,var(--text,#111) 8%,transparent);border-radius:20px;padding:13px 12px;background:color-mix(in srgb,var(--g1) 7%,var(--card,#fff));color:inherit;font:inherit;display:flex;align-items:center;gap:11px;text-align:left;cursor:pointer;transition:transform .12s,box-shadow .12s;-webkit-tap-highlight-color:transparent}.stT:active{transform:scale(.97)}'
++'.stT_cam{--g1:#ec4899;--g2:#f43f5e}.stT_txt{--g1:#f59e0b;--g2:#f97316}.stT_mus{--g1:#10b981;--g2:#0d9488}'
++'.stIc{width:46px;height:46px;border-radius:15px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;background:linear-gradient(135deg,var(--g1),var(--g2));box-shadow:0 6px 14px color-mix(in srgb,var(--g2) 38%,transparent)}.stTx{min-width:0;display:flex;flex-direction:column;gap:2px}.stTx b{font-size:14px;font-weight:700;line-height:1.25}.stTx small{font-size:11.5px;opacity:.6;line-height:1.3}'
++'.stLim{margin-top:16px;padding:12px;border-radius:16px;background:color-mix(in srgb,var(--text,#111) 5%,transparent)}.stLimT{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;opacity:.5;margin-bottom:8px}.stCps{display:flex;flex-wrap:wrap;gap:7px}.stCp{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:99px;background:var(--card,#fff);border:1px solid color-mix(in srgb,var(--text,#111) 8%,transparent);opacity:.9}.stCp svg{opacity:.65}'
 +'.stEdTop{display:flex;align-items:center;gap:8px;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 8px}.stEdTop .stNo{flex:none;background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:50%;width:36px;height:36px}.stSz{flex:none;font-size:11px;opacity:.7}'
 +'.stTh{flex:1;display:flex;gap:7px;overflow-x:auto;scrollbar-width:none}.stTh button{flex:none;width:42px;height:42px;border-radius:12px;border:2px solid transparent;padding:0;overflow:hidden;background:#222;color:#fff;font-weight:800}.stTh button.on{border-color:#fff}.stTh img,.stTh span{width:100%;height:100%;object-fit:cover;display:flex;align-items:center;justify-content:center;font-size:13px}.stTh .add{border:2px dashed rgba(255,255,255,.5);background:transparent;font-size:20px}'
 +'.stEdPv{position:relative;margin:0 10px;border-radius:20px;overflow:hidden;background:#111}.stEdPv video,.stEdPv img{width:100%;height:100%;object-fit:contain}.stMood{position:absolute;left:12px;top:12px;font-size:30px;filter:drop-shadow(0 2px 6px #000)}'
