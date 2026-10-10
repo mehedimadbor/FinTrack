@@ -4038,6 +4038,7 @@ function renderReport(){
   const expList = list.filter(isExpenseLike);
   const expense = sum(expList);
   const net = income - expense;
+  const B = currentLang==='bn';
 
   // verdict
   let vClass='neutral', vText='';
@@ -4074,9 +4075,14 @@ function renderReport(){
     const [y,m] = month.split('-').map(Number);
     days = (month === todayStr().slice(0,7)) ? new Date().getDate() : new Date(y, m, 0).getDate();
   }else{
-    days = Math.max(1, Math.round((new Date(dates[dates.length-1]) - new Date(dates[0]))/86400000) + 1);
+    const today0 = todayStr();
+    const st = from || dates[0];
+    let en = to || dates[dates.length-1]; if(en > today0) en = today0;
+    days = en < st ? 1 : Math.max(1, Math.round((new Date(en) - new Date(st))/86400000) + 1);
   }
   let ins = kv(t('rep_avg_daily'), fmt(Math.round(expense/days)));
+  const cc = list.reduce((a,x)=> x.fund ? a : a + (TYPE_META[x.type] ? TYPE_META[x.type].sign : 0) * x.amount, 0);
+  ins += kv(B ? 'ব্যালেন্স পরিবর্তন (নগদ প্রবাহ)' : 'Net cash change', (cc>=0?'+':'−') + fmt(Math.abs(cc)));
   if(expList.length){
     const byDay = sumBy(expList, x=>x.date);
     const top = Object.entries(byDay).sort((a,b)=>b[1]-a[1])[0];
@@ -4085,16 +4091,30 @@ function renderReport(){
   if(deps.length) ins += kv(t('rep_biggest_income'), fmt(Math.max(...deps.map(x=>x.amount))));
   if(income>0) ins += kv(t('rep_savings_rate'), Math.round(net/income*100)+'%');
   ins += kv(t('rep_tx_count'), list.length);
-  if(month){
-    const [y,m] = month.split('-').map(Number);
-    const pd = new Date(y, m-2, 1);
-    const prev = pd.getFullYear()+'-'+String(pd.getMonth()+1).padStart(2,'0');
-    const pl = data.transactions.filter(x=>x.date.slice(0,7)===prev);
-    if(pl.length){
+  {
+    let pl = null, partial = false;
+    if(month){
+      const [y,m] = month.split('-').map(Number);
+      const pd = new Date(y, m-2, 1);
+      const prev = pd.getFullYear()+'-'+String(pd.getMonth()+1).padStart(2,'0');
+      const pdim = new Date(y, m-1, 0).getDate();
+      const isCur = month === todayStr().slice(0,7);
+      const cut = isCur ? Math.min(+todayStr().slice(8,10), pdim) : 31;
+      pl = data.transactions.filter(x=>x.date.slice(0,7)===prev && +x.date.slice(8,10)<=cut);
+      partial = isCur;
+    }else if(from && to){
+      const nd = Math.round((new Date(to)-new Date(from))/86400000)+1;
+      const pt = new Date(from+'T00:00:00'); pt.setDate(pt.getDate()-1);
+      const pf = new Date(from+'T00:00:00'); pf.setDate(pf.getDate()-nd);
+      const pT = fmtDate(pt), pF = fmtDate(pf);
+      pl = data.transactions.filter(x=>x.date>=pF && x.date<=pT);
+    }
+    if(pl && pl.length){
       const pInc = sum(pl.filter(x=>x.type==='deposit')), pExp = sum(pl.filter(isExpenseLike));
       const chg = (cur,old)=> old ? (Math.round(Math.abs(cur-old)/old*100)+'% '+(cur>=old?t('rep_up'):t('rep_down'))) : '—';
-      ins += kv(`${t('rep_vs_prev')} — ${t('rep_income')}`, `${fmt(pInc)} → ${fmt(income)} (${chg(income,pInc)})`);
-      ins += kv(`${t('rep_vs_prev')} — ${t('rep_expense')}`, `${fmt(pExp)} → ${fmt(expense)} (${chg(expense,pExp)})`);
+      const pvl = t('rep_vs_prev') + (partial ? (B?' (একই সময়ের)':' (same days)') : (month?'':(B?' (আগের সমান সময়)':' (previous period)')));
+      ins += kv(`${pvl} — ${t('rep_income')}`, `${fmt(pInc)} → ${fmt(income)} (${chg(income,pInc)})`);
+      ins += kv(`${pvl} — ${t('rep_expense')}`, `${fmt(pExp)} → ${fmt(expense)} (${chg(expense,pExp)})`);
     }
   }
   html += `<div class="box"><h3>${t('rep_insights')}</h3>${ins}</div>`;
@@ -4199,7 +4219,7 @@ function recTypeChange(){
   document.getElementById('recAccWrap').style.display = ty==='save_to_account' ? 'block' : 'none';
 }
 function recTimeLbl(tm){ const p=String(tm||'').split(':'), h=+p[0], m=+p[1]; if(!isFinite(h)||!isFinite(m)) return ''; return ((h%12)||12)+':'+String(m).padStart(2,'0')+' '+(h<12?'AM':'PM'); }
-function nowHM(){ const d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+function nowHM(){ return nowTime(); }
 function effDay(day){
   const now = new Date();
   const dim = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
@@ -4232,7 +4252,7 @@ function addRecurring(){
     note: document.getElementById('recNote').value.trim(),
     lastMonth: null
   };
-  { const dn = new Date().getDate(), ed = effDay(day); if(dn > ed || (dn === ed && nowHM() >= time)) r.lastMonth = todayStr().slice(0,7); }
+  { const dn = +todayStr().slice(8,10), ed = effDay(day); if(dn > ed || (dn === ed && nowHM() >= time)) r.lastMonth = todayStr().slice(0,7); }
   data.recurring.push(r);
   saveData();
   document.getElementById('recAmount').value = '';
@@ -4780,6 +4800,36 @@ function personLoanStatus(person){
   if(owe>0) resp += person + t('chat_you_owe_suffix') + fmt(owe) + '। ';
   return resp || null;
 }
+function chatAnalysis(q){
+  const B=currentLang==='bn', ql=q.toLowerCase(), T=data.transactions, today=todayStr(), key=today.slice(0,7), day=+today.slice(8,10);
+  const dim=new Date(+key.slice(0,4),+key.slice(5,7),0).getDate(), sum=l=>l.reduce((a,x)=>a+(+x.amount||0),0);
+  const wantToday=/আজ|today/.test(ql)&&/খরচ|spend|expense/.test(ql);
+  const wantMonth=/বিশ্লেষণ|রিপোর্ট|সারসংক্ষেপ|এই মাস|analysis|report|summary|this month/.test(ql);
+  if(!wantToday&&!wantMonth) return null;
+  if(!T.length) return t('chat_no_data');
+  const E=T.filter(isExpenseLike), firstD=T.reduce((m,x)=>x.date&&x.date<m?x.date:m,today);
+  if(wantToday&&!wantMonth){
+    const te=E.filter(x=>x.date===today), s=sum(te);
+    const d0=new Date(today+'T00:00:00'); d0.setDate(d0.getDate()-30); const f=fmtDate(d0);
+    const span=Math.min(30,Math.round((new Date(today+'T00:00:00')-new Date(firstD+'T00:00:00'))/86400000));
+    const avg=span>0?sum(E.filter(x=>x.date>=f&&x.date<today))/span:0;
+    let r=(B?'আজ খরচ: ':'Spent today: ')+fmt(s)+(B?' ('+te.length+'টি লেনদেন)':' ('+te.length+' transaction'+(te.length===1?'':'s')+')');
+    if(avg>0) r+='\n'+(B?'গত ৩০ দিনের দৈনিক গড়: ':'Daily average (last 30 days): ')+fmt(avg)+' — '+(s>avg?(B?'আজ গড়ের চেয়ে '+fmt(s-avg)+' বেশি':'above average by '+fmt(s-avg)):(B?'গড়ের মধ্যেই আছে':'within average'));
+    return r;
+  }
+  const inc=sum(T.filter(x=>x.type==='deposit'&&x.date.slice(0,7)===key)), me=E.filter(x=>x.date.slice(0,7)===key), exp=sum(me);
+  const L=[(B?'এই মাসের বিশ্লেষণ':'This month\'s analysis'), (B?'আয়: ':'Income: ')+fmt(inc)+' · '+(B?'খরচ: ':'Expense: ')+fmt(exp)+' · '+(B?'বাকি: ':'Left: ')+fmt(inc-exp)];
+  if(inc>0) L.push((B?'সঞ্চয়ের হার: ':'Savings rate: ')+Math.round((inc-exp)/inc*100)+'%');
+  if(day>=3&&exp>0) L.push((B?'মাস শেষে আনুমানিক খরচ: ':'Projected month-end spend: ')+fmt(exp/day*dim));
+  const pk=(()=>{const d=new Date(+key.slice(0,4),+key.slice(5,7)-2,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');})();
+  const pdd=Math.min(day,new Date(+pk.slice(0,4),+pk.slice(5,7),0).getDate());
+  const pm=sum(E.filter(x=>x.date.slice(0,7)===pk&&+x.date.slice(8,10)<=pdd));
+  if(pm>0&&exp>0){ const ch=Math.round((exp-pm)/pm*100); L.push((B?'গত মাসের একই সময়ের তুলনায় খরচ ':'Spending vs same days last month: ')+(ch>=0?'+':'−')+Math.abs(ch)+'%'); }
+  const cat=Object.entries(calcByCategoryForMonth(key)).sort((a,b)=>b[1]-a[1])[0];
+  if(cat&&exp>0) L.push((B?'সবচেয়ে বেশি খরচের খাত: ':'Top category: ')+cat[0]+' ('+fmt(cat[1])+', '+Math.round(cat[1]/exp*100)+'%)');
+  L.push((B?'বর্তমান ব্যালেন্স: ':'Current balance: ')+fmt(calcBalance()));
+  return L.join('\n');
+}
 function getAIResponse(msg){
   const q = msg, ql = msg.toLowerCase();
   const delKeyword = q.includes('মুছে') || q.includes('ডিলিট') || q.includes('বাদ') || ql.includes('delete') || ql.includes('remove');
@@ -4808,6 +4858,8 @@ function getAIResponse(msg){
      (q.includes('লেনদেন') && (q.includes('দেখা') || q.includes('তালিকা')))){
     return showHistoryChat(msg);
   }
+  // 5b) Analysis questions ("এই মাসের বিশ্লেষণ", "আজ কত খরচ")
+  if(!/[0-9০-৯]/.test(q)){ try{ const ar=chatAnalysis(q); if(ar) return ar; }catch(e){} }
 
   // 6) Person-specific loan/status question, e.g. "রহিমের কাছে কত পাবো"
   if(q.includes('কত') || ql.includes('how much')){
@@ -4975,10 +5027,12 @@ if(devUnlocked){
             :`${pct}% of income spent`+(pct<=100?` — saving rate ${100-pct}%`:' — spending exceeds income!'))
       : (bn?'এই মাসে এখনো কোনো আয় যোগ হয়নি':'No income added this month yet'));
     const d=document.getElementById('mDelta');
-    if(prev.exp>0){
-      const ch=Math.round((cur.exp-prev.exp)/prev.exp*100);
+    const _dn=+todayStr().slice(8,10), _pk=monthKey(-1), _pdim=new Date(+_pk.slice(0,4),+_pk.slice(5,7),0).getDate(), _cut=Math.min(_dn,_pdim);
+    let prevSame=0; data.transactions.forEach(tx=>{ if(tx.date&&tx.date.slice(0,7)===_pk&&+tx.date.slice(8,10)<=_cut&&isExpenseLike(tx)) prevSame+=tx.amount; });
+    if(prevSame>0){
+      const ch=Math.round((cur.exp-prevSame)/prevSame*100);
       d.className='mDelta '+(ch>0?'up':'down');
-      d.textContent=(ch>0?'↑ ':'↓ ')+Math.abs(ch)+'% '+(bn?'গত মাসের তুলনায়':'vs last month');
+      d.textContent=(ch>0?'↑ ':ch<0?'↓ ':'→ ')+Math.abs(ch)+'% '+(bn?'গত মাসের একই সময়ের তুলনায়':'vs same days last month');
     }else{ d.className='mDelta'; d.textContent=''; }
   };
   window.quickAdd=function(type){ activateTab('add'); selectType(type); window.scrollTo({top:0,behavior:'smooth'}); };
@@ -5317,25 +5371,223 @@ if(devUnlocked){
 
   // smart insights card
   const ib=document.createElement('div'); ib.className='box insight';
-  ib.innerHTML='<h3><span class="bn">স্মার্ট ইনসাইট</span><span class="en">Smart insights</span></h3><div id="insBody"></div>';
+  ib.innerHTML='<h3><span class="bn">স্মার্ট ইনসাইট</span><span class="en">Smart insights</span></h3><div class="insConf" id="insConf"></div><div id="insBody"></div>';
+  { const st=document.createElement('style'); st.id='insCss'; st.textContent='.insight .insConf{font-size:11.5px;font-weight:600;color:var(--muted);margin:-2px 0 4px;line-height:1.4}.insight .insConf:empty{display:none}.insight .insG{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--muted);margin:12px 0 0;text-transform:uppercase}.insight .insG:first-child{margin-top:4px}.insight .ins small.insM{display:block;font-size:11px;font-weight:500;color:var(--muted);margin-top:3px;line-height:1.4}.insight .ins.t-good .e{color:var(--green)}.insight .ins.t-warn .e{color:var(--amber)}.insight .ins.t-bad .e{color:var(--red)}.insight .insX{display:none}.insight .insMoreBtn{width:100%;margin-top:10px;padding:10px;border:1px dashed var(--border);border-radius:12px;background:transparent;color:var(--primary);font:inherit;font-weight:700;font-size:13px;cursor:pointer}.insight .insMoreBtn:active{transform:scale(.98)}'; document.head.appendChild(st); }
   document.querySelector('.monthBox').after(ib);
+  /*INS_ENGINE_START*/
+  function insightsEngine(){
+    const B=bn(), Lg=(b,e)=>B?b:e, today=todayStr(), key=today.slice(0,7), day=+today.slice(8,10);
+    const dim=new Date(+key.slice(0,4),+key.slice(5,7),0).getDate(), left=dim-day;
+    const T=data.transactions.filter(x=>x&&x.date&&isFinite(+x.amount)), out=[];
+    const P=(g,icn,tone,txt,meth)=>out.push({g:g,ic:icn,tone:tone||'',txt:txt,meth:meth||''});
+    if(!T.length) return {rows:out,conf:null};
+    /* ---- small math toolkit ---- */
+    const sum=l=>l.reduce((a,x)=>a+(+x.amount||0),0), sumv=a=>a.reduce((x,y)=>x+y,0), mean=a=>a.length?sumv(a)/a.length:0;
+    const sd=a=>{ if(a.length<2) return 0; const m=mean(a); return Math.sqrt(a.reduce((s,v)=>s+(v-m)*(v-m),0)/(a.length-1)); };
+    const pctl=(a,p)=>{ const b=a.slice().sort((x,y)=>x-y); if(!b.length) return 0; const i=(b.length-1)*p, lo=Math.floor(i), hi=Math.ceil(i); return b[lo]+(b[hi]-b[lo])*(i-lo); };
+    const erf=x=>{ const s=x<0?-1:1; x=Math.abs(x); const t=1/(1+0.3275911*x); return s*(1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x)); };
+    const Phi=x=>0.5*(1+erf(x/Math.SQRT2));
+    const rng32=a=>()=>{ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; };
+    const addD=(s,n)=>{ const d=new Date(s+'T00:00:00'); d.setDate(d.getDate()+n); return fmtDate(d); };
+    const r1=x=>(Math.round(x*10)/10), pc=x=>Math.round(x*100)+'%';
+    const isRec=x=>String(x.note||'').indexOf('\u{1F501}')===0;
+    /* ---- data prep ---- */
+    const firstD=T.reduce((m,x)=>x.date<m?x.date:m,today), yest=addD(today,-1);
+    const startD=firstD>addD(today,-60)?firstD:addD(today,-60);
+    const byDay={}; T.filter(x=>isExpenseLike(x)&&!isRec(x)&&x.date>=startD&&x.date<=today).forEach(x=>{ byDay[x.date]=(byDay[x.date]||0)+(+x.amount||0); });
+    const hist=[], hd=[]; for(let d=startD,g=0; d<=yest&&g<80; d=addD(d,1),g++){ hist.push(byDay[d]||0); hd.push(d); }
+    const m=hist.length, td=byDay[today]||0;
+    const mkeys=[]; { let y=+firstD.slice(0,4), mo=+firstD.slice(5,7); const cy=+key.slice(0,4), cm=+key.slice(5,7), gd=0;
+      while((y<cy||(y===cy&&mo<cm))&&mkeys.length<120){ mkeys.push(y+'-'+String(mo).padStart(2,'0')); mo++; if(mo>12){mo=1;y++;} }
+      if(mkeys.length&&mkeys[0]===firstD.slice(0,7)&&+firstD.slice(8,10)>5) mkeys.shift(); }
+    const lastK=mkeys.slice(-6);
+    const monE=lastK.map(k=>sum(T.filter(x=>isExpenseLike(x)&&x.date.slice(0,7)===k))), monI=lastK.map(k=>sum(T.filter(x=>x.type==='deposit'&&x.date.slice(0,7)===k)));
+    const spent=sum(T.filter(x=>isExpenseLike(x)&&x.date.slice(0,7)===key)), earned=sum(T.filter(x=>x.type==='deposit'&&x.date.slice(0,7)===key));
+    const nzI=monI.filter(v=>v>0), nzE=monE.filter(v=>v>0), avgInc=nzI.length?mean(nzI):earned, avgMonE=nzE.length?mean(nzE):0;
+    const bal=calcBalance(), accT=Object.values(calcAccountBalances()).reduce((a,b)=>a+b,0), LN=calcLoans();
+    const owe=Object.values(LN.oweMap).filter(v=>v>0).reduce((a,b)=>a+b,0);
+    let upIn=0, upOut=0, upExp=0; (data.recurring||[]).forEach(r=>{ if(r.lastMonth===key) return; const a=+r.amount||0; if(r.type==='deposit') upIn+=a; else if(r.type==='expense'){ upOut+=a; upExp+=a; } else if(r.type==='save_to_account') upOut+=a; });
+    const conf=(m>=45&&T.length>=40)?2:(m>=14&&T.length>=12)?1:0;
+    const WD=Lg(['রবিবার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার','শুক্রবার','শনিবার'],['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']);
+    const G1=Lg('পূর্বাভাস ও ঝুঁকি','Forecast & risk'), G2=Lg('ব্যয়ের ধরন','Spending behaviour'), G3=Lg('সম্পদ ও লক্ষ্য','Wealth & goals');
+
+    /* 1) month-end spend forecast: ensemble of 3 models */
+    { const ms=[];
+      if(day>=3&&spent>0) ms.push([Lg('রান-রেট','run-rate'), spent/day*dim]);
+      let ewv=null; if(m>=7){ const al=2/(7+1); let ew=hist[0]; for(let i=1;i<m;i++) ew=al*hist[i]+(1-al)*ew; ewv=ew; ms.push(['EWMA', spent+Math.max(0,ew-td)+ew*left+upExp]); }
+      const fr=[]; lastK.forEach(k=>{ const tot=sum(T.filter(x=>isExpenseLike(x)&&x.date.slice(0,7)===k)); if(tot>0){ const part=sum(T.filter(x=>isExpenseLike(x)&&x.date.slice(0,7)===k&&+x.date.slice(8,10)<=day)); fr.push(part/tot); } });
+      if(fr.length&&mean(fr)>=0.1&&spent>0) ms.push([Lg('মাসিক কার্ভ','monthly curve'), spent/mean(fr)]);
+      if(ms.length){ const vs=ms.map(a=>a[1]), F=mean(vs), lo=Math.min.apply(null,vs), hi=Math.max.apply(null,vs);
+        const ref=earned>0?earned:avgInc; const tone=ref>0?(F>ref?'bad':F>0.9*ref?'warn':'good'):'';
+        P(G1,'trend',tone, Lg('মাস শেষে মোট খরচ হতে পারে প্রায় '+fmt(F)+(ms.length>1&&hi-lo>1?' (সম্ভাব্য পরিসর '+fmt(lo)+'–'+fmt(hi)+')':'')+(avgMonE>0?' — গত মাসগুলোর গড়ের চেয়ে '+Math.abs(Math.round((F/avgMonE-1)*100))+'% '+(F>=avgMonE?'বেশি':'কম'):'')+(ref>0?' · আয়ের '+Math.round(F/ref*100)+'%':''),
+                                  'Month-end spend likely about '+fmt(F)+(ms.length>1&&hi-lo>1?' (range '+fmt(lo)+'–'+fmt(hi)+')':'')+(avgMonE>0?' — '+Math.abs(Math.round((F/avgMonE-1)*100))+'% '+(F>=avgMonE?'above':'below')+' your past-month average':'')+(ref>0?' · '+Math.round(F/ref*100)+'% of income':'')),
+          Lg(ms.length+'টি মডেলের গড়: ','Average of '+ms.length+' models: ')+ms.map(a=>a[0]).join(' · ')+(ewv!=null?' (α=0.25)':'')); }
+    }
+    /* 2) Monte-Carlo: end-of-month balance + ruin risk;  3) 7-day Value-at-Risk */
+    if(m>=10){
+      const rnd=rng32(parseInt(today.replace(/-/g,''),10)+Math.round(bal)+m*7919), N=2000, fin=[]; let ruin=0;
+      if(left>=1){
+        for(let i=0;i<N;i++){ let b=bal-upOut, bad=b<0; for(let d=0;d<left;d++){ b-=hist[Math.floor(rnd()*m)]; if(b<0) bad=true; } b+=upIn; fin.push(b); if(bad) ruin++; }
+        const p10=pctl(fin,0.1), p50=pctl(fin,0.5), p90=pctl(fin,0.9), rk=ruin/N*100, tone=p50<0?'bad':(p10<0||rk>=10)?'warn':'good';
+        P(G1,'gauge',tone, Lg('মাস শেষে ব্যালেন্স সম্ভবত '+fmt(p50)+' — ৮০% সম্ভাবনায় '+fmt(p10)+' থেকে '+fmt(p90)+'-এর মধ্যে<br>টাকা ফুরিয়ে যাওয়ার ঝুঁকি (ব্যালেন্স ০-এর নিচে নামা): '+(rk<1?'১%-এর কম':Math.round(rk)+'%'),
+                                'Month-end balance likely '+fmt(p50)+' — 80% chance between '+fmt(p10)+' and '+fmt(p90)+'<br>Risk of running out of money (balance below 0): '+(rk<1?'under 1%':Math.round(rk)+'%')),
+          Lg('মন্টে কার্লো · ','Monte Carlo · ')+N+Lg(' সিমুলেশন · গত '+m+' দিনের দৈনিক খরচ থেকে এলোমেলো নমুনা'+(upIn||upOut?' · বাকি নিয়মিত আয়/খরচসহ':''),' simulations · random draws from your last '+m+' days'+(upIn||upOut?' · incl. upcoming recurring items':'')));
+      }
+      const sums7=[]; for(let i=0;i<N;i++){ let s=0; for(let d=0;d<7;d++) s+=hist[Math.floor(rnd()*m)]; sums7.push(s); }
+      const v=pctl(sums7,0.95); if(v>0){ const tone=bal>0?(v>bal?'bad':v>0.6*bal?'warn':'good'):'warn';
+        P(G1,'shield',tone, Lg('আগামী ৭ দিনে ৯৫% নিশ্চয়তায় মোট খরচ '+fmt(v)+'-এর বেশি হবে না (দিনে গড়ে '+fmt(v/7)+')'+(bal>0?' — ব্যালেন্সের '+Math.round(v/bal*100)+'%':''),
+                                'Over the next 7 days, spending stays under '+fmt(v)+' with 95% confidence ('+fmt(v/7)+'/day)'+(bal>0?' — '+Math.round(v/bal*100)+'% of your balance':'')),
+          Lg('Value-at-Risk (VaR ৯৫%) · বুটস্ট্র্যাপ ৭ দিনের যোগফল','Value-at-Risk (VaR 95%) · bootstrapped 7-day sums')); }
+    }
+    /* 4) today's spend as an anomaly score (z-score + percentile rank) */
+    if(m>=7&&td>0){ const mu=mean(hist), sg=sd(hist), z=sg>0?(td-mu)/sg:0, rank=Math.round(hist.filter(v=>v<=td).length/m*100);
+      P(G1,z>2?'alert':'check-circle',z>2?'bad':z>1?'warn':'good', Lg('আজকের খরচ '+fmt(td)+' — গত '+m+' দিনের '+rank+'% দিনের চেয়ে বেশি (z-স্কোর '+(z>=0?'+':'')+r1(z)+'); স্বাভাবিক সীমা ≈ '+fmt(mu+2*sg)+(z>2?' — অস্বাভাবিক উচ্চ':z>1?' — একটু বেশি':' — স্বাভাবিক'),
+                                  'Today '+fmt(td)+' — higher than '+rank+'% of the last '+m+' days (z-score '+(z>=0?'+':'')+r1(z)+'); normal range ≈ up to '+fmt(mu+2*sg)+(z>2?' — unusually high':z>1?' — a bit high':' — normal')),
+        'z = (x − μ) / σ · μ='+fmt(mu)+', σ='+fmt(sg)); }
+    /* 5) Welch t-test: last 7 days vs the 28 days before */
+    if(m>=14){ const a=hist.slice(-7), b=hist.slice(-35,-7); if(b.length>=7){ const ma=mean(a), mb=mean(b), va=Math.pow(sd(a),2), vb=Math.pow(sd(b),2), na=a.length, nb=b.length, se=Math.sqrt(va/na+vb/nb);
+        if(se>0&&mb>0){ const t=(ma-mb)/se, df=Math.pow(va/na+vb/nb,2)/((Math.pow(va/na,2)/(na-1))+(Math.pow(vb/nb,2)/(nb-1))||1), zt=t*(1-1/(4*df))/Math.sqrt(1+t*t/(2*df)), p=2*(1-Phi(Math.abs(zt))), sig=p<0.1, chg=Math.round(Math.abs(ma/mb-1)*100);
+          P(G1,'bars',sig?(ma>mb?'warn':'good'):'', sig?Lg('গত ৭ দিনে দৈনিক গড় খরচ '+fmt(ma)+' — আগের '+nb+' দিনের ('+fmt(mb)+') চেয়ে '+chg+'% '+(ma>mb?'বেশি':'কম')+'; পরিবর্তনটা পরিসংখ্যানগতভাবে উল্লেখযোগ্য (p≈'+(p<0.01?'<0.01':r1(p*100)/100)+')',
+                                                      'Last 7 days average '+fmt(ma)+'/day — '+chg+'% '+(ma>mb?'above':'below')+' the previous '+nb+' days ('+fmt(mb)+'); statistically significant (p≈'+(p<0.01?'<0.01':r1(p*100)/100)+')')
+                                         :Lg('গত ৭ দিনে দৈনিক গড় খরচ '+fmt(ma)+', আগের '+nb+' দিনে '+fmt(mb)+' — উল্লেখযোগ্য কোনো পরিবর্তন নেই (p≈'+r1(p*100)/100+')','Last 7 days '+fmt(ma)+'/day vs '+fmt(mb)+' before — no significant change (p≈'+r1(p*100)/100+')'),
+            Lg('Welch t-পরীক্ষা · ','Welch t-test · ')+'t='+r1(t)+', df≈'+Math.round(df)); } } }
+    /* 6) OLS trend of daily spend (last 30 days) */
+    if(m>=14){ const y=hist.slice(-30), n=y.length, xm=(n-1)/2, ym=mean(y); let sxx=0, sxy=0; y.forEach((v,i)=>{ sxx+=(i-xm)*(i-xm); sxy+=(i-xm)*(v-ym); });
+      const bsl=sxx>0?sxy/sxx:0, ic0=ym-bsl*xm; let sse=0, sst=0; y.forEach((v,i)=>{ const e=v-(ic0+bsl*i); sse+=e*e; sst+=(v-ym)*(v-ym); });
+      const r2=sst>0?1-sse/sst:0, seb=(n>2&&sxx>0)?Math.sqrt(sse/(n-2)/sxx):0, tb=seb>0?bsl/seb:0;
+      if(Math.abs(tb)>=2&&ym>0&&Math.abs(bsl)*(n-1)>=0.25*ym){ P(G1,'trend',bsl>0?'warn':'good', Lg('গত '+n+' দিনে দৈনিক খরচ প্রতিদিন গড়ে '+fmt(Math.abs(bsl))+' করে '+(bsl>0?'বাড়ছে':'কমছে')+' (মাসে ≈ '+fmt(Math.abs(bsl)*30)+'), মডেলের ব্যাখ্যা-ক্ষমতা R²='+r1(r2*100)/100,
+                                  'Over the last '+n+' days daily spend is '+(bsl>0?'rising':'falling')+' by about '+fmt(Math.abs(bsl))+' per day (≈ '+fmt(Math.abs(bsl)*30)+'/month), R²='+r1(r2*100)/100),
+          Lg('সরল রৈখিক রিগ্রেশন (OLS) · ঢাল t='+r1(tb),'Linear regression (OLS) · slope t='+r1(tb))); } }
+    /* 7) Pareto 80/20 + Herfindahl concentration (last 90 days) */
+    { const f90=addD(today,-90), cat={}; T.filter(x=>isExpenseLike(x)&&x.date>=f90).forEach(x=>{ const k=x.category||Lg('অন্যান্য','Other'); cat[k]=(cat[k]||0)+(+x.amount||0); });
+      const es=Object.entries(cat).sort((a,b)=>b[1]-a[1]), tot=sumv(es.map(e=>e[1]));
+      if(es.length>=2&&tot>0){ let cum=0, k=0; for(const e of es){ cum+=e[1]; k++; if(cum/tot>=0.8) break; }
+        const hh=Math.round(sumv(es.map(e=>Math.pow(e[1]/tot*100,2)))), eff=r1(10000/hh), lab=hh<1500?Lg('বৈচিত্র্যপূর্ণ','diversified'):hh<2500?Lg('মাঝারি কেন্দ্রীভূত','moderately concentrated'):Lg('অত্যন্ত কেন্দ্রীভূত','highly concentrated');
+        P(G2,'split',hh>=2500?'warn':'', Lg(k+'টি খাত (মোট '+es.length+'টির মধ্যে) মিলে '+Math.round(cum/tot*100)+'% খরচ করে — শীর্ষ খাত '+esc(es[0][0])+' ('+Math.round(es[0][1]/tot*100)+'%)<br>খরচ-কেন্দ্রীকতা (HHI) '+hh+' — '+lab,
+                                k+' of '+es.length+' categories make up '+Math.round(cum/tot*100)+'% of spend — top: '+esc(es[0][0])+' ('+Math.round(es[0][1]/tot*100)+'%)<br>Spend concentration (HHI) '+hh+' — '+lab),
+          Lg('পারেতো ৮০/২০ বিশ্লেষণ · HHI = Σ(শেয়ার%)² · কার্যকর খাত ≈ '+eff+' · গত ৯০ দিন','Pareto 80/20 · HHI = Σ(share%)² · effective categories ≈ '+eff+' · last 90 days')); } }
+    /* 8) weekday seasonality index */
+    if(m>=21){ const sums=[0,0,0,0,0,0,0], cnt=[0,0,0,0,0,0,0]; hd.forEach((d,i)=>{ const w=new Date(d+'T00:00:00').getDay(); sums[w]+=hist[i]; cnt[w]++; });
+      const mu=mean(hist); if(mu>0&&cnt.every(c=>c>=2)){ const idx=sums.map((s,w)=>s/cnt[w]/mu), hi=idx.indexOf(Math.max.apply(null,idx)), lo=idx.indexOf(Math.min.apply(null,idx));
+        if(idx[hi]>=1.25) P(G2,'calendar','', Lg(WD[hi]+'ে খরচ গড়ের '+r1(idx[hi])+' গুণ (গড় '+fmt(sums[hi]/cnt[hi])+'/দিন); সবচেয়ে কম '+WD[lo]+'ে ('+r1(idx[lo])+' গুণ)',
+                                              'Spending on '+WD[hi]+'s is '+r1(idx[hi])+'× the daily average ('+fmt(sums[hi]/cnt[hi])+'/day); lowest on '+WD[lo]+'s ('+r1(idx[lo])+'×)'),
+          Lg('মৌসুমী সূচক = সপ্তাহের দিনের গড় ÷ সামগ্রিক দৈনিক গড় · গত '+m+' দিন','Seasonality index = weekday mean ÷ overall daily mean · last '+m+' days')); } }
+    /* 9) income stability (CV) → recommended emergency fund */
+    if(nzI.length>=3&&avgMonE>0){ const cv=sd(nzI)/mean(nzI), rec=cv<0.15?3:cv<0.35?5:6, em=(bal+accT)/avgMonE, lab=cv<0.15?Lg('স্থিতিশীল','stable'):cv<0.35?Lg('মাঝারি ওঠানামা','moderately variable'):Lg('অস্থির','volatile');
+      P(G3,'wallet',em>=rec?'good':em>=rec/2?'warn':'bad', Lg('আয়ের ওঠানামা (CV) '+Math.round(cv*100)+'% — '+lab+'; নিরাপদ থাকতে '+rec+' মাসের খরচ জরুরি তহবিলে রাখা ভালো, আপনার আছে '+r1(em)+' মাস',
+                                'Income variability (CV) '+Math.round(cv*100)+'% — '+lab+'; a safe emergency fund is about '+rec+' months of spending, you have '+r1(em)+' months'),
+        Lg('CV = σ ÷ μ (মাসিক আয়, '+nzI.length+' মাস) · জরুরি তহবিল = (ব্যালেন্স+সঞ্চয়) ÷ গড় মাসিক খরচ','CV = σ ÷ μ (monthly income, '+nzI.length+' months) · emergency fund = (balance+savings) ÷ avg monthly spend')); }
+    /* 10) debt load + payoff time */
+    if(owe>0&&avgInc>0){ const sp=[]; lastK.forEach((k,i)=>{ if(monI[i]>0||monE[i]>0) sp.push(monI[i]-monE[i]); }); const s=mean(sp), dm=owe/avgInc;
+      P(G3,'loan-out',dm>3?'bad':dm>1?'warn':'good', Lg('মোট দেনা '+fmt(owe)+' = '+r1(dm)+' মাসের আয়'+(s>0?'; মাসে গড় উদ্বৃত্ত '+fmt(s)+' দিয়ে শোধ করতে ≈ '+Math.ceil(owe/s)+' মাস লাগবে':'; বর্তমান খরচে উদ্বৃত্ত নেই, তাই দেনা শোধ কঠিন'),
+                              'Total debt '+fmt(owe)+' = '+r1(dm)+' months of income'+(s>0?'; at an average surplus of '+fmt(s)+'/month it takes ≈ '+Math.ceil(owe/s)+' months to clear':'; no monthly surplus right now, so repayment is hard')),
+        Lg('ঋণ-আয় অনুপাত = দেনা ÷ গড় মাসিক আয় · শোধের সময় = দেনা ÷ গড় মাসিক উদ্বৃত্ত','Debt-to-income = debt ÷ avg monthly income · payoff time = debt ÷ avg monthly surplus')); }
+    /* 11) savings-goal ETA + required monthly deposit (annuity) */
+    { const goal=data.savingsGoal||{}, tg=+goal.target||0;
+      if(tg>0){ const rem=tg-accT;
+        if(rem<=0) P(G3,'target','good', Lg('সঞ্চয়ের লক্ষ্য '+fmt(tg)+' পূরণ হয়েছে — অভিনন্দন','Savings goal '+fmt(tg)+' reached — congratulations'), Lg('জমা ≥ লক্ষ্য','saved ≥ target'));
+        else { const net=lastK.map(k=>sum(T.filter(x=>x.type==='save_to_account'&&x.date.slice(0,7)===k))-sum(T.filter(x=>x.type==='use_from_account'&&x.date.slice(0,7)===k))), c=mean(net);
+          P(G3,'target',c>0?(rem/c<=12?'good':'warn'):'warn', Lg('লক্ষ্য '+fmt(tg)+' — জমেছে '+fmt(accT)+' ('+Math.round(accT/tg*100)+'%)'+(c>0?'; মাসে গড়ে '+fmt(c)+' জমালে আরও ≈ '+Math.ceil(rem/c)+' মাস লাগবে':'; গত মাসগুলোতে নিট সঞ্চয় নেই')+'<br>১২ মাসে পূরণ করতে মাসে জমাতে হবে '+fmt(rem/12),
+                                      'Goal '+fmt(tg)+' — saved '+fmt(accT)+' ('+Math.round(accT/tg*100)+'%)'+(c>0?'; saving '+fmt(c)+'/month on average needs ≈ '+Math.ceil(rem/c)+' more months':'; no net savings in recent months')+'<br>To finish in 12 months, save '+fmt(rem/12)+' per month'),
+            Lg('সময় = বাকি টাকা ÷ গড় মাসিক নিট সঞ্চয় · প্রয়োজনীয় কিস্তি = বাকি ÷ ১২','months = remaining ÷ avg monthly net savings · required deposit = remaining ÷ 12')); } } }
+    /* 12) compound monthly growth rate (CAGR) of spending */
+    { const k0=monE.findIndex(v=>v>0), arr=k0<0?[]:monE.slice(k0); if(arr.length>=3&&arr[0]>0&&arr[arr.length-1]>0){ const g=Math.pow(arr[arr.length-1]/arr[0],1/(arr.length-1))-1;
+        if(Math.abs(g)>=0.02&&Math.abs(g)<1) P(G3,'up',g>0.05?'warn':g<0?'good':'', Lg('মাসিক খরচ চক্রবৃদ্ধি হারে '+(g>0?'+':'−')+r1(Math.abs(g)*100)+'% করে '+(g>0?'বাড়ছে':'কমছে')+' — এই হারে চললে ৬ মাস পরে মাসিক খরচ ≈ '+fmt(arr[arr.length-1]*Math.pow(1+g,6)),
+                                                  'Monthly spend is compounding at '+(g>0?'+':'−')+r1(Math.abs(g)*100)+'% per month — at this rate it reaches ≈ '+fmt(arr[arr.length-1]*Math.pow(1+g,6))+' in 6 months'),
+          Lg('CAGR = (শেষ ÷ প্রথম)^(১÷(মাস−১)) − ১ · '+arr.length+' মাস','CAGR = (last ÷ first)^(1÷(months−1)) − 1 · '+arr.length+' months')); } }
+    /* 13) future value of regular saving (assumption stated) */
+    { const sp=[]; lastK.forEach((k,i)=>{ if(monI[i]>0||monE[i]>0) sp.push(monI[i]-monE[i]); }); const s=mean(sp);
+      if(sp.length>=2&&s>0){ const r=0.06/12, fv=s*((Math.pow(1+r,12)-1)/r);
+        P(G3,'coin','', Lg('মাসে গড়ে '+fmt(s)+' জমালে ১২ মাসে '+fmt(s*12)+'; বার্ষিক ৬% মুনাফা পেলে (অনুমান) ≈ '+fmt(fv),'Saving '+fmt(s)+' a month gives '+fmt(s*12)+' in 12 months; at an assumed 6% annual return ≈ '+fmt(fv)),
+          Lg('বার্ষিক কিস্তির ভবিষ্যৎ মূল্য FV = P·((১+r)ⁿ−১)÷r, r=০.৫%/মাস, n=১২ — ৬% শুধু উদাহরণ','Future value of an annuity FV = P·((1+r)ⁿ−1)÷r, r=0.5%/month, n=12 — 6% is only an example')); } }
+    /* ================= ADVANCED MATH LAB (G4) ================= */
+    const G4=Lg('অ্যাডভান্সড গণিত ল্যাব','Advanced math lab');
+    const base30=hist.slice(-30), mu30=mean(base30), sg30=sd(base30), refInc=earned>0?earned:avgInc;
+    const f2=x=>(Math.round(x*100)/100).toFixed(2), dm0=n=>n>365?Lg('১ বছরের বেশি','over 1 year'):Math.round(n)+Lg(' দিন',' days');
+
+    /* A) Holt double-exponential smoothing: 7-day forecast with 80% band */
+    if(m>=14){ const a=0.3, b=0.1; let l=hist[0], tr=(hist[Math.min(6,m-1)]-hist[0])/Math.max(1,Math.min(6,m-1)); const errs=[];
+      for(let i=1;i<m;i++){ const f=l+tr; errs.push(hist[i]-f); const nl=a*hist[i]+(1-a)*(l+tr); tr=b*(nl-l)+(1-b)*tr; l=nl; }
+      let tot=0; for(let h=1;h<=7;h++) tot+=Math.max(0,l+h*tr);
+      const band=1.2816*sd(errs)*Math.sqrt(7), lo=Math.max(0,tot-band), hi=tot+band, tone=bal>0?(tot>bal?'bad':tot>0.6*bal?'warn':'good'):'warn';
+      P(G4,'trend',tone, Lg('আগামী ৭ দিনে মোট খরচ ≈ '+fmt(tot)+' (৮০% সম্ভাবনায় '+fmt(lo)+'–'+fmt(hi)+'); দৈনিক প্রবণতা '+(tr>=0?'+':'−')+fmt(Math.abs(tr))+'/দিন',
+                            'Next 7 days total spend ≈ '+fmt(tot)+' (80% band '+fmt(lo)+'–'+fmt(hi)+'); daily trend '+(tr>=0?'+':'−')+fmt(Math.abs(tr))+'/day'),
+        Lg('হোল্ট ডাবল এক্সপোনেনশিয়াল স্মুদিং · ℓₜ=α·yₜ+(1−α)(ℓₜ₋₁+bₜ₋₁), bₜ=β(ℓₜ−ℓₜ₋₁)+(1−β)bₜ₋₁ · α=0.3, β=0.1 · ব্যান্ড = ±1.28·σₑ·√7','Holt double exponential smoothing · ℓₜ=α·yₜ+(1−α)(ℓₜ₋₁+bₜ₋₁), bₜ=β(ℓₜ−ℓₜ₋₁)+(1−β)bₜ₋₁ · α=0.3, β=0.1 · band = ±1.28·σₑ·√7')); }
+
+    /* B) autocorrelation: weekly rhythm / clustering of spending */
+    if(m>=21){ const mu=mean(hist); let den=0; hist.forEach(v=>{ den+=(v-mu)*(v-mu); });
+      if(den>0){ const acf=k=>{ let s=0; for(let i=0;i+k<m;i++) s+=(hist[i]-mu)*(hist[i+k]-mu); return s/den; }, ac1=acf(1), ac7=acf(7), bd=1.96/Math.sqrt(m);
+        const txt=ac7>bd?Lg('খরচে স্পষ্ট সাপ্তাহিক ছন্দ আছে (৭ দিনের স্বসহসম্বন্ধ '+f2(ac7)+') — প্রতি সপ্তাহে একই দিনগুলোতে খরচ বাড়ে','Spending has a clear weekly rhythm (lag-7 autocorrelation '+f2(ac7)+') — the same weekdays are heavy each week')
+          :ac1>bd?Lg('বেশি খরচের দিনের পরের দিনও খরচ বেশি থাকে (১ দিনের স্বসহসম্বন্ধ '+f2(ac1)+') — খরচ গুচ্ছ আকারে হয়','High-spend days tend to be followed by more high-spend days (lag-1 autocorrelation '+f2(ac1)+')')
+          :Lg('দৈনিক খরচের মধ্যে উল্লেখযোগ্য কোনো ধরন নেই (স্বসহসম্বন্ধ ≈ '+f2(ac1)+') — খরচ প্রায় এলোমেলো','No significant pattern between days (autocorrelation ≈ '+f2(ac1)+') — spending looks random');
+        P(G4,'repeat',ac1>bd&&ac7<=bd?'warn':'', txt, Lg('ACF(k)=Σ(yₜ−μ)(yₜ₊ₖ−μ)÷Σ(yₜ−μ)² · ৯৫% সীমা ±1.96÷√n = ±','ACF(k)=Σ(yₜ−μ)(yₜ₊ₖ−μ)÷Σ(yₜ−μ)² · 95% bound ±1.96÷√n = ±')+f2(bd)); } }
+
+    /* C) probability of finishing the month within income (CLT) + safe daily limit */
+    if(m>=10&&refInc>0&&left>=1&&sg30>0){ const proj=spent+upExp+mu30*left, sdv=sg30*Math.sqrt(left), p=Phi((refInc-proj)/sdv), safe=(refInc-spent-upExp-1.2816*sdv)/left;
+      P(G4,'gauge',p>=0.8?'good':p>=0.5?'warn':'bad', Lg('এই মাসের খরচ আয়ের ('+fmt(refInc)+') মধ্যে থাকার সম্ভাবনা ≈ '+Math.round(p*100)+'%<br>'+(safe>0?'৯০% নিশ্চয়তায় নিরাপদ থাকতে বাকি দিনগুলোতে দিনে ≈ '+fmt(safe)+'-এর বেশি খরচ না করাই ভালো':'নিরাপদ সীমা এখনই পেরিয়ে গেছে — বাকি দিনে খরচ কমানো দরকার'),
+                            'Chance this month\'s spending stays within income ('+fmt(refInc)+') ≈ '+Math.round(p*100)+'%<br>'+(safe>0?'To stay safe with 90% confidence, keep daily spend under ≈ '+fmt(safe)+' for the rest of the month':'The safe limit is already exceeded — cut spending for the remaining days')),
+        Lg('কেন্দ্রীয় সীমা উপপাদ্য (CLT): বাকি খরচ ~ N(μ·n, σ²·n) · P = Φ((আয় − অনুমিত মোট) ÷ (σ·√n)) · নিরাপদ সীমা = (আয় − খরচ − 1.28·σ√n) ÷ n','Central Limit Theorem: remaining spend ~ N(μ·n, σ²·n) · P = Φ((income − projected total) ÷ (σ·√n)) · safe limit = (income − spent − 1.28·σ√n) ÷ n')); }
+
+    /* D) cash runway (burn-rate) with conservative bound */
+    if(bal>0&&mu30>0&&m>=7){ const ub=mu30+1.645*sg30/Math.sqrt(base30.length), d1=bal/mu30, d2=bal/ub;
+      P(G4,'hourglass',d2<15?'bad':d1<45?'warn':'good', Lg('বর্তমান ব্যালেন্সে গড় খরচ ('+fmt(mu30)+'/দিন) ধরলে ≈ '+dm0(d1)+' চলবে'+(d1<=365?' (প্রায় '+addD(today,Math.floor(d1))+' পর্যন্ত)':'')+'; সতর্ক হিসাবে ≈ '+dm0(d2),
+                              'At your average burn ('+fmt(mu30)+'/day) the current balance lasts ≈ '+dm0(d1)+(d1<=365?' (until about '+addD(today,Math.floor(d1))+')':'')+'; conservative estimate ≈ '+dm0(d2)),
+        Lg('রানওয়ে = ব্যালেন্স ÷ দৈনিক বার্ন-রেট · সতর্ক = ব্যালেন্স ÷ (μ + 1.645·σ÷√n) · গত '+base30.length+' দিন','Runway = balance ÷ daily burn rate · conservative = balance ÷ (μ + 1.645·σ÷√n) · last '+base30.length+' days')); }
+
+    /* E) outlier transactions: Tukey IQR fence + modified z-score (MAD) */
+    { const f90=addD(today,-90), ex=T.filter(x=>isExpenseLike(x)&&!isRec(x)&&x.date>=f90&&+x.amount>0);
+      if(ex.length>=10){ const am=ex.map(x=>+x.amount), q1=pctl(am,0.25), q3=pctl(am,0.75), iqr=q3-q1, fence=q3+1.5*iqr, med=pctl(am,0.5), mad=pctl(am.map(v=>Math.abs(v-med)),0.5), outs=ex.filter(x=>+x.amount>fence).sort((a,b)=>b.amount-a.amount);
+        if(outs.length&&iqr>0){ const t0=outs[0], mz=mad>0?0.6745*(t0.amount-med)/mad:0, nm=esc(t0.category||t0.note||Lg('অজানা','unknown'));
+          P(G4,'alert',outs.length>=3?'warn':'', Lg('গত ৯০ দিনে '+outs.length+'টি অস্বাভাবিক বড় খরচ ('+fmt(fence)+'-এর বেশি); সবচেয়ে বড়: '+fmt(t0.amount)+' ('+nm+', '+t0.date+') — স্বাভাবিক মধ্যমার '+r1(t0.amount/Math.max(1,med))+' গুণ',
+                                  outs.length+' unusually large expense'+(outs.length>1?'s':'')+' in the last 90 days (above '+fmt(fence)+'); biggest: '+fmt(t0.amount)+' ('+nm+', '+t0.date+') — '+r1(t0.amount/Math.max(1,med))+'× the median'),
+            Lg('টুকির বেড়া = Q₃ + 1.5·IQR · সংশোধিত z = 0.6745·(x − মধ্যমা) ÷ MAD = ','Tukey fence = Q₃ + 1.5·IQR · modified z = 0.6745·(x − median) ÷ MAD = ')+r1(mz)+' · '+ex.length+Lg('টি লেনদেন',' transactions')); } } }
+
+    /* F) Gini coefficient + Lorenz share of the heaviest 20% of days */
+    if(m>=21){ const w=hist.slice(-60), n=w.length, s=w.slice().sort((a,b)=>a-b), tt=sumv(s);
+      if(tt>0){ let cw=0; s.forEach((v,i)=>{ cw+=(i+1)*v; }); const g=Math.max(0,2*cw/(n*tt)-(n+1)/n), top=Math.max(1,Math.ceil(n*0.2)), ts=sumv(s.slice(-top))/tt,
+          lab=g>0.6?Lg('কয়েকটি বড় খরচের দিনে কেন্দ্রীভূত','concentrated in a few big days'):g>0.4?Lg('মাঝারি অসম','moderately uneven'):Lg('দিনগুলোতে সমানভাবে ছড়ানো','spread evenly across days');
+        P(G4,'scale',g>0.6?'warn':'', Lg('দৈনিক খরচের অসমতা (Gini) '+f2(g)+' — '+lab+'; সবচেয়ে বেশি খরচের ২০% দিন ('+top+' দিন) মোট খরচের '+Math.round(ts*100)+'% করে','Daily-spend inequality (Gini) '+f2(g)+' — '+lab+'; the top 20% of days ('+top+' days) account for '+Math.round(ts*100)+'% of spending'),
+          Lg('Gini = 2·Σ(i·yᵢ)÷(n·Σyᵢ) − (n+1)÷n (লরেঞ্জ বক্ররেখা) · গত '+n+' দিন','Gini = 2·Σ(i·yᵢ)÷(n·Σyᵢ) − (n+1)÷n (Lorenz curve) · last '+n+' days')); } }
+
+    /* H) CUSUM change-point detection on the daily spending level */
+    if(m>=28){ const w=hist.slice(-60), wd=hd.slice(-60), ref=w.slice(0,Math.max(7,w.length-14)), mu=mean(ref), s0=sd(ref)||sg30;
+      if(s0>0){ const k=0.5*s0, h=4*s0; let sp=0, sn=0, stP=0, stN=0; w.forEach((v,i)=>{ sp=Math.max(0,sp+(v-mu-k)); if(sp===0) stP=i+1; sn=Math.max(0,sn+(mu-v-k)); if(sn===0) stN=i+1; });
+        const up=sp>h, dn=!up&&sn>h, st=up?stP:stN;
+        if((up||dn)&&st<w.length-1){ const nm=mean(w.slice(st));
+          P(G4,up?'up':'check-circle',up?'warn':'good', Lg(wd[st]+' তারিখের কাছাকাছি থেকে দৈনিক খরচের স্তর '+(up?'স্থায়ীভাবে বেড়েছে':'কমে গেছে')+': '+fmt(mu)+' → '+fmt(nm)+'/দিন ('+Math.round(Math.abs(nm/Math.max(1,mu)-1)*100)+'% '+(up?'বেশি':'কম')+')',
+                                       'Around '+wd[st]+' your daily-spend level '+(up?'shifted up':'dropped')+' for good: '+fmt(mu)+' → '+fmt(nm)+'/day ('+Math.round(Math.abs(nm/Math.max(1,mu)-1)*100)+'% '+(up?'higher':'lower')+')'),
+            Lg('CUSUM চেঞ্জ-পয়েন্ট শনাক্তকরণ · Sₜ=max(0, Sₜ₋₁ + (yₜ−μ) − k), k=0.5σ, সংকেত যখন S > 4σ','CUSUM change-point detection · Sₜ=max(0, Sₜ₋₁ + (yₜ−μ) − k), k=0.5σ, signal when S > 4σ')); } } }
+
+    /* I) 4%-rule financial-independence timeline (annuity solved for n) + saving consistency */
+    { const sp=[]; lastK.forEach((k,i)=>{ if(monI[i]>0||monE[i]>0) sp.push(monI[i]-monE[i]); }); const s=mean(sp);
+      if(sp.length>=2&&s>0&&avgMonE>0){ const r=0.06/12, target=avgMonE*12*25, pv=Math.max(0,bal+accT), sr=avgInc>0?s/avgInc:0, cs=sp.length>=3&&sd(sp)>0?s/sd(sp):null;
+        if(pv<target){ const n=Math.log((target*r+s)/(pv*r+s))/Math.log(1+r);
+          if(isFinite(n)&&n>0&&n<1200) P(G4,'target',n/12<=15?'good':'',
+            Lg('৪% নিয়মে আর্থিক স্বাধীনতার লক্ষ্য ('+fmt(target)+' = বার্ষিক খরচের ২৫ গুণ); মাসে '+fmt(s)+' জমিয়ে ৬% রিটার্নে (অনুমান) ≈ '+r1(n/12)+' বছর লাগবে'+(sr>0?'<br>সঞ্চয়ের হার '+Math.round(sr*100)+'%'+(cs!=null?' · সঞ্চয়ের ধারাবাহিকতা (গড় ÷ σ) = '+r1(cs):''):''),
+                   '4%-rule independence target ('+fmt(target)+' = 25× annual spend); saving '+fmt(s)+'/month at an assumed 6% return takes ≈ '+r1(n/12)+' years'+(sr>0?'<br>Savings rate '+Math.round(sr*100)+'%'+(cs!=null?' · saving consistency (mean ÷ σ) = '+r1(cs):''):'')),
+            Lg('n = ln((F·r+P)÷(V·r+P)) ÷ ln(1+r), F=লক্ষ্য, V=এখনকার সম্পদ, P=মাসিক জমা, r=০.৫%/মাস — ৬% শুধু উদাহরণ','n = ln((F·r+P)÷(V·r+P)) ÷ ln(1+r), F=target, V=current wealth, P=monthly saving, r=0.5%/month — 6% is only an example')); } } }
+
+    /* J) income–expense correlation and marginal propensity to consume */
+    { const pI=[], pE=[]; lastK.forEach((k,i)=>{ if(monI[i]>0&&monE[i]>0){ pI.push(monI[i]); pE.push(monE[i]); } });
+      if(pI.length>=4){ const mI=mean(pI), mE=mean(pE); let sxy=0, sxx=0, syy=0; pI.forEach((v,i)=>{ sxy+=(v-mI)*(pE[i]-mE); sxx+=(v-mI)*(v-mI); syy+=(pE[i]-mE)*(pE[i]-mE); });
+        if(sxx>0&&syy>0){ const rho=sxy/Math.sqrt(sxx*syy), mpc=sxy/sxx, life=rho>0.7&&mpc>0.8;
+          P(G4,'split',life?'warn':'', Lg('আয়-খরচ সহসম্বন্ধ (Pearson r) = '+f2(rho)+'; আয় প্রতি ১০০ টাকা বাড়লে খরচ ≈ '+Math.abs(Math.round(mpc*100))+' টাকা '+(mpc>=0?'বাড়ে':'কমে')+' (প্রান্তিক ভোগ-প্রবণতা)'+(life?' — আয় বাড়লেই খরচও বাড়ছে, সঞ্চয় বাড়ছে না':''),
+                                  'Income–spend correlation (Pearson r) = '+f2(rho)+'; every extra 100 of income '+(mpc>=0?'adds':'removes')+' ≈ '+Math.abs(Math.round(mpc*100))+' of spending (marginal propensity to consume)'+(life?' — spending rises with income, so savings are not growing':'')),
+            Lg('r = Σ(x−x̄)(y−ȳ) ÷ √(Σ(x−x̄)²·Σ(y−ȳ)²) · MPC = রিগ্রেশন ঢাল = Σ(x−x̄)(y−ȳ) ÷ Σ(x−x̄)² · '+pI.length+' মাস','r = Σ(x−x̄)(y−ȳ) ÷ √(Σ(x−x̄)²·Σ(y−ȳ)²) · MPC = regression slope = Σ(x−x̄)(y−ȳ) ÷ Σ(x−x̄)² · '+pI.length+' months')); } } }
+    return {rows:out,conf:conf,m:m,n:T.length};
+  }
+  /*INS_ENGINE_END*/
+  let insOpen=false;
+  window.ftInsToggle=function(){ insOpen=!insOpen; try{ insights(); }catch(e){} };
   function insights(){
-    const today=todayStr(), key=today.slice(0,7), day=+today.slice(8,10), dim=new Date(+key.slice(0,4),+key.slice(5,7),0).getDate();
-    const sum=l=>l.reduce((a,x)=>a+x.amount,0), ex=data.transactions.filter(isExpenseLike), rows=[];
-    const spent=sum(ex.filter(x=>x.date.slice(0,7)===key));
-    if(spent>0){
-      rows.push(['trend',bn()?`এই গতিতে চললে মাস শেষে খরচ হবে প্রায় ${fmt(spent/day*dim)}`:`At this pace you'll spend about ${fmt(spent/day*dim)} by month end`]);
-      const top=Object.entries(calcByCategoryForMonth(key)).sort((a,b)=>b[1]-a[1])[0];
-      if(top) rows.push(['tag',bn()?`এই মাসে সবচেয়ে বেশি খরচ: ${esc(top[0])} (${fmt(top[1])}, ${Math.round(top[1]/spent*100)}%)`:`Top category this month: ${esc(top[0])} (${fmt(top[1])}, ${Math.round(top[1]/spent*100)}%)`]);
-    }
-    const from=new Date(today+'T00:00:00'); from.setDate(from.getDate()-30); const fs=fmtDate(from);
-    const avg=sum(ex.filter(x=>x.date>=fs&&x.date<today))/30, td=sum(ex.filter(x=>x.date===today));
-    if(avg>0&&td>0){
-      const p=Math.round((td-avg)/avg*100);
-      rows.push([p>0?'alert':'check-circle',bn()?`আজকের খরচ ${fmt(td)} — গত ৩০ দিনের দৈনিক গড়ের চেয়ে ${Math.abs(p)}% ${p>0?'বেশি':'কম'}`:`Today ${fmt(td)} — ${Math.abs(p)}% ${p>0?'above':'below'} your 30-day daily average`]);
-    }
-    if(!rows.length) rows.push(['info',bn()?'লেনদেন যোগ করলে এখানে বিশ্লেষণ দেখাবে':'Add transactions to see insights here']);
-    $('insBody').innerHTML=rows.map(r=>`<div class="ins"><span class="e">${mi(r[0])}</span><span>${r[1]}</span></div>`).join('');
+    const R=insightsEngine(), c=$('insConf'), bd=$('insBody'), VIS=6;
+    if(!R.rows.length){ bd.innerHTML='<div class="ins"><span class="e">'+mi('info')+'</span><span>'+(bn()?'লেনদেন যোগ করলে এখানে বিশ্লেষণ দেখাবে':'Add transactions to see insights here')+'</span></div>'; if(c) c.textContent=''; return; }
+    if(c){ const lv=[bn()?'কম':'Low',bn()?'মাঝারি':'Medium',bn()?'উচ্চ':'High'][R.conf];
+      c.textContent=(bn()?'ডেটা: '+R.m+' দিন · '+R.n+'টি লেনদেন · নির্ভরযোগ্যতা: ':'Data: '+R.m+' days · '+R.n+' transactions · Reliability: ')+lv+(R.conf===0?(bn()?' — আরও লেনদেনে নির্ভুলতা বাড়বে':' — accuracy improves with more data'):''); }
+    let last='', html=R.rows.map((r,i)=>{ let g=''; if(r.g!==last){ last=r.g; g='<div class="insG'+(i>=VIS&&!insOpen?' insX':'')+'">'+r.g+'</div>'; }
+      return g+'<div class="ins t-'+(r.tone||'n')+(i>=VIS&&!insOpen?' insX':'')+'"><span class="e">'+mi(r.ic)+'</span><span>'+r.txt+(r.meth?'<small class="insM">'+r.meth+'</small>':'')+'</span></div>'; }).join('');
+    if(R.rows.length>VIS) html+='<button type="button" class="insMoreBtn" onclick="ftInsToggle()">'+(insOpen?(bn()?'কম দেখুন':'Show less'):(bn()?'আরও ইনসাইট দেখুন ('+(R.rows.length-VIS)+')':'Show more insights ('+(R.rows.length-VIS)+')'))+'</button>';
+    bd.innerHTML=html;
   }
   const _uh=window.updateHome;
   window.updateHome=function(){ _uh.apply(this,arguments); try{ insights(); }catch(e){} };
@@ -9122,17 +9374,19 @@ function adv(){
   const head='<h3>'+ic('trend')+' '+Lg('স্মার্ট আর্থিক বিশ্লেষণ','Smart financial analysis')+'</h3>';
   if(!T.length){ box.innerHTML=head+'<div class="empty">'+Lg('লেনদেন যোগ করলে বিশ্লেষণ দেখাবে','Add transactions to see analysis')+'</div>'; return; }
   const bal=calcBalance(), acc=Object.values(calcAccountBalances()).reduce((a,b)=>a+b,0), LN=calcLoans(), get=pos(LN.getMap), owe=pos(LN.oweMap);
-  const spent=E[5], earned=I[5], sr=earned>0?Math.round((earned-spent)/earned*100):null;
-  const d30=new Date(today+'T00:00:00'); d30.setDate(d30.getDate()-30); const f30=fmtDate(d30);
-  const burn=sum(T.filter(x=>isExpenseLike(x)&&x.date>=f30&&x.date<=today))/30, runway=burn>0?Math.max(0,Math.floor(bal/burn)):null;
+  const spent=E[5], earned=I[5], sr=earned>0?Math.round((earned-spent)/earned*100):null, sre=sr!=null?sr:(I[4]>0?Math.round((I[4]-E[4])/I[4]*100):null);
+  const d30=new Date(today+'T00:00:00'); d30.setDate(d30.getDate()-29); let f30=fmtDate(d30);
+  const firstD=T.reduce((m,x)=>x.date&&x.date<m?x.date:m,today); if(firstD>f30) f30=firstD;
+  const span30=Math.max(1,Math.round((new Date(today+'T00:00:00')-new Date(f30+'T00:00:00'))/86400000)+1);
+  const burn=sum(T.filter(x=>isExpenseLike(x)&&x.date>=f30&&x.date<=today))/span30, runway=burn>0&&span30>=3?Math.max(0,Math.floor(bal/burn)):null;
   const proj=day>0?spent/day*dim:0, nzI=I.slice(0,5).filter(v=>v>0), avgI=Math.max(earned,nzI.length?sum(nzI.map(v=>({amount:v})))/nzI.length:0);
-  const nzE=E.slice(0,5).filter(v=>v>0), avgE=nzE.length?sum(nzE.map(v=>({amount:v})))/nzE.length:(spent||0);
-  const safe=left>0?Math.max(0,(avgI-spent)/left):0, em=avgE>0?(bal+acc)/avgE:null, nw=bal+acc+get-owe, dr=(bal+acc+get)>0?owe/(bal+acc+get):(owe>0?1:0);
-  const n=6, xs=[0,1,2,3,4,5], sx=15, sy=sum(E.map(v=>({amount:v}))), sxy=xs.reduce((a,x)=>a+x*E[x],0), slope=(n*sxy-sx*sy)/(n*55-sx*sx);
-  let score=Math.round((sr==null?0:Math.min(Math.max(sr,0),30)/30)*35+(runway==null?(bal>0?25:0):Math.min(runway,90)/90*25)+(1-Math.min(dr,1))*20+(em==null?0:Math.min(Math.max(em,0),6)/6*20));
+  const nzE=E.slice(0,5).filter(v=>v>0), avgE=nzE.length?sum(nzE.map(v=>({amount:v})))/nzE.length:(day>=7?proj:(spent||0));
+  const safe=left>0&&avgI>0?Math.max(0,(avgI-spent)/left):0, em=avgE>0?(bal+acc)/avgE:null, nw=bal+acc+get-owe, dr=(bal+acc+get)>0?owe/(bal+acc+get):(owe>0?1:0);
+  const hist=E.slice(0,5), fi=hist.findIndex(v=>v>0), hs=fi<0?[]:hist.slice(fi), nn=hs.length, mxm=(nn-1)/2, mym=nn?hs.reduce((a,v)=>a+v,0)/nn:0, den=hs.reduce((a,_,i)=>a+(i-mxm)*(i-mxm),0), slope=nn>=3&&den>0?hs.reduce((a,v,i)=>a+(i-mxm)*(v-mym),0)/den:0;
+  let score=Math.round((sre==null?0:Math.min(Math.max(sre,0),30)/30)*35+(runway==null?(bal>0?25:0):Math.min(runway,90)/90*25)+(1-Math.min(dr,1))*20+(em==null?0:Math.min(Math.max(em,0),6)/6*20));
   const sc=score>=70?'var(--green)':score>=40?'var(--amber)':'var(--red)', lb=score>=70?Lg('ভালো','Good'):score>=40?Lg('মোটামুটি','Fair'):Lg('সতর্ক','Needs care');
   const tile=(l,v,s2)=>'<div class="advT"><small>'+l+'</small><b>'+v+'</b><small>'+s2+'</small></div>';
-  const dl=left+1, spT=sum(T.filter(x=>isExpenseLike(x)&&x.date===today)), startBal=Math.max(0,bal+spT), per30=startBal/30, perLeft=startBal/dl, remT=perLeft-spT, usedPct=perLeft>0?Math.min(100,spT/perLeft*100):(spT>0?100:0);
+  const dl=left+1, spT=sum(T.filter(x=>isExpenseLike(x)&&x.date===today)), resv=(data.recurring||[]).filter(r=>(r.type==='expense'||r.type==='save_to_account')&&r.lastMonth!==key).reduce((a,r)=>a+(+r.amount||0),0), startBal=Math.max(0,bal+spT-resv), per30=startBal/30, perLeft=startBal/dl, remT=perLeft-spT, usedPct=perLeft>0?Math.min(100,spT/perLeft*100):(spT>0?100:0);
   const dcol=remT<0?'var(--red)':usedPct>=80?'var(--amber)':'var(--green)';
   const dmsg=startBal<=0&&spT<=0?Lg('ব্যালেন্স নেই — আয় বা জমা যোগ করুন','No balance left — add income or a deposit'):remT>=0?Lg('আজ আর '+fmt(remT)+' খরচ করতে পারবেন — এভাবে চললে বর্তমান ব্যালেন্সে মাস শেষ পর্যন্ত চলবে','You can still spend '+fmt(remT)+' today — at this pace your balance lasts to month end'):Lg('আজ সীমার চেয়ে '+fmt(-remT)+' বেশি খরচ হয়েছে — বাকি দিনগুলোতে একটু কম খরচ করুন','You are '+fmt(-remT)+' over today\'s limit — spend a little less on the remaining days');
   const daily='<div class="advDaily"><div class="advDH">'+ic('gauge')+' '+Lg('আজ কত খরচ করতে পারবেন','How much you can spend today')+'</div>'
@@ -9142,27 +9396,36 @@ function adv(){
     +'<div class="advDRow"><span>'+Lg('আজ আর বাকি','Left for today')+'</span><b style="color:'+dcol+'">'+fmt(Math.max(0,remT))+'</b></div>'
     +'<div class="advDRow"><span>'+Lg('ব্যালেন্স ÷ ৩০ দিন','Balance ÷ 30 days')+'</span><b>'+fmt(per30)+Lg(' /দিন',' /day')+'</b></div>'
     +'<div class="advDRow"><span>'+Lg('ব্যালেন্স ÷ মাসের বাকি '+dl+' দিন','Balance ÷ '+dl+' days left in month')+'</span><b>'+fmt(perLeft)+Lg(' /দিন',' /day')+'</b></div>'
+    +(resv>0?'<div class="advDRow"><span>'+Lg('বাকি নিয়মিত খরচের জন্য রাখা','Set aside for upcoming recurring')+'</span><b>'+fmt(resv)+'</b></div>':'')
     +'<div class="advDMsg" style="color:'+dcol+'">'+dmsg+'</div></div>';
   let h=head+daily+'<div class="advG"><div class="advT w"><small>'+ic('gauge')+' '+Lg('আর্থিক স্বাস্থ্য স্কোর','Financial health score')+'</small><b style="color:'+sc+'">'+score+'/100 · '+lb+'</b><div class="advBar"><i style="width:'+score+'%;background:'+sc+'"></i></div></div>'
    +tile(Lg('সঞ্চয়ের হার','Savings rate'),sr==null?'—':sr+'%',Lg('এই মাসের আয় থেকে','of this month\'s income'))
    +tile(Lg('ব্যালেন্সে চলবে','Runway'),runway==null?'—':runway+Lg(' দিন',' days'),Lg('দৈনিক গড় ','avg ')+fmt(burn))
    +tile(Lg('মাস শেষে খরচ','Month-end spend'),fmt(proj),Lg('বর্তমান গতিতে','at current pace'))
-   +tile(Lg('দৈনিক নিরাপদ সীমা','Safe daily limit'),left>0?fmt(safe):'—',Lg('বাকি '+left+' দিন','for '+left+' days left'))
+   +tile(Lg('দৈনিক নিরাপদ সীমা','Safe daily limit'),left>0&&avgI>0?fmt(safe):'—',Lg('বাকি '+left+' দিন','for '+left+' days left'))
    +tile(Lg('নিট সম্পদ','Net worth'),fmt(nw),Lg('ব্যালেন্স+সঞ্চয়+পাওনা−দেনা','balance+savings+owed−debt'))
    +tile(Lg('জরুরি তহবিল','Emergency fund'),em==null?'—':em.toFixed(1)+Lg(' মাস',' mo'),Lg('গড় মাসিক খরচের ভিত্তিতে','at avg monthly spend'))+'</div>';
   const mx=Math.max(1,...I,...E);
   h+='<svg viewBox="0 0 300 84" width="100%" style="margin-bottom:8px">'+ms.map((m,i)=>{const x=i*50+8,hi=I[i]/mx*58,he=E[i]/mx*58,lbm=new Date(+m.slice(0,4),+m.slice(5,7)-1,1).toLocaleDateString(bn()?'bn-BD':'en-GB',{month:'short'});
     return '<rect x="'+x+'" y="'+(64-hi)+'" width="15" height="'+hi+'" rx="3" style="fill:var(--green)"/><rect x="'+(x+17)+'" y="'+(64-he)+'" width="15" height="'+he+'" rx="3" style="fill:var(--red)"/><text x="'+(x+16)+'" y="79" text-anchor="middle" font-size="9" style="fill:var(--muted)">'+lbm+'</text>';}).join('')+'</svg>';
   const rows=[];
-  if(E.filter(v=>v>0).length>=2&&Math.abs(slope)>1) rows.push(['trend',Lg('মাসিক খরচ গড়ে '+fmt(Math.abs(slope))+(slope>0?' করে বাড়ছে':' করে কমছে'),'Monthly spend is '+(slope>0?'rising':'falling')+' by about '+fmt(Math.abs(slope))+'/month')]);
+  if(nn>=3&&Math.abs(slope)>1) rows.push(['trend',Lg('মাসিক খরচ গড়ে '+fmt(Math.abs(slope))+(slope>0?' করে বাড়ছে':' করে কমছে'),'Monthly spend is '+(slope>0?'rising':'falling')+' by about '+fmt(Math.abs(slope))+'/month')]);
   if(avgI>0&&proj>avgI) rows.push(['alert',Lg('এই গতিতে মাস শেষে খরচ আয়ের চেয়ে '+fmt(proj-avgI)+' বেশি হবে','At this pace you will overspend income by '+fmt(proj-avgI))]);
   const d90=new Date(today+'T00:00:00'); d90.setDate(d90.getDate()-90); const f90=fmtDate(d90), W=[0,0,0,0,0,0,0];
   T.filter(x=>isExpenseLike(x)&&x.date>=f90).forEach(x=>{W[new Date(x.date+'T00:00:00').getDay()]+=+x.amount||0;});
   const wi=W.indexOf(Math.max(...W)); if(W[wi]>0) rows.push(['calendar',Lg('সবচেয়ে বেশি খরচ হয় '+['রবি','সোম','মঙ্গল','বুধ','বৃহস্পতি','শুক্র','শনি'][wi]+'বার','You spend most on '+['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][wi]+'s')+' ('+fmt(W[wi])+', '+Lg('গত ৩ মাস','last 3 months')+')']);
   const cm=calcByCategoryForMonth(key), prev=[mk(-1),mk(-2),mk(-3)].map(calcByCategoryForMonth);
-  Object.entries(cm).map(([c,v])=>{const a=prev.reduce((s2,p)=>s2+(p[c]||0),0)/3;return [c,v,a];}).filter(r=>r[2]>0&&r[1]>r[2]*1.5&&r[1]-r[2]>100).sort((a,b)=>(b[1]-b[2])-(a[1]-a[2])).slice(0,2)
+  Object.entries(cm).map(([c,v])=>{const a=prev.reduce((s2,p)=>s2+(p[c]||0),0)/Math.max(1,prev.filter(p=>Object.keys(p).length).length);return [c,v,a];}).filter(r=>r[2]>0&&r[1]>r[2]*1.5&&r[1]-r[2]>100).sort((a,b)=>(b[1]-b[2])-(a[1]-a[2])).slice(0,2)
     .forEach(r=>rows.push(['alert',esc(r[0])+': '+Lg('গত ৩ মাসের গড়ের চেয়ে '+Math.round((r[1]/r[2]-1)*100)+'% বেশি ('+fmt(r[1])+')',Math.round((r[1]/r[2]-1)*100)+'% above the 3-month average ('+fmt(r[1])+')')]));
   if(get||owe) rows.push(['scale',Lg('পাওনা '+fmt(get)+' · দেনা '+fmt(owe)+' · নিট '+fmt(get-owe)+(dr>0.5?' — দেনার চাপ বেশি':''),'Owed '+fmt(get)+' · Debt '+fmt(owe)+' · Net '+fmt(get-owe)+(dr>0.5?' — high debt load':''))]);
+  { const pk=mk(-1), pdim=new Date(+pk.slice(0,4),+pk.slice(5,7),0).getDate(), pdd=Math.min(day,pdim);
+    const prevMTD=sum(T.filter(x=>isExpenseLike(x)&&x.date.slice(0,7)===pk&&+x.date.slice(8,10)<=pdd));
+    if(prevMTD>0&&spent>0){ const ch=Math.round((spent-prevMTD)/prevMTD*100), sg=ch>=0?'+':'−';
+      rows.push(['trend',Lg('গত মাসের প্রথম '+pdd+' দিনে খরচ ছিল '+fmt(prevMTD)+' — এবার '+fmt(spent)+' ('+sg+Math.abs(ch)+'%)','First '+pdd+' days last month: '+fmt(prevMTD)+' — now '+fmt(spent)+' ('+sg+Math.abs(ch)+'%)')]); }
+    const mExp=T.filter(x=>isExpenseLike(x)&&x.date.slice(0,7)===key);
+    if(mExp.length&&spent>0){ const big=mExp.reduce((a,b)=>b.amount>a.amount?b:a), ce=Object.entries(cm).sort((a,b)=>b[1]-a[1])[0];
+      if(ce) rows.push(['scale',Lg('এই মাসে সবচেয়ে বেশি খরচ: '+esc(ce[0])+' ('+Math.round(ce[1]/spent*100)+'%) · সবচেয়ে বড় একক খরচ '+fmt(big.amount),'Top category this month: '+esc(ce[0])+' ('+Math.round(ce[1]/spent*100)+'%) · largest single expense '+fmt(big.amount))]); }
+  }
   h+=rows.map(r=>'<div class="ins"><span class="e">'+ic(r[0])+'</span><span>'+r[1]+'</span></div>').join('');
   box.innerHTML=h;
 }
@@ -10441,7 +10704,7 @@ function render(){
   if(err==='rules') h+='<div class="frCard"><div class="frEm" style="color:#ef4444">'+L('সার্ভারে অনুমতি নেই। Firebase Rules-এর মূল "rules" অবজেক্টের ভেতরে নিচের অংশ যোগ করুন।','Server refused. Add this inside the main "rules" object in Firebase Rules.')+'</div><div class="frRules" id="frRules">'+E(RULES)+'</div><button type="button" class="frB y" data-fa="copy">'+L('Rules কপি করুন','Copy rules')+'</button></div>';
   else if(err==='net') h+='<div class="frCard"><div class="frEm">'+L('লোড করা যায়নি, আবার চেষ্টা হচ্ছে…','Could not load, retrying…')+'</div></div>';
   const I=Object.keys(S.inc), O=Object.keys(S.out), F=Object.keys(S.fr).sort((a,b)=>nm(S.fr[a]).localeCompare(nm(S.fr[b])));
-  h+='<div class="frStats"><div'+(I.length?' class="hot"':'')+'><b>'+nbn(I.length)+'</b><span>'+L('নতুন অনুরোধ','Requests')+'</span></div><div><b>'+nbn(F.length)+'</b><span>'+L('বন্ধু','Friends')+'</span></div><div><b>'+nbn(O.length)+'</b><span>'+L('পাঠানো','Sent')+'</span></div></div>';
+  { let sb={sig:'',html:''}; try{ if(window.ftStoryBlock) sb=window.ftStoryBlock(); }catch(e){} h+='<div class="frStories" id="frStories" data-sig="'+sb.sig+'">'+sb.html+'</div>'; }
   if(I.length) h+='<div class="frCard frIn"><h4>'+SV.user+' '+L('বন্ধুর অনুরোধ','Friend requests')+' <span class="frN">'+I.length+'</span></h4><p class="frSub">'+L('কার্ডে ট্যাপ করে প্রোফাইল দেখুন। প্রোফাইল প্রাইভেট হলেও কে অনুরোধ পাঠিয়েছে এখানে দেখা যাবে।','Tap a card to view the profile. You can always see who sent the request, even if their profile is private.')+'</p>'+I.sort((a,b)=>(S.inc[b].t||0)-(S.inc[a].t||0)).map(u=>{ const o=S.inc[u]; return '<div class="frReq">'+((Date.now()-(o.t||0))<864e5?'<span class="frNew">'+L('নতুন','NEW')+'</span>':'')+'<div class="frMain" data-fa="pf" data-u="'+E(u)+'"><div class="frAv big">'+av(o)+'</div><div class="frTx"><b>'+E(nm(o))+'</b><span>'+(o.u?'@'+E(o.u):'')+'</span><em class="frWhen">'+ago(o.t)+'</em></div><span class="frGo">'+L('প্রোফাইল','Profile')+SV.chev+'</span></div><div class="frReqB"><button type="button" class="frB y" data-fa="acc" data-u="'+E(u)+'">'+SV.check+' '+L('গ্রহণ করুন','Accept')+'</button><button type="button" class="frB" data-fa="dec" data-u="'+E(u)+'">'+SV.x+' '+L('বাতিল','Decline')+'</button></div></div>'; }).join('')+'</div>';
   if(O.length) h+='<div class="frCard"><h4>'+SV.send+' '+L('পাঠানো অনুরোধ','Sent requests')+'</h4>'+O.map(u=>row(u,S.out[u],bt('can',u,L('বাতিল','Cancel')))).join('')+'</div>';
   h+='<div class="frCard"><h4>'+L('আমার বন্ধু','My friends')+' ('+F.length+')</h4>'+(F.length?F.map(u=>row(u,S.fr[u],bt('msg',u,L('মেসেজ','Message'),1)+bt('pf',u,L('প্রোফাইল','Profile'))+bt('rm',u,'✕'))).join(''):'<div class="frEm">'+L('এখনো কোনো বন্ধু নেই। “ইউজার খুঁজুন” চেপে ইউজারনেম দিয়ে খুঁজুন, প্রোফাইল খুলে “বন্ধু যোগ করুন” চাপুন। অনুরোধ গ্রহণ হলে এখানে যোগ হবে।','No friends yet. Tap “Find users”, open a profile and tap “Add friend”. They appear here once accepted.')+'</div>')+'</div>';
@@ -10723,12 +10986,61 @@ async function decorate(){
     var add=el.querySelector(':scope>.stAdd'), isOwnAv=(el.matches('.ppAv')&&el.dataset.own==='1')||el.matches('.pfAvatar');
     if(isOwnAv){ if(!add){add=document.createElement('button');add.type='button';add.className='stAdd';add.setAttribute('aria-label','status');add.textContent='+';el.appendChild(add);} el.classList.add('hasAdd');
       var top=el.parentNode; if(el.matches('.ppAv')&&top&&!top.querySelector('.stBtn')){var sb=document.createElement('button');sb.type='button';sb.className='stBtn';sb.textContent=L('+ স্ট্যাটাস','+ Status');top.insertBefore(sb,el.nextSibling);} }
-    else if(add) add.remove();});}
+    else if(add) add.remove();}); try{ paintStories(); }catch(e){} }
 function homeAdd(){ var el=document.querySelector('#homeProfile .pfAvatar'); if(!el||el.querySelector(':scope>.stAdd')) return; var b=document.createElement('button'); b.type='button'; b.className='stAdd'; b.setAttribute('aria-label','status'); b.textContent='+'; el.appendChild(b); el.classList.add('hasAdd'); }
 homeAdd(); setInterval(homeAdd,3000);
 var dt=0; function sched(){cancelAnimationFrame(dt); dt=requestAnimationFrame(function(){decorate().catch(function(){});});}
 function watch(){['sec-profile','sec-friends'].forEach(function(id){var e=document.getElementById(id); if(e&&!e._stW){e._stW=1; new MutationObserver(sched).observe(e,{childList:true,subtree:true});}});}
 window.addEventListener('ftFrChange',function(){Object.keys(meta).forEach(function(k){meta[k].at=0;});sched();});
+/* ---- friends tab: Facebook-style story strip ---- */
+function pcOk(p){ return typeof p==='string'&&p.length<60000&&/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/.test(p)?p:''; }
+function thOk(p){ return typeof p==='string'&&p.length<14000&&/^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(p)?p:''; }
+function nb(x){ var s=String(x); return bn()?s.replace(/\d/g,function(d){return '০১২৩৪৫৬৭৮৯'[d];}):s; }
+function agoS(t){ var mn=Math.max(1,Math.floor((Date.now()-t)/6e4)); if(mn<60) return nb(mn)+L(' মিনিট',' min'); return nb(Math.floor(mn/60))+L(' ঘণ্টা',' h'); }
+function hidx(u){ var h=0; for(var i=0;i<u.length;i++) h=(h*31+u.charCodeAt(i))>>>0; return h; }
+function lsGet(k){ try{ return localStorage.getItem(k)||''; }catch(e){ return ''; } }
+var SV_PLAY='<svg viewBox="0 0 24 24" width="11" height="11" aria-hidden="true"><path d="M8.5 5.6v12.8a.6.6 0 0 0 .9.5l10-6.4a.6.6 0 0 0 0-1L9.4 5.1a.6.6 0 0 0-.9.5z" fill="currentColor"/></svg>';
+var SV_MUS='<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V6.2a1 1 0 0 1 .8-1l8-1.7a1 1 0 0 1 1.2 1V16"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>';
+var SV_PLUS='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+function storyBlock(){
+  var fr=window.ftFrInfo||{}, sn=seen(), mu=me(), list=[], nfr=Object.keys(fr).length;
+  Object.keys(fr).forEach(function(u){ var m=active(u); if(m) list.push({u:u,m:m,i:fr[u]||{},s:sn[u]===m.t}); });
+  list.sort(function(a,b){ return ((a.s?1:0)-(b.s?1:0))||(b.m.t-a.m.t); });
+  var own=active(mu), unseen=list.filter(function(x){return !x.s;}).length, myp=pcOk(lsGet('myProfilePic_v1')), myn=lsGet('myName_v1')||'?';
+  function card(u,m,i,isOwn,s){
+    var nm=isOwn?L('আপনার স্টোরি','Your story'):(i.n||i.u||'?'), th=thOk(m.th), pc=isOwn?myp:pcOk(i.pic), g=((typeof m.g==='number')?m.g:hidx(u))%BG.length;
+    var bg=th?'background-image:url('+th+');background-size:cover;background-position:center':'background:linear-gradient(160deg,'+BG[g]+')';
+    var snip=(!th&&m.c)?'<span class="frStTx">'+esc(String(m.c).slice(0,60))+'</span>':'';
+    var av=pc?'<img alt="" src="'+pc+'">':esc((String(nm).trim()[0]||'?').toUpperCase());
+    var ic=''; if(m.k==='v') ic+='<span class="frStK">'+SV_PLAY+'</span>'; if(m.mu) ic+='<span class="frStK">'+SV_MUS+'</span>';
+    return '<button type="button" class="frSt'+(s?' seen':'')+'" data-su="'+esc(u)+'" style="'+bg+'">'+snip+'<span class="frStSh"></span><span class="frStAv"><i>'+av+'</i></span>'+(ic?'<span class="frStKs">'+ic+'</span>':'')
+      +(isOwn?'<span class="frStPlus" data-sadd="1" role="button" aria-label="'+L('স্লাইড যোগ করুন','Add slide')+'">'+SV_PLUS+'</span>':'')
+      +'<span class="frStNm"><b>'+esc(nm)+'</b><small>'+agoS(m.t)+L(' আগে',' ago')+'</small></span></button>'; }
+  var cr='<button type="button" class="frStC" data-sadd="1"><span class="frStCt" style="'+(myp?'background-image:url('+myp+');background-size:cover;background-position:center':'background:linear-gradient(160deg,#6366f1,#d946ef)')+'">'+(myp?'':'<em>'+esc((String(myn).trim()[0]||'?').toUpperCase())+'</em>')+'</span><span class="frStCb"><i class="frStCp">'+SV_PLUS+'</i><b>'+L('স্টোরি দিন','Create story')+'</b></span></button>';
+  var head='<div class="frStH"><b>'+L('বন্ধুদের স্টোরি','Friends\' stories')+'</b>'+(unseen?'<span class="frStCnt">'+nb(unseen)+L(' নতুন',' new')+'</span>':(list.length?'<span class="frStCnt dim">'+nb(list.length)+L('টি স্টোরি',' stories')+'</span>':''))+'</div>';
+  var row='<div class="frStRow">'+(own?card(mu,own,{},true,false):cr)+list.map(function(x){ return card(x.u,x.m,x.i,false,x.s); }).join('')+'</div>';
+  var em=list.length?'':'<div class="frStEm">'+(nfr?L('বন্ধুরা স্টোরি দিলে এখানে দেখা যাবে','Your friends\' stories will appear here'):L('বন্ধু যোগ করলে তাদের স্টোরি এখানে দেখা যাবে','Add friends to see their stories here'))+'</div>';
+  var raw=[bn()?'b':'e',mu,own?own.t:0,myp.length,myn,nfr,Math.floor(Date.now()/6e5)].concat(list.map(function(x){ return x.u+':'+x.m.t+':'+(x.s?1:0)+':'+(x.i.pic?x.i.pic.length:0)+':'+(x.i.n||x.i.u||'')+':'+(x.m.th?x.m.th.length:0); })).join('|');
+  return {sig:hidx(raw).toString(36)+'.'+raw.length, html:head+row+em}; }
+window.ftStoryBlock=storyBlock;
+function paintStories(){ var el=document.getElementById('frStories'); if(!el) return; var b=storyBlock(); if(el.getAttribute('data-sig')===b.sig) return;
+  var r=el.querySelector('.frStRow'), sl=r?r.scrollLeft:0; el.setAttribute('data-sig',b.sig); el.innerHTML=b.html; var r2=el.querySelector('.frStRow'); if(r2&&sl) r2.scrollLeft=sl; }
+document.addEventListener('click',function(e){ var t=e.target; if(!t||!t.closest) return;
+  var a=t.closest('#frStories [data-sadd]'); if(a){ e.preventDefault(); e.stopPropagation(); pick(); return; }
+  var c=t.closest('#frStories [data-su]'); if(c){ e.preventDefault(); e.stopPropagation(); view(c.getAttribute('data-su')); } },true);
+/* small preview picture of the first slide, stored inside statusMeta so friends' story cards can show it */
+function thumbOf(s){ return new Promise(function(ok){ var done=false; function fin(v){ if(done) return; done=true; ok(v||''); }
+  try{ if(!s||s.k==='t'||!s.d) return fin('');
+    var draw=function(src,w,h,cleanup){ try{ var W=120,H=214,c=document.createElement('canvas'); c.width=W; c.height=H; var x=c.getContext('2d'); x.fillStyle='#111'; x.fillRect(0,0,W,H);
+        var r=Math.max(W/w,H/h), dw=w*r, dh=h*r; x.drawImage(src,(W-dw)/2,(H-dh)/2,dw,dh); var q=.6, d=c.toDataURL('image/jpeg',q); while(d.length>9000&&q>.25){ q-=.1; d=c.toDataURL('image/jpeg',q); }
+        if(cleanup) cleanup(); fin(d.length<=12000?d:''); }catch(e){ fin(''); } };
+    if(s.k==='i'){ var im=new Image(); im.onload=function(){ draw(im,im.width||1,im.height||1); }; im.onerror=function(){ fin(''); }; im.src=s.d; }
+    else{ var v=document.createElement('video'), u=blobUrl(s.d); v.muted=true; v.playsInline=true; v.setAttribute('playsinline',''); v.preload='auto'; v.src=u;
+      var cl=function(){ try{ URL.revokeObjectURL(u); }catch(e){} try{ v.removeAttribute('src'); v.load(); }catch(e){} };
+      v.onloadeddata=function(){ try{ v.currentTime=Math.min(.5,(v.duration||1)/2); }catch(e){ draw(v,v.videoWidth||1,v.videoHeight||1,cl); } };
+      v.onseeked=function(){ draw(v,v.videoWidth||1,v.videoHeight||1,cl); }; v.onerror=function(){ cl(); fin(''); }; }
+    setTimeout(function(){ fin(''); },3500);
+  }catch(e){ fin(''); } }); }
 /* ---- posting: advanced story composer (multi-slide, text, music, filters) ---- */
 var H1=36e5, MAXS=5, TOTAL=6200000;
 var BG=['#6366f1,#d946ef','#f59e0b,#ef4444','#10b981,#0e7490','#3b82f6,#1e3a8a','#ec4899,#f97316','#111827,#4b5563','#16a34a,#a3e635','#7c3aed,#06b6d4'];
@@ -10877,6 +11189,7 @@ async function post(btn){
   var out=S.slides.map(clean), t=Date.now(), exp=Math.max(S.base?+S.base.exp:0,t+S.life*H1), t0=(S.base&&S.base.t0)||(S.base&&S.base.t)||t, appended=!!S.base;
   var fc=''; out.forEach(function(s){ if(!fc) fc=s.c||s.tx||s.an||''; });
   var m={t:t,t0:t0,exp:exp,k:out[0].k==='v'?'v':'i',c:String(fc).slice(0,80),n:out.length};
+  try{ var th=await thumbOf(out[0]); if(th) m.th=th; }catch(e){} m.f=out[0].k; if(out[0].k==='t') m.g=out[0].bg||0; if(out.some(function(x){return !!x.au;})) m.mu=1;
   await lset({s:out,t:t,t0:t0,exp:exp,k:m.k,c:m.c,n:m.n});
   try{ if(!appended) await db('statusViews/'+me(),{method:'DELETE'}).catch(function(){}); await db('status/'+me(),{method:'PUT',headers:J,body:JSON.stringify({s:out,exp:exp})}); await db('statusMeta/'+me(),{method:'PUT',headers:J,body:JSON.stringify(m)});
     meta[me()]={v:m,at:Date.now()}; toastM(L('স্ট্যাটাস পোস্ট হয়েছে','Status posted')+' ('+Math.round((exp-t)/H1)+L(' ঘণ্টা)','h)')); }
@@ -10894,10 +11207,10 @@ async function view(u){
   sl=(sl||[]).map(vet).filter(Boolean).slice(0,MAXS);
   if(!sl.length){ toastM(L('স্ট্যাটাস লোড করা যায়নি','Could not load status')); return; }
   if(vcur&&vcur._close) vcur._close();
-  var fi=(window.ftFrInfo||{})[u]||{}, nm=own?L('আপনার স্ট্যাটাস','Your status'):(fi.n||fi.u||''), left=Math.max(0,Math.ceil((m.exp-Date.now())/H1));
+  var fi=(window.ftFrInfo||{})[u]||{}, nm=own?L('আপনার স্ট্যাটাস','Your status'):(fi.n||fi.u||''), left=Math.max(0,Math.ceil((m.exp-Date.now())/H1)), avp=pcOk(own?lsGet('myProfilePic_v1'):fi.pic);
   var ov=document.createElement('div'); ov.className='stOv stView';
   ov.innerHTML='<div class="stSegs">'+sl.map(function(){return '<b><i></i></b>';}).join('')+'</div>'
-    +'<div class="stHd"><div class="stAvL">'+esc((String(nm).trim()[0]||'?').toUpperCase())+'</div><div class="stHt"><b>'+esc(nm)+'</b><span>'+left+L(' ঘণ্টা বাকি','h left')+'</span></div><button type="button" class="stSnd" style="display:none">🔊</button><button type="button" class="stNo">✕</button></div>'
+    +'<div class="stHd"><div class="stAvL">'+(avp?'<img alt="" src="'+avp+'">':esc((String(nm).trim()[0]||'?').toUpperCase()))+'</div><div class="stHt"><b>'+esc(nm)+'</b><span>'+(own?left+L(' ঘণ্টা বাকি','h left'):agoS(m.t)+L(' আগে',' ago')+(fi.u?' · @'+esc(fi.u):''))+'</span></div><button type="button" class="stSnd" style="display:none">🔊</button><button type="button" class="stNo">✕</button></div>'
     +'<div class="stPv"></div><div class="stChips"></div><div class="stCap" style="display:none"></div>'
     +(!own?'<div class="stRx">'+RX.map(function(x){return '<button type="button" data-r="'+x+'">'+x+'</button>';}).join('')+'</div>':'<div class="stBar"><button type="button" class="stViews">👁 <span>0</span></button><button type="button" class="stNew">＋ '+L('স্লাইড','Slide')+'</button><button type="button" class="stDel">'+L('মুছুন','Delete')+'</button></div>');
   document.body.appendChild(ov); vcur=ov;
@@ -11026,6 +11339,23 @@ css.textContent+='html body .stAdd{font-size:17px;font-weight:800;line-height:1;
 +'.stHd .stSnd{background:rgba(0,0,0,.45);color:#fff;border:0;border-radius:50%;width:34px;height:34px;font-size:16px;padding:0}.stSnd.hint{animation:stBeat 1s ease-in-out infinite;background:#ef4444}'
 +'.stChips{position:absolute;left:14px;top:calc(66px + env(safe-area-inset-top,0px));display:flex;gap:6px;z-index:3;pointer-events:none}.stChips span{background:rgba(0,0,0,.45);padding:4px 10px;border-radius:14px;font-size:12.5px;font-weight:700;backdrop-filter:blur(6px)}'
 +'.stView .stCap{z-index:3;pointer-events:none}.stView .stRx,.stView .stBar{z-index:4}';
+css.textContent+='html body #sec-friends .frStories{background:var(--card);border:1px solid var(--border);border-radius:26px;padding:14px 0 12px 14px;margin-bottom:12px;overflow:hidden;box-shadow:0 14px 28px -24px rgba(0,0,0,.55)}'
++'.frStH{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-right:14px;margin-bottom:11px}.frStH b{font-size:15.5px;font-weight:800;color:var(--text);letter-spacing:-.1px}'
++'.frStCnt{font-size:11px;font-weight:800;padding:4px 10px;border-radius:12px;color:#fff;background:linear-gradient(135deg,#ef4444,#f97316)}.frStCnt.dim{color:var(--muted);background:color-mix(in srgb,var(--text,#111) 8%,transparent)}'
++'.frStRow{display:flex;gap:10px;overflow-x:auto;padding:2px 14px 4px 0;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch}.frStRow::-webkit-scrollbar{display:none}'
++'.frSt,.frStC{position:relative;flex:none;width:104px;height:176px;border-radius:20px;border:0;padding:0;overflow:hidden;scroll-snap-align:start;cursor:pointer;color:#fff;font:inherit;text-align:left;box-shadow:0 12px 22px -16px rgba(0,0,0,.65);transition:transform .15s}.frSt:active,.frStC:active{transform:scale(.97)}'
++'.frSt.seen{filter:saturate(.7) brightness(.92)}.frStSh{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.34) 0,transparent 34%,transparent 50%,rgba(0,0,0,.78) 100%)}'
++'.frStTx{position:absolute;left:8px;right:8px;top:50%;transform:translateY(-62%);font-size:12.5px;font-weight:800;line-height:1.35;text-align:center;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;text-shadow:0 2px 8px rgba(0,0,0,.35)}'
++'.frStAv{position:absolute;left:8px;top:8px;width:38px;height:38px;border-radius:50%;padding:2.5px;background:conic-gradient(#f59e0b,#ef4444,#d946ef,#6366f1,#f59e0b);box-shadow:0 4px 10px rgba(0,0,0,.35);display:block}.frSt.seen .frStAv{background:#94a3b8}'
++'.frStAv i{display:flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:50%;overflow:hidden;font-style:normal;font-weight:800;font-size:14px;color:var(--primary);background:var(--card);border:2px solid var(--card);box-sizing:border-box}.frStAv img{width:100%;height:100%;object-fit:cover;display:block}'
++'.frStKs{position:absolute;right:7px;top:9px;display:flex;flex-direction:column;gap:5px}.frStK{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.45);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);color:#fff}'
++'.frStNm{position:absolute;left:9px;right:9px;bottom:9px;display:flex;flex-direction:column;gap:1px}.frStNm b{font-size:12.5px;font-weight:800;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;text-shadow:0 1px 6px rgba(0,0,0,.6)}.frStNm small{font-size:10.5px;font-weight:600;opacity:.88;text-shadow:0 1px 5px rgba(0,0,0,.6)}'
++'.frStPlus{position:absolute;right:7px;bottom:34px;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--primary);color:#fff;border:2.5px solid #fff;box-shadow:0 5px 12px rgba(0,0,0,.4)}.frStPlus svg{width:13px;height:13px}'
++'.frStC{background:var(--card);border:1px solid var(--border);color:var(--text);display:flex;flex-direction:column}.frStCt{display:flex;align-items:center;justify-content:center;flex:1;min-height:0}.frStCt em{font-style:normal;font-weight:800;font-size:34px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.25)}'
++'.frStCb{position:relative;height:56px;flex:none;display:flex;align-items:flex-end;justify-content:center;padding:0 6px 9px;background:var(--card)}.frStCb b{font-size:12px;font-weight:800;line-height:1.2;text-align:center}.frStCp{position:absolute;left:50%;top:-17px;transform:translateX(-50%);width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--primary);color:#fff;border:3px solid var(--card);box-shadow:0 6px 14px -4px var(--primary)}'
++'.frStEm{margin:8px 14px 2px 0;font-size:12px;line-height:1.5;color:var(--muted)}'
++'.stAvL{overflow:hidden}.stAvL img{width:100%;height:100%;object-fit:cover;display:block}';
+
 document.head.appendChild(css);
 })();
 </script>
