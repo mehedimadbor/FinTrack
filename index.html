@@ -4576,7 +4576,10 @@ function loginPicRefresh(){
   else{ im.removeAttribute('src'); av.classList.remove('has'); rm.style.display='none'; }
 }
 function loginPicPick(input){
-  const f=input.files&&input.files[0]; if(!f) return;
+  const f=input.files&&input.files[0]; if(!f) return; input.value='';
+  const bn=(()=>{ try{ return localStorage.getItem('appLang_v1')!=='en'; }catch(e){ return true; } })();
+  const done=d=>{ try{ localStorage.setItem('myProfilePic_v1',d); }catch(err){} try{ applyProfilePic(d); }catch(err){} loginPicRefresh(); };
+  if(window.ftCrop){ ftCrop.open(f,{round:true,ratio:1,w:320,title:bn?'প্রোফাইল ছবি অ্যাডজাস্ট করুন':'Adjust profile photo'},done); return; }
   const r=new FileReader();
   r.onload=e=>{
     const img=new Image();
@@ -4584,15 +4587,12 @@ function loginPicPick(input){
       const S=320, c=document.createElement('canvas'); c.width=S; c.height=S;
       const m=Math.min(img.width,img.height), sx=(img.width-m)/2, sy=(img.height-m)/2;
       c.getContext('2d').drawImage(img,sx,sy,m,m,0,0,S,S);
-      let d=c.toDataURL('image/jpeg',.85);
-      try{ localStorage.setItem('myProfilePic_v1',d); }catch(err){}
-      try{ applyProfilePic(d); }catch(err){}
-      loginPicRefresh();
+      done(c.toDataURL('image/jpeg',.85));
     };
     img.onerror=()=>{ try{ localStorage.setItem('myProfilePic_v1',e.target.result); applyProfilePic(e.target.result); }catch(err){} loginPicRefresh(); };
     img.src=e.target.result;
   };
-  r.readAsDataURL(f); input.value='';
+  r.readAsDataURL(f);
 }
 function loginPicRemove(){ try{ resetProfilePic(); }catch(e){ try{ localStorage.removeItem('myProfilePic_v1'); }catch(_){} } loginPicRefresh(); }
 (function(){ const _lc=loginContinue; loginContinue=function(){ _lc.apply(this,arguments); try{ window.ftCountUser&&window.ftCountUser(); }catch(e){} }; })();
@@ -5108,7 +5108,7 @@ if(devUnlocked){
     r.readAsDataURL(file);
   }
   const keep=(k,u)=>{ try{ localStorage.setItem(k,u); }catch(e){ toast(bn()?'স্টোরেজ ভরে গেছে':'Storage full'); } };
-  window.handleProfilePicUpload=function(i){ const f=i.files&&i.files[0]; if(!f) return; shrink(f,320,'image/jpeg',u=>{ keep('myProfilePic_v1',u); applyProfilePic(u); }); i.value=''; };
+  window.handleProfilePicUpload=function(i){ const f=i.files&&i.files[0]; i.value=''; if(!f) return; const done=u=>{ keep('myProfilePic_v1',u); applyProfilePic(u); }; if(window.ftCrop) ftCrop.open(f,{round:true,ratio:1,w:320,title:bn()?'প্রোফাইল ছবি অ্যাডজাস্ট করুন':'Adjust profile photo'},done); else shrink(f,320,'image/jpeg',done); };
   window.handleLogoUpload=function(i){ const f=i.files&&i.files[0]; if(!f) return; shrink(f,160,'image/png',u=>{ keep('customLogo_v1',u); applyCustomLogo(u); }); i.value=''; };
 
   // QR: lazy-load libs, guard camera, lighter scanning
@@ -10109,10 +10109,13 @@ window.ppView=(uid,seed)=>{ if(seed) seeds[uid]=seed; else delete seeds[uid]; fr
 window.addEventListener('ftFrChange',()=>{ try{ const e=$('sec-profile'); if(e&&e.classList.contains('active')) renderTab(); }catch(x){} });
 window.ppLock=on=>{ try{ localStorage.setItem(LK,on?'1':'0'); }catch(e){} lastSig=''; renderTab(); pub(true); };
 window.ppSocSave=()=>{ const o={}; ['fb','ig','tg','wa'].forEach(k=>{ const e=$('ppS_'+k); if(e) o[k]=e.value; }); try{ localStorage.setItem('mySocial_v1',JSON.stringify(cleanSoc(o))); }catch(e){} lastSig=''; try{ document.activeElement.blur(); }catch(e){} renderTab(); pub(true); if(window.toast) window.toast(L('সেভ হয়েছে','Saved')); };
-window.ppCover=inp=>{ const f=inp.files&&inp.files[0]; inp.value=''; if(!f) return; const rd=new FileReader();
+window.ppCover=inp=>{ const f=inp.files&&inp.files[0]; inp.value=''; if(!f) return;
+  const save=u=>{ try{ localStorage.setItem('myCoverPic_v1',u); }catch(er){} lastSig=''; renderTab(); pub(true); };
+  if(window.ftCrop){ ftCrop.open(f,{round:false,ratio:640/240,w:640,q:.8,maxLen:52000,title:L('কভার ছবি অ্যাডজাস্ট করুন','Adjust cover photo')},save); return; }
+  const rd=new FileReader();
   rd.onload=ev=>{ const im=new Image(); im.onload=()=>{ const W=640,H=240,c=document.createElement('canvas'); c.width=W; c.height=H; const g=c.getContext('2d'), k=Math.max(W/im.width,H/im.height), w=im.width*k, h=im.height*k; g.drawImage(im,(W-w)/2,(H-h)/2,w,h);
     let qy=.75, u=c.toDataURL('image/jpeg',qy); while(u.length>52000&&qy>.3){ qy-=.1; u=c.toDataURL('image/jpeg',qy); }
-    try{ localStorage.setItem('myCoverPic_v1',u); }catch(er){} lastSig=''; renderTab(); pub(true); }; im.src=ev.target.result; };
+    save(u); }; im.src=ev.target.result; };
   rd.readAsDataURL(f); };
 window.ppCvDel=()=>{ try{ localStorage.removeItem('myCoverPic_v1'); }catch(e){} lastSig=''; renderTab(); pub(true); };
 window.ppBack=()=>{ viewed=null; sel=''; if(fromFr){ fromFr=false; try{ if(window.ftFrBack) ftFrBack(); }catch(e){} return; } renderTab(); const e=$('ppQ'); if(e) e.focus(); };
@@ -11294,6 +11297,116 @@ html:not(.locked) .lockOverlay .lkOrb,html:not(.locked) .lockOverlay .lockBg{dis
     var r=e.target.closest&&e.target.closest('.ftRow[data-k="installBox"]');
     if(r){ e.stopImmediatePropagation(); e.preventDefault(); open(); }
   },true);
+})();
+</script>
+<script>
+/* ===== Photo cropper: move / zoom / rotate before uploading (profile photo + cover photo) ===== */
+(function(){
+  if(window.ftCrop) return;
+  var en=function(){ try{ return localStorage.getItem('appLang_v1')==='en'; }catch(e){ return false; } };
+  var T=function(b,e){ return en()?e:b; };
+  var SV=function(b,n){ return '<svg viewBox="0 0 24 24" width="'+n+'" height="'+n+'" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+b+'</svg>'; };
+  var IC={
+    x:'<path d="M6 6l12 12M18 6L6 18"/>',
+    rot:'<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4.5V11h-6.5"/>',
+    rst:'<path d="M4 4v5h5"/><path d="M4.6 9A8 8 0 1 1 4 12.5"/>',
+    min:'<path d="M5 12h14"/>', plus:'<path d="M12 5v14M5 12h14"/>',
+    chk:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    mov:'<path d="M12 3v18M3 12h18"/><path d="M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"/>',
+    zi:'<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2M11 8.5v5M8.5 11h5"/>'
+  };
+  var CSS='.ckOv{position:fixed;inset:0;z-index:2147483100;background:#0a0e18;color:#fff;display:flex;flex-direction:column;font-family:inherit;-webkit-user-select:none;user-select:none;animation:ckIn .2s ease both}@keyframes ckIn{from{opacity:0}}'
+  +'.ckTop{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:calc(10px + env(safe-area-inset-top,0px)) 14px 10px}.ckTop b{font-size:16px;font-weight:700;flex:1;text-align:center}'
+  +'.ckIb{width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.12);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;padding:0}.ckIb:active{transform:scale(.92)}'
+  +'.ckOk{height:40px;border:0;border-radius:20px;padding:0 18px;background:var(--primary,#2563eb);color:#fff;font:inherit;font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px;cursor:pointer;flex:none}.ckOk:active{transform:scale(.96)}'
+  +'.ckStage{flex:1;position:relative;overflow:hidden;touch-action:none;cursor:grab;min-height:0}.ckStage:active{cursor:grabbing}'
+  +'.ckImg{position:absolute;left:50%;top:50%;max-width:none!important;max-height:none!important;transform-origin:50% 50%;pointer-events:none;-webkit-user-drag:none;will-change:transform}'
+  +'.ckFrame{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 100vmax rgba(10,14,24,.68);border:2px solid rgba(255,255,255,.92);pointer-events:none;box-sizing:border-box;overflow:hidden}'
+  +'.ckFrame.rd{border-radius:50%}.ckFrame:not(.rd){border-radius:14px}'
+  +'.ckFrame::before,.ckFrame::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.55;background:linear-gradient(rgba(255,255,255,.55),rgba(255,255,255,.55)) 33.33% 0/1px 100% no-repeat,linear-gradient(rgba(255,255,255,.55),rgba(255,255,255,.55)) 66.66% 0/1px 100% no-repeat}'
+  +'.ckFrame::after{background:linear-gradient(rgba(255,255,255,.55),rgba(255,255,255,.55)) 0 33.33%/100% 1px no-repeat,linear-gradient(rgba(255,255,255,.55),rgba(255,255,255,.55)) 0 66.66%/100% 1px no-repeat}'
+  +'.ckFrame.rd::before,.ckFrame.rd::after{display:none}'
+  +'.ckHint{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;align-items:center;gap:7px;background:rgba(0,0,0,.55);padding:7px 14px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap;pointer-events:none;transition:opacity .35s;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}.ckHint.off{opacity:0}'
+  +'.ckBar{padding:14px 18px calc(16px + env(safe-area-inset-bottom,0px));background:#10151f;border-radius:24px 24px 0 0;display:flex;flex-direction:column;gap:14px}'
+  +'.ckZ{display:flex;align-items:center;gap:12px}.ckZ button{width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.1);color:#fff;display:flex;align-items:center;justify-content:center;padding:0;flex:none;cursor:pointer}'
+  +'.ckZ input{flex:1;min-width:0;height:28px;margin:0;background:transparent;accent-color:var(--primary,#2563eb);-webkit-appearance:none;appearance:none}'
+  +'.ckZ input::-webkit-slider-runnable-track{height:5px;border-radius:5px;background:rgba(255,255,255,.2)}.ckZ input::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;margin-top:-8.5px;box-shadow:0 2px 8px rgba(0,0,0,.5)}'
+  +'.ckZ input::-moz-range-track{height:5px;border-radius:5px;background:rgba(255,255,255,.2)}.ckZ input::-moz-range-thumb{width:22px;height:22px;border:0;border-radius:50%;background:#fff}'
+  +'.ckAct{display:flex;gap:10px}.ckAct button{flex:1;height:44px;border-radius:14px;border:0;background:rgba(255,255,255,.1);color:#fff;font:inherit;font-size:13.5px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer}.ckAct button:active{transform:scale(.97)}';
+  function toast(m){ try{ (window.toast||function(x){ alert(x); })(m); }catch(e){} }
+
+  function open(file,opt,cb){
+    opt=opt||{};
+    var ratio=opt.ratio||1, ow=opt.w||320, oh=Math.round(ow/ratio), round=!!opt.round, MAXZ=4;
+    if(!file||!/^image\//.test(file.type||'image/')) { toast(T('ছবি পড়া যায়নি','Could not read image')); return; }
+    var url=URL.createObjectURL(file), im=new Image();
+    im.onerror=function(){ URL.revokeObjectURL(url); toast(T('ছবি পড়া যায়নি','Could not read image')); };
+    im.onload=function(){ try{ start(); }catch(e){ URL.revokeObjectURL(url); toast(T('ছবি পড়া যায়নি','Could not read image')); } };
+    im.src=url;
+
+    function start(){
+      if(!document.getElementById('ckCss')){ var st=document.createElement('style'); st.id='ckCss'; st.textContent=CSS; document.head.appendChild(st); }
+      var NW=im.naturalWidth||im.width, NH=im.naturalHeight||im.height;
+      if(!NW||!NH) throw new Error('size');
+      /* pre-shrink huge photos once so previews and the final resize stay smooth */
+      var sc=Math.min(1,2400/Math.max(NW,NH)), SW=Math.round(NW*sc), SH=Math.round(NH*sc), src=im;
+      if(sc<1){ var pc=document.createElement('canvas'); pc.width=SW; pc.height=SH; var pg=pc.getContext('2d'); pg.imageSmoothingQuality='high'; pg.drawImage(im,0,0,SW,SH); src=pc; }
+      var ov=document.createElement('div'); ov.className='ckOv'; ov.setAttribute('role','dialog'); ov.setAttribute('aria-modal','true');
+      ov.innerHTML='<div class="ckTop"><button type="button" class="ckIb ckX" aria-label="Cancel">'+SV(IC.x,20)+'</button><b>'+(opt.title||T('ছবি অ্যাডজাস্ট করুন','Adjust photo'))+'</b><button type="button" class="ckOk">'+SV(IC.chk,17)+'<span>'+T('সম্পন্ন','Done')+'</span></button></div>'
+       +'<div class="ckStage"><img class="ckImg" alt="" draggable="false"><div class="ckFrame'+(round?' rd':'')+'"></div><div class="ckHint">'+SV(IC.mov,15)+T('টেনে সরান · দুই আঙুলে জুম','Drag to move · pinch to zoom')+'</div></div>'
+       +'<div class="ckBar"><div class="ckZ"><button type="button" class="ckZm" aria-label="Zoom out">'+SV(IC.min,18)+'</button><input type="range" min="1" max="'+MAXZ+'" step="0.01" value="1" aria-label="Zoom"><button type="button" class="ckZp" aria-label="Zoom in">'+SV(IC.plus,18)+'</button></div>'
+       +'<div class="ckAct"><button type="button" class="ckRot">'+SV(IC.rot,18)+T('ঘোরান','Rotate')+'</button><button type="button" class="ckRst">'+SV(IC.rst,18)+T('রিসেট','Reset')+'</button></div></div>';
+      document.body.appendChild(ov);
+      var prevOv=document.body.style.overflow; document.body.style.overflow='hidden';
+      var q=function(s){ return ov.querySelector(s); }, stage=q('.ckStage'), img=q('.ckImg'), frame=q('.ckFrame'), rng=q('input'), hint=q('.ckHint');
+      img.src=url; img.style.width=SW+'px'; img.style.height=SH+'px'; img.style.marginLeft=(-SW/2)+'px'; img.style.marginTop=(-SH/2)+'px';
+      var fw=0, fh=0, S={x:0,y:0,z:1,r:0}, pts={}, last=null;
+      var rotated=function(){ return S.r%180!==0; }, dimW=function(){ return rotated()?SH:SW; }, dimH=function(){ return rotated()?SW:SH; };
+      var k0=function(){ return Math.max(fw/dimW(),fh/dimH()); };
+      function layout(){
+        var sw=stage.clientWidth, sh=stage.clientHeight, maxW=round?Math.min(340,sw-48):Math.min(560,sw-32);
+        fw=Math.max(80,maxW); fh=fw/ratio; var maxH=sh-28; if(fh>maxH){ fh=Math.max(60,maxH); fw=fh*ratio; }
+        frame.style.width=fw+'px'; frame.style.height=fh+'px'; apply();
+      }
+      function apply(){
+        var k=k0()*S.z, mx=Math.max(0,(dimW()*k-fw)/2), my=Math.max(0,(dimH()*k-fh)/2);
+        S.x=Math.min(mx,Math.max(-mx,S.x)); S.y=Math.min(my,Math.max(-my,S.y));
+        img.style.transform='translate('+S.x+'px,'+S.y+'px) rotate('+S.r+'deg) scale('+k+')'; rng.value=S.z;
+      }
+      function zoomAt(nz,px,py){ nz=Math.min(MAXZ,Math.max(1,nz)); var f=nz/S.z; S.x=px-(px-S.x)*f; S.y=py-(py-S.y)*f; S.z=nz; apply(); }
+      function pos(e){ var r=stage.getBoundingClientRect(); return {x:e.clientX-r.left-r.width/2,y:e.clientY-r.top-r.height/2}; }
+      function used(){ hint.classList.add('off'); }
+      stage.addEventListener('pointerdown',function(e){ pts[e.pointerId]=pos(e); last=null; try{ stage.setPointerCapture(e.pointerId); }catch(_){} used(); });
+      stage.addEventListener('pointermove',function(e){
+        if(!pts[e.pointerId]) return; var p=pos(e), o=pts[e.pointerId]; pts[e.pointerId]=p; var ids=Object.keys(pts);
+        if(ids.length===1){ S.x+=p.x-o.x; S.y+=p.y-o.y; apply(); }
+        else{ var a=pts[ids[0]], b=pts[ids[1]], m={x:(a.x+b.x)/2,y:(a.y+b.y)/2}, d=Math.hypot(a.x-b.x,a.y-b.y)||1;
+          if(last){ S.x+=m.x-last.m.x; S.y+=m.y-last.m.y; zoomAt(S.z*d/last.d,m.x,m.y); } last={m:m,d:d}; }
+      });
+      var up=function(e){ delete pts[e.pointerId]; last=null; };
+      stage.addEventListener('pointerup',up); stage.addEventListener('pointercancel',up);
+      stage.addEventListener('wheel',function(e){ e.preventDefault(); var p=pos(e); zoomAt(S.z*(e.deltaY<0?1.1:1/1.1),p.x,p.y); used(); },{passive:false});
+      rng.addEventListener('input',function(){ zoomAt(parseFloat(rng.value)||1,0,0); used(); });
+      q('.ckZm').onclick=function(){ zoomAt(S.z-.3,0,0); };
+      q('.ckZp').onclick=function(){ zoomAt(S.z+.3,0,0); };
+      q('.ckRot').onclick=function(){ var x=S.x,y=S.y; S.x=-y; S.y=x; S.r=(S.r+90)%360; apply(); used(); };
+      q('.ckRst').onclick=function(){ S.x=0; S.y=0; S.z=1; S.r=0; apply(); };
+      function close(){ document.removeEventListener('keydown',onKey,true); window.removeEventListener('resize',layout); ov.remove(); document.body.style.overflow=prevOv; URL.revokeObjectURL(url); }
+      function onKey(e){ if(e.key==='Escape'){ e.stopPropagation(); close(); } }
+      document.addEventListener('keydown',onKey,true); window.addEventListener('resize',layout);
+      q('.ckX').onclick=close;
+      q('.ckOk').onclick=function(){
+        var c=document.createElement('canvas'); c.width=ow; c.height=oh; var g=c.getContext('2d'), k=k0()*S.z, qf=ow/fw;
+        g.fillStyle='#fff'; g.fillRect(0,0,ow,oh); g.imageSmoothingQuality='high';
+        g.translate(ow/2+S.x*qf,oh/2+S.y*qf); g.rotate(S.r*Math.PI/180); g.scale(k*qf,k*qf); g.drawImage(src,-SW/2,-SH/2,SW,SH);
+        var qy=opt.q||.85, u=c.toDataURL('image/jpeg',qy);
+        if(opt.maxLen){ while(u.length>opt.maxLen&&qy>.3){ qy-=.1; u=c.toDataURL('image/jpeg',qy); } }
+        close(); try{ cb&&cb(u); }catch(e){}
+      };
+      layout();
+    }
+  }
+  window.ftCrop={open:open};
 })();
 </script>
 </body>
