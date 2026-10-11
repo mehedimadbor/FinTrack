@@ -2483,12 +2483,6 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
         <div class="pfHdS" id="pfHdS"></div>
       </div>
       <div class="pfPanel">
-        <div class="bkRow" id="bkRow" style="display:none;">
-          <div class="bkTop"><span class="bkDot off" id="bkDot"></span><b id="bkState"></b></div>
-          <div class="bkLn"><span><span class="bn">সর্বশেষ ক্লাউড ব্যাকআপ</span><span class="en">Last cloud backup</span></span><b id="bkLast">—</b></div>
-          <div class="bkLn"><span><span class="bn">সর্বশেষ সিঙ্ক যাচাই</span><span class="en">Last sync check</span></span><b id="bkChk">—</b></div>
-          <button type="button" class="typebtn bkBtn" id="bkNow" onclick="ftCloud.bkAct()"></button>
-        </div>
         <div class="pfG2"><div class="pfPill"><input id="pfn" type="text" autocomplete="name" autocapitalize="none" spellcheck="false" oninput="ftCloud.pfTouch()" ></div><div class="pfPill"><input id="pfu" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" oninput="ftCloud.pfTouch()" ></div></div>
         <div class="pfPill"><input id="pfe" type="email" autocomplete="email" autocapitalize="none" spellcheck="false" oninput="ftCloud.pfTouch()" ></div>
         <div class="pfG2"><div class="pfPill"><input id="pfw" type="password" autocomplete="new-password" oninput="ftCloud.pfTouch()"></div><button type="button" class="pfEyeB" aria-label="Show / hide" onclick="ftCloud.pfEye('pfw',this)"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="sl" d="M4 4l16 16"/></svg></button></div>
@@ -6591,7 +6585,7 @@ const box=$('devModeBox');
 
 function tog2(b,e,key,def,fn){ const l=document.createElement('label'); l.className='ftRow'; l.innerHTML='<span>'+bl(b,e)+'</span><input type="checkbox">'; const c=l.querySelector('input'); c.checked=ls(key,def)==='1'; c.onchange=()=>{ st(key,c.checked?'1':'0'); fn&&fn(); }; return l; }
 $('devSw').appendChild(tog2('অ্যাড পেজে কুইক বাটন ও সাম্প্রতিক এন্ট্রি','Quick buttons & recent entries on Add page','qaOn_v1','1',qaRender));
-$('devSw').appendChild(tog2('প্রোফাইলে ক্লাউড ব্যাকআপের তথ্য ও আপডেট বাটন','Cloud backup info & update button in Profile','pfSyncInfo_v1','1',()=>{ try{ ftCloud.refresh(); }catch(e){} }));
+$('devSw').appendChild(tog2('সেটিংস মেনুতে প্রোফাইলের নিচে ক্লাউড ব্যাকআপের তথ্য','Cloud backup info below Profile in Settings menu','pfSyncInfo_v1','1',()=>{ try{ ftCloud.refresh(); }catch(e){} }));
 $('devSw').appendChild(tog2('অ্যাপ খুললে রিমাইন্ডার পপআপ','Reminder popup when app opens','rmPopup_v1','1'));
 $('devSw').appendChild(tog2('সঠিক পিন দিলে নিজে থেকে অ্যাপে ঢুকবে','Auto-unlock when PIN is correct','autoUnlock_v1','1',()=>{try{const pd=document.querySelector('.pkPad');if(pd)pd.classList.toggle('auto',ls('autoUnlock_v1','1')==='1'&&+ls('appPinLen_v1',0)>=4)}catch(e){}}));
 
@@ -10741,6 +10735,8 @@ details.setBox.ftShow>summary{display:none!important;} details.setBox.ftShow{mar
 .ftGc{background:var(--card);border:1px solid var(--border);border-radius:22px;overflow:hidden;}
 .ftRow{display:flex;align-items:center;gap:14px;padding:13px 14px;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;transition:background .15s;}
 .ftRow:active{background:color-mix(in srgb,var(--primary) 8%,transparent);}
+.ftGc>.bkMenu{margin:0 12px 12px; cursor:default;}
+.bkMenu+.ftRow::before{content:"";position:absolute;left:74px;right:0;top:0;height:1px;background:var(--border);}
 .ftRow+.ftRow::before{content:"";position:absolute;left:74px;right:0;top:0;height:1px;background:var(--border);}
 .ftRow .setIco{width:46px;height:46px;border-radius:15px;font-size:22px;}
 .ftRt{flex:1;min-width:0;} .ftRt b{display:block;font-size:16px;font-weight:700;color:var(--text);} .ftRt span.s{display:block;font-size:13px;color:var(--muted);margin-top:2px;line-height:1.35;}
@@ -10811,6 +10807,12 @@ function banner(){
   const w=who(), el=$('ftBan'); if(!el) return;
   el.innerHTML='<div class="ftBanAv">'+avatar()+'</div><div class="ftBanTx"><b>'+(w.name?L('হ্যালো ','Hello ')+esc(w.name):L('স্বাগতম','Welcome'))+'</b><span>'+esc(w.un?'@'+w.un:(w.email||L('প্রোফাইল ও অ্যাকাউন্ট','Profile & account')))+'</span></div>'+CHEV;
 }
+function bkCard(){
+  return '<div class="bkRow bkMenu" id="bkRow" style="display:none;"><div class="bkTop"><span class="bkDot off" id="bkDot"></span><b id="bkState"></b></div>'
+    +'<div class="bkLn"><span>'+L('সর্বশেষ ক্লাউড ব্যাকআপ','Last cloud backup')+'</span><b id="bkLast">—</b></div>'
+    +'<div class="bkLn"><span>'+L('সর্বশেষ সিঙ্ক যাচাই','Last sync check')+'</span><b id="bkChk">—</b></div>'
+    +'<button type="button" class="typebtn bkBtn" id="bkNow" onclick="ftCloud.bkAct()"></button></div>';
+}
 function build(force){
   let host=$('ftSetList');
   if(!host){ host=document.createElement('div'); host.id='ftSetList'; host.innerHTML='<div class="ftSetTitle" id="ftSetTitle"></div><div class="ftBan" id="ftBan"></div><div id="ftGroups"></div>'; sec.insertBefore(host,sec.firstChild); host.addEventListener('click',onList); }
@@ -10826,10 +10828,10 @@ function build(force){
     if(isMoved(n)) return;
     if(!open){ html+=pend+'<div class="ftGc">'; pend=''; open=true; }
     const c=chipOf(n), s=subOf(n);
-    html+='<div class="ftRow" data-k="'+esc(kOf(n))+'"><span class="setIco" style="--c:'+c.c+'">'+c.i+'</span><div class="ftRt"><b>'+titleHtml(n)+'</b>'+(s?'<span class="s">'+esc(s)+'</span>':'')+'</div>'+CHEV+'</div>';
+    html+='<div class="ftRow" data-k="'+esc(kOf(n))+'"><span class="setIco" style="--c:'+c.c+'">'+c.i+'</span><div class="ftRt"><b>'+titleHtml(n)+'</b>'+(s?'<span class="s">'+esc(s)+'</span>':'')+'</div>'+CHEV+'</div>'; if(kOf(n)==='settings_profile') html+=bkCard();
   });
   close();
-  $('ftGroups').innerHTML=html;
+  $('ftGroups').innerHTML=html; try{ if(window.ftCloud) ftCloud.refresh(); }catch(e){}
 }
 function onList(e){ const b=e.target.closest('.ftBan'); if(b){ window.ftSetOpen('settings_profile'); return; } const r=e.target.closest('.ftRow'); if(r) window.ftSetOpen(r.dataset.k); }
 function ensureBar(){
