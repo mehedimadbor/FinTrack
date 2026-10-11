@@ -1547,7 +1547,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     var P={pfn:tx('নাম','Name'),pfu:tx('ইউজারনেম','Username'),pfe:tx('ইমেইল','Email'),pfw:ss?tx('নতুন পাসওয়ার্ড (বদলাতে চাইলে)','New password (only to change)'):tx('পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)','Password (min 6 characters)'),pfc:tx('বর্তমান পাসওয়ার্ড','Current password'),pfp:tx('মোবাইল নম্বর (ঐচ্ছিক)','Mobile number (optional)')};
     Object.keys(P).forEach(function(k){ var e=$(k); if(e){ e.placeholder=P[k]; e.setAttribute('aria-label',P[k]); } });
     if(!pfDirty && !sh.busy){ $('pfn').value=lsGet('myName_v1'); $('pfu').value=lsGet('myUsername_v1').replace(/^@/,''); $('pfp').value=lsGet('myPhone_v1'); $('pfe').value=ss?ss.email:''; $('pfw').value=''; $('pfc').value=''; }
-    var hs=$('pfHdS'); if(hs) hs.textContent=ss?(auto()?tx('ক্লাউড সিঙ্ক চালু · ','Cloud sync on · '):tx('সিঙ্ক বন্ধ · ','Sync off · '))+ss.email:tx('গেস্ট · ডেটা শুধু এই ফোনে','Guest · data on this phone only');
+    var hs=$('pfHdS'); if(hs) hs.textContent=ss?ss.email:tx('গেস্ট · ডেটা শুধু এই ফোনে','Guest · data on this phone only');
     var bb=$('pfBigBtn'); if(bb&&!sh.busy){ bb.textContent=tx('সংরক্ষণ করুন','Save'); bb.disabled=false; }
     curVis();
   }
@@ -1979,9 +1979,8 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     return abs+' · '+rel;
   }
   function bkRefresh(){
-    var row=$('bkRow'); if(!row) return;
-    if(LS.getItem('pfSyncInfo_v1')==='0'){ row.style.display='none'; return; }
-    row.style.display='';
+    var rows=document.querySelectorAll('.bkRow'); if(!rows.length) return;
+    var off=LS.getItem('pfSyncInfo_v1')==='0';
     var s=ses(), cls='', msg='', btn=tx('এখনই আপডেট ও সিঙ্ক করুন','Update & sync now');
     if(!ok()||!s){ cls='off'; msg=tx('ক্লাউড ব্যাকআপ বন্ধ — ডেটা শুধু এই ফোনে','Cloud backup is off — data stays on this phone'); }
     else if(isDeadNow()){ cls='bad'; msg=tx('লগইনের মেয়াদ শেষ — ব্যাকআপ থেমে আছে','Login expired — backup is paused'); btn=tx('আবার লগইন করুন','Sign in again'); }
@@ -1989,13 +1988,16 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     else if(!auto()){ cls='warn'; msg=tx('অটো সিঙ্ক বন্ধ আছে','Auto sync is off'); }
     else if(LS.getItem(DIRTY)==='1'){ cls='warn'; msg=tx('নতুন পরিবর্তন আপলোডের অপেক্ষায়','New changes are waiting to upload'); }
     else { cls='ok'; msg=tx('সব ডেটা ক্লাউডে আপ-টু-ডেট','All data is up to date in the cloud'); }
-    $('bkDot').className='bkDot '+cls; $('bkState').textContent=msg;
-    $('bkLast').textContent=s?fmtT(+LS.getItem(PUSHK)||+LS.getItem(LAST)||0):'—';
-    $('bkChk').textContent=s?fmtT(+LS.getItem(CHKK)||+LS.getItem(LAST)||0):'—';
-    var b=$('bkNow'); if(b){ b.textContent=btn; b.disabled=!!(busy&&s); b.style.display=(ok()&&s)?'':'none'; }
+    var last=s?fmtT(+LS.getItem(PUSHK)||+LS.getItem(LAST)||0):'—', chk=s?fmtT(+LS.getItem(CHKK)||+LS.getItem(LAST)||0):'—';
+    [].forEach.call(rows,function(r){
+      if(off){ r.style.display='none'; return; } r.style.display='';
+      var q=function(c){ return r.querySelector(c); };
+      q('.bkDot').className='bkDot '+cls; q('.bkSt').textContent=msg; q('.bkLastV').textContent=last; q('.bkChkV').textContent=chk;
+      var b=q('.bkBtn'); if(b){ b.textContent=btn; b.disabled=!!(busy&&s); b.style.display=(ok()&&s)?'':'none'; }
+    });
   }
   function bkAct(){ if(ses()&&isDeadNow()) reModal(); else sync(true); }
-  setInterval(function(){ if(document.visibilityState==='visible') bkRefresh(); },30000);
+  setInterval(function(){ if(document.visibilityState==='visible') bkRefresh(); },15000);
     /* ---- logged-in devices: list + remote logout (soft logout: the other device signs itself out next time it is online) ---- */
   var devBusy=false, devSeenAt=0, devLoadedAt=0, devChkAt=0;
   function devId(){ var v=lsGet(DEVK); if(!v){ try{ v=(window.crypto&&crypto.randomUUID)?crypto.randomUUID().replace(/-/g,'').slice(0,16):''; }catch(e){ v=''; } if(!v) v=Date.now().toString(36)+Math.random().toString(36).slice(2,10); _set.call(LS,DEVK,v); } return v; }
@@ -6585,7 +6587,7 @@ const box=$('devModeBox');
 
 function tog2(b,e,key,def,fn){ const l=document.createElement('label'); l.className='ftRow'; l.innerHTML='<span>'+bl(b,e)+'</span><input type="checkbox">'; const c=l.querySelector('input'); c.checked=ls(key,def)==='1'; c.onchange=()=>{ st(key,c.checked?'1':'0'); fn&&fn(); }; return l; }
 $('devSw').appendChild(tog2('অ্যাড পেজে কুইক বাটন ও সাম্প্রতিক এন্ট্রি','Quick buttons & recent entries on Add page','qaOn_v1','1',qaRender));
-$('devSw').appendChild(tog2('সেটিংস মেনুতে প্রোফাইলের নিচে ক্লাউড ব্যাকআপের তথ্য','Cloud backup info below Profile in Settings menu','pfSyncInfo_v1','1',()=>{ try{ ftCloud.refresh(); }catch(e){} }));
+$('devSw').appendChild(tog2('মেনুতে প্রোফাইল বক্সের নিচে লাইভ ক্লাউড ব্যাকআপ বক্স','Live cloud backup box below the profile box in menus','pfSyncInfo_v1','1',()=>{ try{ ftCloud.refresh(); }catch(e){} }));
 $('devSw').appendChild(tog2('অ্যাপ খুললে রিমাইন্ডার পপআপ','Reminder popup when app opens','rmPopup_v1','1'));
 $('devSw').appendChild(tog2('সঠিক পিন দিলে নিজে থেকে অ্যাপে ঢুকবে','Auto-unlock when PIN is correct','autoUnlock_v1','1',()=>{try{const pd=document.querySelector('.pkPad');if(pd)pd.classList.toggle('auto',ls('autoUnlock_v1','1')==='1'&&+ls('appPinLen_v1',0)>=4)}catch(e){}}));
 
@@ -10735,8 +10737,11 @@ details.setBox.ftShow>summary{display:none!important;} details.setBox.ftShow{mar
 .ftGc{background:var(--card);border:1px solid var(--border);border-radius:22px;overflow:hidden;}
 .ftRow{display:flex;align-items:center;gap:14px;padding:13px 14px;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;transition:background .15s;}
 .ftRow:active{background:color-mix(in srgb,var(--primary) 8%,transparent);}
-.ftGc>.bkMenu{margin:0 12px 12px; cursor:default;}
-.bkMenu+.ftRow::before{content:"";position:absolute;left:74px;right:0;top:0;height:1px;background:var(--border);}
+.bkLive{background:var(--card); border:1px solid var(--border); border-radius:22px; padding:14px 16px; margin:12px 0 0; box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 22px -14px rgba(16,24,40,.22);}
+.mnBody .bkLive{border-radius:20px; padding:12px 14px; margin:8px 0 4px; box-shadow:none;}
+.bkTag{margin-left:auto; font-size:10px; font-weight:800; letter-spacing:.9px; padding:2px 8px; border-radius:99px; background:color-mix(in srgb,var(--primary) 14%,transparent); color:var(--primary);}
+.bkDot.ok{animation:bkPulse 2s infinite;} .bkDot.wait{animation:bkPulse .9s infinite;}
+@keyframes bkPulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,currentColor 0%,transparent),0 0 0 0 rgba(22,163,74,.45);}70%{box-shadow:0 0 0 7px rgba(22,163,74,0);}100%{box-shadow:0 0 0 0 rgba(22,163,74,0);}}
 .ftRow+.ftRow::before{content:"";position:absolute;left:74px;right:0;top:0;height:1px;background:var(--border);}
 .ftRow .setIco{width:46px;height:46px;border-radius:15px;font-size:22px;}
 .ftRt{flex:1;min-width:0;} .ftRt b{display:block;font-size:16px;font-weight:700;color:var(--text);} .ftRt span.s{display:block;font-size:13px;color:var(--muted);margin-top:2px;line-height:1.35;}
@@ -10808,14 +10813,14 @@ function banner(){
   el.innerHTML='<div class="ftBanAv">'+avatar()+'</div><div class="ftBanTx"><b>'+(w.name?L('হ্যালো ','Hello ')+esc(w.name):L('স্বাগতম','Welcome'))+'</b><span>'+esc(w.un?'@'+w.un:(w.email||L('প্রোফাইল ও অ্যাকাউন্ট','Profile & account')))+'</span></div>'+CHEV;
 }
 function bkCard(){
-  return '<div class="bkRow bkMenu" id="bkRow" style="display:none;"><div class="bkTop"><span class="bkDot off" id="bkDot"></span><b id="bkState"></b></div>'
-    +'<div class="bkLn"><span>'+L('সর্বশেষ ক্লাউড ব্যাকআপ','Last cloud backup')+'</span><b id="bkLast">—</b></div>'
-    +'<div class="bkLn"><span>'+L('সর্বশেষ সিঙ্ক যাচাই','Last sync check')+'</span><b id="bkChk">—</b></div>'
-    +'<button type="button" class="typebtn bkBtn" id="bkNow" onclick="ftCloud.bkAct()"></button></div>';
+  return '<div class="bkRow bkLive" style="display:none;"><div class="bkTop"><span class="bkDot off"></span><b class="bkSt"></b><span class="bkTag">LIVE</span></div>'
+    +'<div class="bkLn"><span>'+L('সর্বশেষ ক্লাউড ব্যাকআপ','Last cloud backup')+'</span><b class="bkLastV">—</b></div>'
+    +'<div class="bkLn"><span>'+L('সর্বশেষ সিঙ্ক যাচাই','Last sync check')+'</span><b class="bkChkV">—</b></div>'
+    +'<button type="button" class="typebtn bkBtn" onclick="ftCloud.bkAct()"></button></div>';
 }
 function build(force){
   let host=$('ftSetList');
-  if(!host){ host=document.createElement('div'); host.id='ftSetList'; host.innerHTML='<div class="ftSetTitle" id="ftSetTitle"></div><div class="ftBan" id="ftBan"></div><div id="ftGroups"></div>'; sec.insertBefore(host,sec.firstChild); host.addEventListener('click',onList); }
+  if(!host){ host=document.createElement('div'); host.id='ftSetList'; host.innerHTML='<div class="ftSetTitle" id="ftSetTitle"></div><div class="ftBan" id="ftBan"></div><div id="ftBkSlot"></div><div id="ftGroups"></div>'; sec.insertBefore(host,sec.firstChild); host.addEventListener('click',onList); }
   $('ftSetTitle').textContent=L('সেটিংস','Settings');
   banner();
   const seq=[].slice.call(sec.children).filter(n=>n.matches&&(n.matches('details.setBox')||n.matches('.setGroup.ftCat')));
@@ -10828,10 +10833,10 @@ function build(force){
     if(isMoved(n)) return;
     if(!open){ html+=pend+'<div class="ftGc">'; pend=''; open=true; }
     const c=chipOf(n), s=subOf(n);
-    html+='<div class="ftRow" data-k="'+esc(kOf(n))+'"><span class="setIco" style="--c:'+c.c+'">'+c.i+'</span><div class="ftRt"><b>'+titleHtml(n)+'</b>'+(s?'<span class="s">'+esc(s)+'</span>':'')+'</div>'+CHEV+'</div>'; if(kOf(n)==='settings_profile') html+=bkCard();
+    html+='<div class="ftRow" data-k="'+esc(kOf(n))+'"><span class="setIco" style="--c:'+c.c+'">'+c.i+'</span><div class="ftRt"><b>'+titleHtml(n)+'</b>'+(s?'<span class="s">'+esc(s)+'</span>':'')+'</div>'+CHEV+'</div>';
   });
   close();
-  $('ftGroups').innerHTML=html; try{ if(window.ftCloud) ftCloud.refresh(); }catch(e){}
+  $('ftGroups').innerHTML=html; $('ftBkSlot').innerHTML=bkCard(); try{ if(window.ftCloud) ftCloud.refresh(); }catch(e){}
 }
 function onList(e){ const b=e.target.closest('.ftBan'); if(b){ window.ftSetOpen('settings_profile'); return; } const r=e.target.closest('.ftRow'); if(r) window.ftSetOpen(r.dataset.k); }
 function ensureBar(){
@@ -10868,6 +10873,7 @@ function fillMenu(){
   const lg=$('headerLogoEl'), logo=$('mnLogo'); if(lg&&logo) logo.innerHTML=lg.innerHTML;
   const nm=document.querySelector('[data-i18n="app_title"]'); if(nm&&$('mnName')) $('mnName').textContent=nm.textContent;
   let h='<div class="mnPro" data-a="tab" data-k="profile"><div class="av">'+avatar()+'</div><div class="tx"><b>'+(w.name?esc(w.name):L('আমার প্রোফাইল','My profile'))+'</b><span>'+(w.on?'<i></i>':'')+esc(w.un?'@'+w.un:(w.email||L('প্রোফাইল দেখুন','View profile')))+'</span></div>'+CHEV+'</div>';
+  h+=bkCard();
   const mv=dets().filter(isMoved).map(d=>{ const ch=chipOf(d), k=kOf(d); return tile('mset',k,ch.c,ch.i,titleHtml(d),det&&det===k); });
   const mvHtml=mv.length?'<div class="mnSec">'+L('অর্থ ও বাজেট','Money & budget')+'</div><div class="mnGrid">'+mv.join('')+'</div>':'';
   TABS.forEach(g=>{
@@ -10877,7 +10883,7 @@ function fillMenu(){
   });
   const FT=tile('tab','settings','#64748b',icon('settings'),L('সেটিংস','Settings'),c==='settings'&&!det)+tile('about','about','#8b5cf6','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.2M12 7.8h.01"/></svg>',L('অ্যাপ সম্পর্কে','About'),false)+((window.ftInstall&&!window.ftInstall.installed())?tile('install','install','#16a34a',icon('download'),L('অ্যাপ ইনস্টল','Install app'),false):'');
   $('mnBody').innerHTML=h+'<div class="mnSec">'+L('আরও','More')+'</div><div class="mnGrid">'+FT+'</div>';
-  $('mnFt').innerHTML='';
+  $('mnFt').innerHTML=''; try{ if(window.ftCloud) ftCloud.refresh(); }catch(e){}
 }
 const ov=document.createElement('div'); ov.id='ftMnOv';
 const mn=document.createElement('aside'); mn.id='ftMn'; mn.setAttribute('role','dialog'); mn.setAttribute('aria-modal','true'); mn.setAttribute('aria-hidden','true');
