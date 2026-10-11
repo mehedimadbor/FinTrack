@@ -1322,12 +1322,14 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   var bnL=function(){return document.documentElement.lang!=='en'}, tx=function(b,e){return bnL()?b:e};
   var $=function(i){return document.getElementById(i)};
   var _set=Storage.prototype.setItem, _rem=Storage.prototype.removeItem;
-  var applying=false, busy=false, timer=0, idTok='', idExp=0, chg=0, again=false;
+  var applying=false, busy=false, timer=0, idTok='', idExp=0, chg=0, again=false, dead=false, askedRe=false, lastUid='';
+  var DEADRE=/TOKEN_EXPIRED|INVALID_REFRESH_TOKEN|MISSING_REFRESH_TOKEN|USER_NOT_FOUND|USER_DISABLED|CREDENTIAL_TOO_OLD_LOGIN_AGAIN|INVALID_ID_TOKEN/;
+  function isDead(e){ return DEADRE.test(String((e&&e.message)||e||'')); }
   var SKIP=/^(appPin|appLock|pinFails|pinLockUntil|lockFailTotal|lastUnlock|lockAutoBio|lockDelay|autoUnlock|loginDone|ftSync|userCounted|happyCount|noticeSeenId|noticeUrl|devLog|backupNudge|backupRemind|lastBackup|ftDataGuard|ftAutoBak)/;
   function syncKey(k){ return typeof k==='string' && /^[A-Za-z0-9_-]+_v1$/.test(k) && !SKIP.test(k); }
   function ok(){ return !!(CFG.apiKey&&CFG.dbUrl); }
   function ses(){ try{return JSON.parse(LS.getItem(ST)||'null')}catch(e){return null} }
-  function setSes(o){ if(o) _set.call(LS,ST,JSON.stringify(o)); else _rem.call(LS,ST); }
+  function setSes(o){ if(o){ try{ var c0=ses(); lastUid=(c0&&c0.uid)||LS.getItem('ftSyncUid_v1')||''; _set.call(LS,'ftSyncUid_v1',o.uid||''); }catch(e){} _set.call(LS,ST,JSON.stringify(o)); } else _rem.call(LS,ST); }
   function auto(){ return LS.getItem(AUTO)!=='0'; }
   function status(m,bad){ var e=$('csStatus'); if(!e) return; e.textContent=m||''; e.style.color=bad?'var(--red)':'var(--primary)'; }
   function timeStr(){ var t=+LS.getItem(LAST)||0; return t?new Date(t).toLocaleString(bnL()?'bn-BD':'en-GB',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):''; }
@@ -1335,7 +1337,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   function acRefresh(){ var w=$('acWho'); if(!w) return; var s=ses(), n=''; try{ n=localStorage.getItem('myName_v1')||''; }catch(e){}
     w.textContent = s ? ((n?n+' · ':'')+(s.email||'')) : tx((n?n+' · ':'')+'গেস্ট (শুধু এই ফোনে)',(n?n+' · ':'')+'Guest (this phone only)'); }
   function ui(){
-    acRefresh(); profRefresh(); lgPh();
+    acRefresh(); profRefresh(); lgPh(); if(dead) reBtn();
     var s=ses(), c=$('csAuto'); if(!c) return;
     var on=!!s&&auto(); c.checked=on;
     var sub=$('csSub');
@@ -1346,6 +1348,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   }
   function errMsg(e){
     var m=String((e&&e.message)||e||'');
+    if(DEADRE.test(m)) return tx('লগইনের মেয়াদ শেষ হয়েছে — আবার লগইন করুন। আপনার ডেটা এই ফোনে নিরাপদ আছে।','Your login has expired — please sign in again. Your data is safe on this phone.');
     if(/EMAIL_EXISTS/.test(m)) return tx('এই ইমেইলে আগেই অ্যাকাউন্ট আছে, লগইন করুন','This email already has an account, please sign in');
     if(/USERNAME_TAKEN/.test(m)) return tx('এই ইউজারনেম আগেই নেওয়া হয়ে গেছে, অন্য একটি বেছে নিন','This username is already taken, choose another');
     if(/NO_PW_LOGIN/.test(m)) return tx('এই অ্যাকাউন্টে ইউজারনেম দিয়ে লগইন এখনো চালু হয়নি। একবার ইমেইল দিয়ে (Google হলে Google দিয়ে) লগইন করুন','Username login is not active for this account yet. Log in once with your email (or Google)');
@@ -1474,8 +1477,19 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     } finally{ applying=false; }
     setTimeout(function(){ location.reload(); },400); return true;
   }
+  function applyLogin(rem){
+    try{
+      var s0=ses();
+      if(s0&&lastUid&&lastUid===s0.uid&&LS.getItem('moneyAppData_v1')&&rem&&rem.data&&mergeRemote(rem)){
+        _set.call(LS,'loginDone_v1','true'); busy=true;
+        push().catch(function(){}).then(function(){ busy=false; setTimeout(function(){ location.reload(); },400); });
+        return true;
+      }
+    }catch(e){}
+    return applyLogin(rem);
+  }
   async function sync(manual){
-    if(busy){ again=true; return; } if(!ses()||!ok()) return; busy=true;
+    if(busy){ again=true; return; } if(!ses()||!ok()) return; if(dead&&!manual) return; busy=true;
     try{
       status(tx('সিঙ্ক হচ্ছে…','Syncing…'));
       var ru=await dbGet('backup/updatedAt'), base=+LS.getItem(BASE)||0, dirty=LS.getItem(DIRTY)==='1';
@@ -1484,14 +1498,14 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
       else if(!dirty){ var full=await dbGet('backup'); if(applyRemote(full)) return; }
       else { var f2=await dbGet('backup'); if(mergeRemote(f2)){ await push(); setTimeout(function(){ location.reload(); },300); return; } await push(); }
       doneMsg();
-    }catch(e){ status(errMsg(e),true); }
+    }catch(e){ status(errMsg(e),true); if(isDead(e)){ dead=true; askRelogin(); } }
     finally{ busy=false; if(again){ again=false; setTimeout(function(){ if(ses()&&auto()&&navigator.onLine) sync(); },700); } }
   }
   async function firstSync(){
     var rem=await dbGet('backup');
     if(!rem||!rem.data){ await push(); doneMsg(); return; }
     var hasLocal=!!LS.getItem('moneyAppData_v1');
-    if(!hasLocal||confirm(tx('ক্লাউডে আপনার ডেটা পাওয়া গেছে। এই ফোনের ডেটা বদলে ক্লাউডের ডেটা নেবেন?\nOK = ক্লাউডের ডেটা নেবেন\nCancel = এই ফোনের ডেটা ক্লাউডে আপলোড হবে','Cloud data found. Replace this phone\'s data with it?\nOK = use the cloud data\nCancel = upload this phone\'s data to the cloud'))){ if(applyRemote(rem)) return; }
+    if(!hasLocal||confirm(tx('ক্লাউডে আপনার ডেটা পাওয়া গেছে। এই ফোনের ডেটা বদলে ক্লাউডের ডেটা নেবেন?\nOK = ক্লাউডের ডেটা নেবেন\nCancel = এই ফোনের ডেটা ক্লাউডে আপলোড হবে','Cloud data found. Replace this phone\'s data with it?\nOK = use the cloud data\nCancel = upload this phone\'s data to the cloud'))){ if(applyLogin(rem)) return; }
     await push(); doneMsg();
   }
   function schedule(){ clearTimeout(timer); timer=setTimeout(function(){ if(navigator.onLine&&auto()) sync(); },1500); }
@@ -1553,7 +1567,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
         var rem=null;
         if(existed){
           try{ rem=await dbGet('backup'); }catch(e2){ setSes(null); idTok=''; throw e2; }
-          if(rem&&rem.data){ keepPrev(); toast(tx('আপনার ক্লাউড ডেটা ফিরিয়ে আনা হচ্ছে…','Restoring your cloud data…')); await syncUnOnLogin(rem,j.email||em,pw); applyRemote(rem); return; }
+          if(rem&&rem.data){ keepPrev(); toast(tx('আপনার ক্লাউড ডেটা ফিরিয়ে আনা হচ্ছে…','Restoring your cloud data…')); await syncUnOnLogin(rem,j.email||em,pw); applyLogin(rem); return; }
         }
         await claimNew(un,j.idToken,!existed);
         try{ await lmPut(un,j.email||em,pw); }catch(e4){}
@@ -1662,7 +1676,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
         setSes({uid:j.localId,rt:j.refreshToken,email:j.email||em}); _set.call(LS,AUTO,'1');
         if(existed){
           var rem=null; try{ rem=await dbGet('backup'); }catch(e2){ setSes(null); idTok=''; throw e2; }
-          if(rem&&rem.data){ keepPrev(); sh.busy=false; sheetClose(); toast(tx('আপনার ডেটা ফিরিয়ে আনা হচ্ছে…','Restoring your data…')); await syncUnOnLogin(rem,j.email||em,pw); applyRemote(rem); return; }
+          if(rem&&rem.data){ keepPrev(); sh.busy=false; sheetClose(); toast(tx('আপনার ডেটা ফিরিয়ে আনা হচ্ছে…','Restoring your data…')); await syncUnOnLogin(rem,j.email||em,pw); applyLogin(rem); return; }
         }
         await claimNew(un2,j.idToken,!existed);
         saveField('myUsername_v1',un2,'myUsernameInput');
@@ -1765,7 +1779,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     var rem=null;
     try{ rem=await dbGet('backup'); }catch(e){ setSes(null); idTok=''; throw e; }
     await syncUnOnLogin(rem,j.email||em,pw);
-    if(rem&&rem.data&&applyRemote(rem)) return 'restored';
+    if(rem&&rem.data&&applyLogin(rem)) return 'restored';
     return 'new';
   }
   async function loginSubmit(){
@@ -1872,7 +1886,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
       idTok=j.idToken; idExp=Date.now()+(+j.expiresIn||3600)*1000;
       setSes({uid:j.localId,rt:j.refreshToken,email:j.email||'',g:1});
       var rem=null; try{ rem=await dbGet('backup'); }catch(e){ setSes(null); idTok=''; throw e; }
-      if(rem&&rem.data&&applyRemote(rem)){ lgStatus(tx('আপনার ডেটা ফিরিয়ে আনা হচ্ছে…','Restoring your data…')); return; }
+      if(rem&&rem.data&&applyLogin(rem)){ lgStatus(tx('আপনার ডেটা ফিরিয়ে আনা হচ্ছে…','Restoring your data…')); return; }
       var ni=$('loginNameInput'); if(ni&&!(ni.value||'').trim()&&!lsGet('myName_v1')) ni.value=j.displayName||'';
       var pre=(($('lgUser')||{}).value||'').trim().replace(/^@/,'');
       if(!lsGet('myUsername_v1')&&UNRE.test(pre)){ try{ if(await claim(pre)) LS.setItem('myUsername_v1',pre); }catch(e1){} }
@@ -1892,6 +1906,47 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     }catch(e){} }
     if(window.google&&google.accounts&&google.accounts.id){ go(); return; }
     var sc=document.createElement('script'); sc.src='https://accounts.google.com/gsi/client'; sc.async=true; sc.defer=true; sc.onload=go; sc.onerror=function(){ box.style.display='none'; }; document.head.appendChild(sc);
+  }
+  /* ---- expired cloud login: sign in again, keep this phone's data and merge it with the cloud ---- */
+  function reBtn(){
+    var e=$('csStatus'); if(!e||$('csRelogin')||!e.parentNode) return;
+    var b=document.createElement('button'); b.id='csRelogin'; b.type='button'; b.textContent=tx('আবার লগইন করুন','Sign in again');
+    b.style.cssText='display:block;margin-top:10px;padding:10px 18px;border:0;border-radius:12px;font-weight:800;font-size:14px;background:var(--primary);color:#fff;cursor:pointer';
+    b.onclick=reModal; e.parentNode.insertBefore(b,e.nextSibling);
+  }
+  function askRelogin(){ reBtn(); if(askedRe||document.visibilityState!=='visible') return; askedRe=true; setTimeout(reModal,700); }
+  function reModal(){
+    var s=ses(); if(!s) return;
+    if(s.g){ try{ window.ftCloud.accountLogout(); }catch(e){} return; }
+    var old=$('csReOv'); if(old) old.remove();
+    var ov=document.createElement('div'); ov.id='csReOv';
+    ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px';
+    var bs='flex:1;padding:12px;border:0;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer';
+    ov.innerHTML='<div style="background:var(--card);color:var(--text);border-radius:22px;padding:20px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.4)">'
+      +'<div style="font-size:17px;font-weight:800;margin-bottom:6px">'+tx('আবার লগইন করুন','Sign in again')+'</div>'
+      +'<div style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:12px">'+tx('ক্লাউড লগইনের মেয়াদ শেষ হয়েছে। পাসওয়ার্ড দিন — এই ফোনের সব ডেটা রেখে ক্লাউডের ডেটার সাথে মিলিয়ে দেওয়া হবে।','Your cloud login expired. Enter your password — this phone\'s data is kept and merged with the cloud.')+'</div>'
+      +'<div style="font-size:13px;font-weight:700;margin-bottom:8px;word-break:break-all">'+escH(s.email)+'</div>'
+      +'<input id="csRePw" type="password" autocomplete="current-password" placeholder="'+tx('পাসওয়ার্ড','Password')+'" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:15px">'
+      +'<div id="csReErr" style="color:var(--red);font-size:12.5px;min-height:18px;margin:8px 0"></div>'
+      +'<div style="display:flex;gap:8px"><button id="csReNo" type="button" style="'+bs+';background:var(--border);color:var(--text)">'+tx('পরে','Later')+'</button><button id="csReGo" type="button" style="'+bs+';background:var(--primary);color:#fff">'+tx('লগইন','Sign in')+'</button></div></div>';
+    document.body.appendChild(ov);
+    var pw=$('csRePw'), er=$('csReErr'), go=$('csReGo');
+    $('csReNo').onclick=function(){ ov.remove(); };
+    async function run(){
+      if(!pw.value){ er.textContent=tx('পাসওয়ার্ড দিন','Enter your password'); return; }
+      go.disabled=true; go.textContent=tx('অপেক্ষা করুন…','Please wait…'); er.textContent='';
+      try{
+        var j=await authReq('signInWithPassword',{email:s.email,password:pw.value,returnSecureToken:true});
+        idTok=j.idToken; idExp=Date.now()+(+j.expiresIn||3600)*1000;
+        setSes({uid:j.localId,rt:j.refreshToken,email:j.email||s.email}); dead=false;
+        var rem=await dbGet('backup');
+        if(rem&&rem.data){ keepPrev(); mergeRemote(rem); } else { _set.call(LS,DIRTY,'1'); }
+        busy=true; try{ await push(); } finally{ busy=false; }
+        toast(tx('লগইন হয়েছে, ডেটা মিলিয়ে দেওয়া হয়েছে','Signed in, data merged')); setTimeout(function(){ location.reload(); },700);
+      }catch(e){ go.disabled=false; go.textContent=tx('লগইন','Sign in'); er.textContent=errMsg(e); }
+    }
+    go.onclick=run; pw.onkeydown=function(ev){ if(ev.key==='Enter') run(); };
+    setTimeout(function(){ try{ pw.focus(); }catch(e){} },150);
   }
   window.ftCloud={
     _raw:function(){ return {ses:ses,token:token,call:call,CFG:CFG,ok:ok,errMsg:errMsg}; },
@@ -1919,7 +1974,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
   window.addEventListener('online',function(){ if(ses()&&auto()) sync(); });
   var lastVis=0; document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible'&&ses()&&auto()&&Date.now()-lastVis>60000){ lastVis=Date.now(); sync(); } });
-  function flush(){ try{ if(ses()&&auto()&&navigator.onLine&&LS.getItem(DIRTY)==='1'){ clearTimeout(timer); sync(); } }catch(e){} }
+  function flush(){ try{ if(!dead&&ses()&&auto()&&navigator.onLine&&LS.getItem(DIRTY)==='1'){ clearTimeout(timer); sync(); } }catch(e){} }
   document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='hidden') flush(); });
   window.addEventListener('pagehide',flush);
   setInterval(function(){ if(document.visibilityState==='visible') flush(); },30000);
