@@ -734,6 +734,13 @@ html.booting .wrap, html.booting .bottomnav{visibility:hidden;}
 .pfNote{margin-top:2px;}
 .pfCard{margin:8px 0 6px; border-radius:30px; overflow:hidden; position:relative; background:var(--card); box-shadow:0 1px 2px rgba(16,24,40,.05),0 18px 36px -20px rgba(16,24,40,.35);}
 .pfHd{position:relative; height:128px; padding:26px 20px 0; text-align:center; color:#fff; background:var(--grad,var(--primary)); overflow:hidden;}
+.bkRow{margin:0 0 12px; padding:12px 14px; border-radius:18px; background:var(--bg); border:1px solid var(--border);}
+.bkTop{display:flex; align-items:center; gap:8px; font-size:13.5px; margin-bottom:8px;}
+.bkDot{width:10px; height:10px; border-radius:50%; flex:none; background:#9ca3af;}
+.bkDot.ok{background:#16a34a;} .bkDot.warn,.bkDot.wait{background:#d97706;} .bkDot.bad{background:var(--red,#dc2626);}
+.bkLn{display:flex; justify-content:space-between; gap:10px; font-size:12.5px; color:var(--muted); padding:3px 0;}
+.bkLn b{color:var(--text); font-weight:700; text-align:right;}
+.bkBtn{width:100%; margin-top:8px;}
 .pfHd i{position:absolute; border-radius:50%; background:rgba(255,255,255,.2);}
 .pfHd i.a{width:110px; height:110px; left:-34px; top:34px;}
 .pfHd i.b{width:96px; height:96px; right:-26px; bottom:10px; background:rgba(255,255,255,.14);}
@@ -1318,7 +1325,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
 /* ===== Cloud sync: full app data <-> Firebase (Auth email/password + Realtime DB, REST only) ===== */
 (function(){
   var CFG=window.FT_FIREBASE||{}, LS=localStorage;
-  var ST='ftSync_v1', BASE='ftSyncBase_v1', DIRTY='ftSyncDirty_v1', AUTO='ftSyncAuto_v1', LAST='ftSyncLast_v1';
+  var ST='ftSync_v1', BASE='ftSyncBase_v1', DIRTY='ftSyncDirty_v1', AUTO='ftSyncAuto_v1', LAST='ftSyncLast_v1', DEADK='ftSyncDead_v1', PUSHK='ftSyncPush_v1', CHKK='ftSyncChk_v1';
   var bnL=function(){return document.documentElement.lang!=='en'}, tx=function(b,e){return bnL()?b:e};
   var $=function(i){return document.getElementById(i)};
   var _set=Storage.prototype.setItem, _rem=Storage.prototype.removeItem;
@@ -1329,22 +1336,23 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   function syncKey(k){ return typeof k==='string' && /^[A-Za-z0-9_-]+_v1$/.test(k) && !SKIP.test(k); }
   function ok(){ return !!(CFG.apiKey&&CFG.dbUrl); }
   function ses(){ try{return JSON.parse(LS.getItem(ST)||'null')}catch(e){return null} }
-  function setSes(o){ if(o){ try{ var c0=ses(); lastUid=(c0&&c0.uid)||LS.getItem('ftSyncUid_v1')||''; _set.call(LS,'ftSyncUid_v1',o.uid||''); }catch(e){} _set.call(LS,ST,JSON.stringify(o)); } else _rem.call(LS,ST); }
+  function setSes(o){ dead=false; try{ _rem.call(LS,DEADK); }catch(e){} if(o){ try{ var c0=ses(); lastUid=(c0&&c0.uid)||LS.getItem('ftSyncUid_v1')||''; _set.call(LS,'ftSyncUid_v1',o.uid||''); }catch(e){} _set.call(LS,ST,JSON.stringify(o)); } else _rem.call(LS,ST); }
   function auto(){ return LS.getItem(AUTO)!=='0'; }
-  function status(m,bad){ var e=$('csStatus'); if(!e) return; e.textContent=m||''; e.style.color=bad?'var(--red)':'var(--primary)'; }
+  function isDeadNow(){ return dead||LS.getItem(DEADK)==='1'; }
+  function status(m,bad){ var e=$('csStatus'); if(e){ e.textContent=m||''; e.style.color=bad?'var(--red)':'var(--primary)'; } try{ bkRefresh(); }catch(x){} }
   function timeStr(){ var t=+LS.getItem(LAST)||0; return t?new Date(t).toLocaleString(bnL()?'bn-BD':'en-GB',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):''; }
-  function doneMsg(){ var t=timeStr(); status(tx('সিঙ্ক হয়েছে','Synced')+(t?' · '+t:'')); }
+  function doneMsg(){ if(ses()&&isDeadNow()){ status(errMsg('TOKEN_EXPIRED'),true); return; } var t=timeStr(); status(tx('সিঙ্ক হয়েছে','Synced')+(t?' · '+t:'')); }
   function acRefresh(){ var w=$('acWho'); if(!w) return; var s=ses(), n=''; try{ n=localStorage.getItem('myName_v1')||''; }catch(e){}
     w.textContent = s ? ((n?n+' · ':'')+(s.email||'')) : tx((n?n+' · ':'')+'গেস্ট (শুধু এই ফোনে)',(n?n+' · ':'')+'Guest (this phone only)'); }
   function ui(){
-    acRefresh(); profRefresh(); lgPh(); if(dead) reBtn();
+    acRefresh(); profRefresh(); lgPh(); bkRefresh(); if(isDeadNow()&&ses()) reBtn();
     var s=ses(), c=$('csAuto'); if(!c) return;
     var on=!!s&&auto(); c.checked=on;
     var sub=$('csSub');
-    if(sub) sub.textContent = s ? (on ? tx('চালু · ','On · ')+(s.email||'') : tx('বন্ধ · ডেটা শুধু এই ফোনে থাকছে','Off · data stays on this phone only'))
+    if(sub) sub.textContent = s ? (on ? (isDeadNow()?tx('লগইনের মেয়াদ শেষ · ','Login expired · '):tx('চালু · ','On · '))+(s.email||'') : tx('বন্ধ · ডেটা শুধু এই ফোনে থাকছে','Off · data stays on this phone only'))
                                 : tx('বন্ধ · চালু করতে ইমেইল ও পাসওয়ার্ড সেট করুন','Off · set an email & password to turn on');
     if(!ok()){ status(tx('ক্লাউড সিঙ্ক এখনো সেট-আপ হয়নি (ডেভেলপারকে FT_FIREBASE এ apiKey ও dbUrl দিতে হবে)।','Cloud sync is not set up yet (developer must fill apiKey and dbUrl in FT_FIREBASE).'),true); }
-    else if(!busy){ if(on) doneMsg(); else status(s?tx('সিঙ্ক বন্ধ আছে — চালু করলে সব পরিবর্তন ক্লাউডে যাবে','Sync is paused — turn it on to back up your changes'):''); }
+    else if(!busy){ if(s&&isDeadNow()) status(errMsg('TOKEN_EXPIRED'),true); else if(on) doneMsg(); else status(s?tx('সিঙ্ক বন্ধ আছে — চালু করলে সব পরিবর্তন ক্লাউডে যাবে','Sync is paused — turn it on to back up your changes'):''); }
   }
   function errMsg(e){
     var m=String((e&&e.message)||e||'');
@@ -1431,12 +1439,13 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     var u=$('lgUser'); if(u) u.placeholder=tx('ইউজারনেম (যেমন karim123)','Username (e.g. karim123)');
   }
   async function dbUrl(path){ return String(CFG.dbUrl).replace(/\/+$/,'')+'/users/'+ses().uid+'/'+path+'.json?auth='+encodeURIComponent(await token()); }
-  async function dbGet(path){ var r=await call(await dbUrl(path)+'&t='+Date.now(),{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }
+  async function withAuth(fn){ try{ return await fn(); }catch(e){ if(/HTTP 401/.test(String((e&&e.message)||e))){ idTok=''; return await fn(); } throw e; } }
+  async function dbGet(path){ return withAuth(async function(){ var r=await call(await dbUrl(path)+'&t='+Date.now(),{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }); }
   function snapshot(){ var o={}; for(var i=0;i<LS.length;i++){ var k=LS.key(i); if(syncKey(k)) o[k]=LS.getItem(k); } return o; }
   async function push(){
-    var url=await dbUrl('backup'), c0=chg, ts=Date.now(), r=await call(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:snapshot(),updatedAt:ts})});
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    _set.call(LS,BASE,String(ts)); _set.call(LS,LAST,String(Date.now()));
+    var c0=chg, ts=Date.now();
+    await withAuth(async function(){ var rr=await call(await dbUrl('backup'),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:snapshot(),updatedAt:ts})}); if(!rr.ok) throw new Error('HTTP '+rr.status); return rr; });
+    _set.call(LS,BASE,String(ts)); _set.call(LS,LAST,String(Date.now())); _set.call(LS,PUSHK,String(Date.now()));
     if(chg===c0) _set.call(LS,DIRTY,'0'); else { _set.call(LS,DIRTY,'1'); again=true; }   /* something changed while uploading -> upload again */
   }
   /* ---- merge (never lose either side): transactions & lists are united by id, this phone wins on the same id ---- */
@@ -1486,7 +1495,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
         return true;
       }
     }catch(e){}
-    return applyLogin(rem);
+    return applyRemote(rem);
   }
   async function sync(manual){
     if(busy){ again=true; return; } if(!ses()||!ok()) return; if(dead&&!manual) return; busy=true;
@@ -1497,9 +1506,9 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
       else if(ru===base){ if(dirty) await push(); }
       else if(!dirty){ var full=await dbGet('backup'); if(applyRemote(full)) return; }
       else { var f2=await dbGet('backup'); if(mergeRemote(f2)){ await push(); setTimeout(function(){ location.reload(); },300); return; } await push(); }
-      doneMsg();
-    }catch(e){ status(errMsg(e),true); if(isDead(e)){ dead=true; askRelogin(); } }
-    finally{ busy=false; if(again){ again=false; setTimeout(function(){ if(ses()&&auto()&&navigator.onLine) sync(); },700); } }
+      try{ _rem.call(LS,DEADK); }catch(x){} dead=false; _set.call(LS,CHKK,String(Date.now())); doneMsg();
+    }catch(e){ status(errMsg(e),true); if(isDead(e)){ dead=true; try{ _set.call(LS,DEADK,'1'); }catch(x){} if(manual) askedRe=false; askRelogin(); } }
+    finally{ busy=false; try{ bkRefresh(); }catch(x){} if(again){ again=false; setTimeout(function(){ if(ses()&&auto()&&navigator.onLine) sync(); },700); } }
   }
   async function firstSync(){
     var rem=await dbGet('backup');
@@ -1948,7 +1957,37 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     go.onclick=run; pw.onkeydown=function(ev){ if(ev.key==='Enter') run(); };
     setTimeout(function(){ try{ pw.focus(); }catch(e){} },150);
   }
+  /* ---- profile card: last cloud backup + update/sync button ---- */
+  function fmtT(t){
+    if(!t) return '—'; var bn=bnL(), d=new Date(t), nf=new Intl.NumberFormat(bn?'bn-BD':'en-US'),
+      abs=d.toLocaleString(bn?'bn-BD':'en-GB',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}),
+      m=Math.max(0,Math.floor((Date.now()-t)/60000)), rel;
+    if(m<1) rel=tx('এইমাত্র','just now');
+    else if(m<60) rel=bn?nf.format(m)+' মিনিট আগে':m+' min ago';
+    else if(m<1440){ var h=Math.floor(m/60); rel=bn?nf.format(h)+' ঘণ্টা আগে':h+' h ago'; }
+    else { var dd=Math.floor(m/1440); rel=bn?nf.format(dd)+' দিন আগে':dd+' d ago'; }
+    return abs+' · '+rel;
+  }
+  function bkRefresh(){
+    var row=$('bkRow'); if(!row) return;
+    if(LS.getItem('pfSyncInfo_v1')==='0'){ row.style.display='none'; return; }
+    row.style.display='';
+    var s=ses(), cls='', msg='', btn=tx('এখনই আপডেট ও সিঙ্ক করুন','Update & sync now');
+    if(!ok()||!s){ cls='off'; msg=tx('ক্লাউড ব্যাকআপ বন্ধ — ডেটা শুধু এই ফোনে','Cloud backup is off — data stays on this phone'); }
+    else if(isDeadNow()){ cls='bad'; msg=tx('লগইনের মেয়াদ শেষ — ব্যাকআপ থেমে আছে','Login expired — backup is paused'); btn=tx('আবার লগইন করুন','Sign in again'); }
+    else if(busy){ cls='wait'; msg=tx('সিঙ্ক হচ্ছে…','Syncing…'); }
+    else if(!auto()){ cls='warn'; msg=tx('অটো সিঙ্ক বন্ধ আছে','Auto sync is off'); }
+    else if(LS.getItem(DIRTY)==='1'){ cls='warn'; msg=tx('নতুন পরিবর্তন আপলোডের অপেক্ষায়','New changes are waiting to upload'); }
+    else { cls='ok'; msg=tx('সব ডেটা ক্লাউডে আপ-টু-ডেট','All data is up to date in the cloud'); }
+    $('bkDot').className='bkDot '+cls; $('bkState').textContent=msg;
+    $('bkLast').textContent=s?fmtT(+LS.getItem(PUSHK)||+LS.getItem(LAST)||0):'—';
+    $('bkChk').textContent=s?fmtT(+LS.getItem(CHKK)||+LS.getItem(LAST)||0):'—';
+    var b=$('bkNow'); if(b){ b.textContent=btn; b.disabled=!!(busy&&s); b.style.display=(ok()&&s)?'':'none'; }
+  }
+  function bkAct(){ if(ses()&&isDeadNow()) reModal(); else sync(true); }
+  setInterval(function(){ if(document.visibilityState==='visible') bkRefresh(); },30000);
   window.ftCloud={
+    bkAct:bkAct,
     _raw:function(){ return {ses:ses,token:token,call:call,CFG:CFG,ok:ok,errMsg:errMsg}; },
     loginSubmit:loginSubmit, loginGoogle:loginGoogle, loginMode:loginMode, loginReset:loginReset, resetOpen:resetOpen, resetSend:resetSend, resetClose:resetClose, loginGuest:loginGuest, loginEye:loginEye,
     edit:openSheet, profSave:profSave, pfTouch:pfTouch, pfEye:pfEye, sheetClose:sheetClose, sheetSave:sheetSave, sheetForgot:sheetForgot, eye:eyeToggle, toggle:toggleSync, refresh:function(){ ui(); },
@@ -2346,6 +2385,12 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
         <div class="pfHdS" id="pfHdS"></div>
       </div>
       <div class="pfPanel">
+        <div class="bkRow" id="bkRow" style="display:none;">
+          <div class="bkTop"><span class="bkDot off" id="bkDot"></span><b id="bkState"></b></div>
+          <div class="bkLn"><span><span class="bn">সর্বশেষ ক্লাউড ব্যাকআপ</span><span class="en">Last cloud backup</span></span><b id="bkLast">—</b></div>
+          <div class="bkLn"><span><span class="bn">সর্বশেষ সিঙ্ক যাচাই</span><span class="en">Last sync check</span></span><b id="bkChk">—</b></div>
+          <button type="button" class="typebtn bkBtn" id="bkNow" onclick="ftCloud.bkAct()"></button>
+        </div>
         <div class="pfG2"><div class="pfPill"><input id="pfn" type="text" autocomplete="name" autocapitalize="none" spellcheck="false" oninput="ftCloud.pfTouch()" ></div><div class="pfPill"><input id="pfu" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" oninput="ftCloud.pfTouch()" ></div></div>
         <div class="pfPill"><input id="pfe" type="email" autocomplete="email" autocapitalize="none" spellcheck="false" oninput="ftCloud.pfTouch()" ></div>
         <div class="pfG2"><div class="pfPill"><input id="pfw" type="password" autocomplete="new-password" oninput="ftCloud.pfTouch()"></div><button type="button" class="pfEyeB" aria-label="Show / hide" onclick="ftCloud.pfEye('pfw',this)"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="sl" d="M4 4l16 16"/></svg></button></div>
@@ -6443,6 +6488,7 @@ const box=$('devModeBox');
 
 function tog2(b,e,key,def,fn){ const l=document.createElement('label'); l.className='ftRow'; l.innerHTML='<span>'+bl(b,e)+'</span><input type="checkbox">'; const c=l.querySelector('input'); c.checked=ls(key,def)==='1'; c.onchange=()=>{ st(key,c.checked?'1':'0'); fn&&fn(); }; return l; }
 $('devSw').appendChild(tog2('অ্যাড পেজে কুইক বাটন ও সাম্প্রতিক এন্ট্রি','Quick buttons & recent entries on Add page','qaOn_v1','1',qaRender));
+$('devSw').appendChild(tog2('প্রোফাইলে ক্লাউড ব্যাকআপের তথ্য ও আপডেট বাটন','Cloud backup info & update button in Profile','pfSyncInfo_v1','1',()=>{ try{ ftCloud.refresh(); }catch(e){} }));
 $('devSw').appendChild(tog2('অ্যাপ খুললে রিমাইন্ডার পপআপ','Reminder popup when app opens','rmPopup_v1','1'));
 $('devSw').appendChild(tog2('সঠিক পিন দিলে নিজে থেকে অ্যাপে ঢুকবে','Auto-unlock when PIN is correct','autoUnlock_v1','1',()=>{try{const pd=document.querySelector('.pkPad');if(pd)pd.classList.toggle('auto',ls('autoUnlock_v1','1')==='1'&&+ls('appPinLen_v1',0)>=4)}catch(e){}}));
 
@@ -6507,10 +6553,10 @@ HERO.forEach(h=>$('devHero').appendChild(tog2(h[1]+' কার্ড',h[2]+' car
 
 $('devSwReset').onclick=()=>{
   appDialog(bn()?'সব ফিচার সুইচ ডিফল্টে (সব চালু) ফিরে যাবে। এগোবেন?':'All feature switches will go back to default (everything on). Continue?',{confirm:true,yes:'OK'},()=>{
-    const keys=['qaOn_v1','weekCard_v1','autoUnlock_v1','rmPopup_v1'].concat(DASH.map(d=>swKey(d[0])),NAV.map(n=>swKey(n[0])),HERO.map(h=>'dash_hero_'+h[0]+'_v1'));
+    const keys=['qaOn_v1','weekCard_v1','autoUnlock_v1','rmPopup_v1','pfSyncInfo_v1'].concat(DASH.map(d=>swKey(d[0])),NAV.map(n=>swKey(n[0])),HERO.map(h=>'dash_hero_'+h[0]+'_v1'));
     keys.forEach(k=>st(k,'1'));
     ['devSw','devHero','devDash','devNav'].forEach(id=>$(id).querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=true));
-    applyDash(); applyHero(); qaRender(); week();
+    applyDash(); applyHero(); qaRender(); week(); try{ ftCloud.refresh(); }catch(e){}
     say(bn()?'সব সুইচ ডিফল্টে ফিরেছে':'Switches reset');
   });
 };
