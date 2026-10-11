@@ -10853,7 +10853,7 @@ const bn=()=>typeof currentLang!=='undefined'&&currentLang==='bn', L=(b,e)=>bn()
 const nb=x=>bn()?String(x).replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]):String(x);
 const E=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const getSnap=()=>{ try{ return JSON.parse(LS.getItem(SK)||'null'); }catch(e){ return null; } };
-function snap(){ try{ if(!LS.getItem('moneyAppData_v1')) return; const o=getSnap(); if(o&&Date.now()-o.t<WEEK) return; const d={}; KEYS.forEach(k=>{ const v=LS.getItem(k); if(v!=null) d[k]=v; }); LS.setItem(SK,JSON.stringify({t:Date.now(),d})); }catch(e){} }
+function snap(){ try{ const _r=LS.getItem('moneyAppData_v1'); if(!_r) return; try{ const _o=JSON.parse(_r); if(!_o||!_o.transactions||!_o.transactions.length) return; }catch(_e){ return; } const o=getSnap(); if(o&&Date.now()-o.t<WEEK) return; const d={}; KEYS.forEach(k=>{ const v=LS.getItem(k); if(v!=null) d[k]=v; }); LS.setItem(SK,JSON.stringify({t:Date.now(),d})); }catch(e){} }
 setTimeout(snap,4000); setInterval(snap,6*36e5);
 const ic={
  info:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.2M12 7.8h.01"/></svg>',
@@ -11875,6 +11875,41 @@ function add(){
   try{ applyTheme(localStorage.getItem('appTheme_v1')||''); }catch(e){}
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',add); else add();
+})();
+</script>
+
+<script id="dataSafetyNet">
+/* Data safety net: keeps a restore point if saved data suddenly shrinks, and offers recovery when the app opens empty. */
+(function(){
+  var LS=localStorage, K='moneyAppData_v1', G='ftDataGuard_v1', NO='ftDataGuardNo_v1', SK='ftAutoBak_v1';
+  function cnt(raw){ try{ var o=JSON.parse(raw); return (o&&Array.isArray(o.transactions))?o.transactions.length:0; }catch(e){ return 0; } }
+  function getG(){ try{ return JSON.parse(LS.getItem(G)||'null'); }catch(e){ return null; } }
+  try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+  var last=cnt(LS.getItem(K)), _si=Storage.prototype.setItem;
+  Storage.prototype.setItem=function(k,v){
+    if(this===LS&&k===K){
+      try{
+        var nn=cnt(v);
+        if(last>=3&&nn<last*0.5){ var g=getG(), prev=LS.getItem(K); if(prev&&(!g||cnt(g.raw)<=last)) _si.call(LS,G,JSON.stringify({t:Date.now(),raw:prev})); }
+        last=nn;
+      }catch(e){}
+    }
+    return _si.apply(this,arguments);
+  };
+  function bn(){ try{ return typeof currentLang==='undefined'||currentLang==='bn'; }catch(e){ return true; } }
+  function check(){
+    try{
+      if(typeof data==='undefined'||!data||(data.transactions||[]).length) return;
+      var best=null, g=getG();
+      if(g&&cnt(g.raw)>0&&String(g.t)!==LS.getItem(NO)) best={n:cnt(g.raw),t:g.t,run:function(){ LS.setItem(K,g.raw); }};
+      var sn=null; try{ sn=JSON.parse(LS.getItem(SK)||'null'); }catch(e){}
+      if(sn&&sn.d&&sn.d[K]){ var n2=cnt(sn.d[K]); if(n2>0&&String(sn.t)!==LS.getItem(NO)&&(!best||n2>best.n)) best={n:n2,t:sn.t,run:function(){ Object.keys(sn.d).forEach(function(k){ LS.setItem(k,sn.d[k]); }); }}; }
+      if(!best) return;
+      var msg=bn()?('আগের ডেটা পাওয়া গেছে ('+best.n+'টি লেনদেন)। ফিরিয়ে আনবেন?\nOK = ফিরিয়ে আনুন\nCancel = না'):('Previous data found ('+best.n+' transactions). Restore it?\nOK = Restore\nCancel = No');
+      if(confirm(msg)){ best.run(); location.reload(); } else { LS.setItem(NO,String(best.t)); }
+    }catch(e){}
+  }
+  setTimeout(check,2500);
 })();
 </script>
 </body>
