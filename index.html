@@ -741,6 +741,16 @@ html.booting .wrap, html.booting .bottomnav{visibility:hidden;}
 .bkLn{display:flex; justify-content:space-between; gap:10px; font-size:12.5px; color:var(--muted); padding:3px 0;}
 .bkLn b{color:var(--text); font-weight:700; text-align:right;}
 .bkBtn{width:100%; margin-top:8px;}
+.dvWrap{margin:4px 0 12px; padding:12px; border-radius:16px; background:var(--bg); border:1px solid var(--border);}
+.dvHd{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:14px;}
+.dvRef{border:0; background:transparent; color:var(--primary); font-weight:800; font-size:12.5px; cursor:pointer; padding:4px 6px;}
+.dvCnt{font-size:12.5px; color:var(--muted); margin-bottom:6px;}
+.dvRow{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-top:1px solid var(--border);}
+.dvI{min-width:0; flex:1;} .dvI b{display:block; font-size:13.5px; word-break:break-word;} .dvI small{display:block; font-size:11.5px; color:var(--muted); margin-top:2px;}
+.dvMe{display:inline-block; font-size:10.5px; font-weight:800; padding:2px 7px; border-radius:99px; background:var(--primary); color:#fff; margin-left:4px; vertical-align:middle;}
+.dvOut{flex:none; border:1px solid var(--red,#dc2626); color:var(--red,#dc2626); background:transparent; border-radius:10px; padding:7px 12px; font-weight:800; font-size:12.5px; cursor:pointer;}
+.dvAll{width:100%; margin-top:8px; color:var(--red,#dc2626);}
+.dvNote{font-size:11.5px; color:var(--muted); margin-top:8px; line-height:1.45;}
 .pfHd i{position:absolute; border-radius:50%; background:rgba(255,255,255,.2);}
 .pfHd i.a{width:110px; height:110px; left:-34px; top:34px;}
 .pfHd i.b{width:96px; height:96px; right:-26px; bottom:10px; background:rgba(255,255,255,.14);}
@@ -1325,7 +1335,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
 /* ===== Cloud sync: full app data <-> Firebase (Auth email/password + Realtime DB, REST only) ===== */
 (function(){
   var CFG=window.FT_FIREBASE||{}, LS=localStorage;
-  var ST='ftSync_v1', BASE='ftSyncBase_v1', DIRTY='ftSyncDirty_v1', AUTO='ftSyncAuto_v1', LAST='ftSyncLast_v1', DEADK='ftSyncDead_v1', PUSHK='ftSyncPush_v1', CHKK='ftSyncChk_v1';
+  var ST='ftSync_v1', BASE='ftSyncBase_v1', DIRTY='ftSyncDirty_v1', AUTO='ftSyncAuto_v1', LAST='ftSyncLast_v1', DEADK='ftSyncDead_v1', PUSHK='ftSyncPush_v1', CHKK='ftSyncChk_v1', DEVK='ftSyncDev_v1', DEVAT='ftSyncDevAt_v1';
   var bnL=function(){return document.documentElement.lang!=='en'}, tx=function(b,e){return bnL()?b:e};
   var $=function(i){return document.getElementById(i)};
   var _set=Storage.prototype.setItem, _rem=Storage.prototype.removeItem;
@@ -1336,7 +1346,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   function syncKey(k){ return typeof k==='string' && /^[A-Za-z0-9_-]+_v1$/.test(k) && !SKIP.test(k); }
   function ok(){ return !!(CFG.apiKey&&CFG.dbUrl); }
   function ses(){ try{return JSON.parse(LS.getItem(ST)||'null')}catch(e){return null} }
-  function setSes(o){ dead=false; try{ _rem.call(LS,DEADK); }catch(e){} if(o){ try{ var c0=ses(); lastUid=(c0&&c0.uid)||LS.getItem('ftSyncUid_v1')||''; _set.call(LS,'ftSyncUid_v1',o.uid||''); }catch(e){} _set.call(LS,ST,JSON.stringify(o)); } else _rem.call(LS,ST); }
+  function setSes(o){ dead=false; try{ _rem.call(LS,DEADK); }catch(e){} if(o){ try{ var c0=ses(); lastUid=(c0&&c0.uid)||LS.getItem('ftSyncUid_v1')||''; _set.call(LS,'ftSyncUid_v1',o.uid||''); }catch(e){} _set.call(LS,ST,JSON.stringify(o)); } else { _rem.call(LS,ST); _rem.call(LS,DEVAT); } }
   function auto(){ return LS.getItem(AUTO)!=='0'; }
   function isDeadNow(){ return dead||LS.getItem(DEADK)==='1'; }
   function status(m,bad){ var e=$('csStatus'); if(e){ e.textContent=m||''; e.style.color=bad?'var(--red)':'var(--primary)'; } try{ bkRefresh(); }catch(x){} }
@@ -1345,7 +1355,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   function acRefresh(){ var w=$('acWho'); if(!w) return; var s=ses(), n=''; try{ n=localStorage.getItem('myName_v1')||''; }catch(e){}
     w.textContent = s ? ((n?n+' · ':'')+(s.email||'')) : tx((n?n+' · ':'')+'গেস্ট (শুধু এই ফোনে)',(n?n+' · ':'')+'Guest (this phone only)'); }
   function ui(){
-    acRefresh(); profRefresh(); lgPh(); bkRefresh(); if(isDeadNow()&&ses()) reBtn();
+    acRefresh(); profRefresh(); lgPh(); bkRefresh(); devVis(); if(isDeadNow()&&ses()) reBtn();
     var s=ses(), c=$('csAuto'); if(!c) return;
     var on=!!s&&auto(); c.checked=on;
     var sub=$('csSub');
@@ -1986,8 +1996,93 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   }
   function bkAct(){ if(ses()&&isDeadNow()) reModal(); else sync(true); }
   setInterval(function(){ if(document.visibilityState==='visible') bkRefresh(); },30000);
+    /* ---- logged-in devices: list + remote logout (soft logout: the other device signs itself out next time it is online) ---- */
+  var devBusy=false, devSeenAt=0, devLoadedAt=0, devChkAt=0;
+  function devId(){ var v=lsGet(DEVK); if(!v){ try{ v=(window.crypto&&crypto.randomUUID)?crypto.randomUUID().replace(/-/g,'').slice(0,16):''; }catch(e){ v=''; } if(!v) v=Date.now().toString(36)+Math.random().toString(36).slice(2,10); _set.call(LS,DEVK,v); } return v; }
+  function devLabel(){
+    var ua=navigator.userAgent||'', os='Device', br='';
+    if(/Android/i.test(ua)){ var m=ua.match(/Android[^;)]*;\s*([^;)]+)/); var md=m&&m[1]?m[1].replace(/\s*Build.*$/,'').trim():''; os='Android'+((md&&md.length>1&&!/^wv$/i.test(md))?' '+md:''); }
+    else if(/iPhone/.test(ua)) os='iPhone'; else if(/iPad/.test(ua)) os='iPad';
+    else if(/Windows/.test(ua)) os='Windows'; else if(/Mac OS X|Macintosh/.test(ua)) os='Mac'; else if(/Linux/.test(ua)) os='Linux';
+    if(/Edg\//.test(ua)) br='Edge'; else if(/OPR\/|Opera/.test(ua)) br='Opera'; else if(/SamsungBrowser/.test(ua)) br='Samsung Internet'; else if(/Firefox|FxiOS/.test(ua)) br='Firefox'; else if(/Chrome|CriOS/.test(ua)) br='Chrome'; else if(/Safari/.test(ua)) br='Safari';
+    var inst=false; try{ inst=window.matchMedia&&matchMedia('(display-mode: standalone)').matches; }catch(e){}
+    return os+(br?' · '+br:'')+(inst?' (App)':'');
+  }
+  async function devPatch(id,obj){ return withAuth(async function(){ var r=await call(await dbUrl('devices/'+id),{method:'PATCH',headers:JH,body:JSON.stringify(obj)}); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }); }
+  async function delSelf(){ var id=lsGet(DEVK); if(!id||!ses()||!ok()) return; await withAuth(async function(){ var r=await call(await dbUrl('devices/'+id),{method:'DELETE'}); if(!r.ok) throw new Error('HTTP '+r.status); }); }
+  function devLeave(cb){
+    var done=false; function fin(){ if(done) return; done=true; cb(); }
+    setTimeout(fin,2500);
+    try{ if(ses()&&ok()&&!isDeadNow()) delSelf().then(fin,fin); else fin(); }catch(e){ fin(); }
+  }
+  function remoteOut(){
+    var go=function(){ try{ window.ftCloud._doLogout(); }catch(e){} toast(tx('অন্য ডিভাইস থেকে এই ফোনে লগআউট করা হয়েছে','This device was logged out from another device')); };
+    var done=false, fin=function(){ if(done) return; done=true; go(); }; setTimeout(fin,2500);
+    delSelf().then(fin,fin);
+  }
+  async function devPing(force){
+    if(!ses()||!ok()||isDeadNow()||devBusy) return; devBusy=true;
+    try{
+      var id=devId(), now=Date.now();
+      if(!lsGet(DEVAT)){ await devPatch(id,{name:devLabel(),first:now,seen:now,revoked:false}); _set.call(LS,DEVAT,String(now)); devSeenAt=now; }
+      else{
+        var rec=await dbGet('devices/'+id);
+        if(rec&&rec.revoked){ devBusy=false; remoteOut(); return; }
+        if(force||!rec||now-devSeenAt>600000){ var o={name:devLabel(),seen:now,revoked:false}; if(!rec) o.first=now; await devPatch(id,o); devSeenAt=now; }
+      }
+    }catch(e){}
+    finally{ devBusy=false; }
+  }
+  function devVis(){ var w=$('devWrap'); if(!w) return; w.style.display=(ses()&&ok())?'':'none'; }
+  function devRender(all){
+    var box=$('devList'); if(!box) return; var me=devId();
+    var ids=Object.keys(all).filter(function(k){ return all[k]&&typeof all[k]==='object'; }).sort(function(a,b){ if(a===me) return -1; if(b===me) return 1; return (+all[b].seen||0)-(+all[a].seen||0); });
+    var active=ids.filter(function(k){ return !all[k].revoked; }).length, others=ids.filter(function(k){ return k!==me&&!all[k].revoked; }).length;
+    var nf=new Intl.NumberFormat(bnL()?'bn-BD':'en-US'), h='';
+    h+='<div class="dvCnt">'+tx(nf.format(active)+' টি ডিভাইসে লগইন আছে', nf.format(active)+' device(s) logged in')+'</div>';
+    ids.forEach(function(k){
+      var d=all[k], isMe=k===me, rv=!!d.revoked;
+      h+='<div class="dvRow'+(isMe?' me':'')+'"><div class="dvI"><b>'+escH(d.name||tx('অজানা ডিভাইস','Unknown device'))+(isMe?' <span class="dvMe">'+tx('এই ডিভাইস','This device')+'</span>':'')+'</b>'
+        +'<small>'+(rv?tx('লগআউট অনুরোধ পাঠানো হয়েছে — ডিভাইসটি অনলাইন হলে লগআউট হবে','Logout requested — it will sign out when that device is online'):tx('শেষ সক্রিয়: ','Last active: ')+fmtT(+d.seen||0))+'</small>'
+        +(d.first&&!rv?'<small>'+tx('প্রথম লগইন: ','First login: ')+fmtT0(+d.first)+'</small>':'')+'</div>'
+        +((!isMe&&!rv)?'<button type="button" class="dvOut" onclick="ftCloud.devOut(\''+k+'\')">'+tx('লগআউট','Log out')+'</button>':'')+'</div>';
+    });
+    if(others>0) h+='<button type="button" class="typebtn dvAll" onclick="ftCloud.devOutAll()">'+tx('অন্য সব ডিভাইস থেকে লগআউট','Log out all other devices')+'</button>';
+    box.innerHTML=h;
+  }
+  function fmtT0(t){ return t?new Date(t).toLocaleString(bnL()?'bn-BD':'en-GB',{day:'numeric',month:'short',year:'numeric'}):'—'; }
+  async function devLoad(){
+    var box=$('devList'); if(!box||!ses()||!ok()) return;
+    if(isDeadNow()){ box.textContent=tx('আগে আবার লগইন করুন','Please sign in again first'); return; }
+    devLoadedAt=Date.now(); if(!box.firstChild) box.textContent=tx('লোড হচ্ছে…','Loading…');
+    try{ await devPing(); devRender((await dbGet('devices'))||{}); }
+    catch(e){ box.textContent=/HTTP 40[13]/.test(String((e&&e.message)||e))?tx('ডিভাইস তালিকা পাওয়া যায়নি — Firebase রুলসে users/$uid/devices এ অনুমতি দিন','Could not load devices — allow users/$uid/devices in Firebase rules'):errMsg(e); }
+  }
+  async function devOut(id){
+    if(!ses()||!id) return;
+    if(!confirm(tx('এই ডিভাইস থেকে লগআউট করবেন? ডিভাইসটি অনলাইন হলে নিজে থেকে লগআউট হয়ে যাবে। ওই ফোনের ডেটা মুছবে না।','Log out this device? It will sign itself out once it is online. Its data is not deleted.'))) return;
+    try{ await devPatch(id,{revoked:true}); toast(tx('লগআউট অনুরোধ পাঠানো হয়েছে','Logout request sent')); }catch(e){ toast(errMsg(e)); }
+    devLoad();
+  }
+  async function devOutAll(){
+    if(!ses()) return;
+    if(!confirm(tx('এই ফোন ছাড়া বাকি সব ডিভাইস থেকে লগআউট করবেন?','Log out every device except this one?'))) return;
+    try{
+      var all=(await dbGet('devices'))||{}, me=devId(), o={}, n=0;
+      Object.keys(all).forEach(function(k){ if(k!==me&&all[k]&&typeof all[k]==='object'&&!all[k].revoked){ o[k+'/revoked']=true; n++; } });
+      if(n){ await withAuth(async function(){ var r=await call(await dbUrl('devices'),{method:'PATCH',headers:JH,body:JSON.stringify(o)}); if(!r.ok) throw new Error('HTTP '+r.status); }); }
+      toast(tx('লগআউট অনুরোধ পাঠানো হয়েছে','Logout requests sent'));
+    }catch(e){ toast(errMsg(e)); }
+    devLoad();
+  }
+  function devObserve(){
+    var w=$('devWrap'); if(!w||!('IntersectionObserver' in window)) return;
+    new IntersectionObserver(function(es){ es.forEach(function(en){ if(en.isIntersecting&&Date.now()-devLoadedAt>20000) devLoad(); }); }).observe(w);
+  }
+  setInterval(function(){ if(document.visibilityState==='visible') devPing(); },90000);
+  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible'&&Date.now()-devChkAt>45000){ devChkAt=Date.now(); setTimeout(devPing,800); } });
   window.ftCloud={
-    bkAct:bkAct,
+    bkAct:bkAct, devOut:devOut, devOutAll:devOutAll, devLoad:devLoad,
     _raw:function(){ return {ses:ses,token:token,call:call,CFG:CFG,ok:ok,errMsg:errMsg}; },
     loginSubmit:loginSubmit, loginGoogle:loginGoogle, loginMode:loginMode, loginReset:loginReset, resetOpen:resetOpen, resetSend:resetSend, resetClose:resetClose, loginGuest:loginGuest, loginEye:loginEye,
     edit:openSheet, profSave:profSave, pfTouch:pfTouch, pfEye:pfEye, sheetClose:sheetClose, sheetSave:sheetSave, sheetForgot:sheetForgot, eye:eyeToggle, toggle:toggleSync, refresh:function(){ ui(); },
@@ -1995,6 +2090,9 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     setAuto:function(v){ _set.call(LS,AUTO,v?'1':'0'); if(v) schedule(); },
     accountLogout:function(){
       if(!confirm(tx('অ্যাকাউন্ট থেকে লগআউট করবেন? এই ফোনের ডেটা মুছবে না।','Log out of your account? Data on this phone stays.'))) return;
+      devLeave(function(){ window.ftCloud._doLogout(); });
+    },
+    _doLogout:function(){
       setSes(null); _rem.call(LS,BASE); _rem.call(LS,DIRTY); idTok='';
       try{ localStorage.removeItem('loginDone_v1'); }catch(e){}
       document.documentElement.classList.remove('hasUser','locked');
@@ -2005,11 +2103,11 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
       if(ok()) loginMode('in'); lgStatus('');
       ui(); window.scrollTo(0,0);
     },
-    signOut:function(){ if(!confirm(tx('লগআউট করবেন? এই ফোনের ডেটা মুছবে না।','Sign out? Data on this phone stays.'))) return; setSes(null); _rem.call(LS,BASE); _rem.call(LS,DIRTY); idTok=''; ui(); status(tx('লগআউট হয়েছে','Signed out')); },
+    signOut:function(){ if(!confirm(tx('লগআউট করবেন? এই ফোনের ডেটা মুছবে না।','Sign out? Data on this phone stays.'))) return; devLeave(function(){ setSes(null); _rem.call(LS,BASE); _rem.call(LS,DIRTY); idTok=''; ui(); status(tx('লগআউট হয়েছে','Signed out')); }); },
     wipe:async function(){ if(!confirm(tx('ক্লাউড থেকে আপনার সব ডেটা মুছে যাবে। এই ফোনের ডেটা থাকবে। নিশ্চিত?','This deletes all your data from the cloud. Data on this phone stays. Sure?'))) return;
       try{ var r=await call(await dbUrl('backup'),{method:'DELETE'}); if(!r.ok) throw new Error('HTTP '+r.status); _rem.call(LS,BASE); _set.call(LS,DIRTY,'1'); status(tx('ক্লাউড ডেটা মুছে ফেলা হয়েছে','Cloud data deleted')); }catch(e){ status(errMsg(e),true); } }
   };
-  function init(){ ui(); try{ gInit(); }catch(e){} if(ses()&&ok()){ doneMsg(); setTimeout(function(){ if(auto()) sync(); },1500); setTimeout(checkUn,2200); } }
+  function init(){ ui(); try{ gInit(); }catch(e){} try{ devObserve(); }catch(e){} if(ses()&&ok()){ setTimeout(devPing,2600); doneMsg(); setTimeout(function(){ if(auto()) sync(); },1500); setTimeout(checkUn,2200); } }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
   window.addEventListener('online',function(){ if(ses()&&auto()) sync(); });
   var lastVis=0; document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible'&&ses()&&auto()&&Date.now()-lastVis>60000){ lastVis=Date.now(); sync(); } });
@@ -2443,6 +2541,11 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     <h3><span class="bn">লগআউট</span><span class="en">Logout</span></h3>
     <div style="font-size:13.5px; font-weight:700; word-break:break-all;" id="acWho"></div>
     <div style="font-size:12.5px; color:var(--muted); margin:4px 0 10px;"><span class="bn">লগআউট করলে এই ফোনের ডেটা মুছবে না। আবার লগইন বা গেস্ট হিসেবে ঢুকতে পারবেন।</span><span class="en">Logging out keeps the data on this phone. You can log in again or continue as guest.</span></div>
+    <div id="devWrap" class="dvWrap" style="display:none;">
+      <div class="dvHd"><b><span class="bn">লগইন করা ডিভাইস</span><span class="en">Logged-in devices</span></b><button type="button" class="dvRef" onclick="ftCloud.devLoad()"><span class="bn">রিফ্রেশ</span><span class="en">Refresh</span></button></div>
+      <div id="devList" class="dvList"></div>
+      <div class="dvNote"><span class="bn">অন্য ডিভাইস থেকে লগআউট দিলে সেই ফোন অনলাইন থাকলে ১-২ মিনিটের মধ্যে, না হলে পরের বার অ্যাপ খুললে নিজে লগআউট হবে।</span><span class="en">A remote logout takes effect within 1–2 minutes if that device is online, otherwise the next time it opens the app.</span></div>
+    </div>
     <button class="typebtn" style="width:100%; color:var(--red); display:flex; align-items:center; justify-content:center; gap:8px;" onclick="ftCloud.accountLogout()"><i class="mi" style="--m:var(--ic-power); width:18px; height:18px; flex:none;"></i><span class="bn">লগআউট</span><span class="en">Logout</span></button>
   </div>
   <div class="box" id="cloudSyncBox">
