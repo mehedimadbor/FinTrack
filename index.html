@@ -1322,8 +1322,8 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   var bnL=function(){return document.documentElement.lang!=='en'}, tx=function(b,e){return bnL()?b:e};
   var $=function(i){return document.getElementById(i)};
   var _set=Storage.prototype.setItem, _rem=Storage.prototype.removeItem;
-  var applying=false, busy=false, timer=0, idTok='', idExp=0;
-  var SKIP=/^(appPin|appLock|pinFails|pinLockUntil|lockFailTotal|lastUnlock|lockAutoBio|lockDelay|autoUnlock|loginDone|ftSync|userCounted|happyCount|noticeSeenId|noticeUrl|devLog|backupNudge|backupRemind|lastBackup)/;
+  var applying=false, busy=false, timer=0, idTok='', idExp=0, chg=0, again=false;
+  var SKIP=/^(appPin|appLock|pinFails|pinLockUntil|lockFailTotal|lastUnlock|lockAutoBio|lockDelay|autoUnlock|loginDone|ftSync|userCounted|happyCount|noticeSeenId|noticeUrl|devLog|backupNudge|backupRemind|lastBackup|ftDataGuard|ftAutoBak)/;
   function syncKey(k){ return typeof k==='string' && /^[A-Za-z0-9_-]+_v1$/.test(k) && !SKIP.test(k); }
   function ok(){ return !!(CFG.apiKey&&CFG.dbUrl); }
   function ses(){ try{return JSON.parse(LS.getItem(ST)||'null')}catch(e){return null} }
@@ -1431,9 +1431,36 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   async function dbGet(path){ var r=await call(await dbUrl(path)+'&t='+Date.now(),{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }
   function snapshot(){ var o={}; for(var i=0;i<LS.length;i++){ var k=LS.key(i); if(syncKey(k)) o[k]=LS.getItem(k); } return o; }
   async function push(){
-    var ts=Date.now(), r=await call(await dbUrl('backup'),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:snapshot(),updatedAt:ts})});
+    var url=await dbUrl('backup'), c0=chg, ts=Date.now(), r=await call(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:snapshot(),updatedAt:ts})});
     if(!r.ok) throw new Error('HTTP '+r.status);
-    _set.call(LS,BASE,String(ts)); _set.call(LS,DIRTY,'0'); _set.call(LS,LAST,String(Date.now()));
+    _set.call(LS,BASE,String(ts)); _set.call(LS,LAST,String(Date.now()));
+    if(chg===c0) _set.call(LS,DIRTY,'0'); else { _set.call(LS,DIRTY,'1'); again=true; }   /* something changed while uploading -> upload again */
+  }
+  /* ---- merge (never lose either side): transactions & lists are united by id, this phone wins on the same id ---- */
+  function mergeList(cloud,local){
+    var out=[], idx={}; function key(x){ return (x&&typeof x==='object'&&x.id!=null)?'id:'+x.id:'js:'+JSON.stringify(x); }
+    (cloud||[]).forEach(function(x){ var k=key(x); if(!(k in idx)){ idx[k]=out.length; out.push(x); } });
+    (local||[]).forEach(function(x){ var k=key(x); if(k in idx) out[idx[k]]=x; else { idx[k]=out.length; out.push(x); } });
+    return out;
+  }
+  function mergeApp(rawLocal,rawCloud){
+    try{
+      var L=JSON.parse(rawLocal), R=JSON.parse(rawCloud);
+      if(!L||typeof L!=='object') return rawCloud; if(!R||typeof R!=='object') return rawLocal;
+      var o=Object.assign({},R,L);
+      Object.keys(o).forEach(function(k){ var l=L[k], r=R[k];
+        if(Array.isArray(l)&&Array.isArray(r)) o[k]=mergeList(r,l);
+        else if(l&&r&&typeof l==='object'&&typeof r==='object'&&!Array.isArray(l)&&!Array.isArray(r)) o[k]=Object.assign({},r,l); });
+      return JSON.stringify(o);
+    }catch(e){ return rawLocal; }
+  }
+  function mergeRemote(rem){
+    var d=rem&&rem.data; if(!d||typeof d!=='object') return false;
+    applying=true;
+    try{ Object.keys(d).forEach(function(k){ if(!syncKey(k)||typeof d[k]!=='string') return; var cur=LS.getItem(k);
+      if(cur==null) _set.call(LS,k,d[k]); else if(k==='moneyAppData_v1') _set.call(LS,k,mergeApp(cur,d[k])); }); }
+    finally{ applying=false; }
+    _set.call(LS,DIRTY,'1'); return true;
   }
   function applyRemote(rem){
     var d=rem&&rem.data; if(!d||typeof d!=='object') return false;
@@ -1448,18 +1475,17 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     setTimeout(function(){ location.reload(); },400); return true;
   }
   async function sync(manual){
-    if(busy||!ses()||!ok()) return; busy=true;
+    if(busy){ again=true; return; } if(!ses()||!ok()) return; busy=true;
     try{
       status(tx('সিঙ্ক হচ্ছে…','Syncing…'));
       var ru=await dbGet('backup/updatedAt'), base=+LS.getItem(BASE)||0, dirty=LS.getItem(DIRTY)==='1';
       if(ru===null||typeof ru!=='number'){ await push(); }
       else if(ru===base){ if(dirty) await push(); }
       else if(!dirty){ var full=await dbGet('backup'); if(applyRemote(full)) return; }
-      else if(confirm(tx('এই ফোন ও ক্লাউড—দুই জায়গাতেই নতুন পরিবর্তন আছে।\nOK = ক্লাউডের ডেটা নেবেন\nCancel = এই ফোনের ডেটা রাখবেন (ক্লাউডের ডেটা বদলে যাবে)','Both this phone and the cloud have new changes.\nOK = take the cloud data\nCancel = keep this phone\'s data (replaces the cloud copy)'))){ var f2=await dbGet('backup'); if(applyRemote(f2)) return; }
-      else { await push(); }
+      else { var f2=await dbGet('backup'); if(mergeRemote(f2)){ await push(); setTimeout(function(){ location.reload(); },300); return; } await push(); }
       doneMsg();
     }catch(e){ status(errMsg(e),true); }
-    finally{ busy=false; }
+    finally{ busy=false; if(again){ again=false; setTimeout(function(){ if(ses()&&auto()&&navigator.onLine) sync(); },700); } }
   }
   async function firstSync(){
     var rem=await dbGet('backup');
@@ -1468,8 +1494,8 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     if(!hasLocal||confirm(tx('ক্লাউডে আপনার ডেটা পাওয়া গেছে। এই ফোনের ডেটা বদলে ক্লাউডের ডেটা নেবেন?\nOK = ক্লাউডের ডেটা নেবেন\nCancel = এই ফোনের ডেটা ক্লাউডে আপলোড হবে','Cloud data found. Replace this phone\'s data with it?\nOK = use the cloud data\nCancel = upload this phone\'s data to the cloud'))){ if(applyRemote(rem)) return; }
     await push(); doneMsg();
   }
-  function schedule(){ clearTimeout(timer); timer=setTimeout(function(){ if(navigator.onLine&&auto()) sync(); },5000); }
-  function onChange(k){ if(applying||!syncKey(k)||!ses()) return; _set.call(LS,DIRTY,'1'); if(auto()) schedule(); }
+  function schedule(){ clearTimeout(timer); timer=setTimeout(function(){ if(navigator.onLine&&auto()) sync(); },1500); }
+  function onChange(k){ if(applying||!syncKey(k)||!ses()) return; chg++; _set.call(LS,DIRTY,'1'); if(auto()) schedule(); }
   Storage.prototype.setItem=function(k){ var r=_set.apply(this,arguments); if(this===LS){ try{onChange(k)}catch(e){} } return r; };
   Storage.prototype.removeItem=function(k){ var r=_rem.apply(this,arguments); if(this===LS){ try{onChange(k)}catch(e){} } return r; };
   /* ---- profile rows + account sheet (name / username / phone / email / password) ---- */
@@ -1893,6 +1919,10 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
   window.addEventListener('online',function(){ if(ses()&&auto()) sync(); });
   var lastVis=0; document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible'&&ses()&&auto()&&Date.now()-lastVis>60000){ lastVis=Date.now(); sync(); } });
+  function flush(){ try{ if(ses()&&auto()&&navigator.onLine&&LS.getItem(DIRTY)==='1'){ clearTimeout(timer); sync(); } }catch(e){} }
+  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='hidden') flush(); });
+  window.addEventListener('pagehide',flush);
+  setInterval(function(){ if(document.visibilityState==='visible') flush(); },30000);
 })();
 </script>
 <div class="notifPopupOverlay" id="notifPopupOverlay" style="display:none;">
