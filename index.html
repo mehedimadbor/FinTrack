@@ -1508,7 +1508,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   }
   function applyRemote(rem){
     var d=rem&&rem.data; if(!d||typeof d!=='object') return false;
-    applying=true;
+    window.__ftNoSave=true; applying=true;
     try{
       var del=[]; for(var i=0;i<LS.length;i++){ var k=LS.key(i); if(syncKey(k)&&!(k in d)) del.push(k); }
       del.forEach(function(k){ _rem.call(LS,k); });
@@ -3112,10 +3112,19 @@ const DEFAULT_CATS = ['খাবার','যাতায়াত','বাসা
 const DEFAULT_ACCS = ['ব্যাংক','বিকাশ','নগদ','রকেট'];
 let data = null;
 
+let _ftLastRaw = null;   /* exact text this tab last read from / wrote to storage (used to notice other tabs' changes) */
 function loadData(){
   try{
     const raw = localStorage.getItem('moneyAppData_v1');
-    if(raw) data = JSON.parse(raw);
+    if(raw){
+      try{ data = JSON.parse(raw); if(!data || typeof data!=='object' || Array.isArray(data)) throw new Error('bad shape'); _ftLastRaw = raw; }
+      catch(pe){
+        data = null;
+        /* unreadable saved data: keep the original text safe BEFORE anything can overwrite it */
+        try{ localStorage.setItem('ftCorruptData', JSON.stringify({t:Date.now(), raw:raw})); }catch(_e){}
+        console.error('saved data unreadable, kept in ftCorruptData', pe);
+      }
+    }
   }catch(e){ console.error('load fail', e); }
   if(!data) data = {categories:[...DEFAULT_CATS], transactions:[], accounts:[...DEFAULT_ACCS]};
   if(!data.categories || !data.categories.length) data.categories = [...DEFAULT_CATS];
@@ -3137,10 +3146,62 @@ function sanitizeData(){
     seen.add(id); x.id=id; return x;
   });
 }
+/* Merge what ANOTHER tab/window saved into this tab's memory so nobody's entries are ever overwritten.
+   base = the text this tab last saw. Same id: my edit wins unless I did not touch it; deleted on one side stays deleted. */
+function ftMergeOther(otherRaw){
+  let O=null, B=null;
+  try{ O=JSON.parse(otherRaw); }catch(e){ return false; }
+  if(!O || typeof O!=='object' || Array.isArray(O) || !data) return false;
+  try{ B=_ftLastRaw?JSON.parse(_ftLastRaw):null; }catch(e){ B=null; }
+  const J=JSON.stringify;
+  const key=x=>(x&&typeof x==='object'&&x.id!=null)?'id:'+x.id:'js:'+J(x);
+  Object.keys(O).forEach(k=>{
+    const o=O[k], b=B?B[k]:undefined;
+    if(!(k in data)){ if(!(B&&k in B)) data[k]=o; return; }
+    const m=data[k];
+    if(Array.isArray(o)&&Array.isArray(m)){
+      const bArr=Array.isArray(b)?b:[], bs=new Set(bArr.map(key)), bStr={}; bArr.forEach(x=>{ bStr[key(x)]=J(x); });
+      const oMap={}; o.forEach(x=>{ oMap[key(x)]=x; });
+      const ms=new Set(m.map(key)), out=[];
+      m.forEach(x=>{ const kx=key(x);
+        if(bs.has(kx)&&!(kx in oMap)) return;                                  /* deleted in the other tab */
+        out.push((kx in oMap && bs.has(kx) && J(x)===bStr[kx])?oMap[kx]:x);      /* untouched here -> take the other tab's edit */
+      });
+      o.forEach(x=>{ const kx=key(x); if(!ms.has(kx)&&!bs.has(kx)) out.push(x); }); /* new in the other tab */
+      data[k]=out;
+    }else if(o&&m&&typeof o==='object'&&typeof m==='object'&&!Array.isArray(o)&&!Array.isArray(m)){
+      const bo=(b&&typeof b==='object'&&!Array.isArray(b))?b:null, res={};
+      new Set(Object.keys(o).concat(Object.keys(m))).forEach(kk=>{
+        const inO=kk in o, inM=kk in m, inB=!!bo&&kk in bo, same=inB&&inM&&J(m[kk])===J(bo[kk]);
+        if(inO&&inM) res[kk]=same?o[kk]:m[kk];
+        else if(inM){ if(!inB||!same) res[kk]=m[kk]; }
+        else if(inO){ if(!inB) res[kk]=o[kk]; }
+      });
+      data[k]=res;
+    }else if(b!==undefined && J(m)===J(b)){ data[k]=o; }                      /* plain value I did not touch */
+  });
+  return true;
+}
+let _ftReT=0;
+function ftReRender(){ clearTimeout(_ftReT); _ftReT=setTimeout(()=>{ try{ renderDash(); renderAccounts(); renderLoans(); renderHistory(); }catch(e){ console.error(e); } },120); }
 function saveData(){
-  try{ localStorage.setItem('moneyAppData_v1', JSON.stringify(data)); }
+  if(window.__ftNoSave) return;   /* restore / reset / cloud-replace in progress: never write old memory over it */
+  try{
+    const cur = localStorage.getItem('moneyAppData_v1');
+    if(cur!==null && cur!==_ftLastRaw){ if(ftMergeOther(cur)){ sanitizeData(); ftReRender(); } }
+    const raw = JSON.stringify(data);
+    localStorage.setItem('moneyAppData_v1', raw);
+    _ftLastRaw = raw;
+  }
   catch(e){ console.error('save fail', e); if(window.toast) toast(currentLang==='bn'?'সেভ করা যায়নি — স্টোরেজ ভরে গেছে, ব্যাকআপ নিন':'Could not save — storage full, take a backup'); }
 }
+/* another tab saved -> adopt its changes live (merge, never replace) */
+window.addEventListener('storage',e=>{
+  try{
+    if(window.__ftNoSave || e.key!=='moneyAppData_v1' || !e.newValue || e.newValue===_ftLastRaw || !data) return;
+    if(ftMergeOther(e.newValue)){ sanitizeData(); _ftLastRaw=e.newValue; ftReRender(); }
+  }catch(err){ console.error(err); }
+});
 
 const TYPE_META = {
   deposit:{label:'type_deposit', sign:1, needsSource:true, needsCat:false, needsPerson:false, needsAccount:false},
@@ -4331,6 +4392,7 @@ async function clearAllData(){
   const ok = await verifyOwner();
   if(!ok){ alert(t('dev_clear_denied')); return; }
   const keep = ['appLang_v1','appTheme_v1'];
+  window.__ftNoSave=true;
   try{
     Object.keys(localStorage).filter(k=>!keep.includes(k)).forEach(k=>localStorage.removeItem(k));
     sessionStorage.clear();
@@ -5476,6 +5538,8 @@ if(devUnlocked){
       let p; try{ p=JSON.parse(e.target.result); if(!p||typeof p!=='object'||Array.isArray(p)) throw 0; if(p.moneyAppData_v1) JSON.parse(p.moneyAppData_v1); }
       catch(_){ st.textContent=t('backup_restore_fail'); return; }
       appDialog(t('backup_restore_confirm'),{confirm:true,yes:bn()?'ফিরিয়ে আনুন':'Restore',icon:'upload'},()=>{
+        window.__ftNoSave=true;   /* nothing may overwrite the restored data before the reload */
+        try{ const cur0=localStorage.getItem('moneyAppData_v1'); if(cur0) localStorage.setItem('ftPreRestore',JSON.stringify({t:Date.now(),raw:cur0})); }catch(_){}
         BACKUP_KEYS.forEach(k=>{ if(typeof p[k]==='string'){ try{ localStorage.setItem(k,p[k]); }catch(_){} } });
         st.textContent=t('backup_restore_done'); setTimeout(()=>location.reload(),900);
       });
@@ -12780,6 +12844,74 @@ html:root .hc.hc-bal[data-bs="crit"] .hcVal{color:#ff3b3b !important;text-shadow
   var prev = window.renderDash;
   window.renderDash = function(){ var out = typeof prev==='function' ? prev.apply(this, arguments) : undefined; try{ paint(); }catch(e){} return out; };
   try{ paint(); }catch(e){}
+})();
+</script>
+
+<style id="ftCoverHero">
+/* ===== Home profile = cover hero (user's profile cover is the background) ===== */
+html body header.top{--cvH:262px;}
+html body header.top>h1,html body header.top>.pfStage,html body header.top>.hero{position:relative;z-index:1;}
+.pfCover{position:absolute;left:-14px;right:-14px;top:calc(-8px - env(safe-area-inset-top,0px));height:calc(var(--cvH) + env(safe-area-inset-top,0px));z-index:0;pointer-events:none;overflow:hidden;
+  background:
+    radial-gradient(120% 90% at 85% 0%,color-mix(in srgb,var(--primary) 34%,transparent),transparent 62%),
+    linear-gradient(170deg,color-mix(in srgb,var(--primary) 20%,var(--bg)),color-mix(in srgb,var(--primary) 5%,var(--bg)) 80%);
+  -webkit-mask-image:linear-gradient(180deg,#000 0,#000 52%,rgba(0,0,0,.55) 78%,transparent 100%);
+          mask-image:linear-gradient(180deg,#000 0,#000 52%,rgba(0,0,0,.55) 78%,transparent 100%);}
+.pfCover>i{position:absolute;inset:0;display:block;background-size:cover;background-position:center 60%;background-repeat:no-repeat;opacity:0;transform:scale(1.03);transition:opacity .45s ease;}
+.pfCover>i.on{opacity:1;}
+.pfCover::after{content:"";position:absolute;inset:0;opacity:0;transition:opacity .45s;background:linear-gradient(180deg,rgba(0,0,0,.42) 0,rgba(0,0,0,.16) 48%,transparent 78%);}
+header.top.pfHasCv .pfCover::after{opacity:1;}
+
+/* profile row: no card, sits right on the cover */
+html body header.top .pfStage{margin:2px 0 0;padding:4px 0 58px;border-radius:0;}
+html body header.top .pfStage .profileBar{background:none !important;border:0 !important;box-shadow:none !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important;border-radius:0;padding:0 2px;gap:13px;}
+html body header.top .pfStage .profileBar .pfAvatar{width:62px;height:62px;}
+html body header.top .pfStage .profileBar .pfAvatar span{font-size:25px;}
+html body header.top .pfStage .profileBar .pfHello{font-size:14px;font-weight:500;}
+html body header.top .pfStage .profileBar .pfName{font-size:23px;font-weight:800;letter-spacing:-.3px;}
+html body header.top .pfStage .profileBar .pfSub{font-size:12.5px;}
+
+/* readable on any photo */
+html body header.top.pfHasCv h1{color:#fff !important;text-shadow:0 1px 8px rgba(0,0,0,.45);}
+html body header.top.pfHasCv h1 span:not(#headerLogoEl):not(#headerLogoEl *){background:none !important;-webkit-background-clip:border-box !important;background-clip:border-box !important;-webkit-text-fill-color:#fff !important;color:#fff !important;}
+html body header.top.pfHasCv .pfHello{color:rgba(255,255,255,.9) !important;opacity:1 !important;text-shadow:0 1px 8px rgba(0,0,0,.5);}
+html body header.top.pfHasCv .pfName{color:#fff !important;text-shadow:0 1px 10px rgba(0,0,0,.5);}
+html body header.top.pfHasCv .pfSub{color:#fff !important;opacity:.92 !important;text-shadow:0 1px 8px rgba(0,0,0,.5);}
+html body header.top.pfHasCv :is(#ftMenuBtn,#ppHdrSearch,#ntBell),
+html body header.top.pfHasCv .pfStage .profileBar :is(button:not(.stAdd),.pfGo){background:rgba(255,255,255,.22) !important;color:#fff !important;border:1px solid rgba(255,255,255,.38) !important;box-shadow:none !important;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);}
+html body header.top.pfHasCv .pfStage .profileBar :is(button:not(.stAdd),.pfGo) :is(svg,.mi,i){color:#fff !important;stroke:#fff;}
+html body header.top.pfHasCv .pfAvatar::before{background:rgba(255,255,255,.9);}
+@media (prefers-reduced-motion:reduce){.pfCover>i,.pfCover::after{transition:none}}
+</style>
+<script id="ftCoverHeroJs">
+(function(){
+  var K='myCoverPic_v1', RE=/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/, last=null;
+  function hdr(){ return document.querySelector('header.top'); }
+  function ensure(){
+    var h=hdr(); if(!h) return null;
+    var c=h.querySelector(':scope>.pfCover');
+    if(!c){ c=document.createElement('div'); c.className='pfCover'; c.setAttribute('aria-hidden','true'); c.appendChild(document.createElement('i')); h.insertBefore(c,h.firstChild); }
+    return c;
+  }
+  function apply(){
+    var c=ensure(), h=hdr(); if(!c||!h) return;
+    var v=''; try{ v=localStorage.getItem(K)||''; }catch(e){}
+    if(!RE.test(v)) v='';
+    if(v===last) return; last=v;
+    var i=c.firstChild;
+    if(v){ i.style.backgroundImage='url("'+v+'")'; i.classList.add('on'); h.classList.add('pfHasCv'); }
+    else { i.style.backgroundImage=''; i.classList.remove('on'); h.classList.remove('pfHasCv'); }
+  }
+  /* re-apply whenever the cover is saved / removed anywhere in the app (profile page, studio, cloud restore) */
+  try{
+    var sp=Storage.prototype, _s=sp.setItem, _r=sp.removeItem, _c=sp.clear;
+    sp.setItem=function(k){ var r=_s.apply(this,arguments); if(k===K) setTimeout(apply,0); return r; };
+    sp.removeItem=function(k){ var r=_r.apply(this,arguments); if(k===K) setTimeout(apply,0); return r; };
+    sp.clear=function(){ var r=_c.apply(this,arguments); setTimeout(apply,0); return r; };
+  }catch(e){}
+  try{ if(typeof renderHomeProfile==='function'){ var _h=renderHomeProfile; renderHomeProfile=function(){ var x=_h.apply(this,arguments); try{ apply(); }catch(e){} return x; }; } }catch(e){}
+  window.addEventListener('storage',function(e){ if(!e.key||e.key===K) apply(); });
+  apply();
 })();
 </script>
 
