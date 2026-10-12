@@ -3158,9 +3158,27 @@ function fmt(n){
   const a = Math.abs(n), frac = Math.abs(a - Math.round(a)) > 0.004;   /* show paisa only when there is any */
   return (n < 0 ? '-' : '') + '৳' + a.toLocaleString('en-IN', frac ? {minimumFractionDigits:2, maximumFractionDigits:2} : {maximumFractionDigits:0});
 }
+/* main balance must never go below zero: returns a warning text when `need` is more than `have` */
+function ftShortMsg(need, have){
+  const bn = currentLang==='bn', lack = Math.round((need-have)*100)/100;
+  window.__ftShortLack = lack; return window.__ftShortMsg = bn ? `ব্যালেন্সে যথেষ্ট টাকা নেই! আপনার ব্যালেন্স ${fmt(Math.max(have,0))}, কিন্তু ${fmt(need)} লাগছে (${fmt(lack)} কম)। ব্যালেন্স মাইনাসে যেতে পারে না।`
+            : `Not enough balance! You have ${fmt(Math.max(have,0))} but need ${fmt(need)} (${fmt(lack)} short). Balance can't go below zero.`;
+}
+/* '' = ok, otherwise warning text. Only plain (non-fund) outgoing types draw from the main balance */
+function ftNeedBal(type, amount, fund){
+  const m = TYPE_META[type]; if(!m || m.sign>=0 || fund) return '';
+  const have = calcBalance();
+  return amount > have + 0.005 ? ftShortMsg(amount, have) : '';
+}
 // checks the whole list: no account or loan balance may go negative
 function validateTxSet(list){
   const bn = currentLang==='bn', acc = {}, loan = {};
+  { let main = 0;
+    list.forEach(x=>{ const m = TYPE_META[x.type]; if(m && !x.fund) main += m.sign * (+x.amount||0); });
+    main = Math.round(main*100)/100;
+    const cur = calcBalance();
+    if(main < -0.005 && main < cur - 0.005) return ftShortMsg(cur - main, cur);   /* only blocks changes that push the balance below zero */
+  }
   list.forEach(x=>{
     const a = +x.amount || 0, per = String(x.person||'').trim().toLowerCase();
     if(x.type==='save_to_account') acc[x.account] = (acc[x.account]||0) + a;
@@ -3420,7 +3438,7 @@ function saveTx(){
     time: document.getElementById('inTime').value || nowTime()
   };
   { const base = data.transactions.filter(x=>x.id!==editingTxId), bad = validateTxSet(base.concat([{id:editingTxId||'new', ...txData}]));
-    if(bad){ alert(bad); return; } }
+    if(bad){ ftAlertBad(bad); return; } }
   if(editingTxId){
     const idx = data.transactions.findIndex(x=>x.id===editingTxId);
     if(idx>-1) data.transactions[idx] = {id: editingTxId, ...txData};
@@ -3488,7 +3506,7 @@ function cancelEditTx(){
 
 function deleteTx(id){
   const rest = data.transactions.filter(x=>x.id!==id), bad = validateTxSet(rest);
-  if(bad){ alert(bad); return; }
+  if(bad){ ftAlertBad(bad); return; }
   appDialog(t('confirm_delete'), {confirm:true}, ()=>{
     data.transactions = data.transactions.filter(x=>x.id!==id);
     saveData();
@@ -4261,6 +4279,7 @@ async function payLoan(kind, encName){
   const amount = parseFloat(val);
   if(!amount || amount <= 0){ alert(t('alert_enter_valid_amount')); return; }
   if(amount > remaining){ alert(t('loan_over') + ' ' + fmt(remaining)); return; }
+  if(kind!=='get'){ const nb = ftNeedBal('loan_repay_taken', amount, null); if(nb){ ftWarnPopup(nb); return; } }
   data.transactions.push({
     id: Date.now()+'-'+Math.random().toString(36).slice(2,7),
     type: kind==='get' ? 'loan_repay_given' : 'loan_repay_taken',
@@ -5036,6 +5055,7 @@ function addTxFromChat(type, msg){
   };
   tx.fund = ftFundFor(type);
   if(tx.fund){ const fb=calcAccountBalances()[tx.fund]||0; if(amount>fb) return `${tx.fund}${t('alert_insufficient')}${fmt(fb)}`; }
+  { const nb = ftNeedBal(type, amount, tx.fund); if(nb) return nb; }
   data.transactions.push(tx);
   saveData();
   lastChatTxId = tx.id;
@@ -7045,6 +7065,7 @@ window.wgAddExp=function(){
   const cat=$('wgCat').value||data.categories[0];
   const tx={id:Date.now()+'-'+Math.random().toString(36).slice(2,7),type:'expense',amount,category:cat,source:null,person:null,account:null,note:($('wgNote').value||'').trim(),date:todayStr(),time:nowTime()};
   tx.fund=ftFundFor('expense'); if(tx.fund){ const fb=calcAccountBalances()[tx.fund]||0; if(amount>fb){ toast(tx.fund+L(' একাউন্টে যথেষ্ট টাকা নেই — ব্যালেন্স ',' has not enough balance — ')+fmt(fb)); return; } }
+  { const nb=ftNeedBal('expense',amount,tx.fund); if(nb){ ftWarnPopup(nb); return; } }
   data.transactions.push(tx); cfg.cat=cat; save(); saveData();
   const refresh=()=>{ ['renderDash','renderAccounts','renderHistory'].forEach(f=>{ try{ window[f](); }catch(e){} }); };
   refresh(); renderWidget();
@@ -7531,6 +7552,7 @@ function render(){
   +'<button type="button" class="typebtn" id="zkPay" style="width:100%;margin-top:10px"'+(left>0?'':' disabled')+'>'+(bn()?'যাকাত দিয়েছি — হিসাবে যোগ করুন':'Mark as paid — add to records')+'</button></div>';
   $('zkOut').innerHTML=h;
   $('zkPay').onclick=()=>appDialog(bn()?fmt(left)+' যাকাত খরচ হিসেবে যোগ হবে। এগোবেন?':fmt(left)+' will be added as a zakat expense. Continue?',{confirm:true,yes:'OK'},()=>{
+    { const nb=ftNeedBal('expense',left,null); if(nb){ ftWarnPopup(nb); return; } }
     if(!data.categories.includes('যাকাত')){data.categories.push('যাকাত');try{refreshCategorySelect();refreshBudgetInputs()}catch(e){}}
     data.transactions.push({id:Date.now()+'-zk',type:'expense',amount:left,date:todayStr(),time:nowTime(),note:'যাকাত',category:'যাকাত'});
     saveData();['renderDash','renderHistory','updateHome'].forEach(f=>{try{window[f]&&window[f]()}catch(e){}});render();if(window.toast)toast(bn()?'যাকাত যোগ হয়েছে':'Zakat added');});
@@ -10062,6 +10084,14 @@ window.ftPicThumb=function(){ return new Promise(function(res){ try{
 .cgX{border:0;background:transparent;color:var(--muted);font-size:18px;line-height:1;cursor:pointer;padding:0 2px;}
 .cgDots{display:flex;flex-wrap:wrap;gap:4px;margin-top:9px;} .cgDots i{width:11px;height:11px;border-radius:50%;background:var(--border);display:block;}
 .cgDots i.ok{background:#10b981;} .cgDots i.now{outline:2px solid var(--primary);outline-offset:1px;}
+.cgCd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:9px 12px;border-radius:14px;background:color-mix(in srgb,var(--primary) 9%,transparent);font-size:12.5px;font-weight:600;color:var(--muted);}
+.cgCd span{display:flex;align-items:center;gap:7px;min-width:0;}
+.cgCd b{color:var(--primary);font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;}
+.cgCd .pd{width:8px;height:8px;border-radius:50%;background:#10b981;flex:none;animation:cgCdBlink 1.2s ease-in-out infinite;}
+.cgCd.sub{margin-top:6px;background:transparent;border:1px dashed var(--border);}
+.cgCd.urgent b{color:#ef4444;} .cgCd.urgent .pd{background:#ef4444;}
+@keyframes cgCdBlink{0%,100%{opacity:1}50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.cgCd .pd{animation:none}}
 .cgBadges{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
 .cgBadge{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:10px 4px;text-align:center;font-size:11px;color:var(--muted);line-height:1.35;}
 .cgBadge em{display:block;font-style:normal;font-size:26px;margin-bottom:3px;} .cgBadge.off{opacity:.38;filter:grayscale(1);}
@@ -10174,10 +10204,10 @@ function lv(xp){ let i=0; LV.forEach((l,j)=>{ if(xp>=l[0]) i=j; }); const nx=LV[
 /* evaluate one active challenge */
 function ev(c){
   const today=todayStr(), nowS=today+' '+nowTime(), bs=[]; let oks=0, miss=0;
+  const H=c.hrs||c.bd*24, sa=c.startAt||(c.start+' 00:00');
   for(let i=0;i<c.n;i++){
     let d0,d1,ended,tx;
-    if(c.hrs){ const w0=addH(c.startAt,i*c.hrs), w1=addH(c.startAt,(i+1)*c.hrs); d0=w0.slice(0,10); d1=w1.slice(0,10); ended=nowS>=w1; tx=data.transactions.filter(x=>{ const q=x.date+' '+x.time; return q>=w0&&q<w1; }); }
-    else { d0=addD(c.start,i*c.bd); d1=addD(c.start,(i+1)*c.bd-1); ended=today>d1; tx=data.transactions.filter(x=>x.date>=d0&&x.date<=d1&&(x.date+' '+x.time)>=c.startAt); }
+    { const w0=addH(sa,i*H), w1=addH(sa,(i+1)*H); d0=w0.slice(0,10); d1=w1.slice(0,10); ended=nowS>=w1; tx=data.transactions.filter(x=>{ const q=x.date+' '+x.time; return q>=w0&&q<w1; }); }
     const sum=ty=>tx.filter(x=>x.type===ty).reduce((a,x)=>a+x.amount,0);
     let st='open', val=0;
     if(c.k==='save'){ val=sum('save_to_account'); st=val>=c.amt?'ok':ended?'miss':'open'; }
@@ -10190,7 +10220,7 @@ function ev(c){
   }
   const need=c.n-(c.skip||0);
   let cur=bs.findIndex(b=>!b.ended); if(cur<0) cur=c.n-1;
-  const left=c.hrs?Math.max(0,Math.ceil((msOf(addH(c.startAt,c.n*c.hrs))-msOf(nowS))/36e6)):Math.max(0,diffD(today,addD(c.start,c.n*c.bd-1))+1);
+  const lh=Math.max(0,Math.ceil((msOf(addH(sa,c.n*H))-msOf(nowS))/36e5)), left=c.hrs?lh:Math.ceil(lh/24);
   return {bs,oks,miss,need,cur,left,state:miss>(c.skip||0)?'failed':oks>=need?'done':'active'};
 }
 function stats(){
@@ -10202,6 +10232,26 @@ const stars=n=>[0,1,2,3].map(i=>'<svg class="cgIc" width="13" height="13" viewBo
 const perL=bd=>bd===1?L('দৈনিক','Daily'):bd===7?L('সাপ্তাহিক','Weekly'):L('মাসিক','Monthly');
 const unitL=(bd,n)=>bd===1?L('দিন','day'+(n===1?'':'s')):bd===7?L('সপ্তাহ','week'+(n===1?'':'s')):L('মাস','month'+(n===1?'':'s'));
 function wins(id){ return cg().history.filter(x=>x.status==='done'&&x.id===id).length; }
+
+/* ---------- live countdown (Asia/Dhaka, UTC+6, no DST) ---------- */
+const DHK=6*36e5; let lastFin=0;
+const sAt=c=>c.startAt||(c.start+' 00:00'), hOf=c=>c.hrs||c.bd*24;
+function endMs(c){ return msOf(addH(sAt(c),c.n*hOf(c))); }
+function perEndMs(c,i){ return msOf(addH(sAt(c),(i+1)*hOf(c))); }
+function leftTxt(ms){ const t=Math.max(0,Math.floor(ms/1000)), d=Math.floor(t/86400), h=Math.floor(t%86400/3600), m=Math.floor(t%3600/60), sc=t%60, p=x=>nb(String(x).padStart(2,'0')), U=bn()?['দিন','ঘণ্টা','মিনিট','সেকেন্ড']:['d','h','m','s'];
+  return (d?nb(d)+' '+U[0]+' ':'')+((d||h)?p(h)+' '+U[1]+' ':'')+p(m)+' '+U[2]+' '+p(sc)+' '+U[3]; }
+function cd(c,r){
+  const now=Date.now()+DHK, row=(lbl,ms,sub)=>`<div class="cgCd${sub?' sub':''}${ms-now<36e5?' urgent':''}"><span><i class="pd"></i>${lbl}</span><b data-cgend="${ms}">${leftTxt(ms-now)}</b></div>`;
+  let h=row(L('চ্যালেঞ্জ শেষ হতে বাকি','Challenge ends in'),endMs(c));
+  if(c.n>1&&r.cur<c.n) h+=row(c.hrs?L('এই ধাপ শেষ হতে','This window ends in'):c.bd===1?L('এই ২৪ ঘণ্টা শেষ হতে','This 24h ends in'):c.bd===7?L('এই সপ্তাহ শেষ হতে','This week ends in'):L('এই মাস শেষ হতে','This month ends in'),perEndMs(c,r.cur),1);
+  return h;
+}
+function tick(){
+  const els=document.querySelectorAll('#sec-challenge [data-cgend]'); if(!els.length) return;
+  const now=Date.now()+DHK; let fin=false;
+  els.forEach(el=>{ const ms=+el.dataset.cgend-now; el.textContent=leftTxt(ms); if(el.parentNode) el.parentNode.classList.toggle('urgent',ms<36e5); if(ms<=0) fin=true; });
+  if(fin&&now-lastFin>5000){ lastFin=now; check(); }
+}
 
 /* ---------- views ---------- */
 function hero(){
@@ -10251,7 +10301,7 @@ function runView(){
     const dots=c.n<=60?`<div class="cgDots">${r.bs.map((x,i)=>`<i class="${x.st==='ok'?'ok':''}${i===r.cur?' now':''}"></i>`).join('')}</div>`:'';
     return `<div class="cgRun"><div class="cgRunH"><span>${c.id?'#'+nb(c.id)+' ':' '}${KI[c.k]} ${esc(T(c))}</span><button class="cgX" aria-label="cancel" onclick="cgCancel('${c.uid}')">${sv('x',16)}</button></div>
     <div class="barbg"><div class="barfg" style="width:${pct}%"></div></div>
-    <div class="cgD" style="margin-top:7px;">${L('সম্পন্ন','Done')}: ${nb(r.oks)}/${nb(r.need)} · ${L('বাকি','left')}: ${nb(r.left)} ${c.hrs?L('ঘণ্টা','hrs'):L('দিন','days')} · +${nb(c.pts)} ${L('পয়েন্ট','pts')}<br>${hint}</div>${dots}
+    <div class="cgD" style="margin-top:7px;">${L('সম্পন্ন','Done')}: ${nb(r.oks)}/${nb(r.need)} · ${L('বাকি','left')}: ${nb(r.left)} ${c.hrs?L('ঘণ্টা','hrs'):L('দিন','days')} · +${nb(c.pts)} ${L('পয়েন্ট','pts')}<br>${hint}</div>${cd(c,r)}${dots}
     ${c.k==='save'?`<button class="main" style="margin-top:10px;" onclick="quickAdd('save_to_account')">${L('এখনই সঞ্চয় করুন','Save now')}</button>`:''}</div>`;
   }).join('');
 }
@@ -10371,7 +10421,7 @@ const dt=document.querySelector('.tab[data-tab="dash"]');
 tab.addEventListener('click',()=>activateTab('challenge'));
 const sec=document.createElement('div'); sec.className='section'; sec.id='sec-challenge';
 const st=$('sec-settings'); if(st) st.parentNode.insertBefore(sec,st);
-renderAll(); setTimeout(check,1200); setInterval(check,60000);
+renderAll(); setTimeout(check,1200); setInterval(check,60000); setInterval(tick,1000);
 /* reminder popup: when the app opens (and when you come back after a while) and a challenge is running */
 let lastRem=0;
 function remTxt(c,r){ const b=r.bs[r.cur]||{val:0}, per=c.hrs?L('এই ১২ ঘণ্টায়','In these 12h'):c.bd===1?L('আজ','Today'):c.bd===7?L('এ সপ্তাহে','This week'):L('এ মাসে','This month'); let h;
@@ -12560,5 +12610,178 @@ var al=window.applyLanguage; if(al) window.applyLanguage=function(){ var r=al.ap
 @keyframes ftLvP{50%{transform:scale(1.5);opacity:.55}}
 @media (prefers-reduced-motion:reduce){#ftLive i{animation:none!important}}
 </style>
+<style id="ftBalWarnCss">
+/* low balance: only the balance digits change colour (orange / red); card stays as is */
+html:root .hc.hc-bal[data-bs="low"] .hcVal{color:#ff9a1f !important;text-shadow:0 1px 3px rgba(0,0,0,.35)}
+html:root .hc.hc-bal[data-bs="crit"] .hcVal{color:#ff3b3b !important;text-shadow:0 1px 3px rgba(0,0,0,.4)}
+#ftWarnOv{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.5)}
+#ftWarnOv .ftWarnBox{background:#fff;color:#1a1c1e;border-radius:22px;padding:24px 20px 18px;width:100%;max-width:340px;text-align:center;box-shadow:0 20px 50px -12px rgba(0,0,0,.5);font-family:inherit}
+#ftWarnOv .ftWarnIc{width:64px;height:64px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+#ftWarnOv .ftWarnIc svg{width:34px;height:34px;stroke:#dc2626;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+#ftWarnOv h4{margin:0 0 8px;font-size:17px;font-weight:800;color:#dc2626}
+#ftWarnOv p{margin:0 0 16px;font-size:14px;line-height:1.55;color:#374151}
+#ftWarnOv .ftWarnBox{max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#ftWarnOv button{font:inherit;cursor:pointer;border:0}
+#ftWarnOv .ftWarnOk{width:100%;height:44px;border-radius:14px;background:#dc2626;color:#fff;font-size:14.5px;font-weight:700}
+#ftWarnOv .ftWarnAct{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 10px}
+#ftWarnOv .ftWarnAct button{height:46px;border-radius:14px;font-size:14.5px;font-weight:800;color:#fff}
+#ftWarnOv .ftWarnLoan{background:var(--primary,#4f46e5)}
+#ftWarnOv .ftWarnDep{background:#16a34a}
+#ftWarnOv .ftWarnOk.ghost{background:#f3f4f6;color:#374151;height:42px}
+#ftWarnOv .ftWarnIc.ok{background:#dcfce7}
+#ftWarnOv .ftWarnIc.ok svg{stroke:#16a34a}
+#ftWarnOv h4.ftT2{color:#1a1c1e;font-size:16px}
+#ftWarnOv .ftWarnBack{background:none;color:var(--primary,#4f46e5);font-size:13px;font-weight:700;padding:0 0 8px;display:block;text-align:left}
+#ftWarnOv .ftWarnSub{margin:0 0 12px;font-size:13px;color:#6b7280;text-align:left}
+#ftWarnOv .ftFrList{display:flex;flex-direction:column;gap:8px;margin:0 0 12px;max-height:46vh;overflow-y:auto;text-align:left}
+#ftWarnOv .ftFr{border:1px solid #e5e7eb;border-radius:16px;padding:10px;background:#fafafa}
+#ftWarnOv .ftFrTop{display:flex;align-items:center;gap:10px}
+#ftWarnOv .ftFrAv{width:40px;height:40px;border-radius:50%;flex:none;overflow:hidden;background:var(--primary,#4f46e5);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px}
+#ftWarnOv .ftFrAv img{width:100%;height:100%;object-fit:cover}
+#ftWarnOv .ftFrNm{flex:1;min-width:0;display:flex;flex-direction:column}
+#ftWarnOv .ftFrNm b{font-size:14px;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ftWarnOv .ftFrNm small{font-size:12px;color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ftWarnOv .ftFrGo{width:40px;height:40px;border-radius:50%;flex:none;background:var(--primary,#4f46e5);display:flex;align-items:center;justify-content:center}
+#ftWarnOv .ftFrGo svg{width:19px;height:19px;stroke:#fff;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+#ftWarnOv .ftFrFm{margin-top:10px;display:flex;flex-direction:column;gap:8px}
+#ftWarnOv .ftFrFm label{font-size:12px;font-weight:700;color:#374151}
+#ftWarnOv .ftFrFm input{width:100%;box-sizing:border-box;height:44px;border:1px solid #d1d5db;border-radius:12px;padding:0 12px;font:inherit;font-size:16px;font-weight:700;background:#fff;color:#111827}
+#ftWarnOv .ftFrPm{font-size:12.5px;color:#374151;background:#eef2ff;border-radius:10px;padding:7px 10px}
+#ftWarnOv .ftFrEr{font-size:12.5px;color:#dc2626;font-weight:600;min-height:0}
+#ftWarnOv .ftFrEr:empty{display:none}
+#ftWarnOv .ftFrSend{height:44px;border-radius:12px;background:var(--primary,#4f46e5);color:#fff;font-size:14.5px;font-weight:800}
+#ftWarnOv .ftFrSend:disabled{opacity:.6}
+#ftWarnOv .ftFrEmpty{font-size:13.5px;color:#4b5563;line-height:1.55;margin:0 0 14px;text-align:center}
+</style>
+<script id="ftBalWarnJs">
+(function(){
+  /* reference "one day of spending": the daily limit if set, otherwise the average daily expense of the last 30 days */
+  function dailyRef(){
+    var lim = +data.dailyLimit || 0; if(lim > 0) return lim;
+    var today = todayStr(), t0 = new Date(today+'T00:00:00'), d0 = new Date(t0); d0.setDate(d0.getDate()-29);
+    var from = fmtDate(d0), sum = 0, first = null;
+    data.transactions.forEach(function(x){ if(isExpenseLike(x) && x.date>=from && x.date<=today){ sum += (+x.amount||0); if(!first || x.date<first) first = x.date; } });
+    if(!first) return 0;
+    var days = Math.round((t0 - new Date(first+'T00:00:00'))/86400000) + 1;
+    return sum / Math.max(days, 7);
+  }
+  window.ftBalStatus = function(){
+    var bal = calcBalance(), ref = dailyRef();
+    if(bal <= 0) return {s:'crit', bal:bal, ref:ref};
+    if(ref > 0 && bal < ref*0.5) return {s:'crit', bal:bal, ref:ref};
+    if(ref > 0 && bal < ref)     return {s:'low',  bal:bal, ref:ref};
+    return {s:'', bal:bal, ref:ref};
+  };
+  function paint(){
+    var card = document.querySelector('.hc-bal'); if(!card || typeof data==='undefined' || !data) return;
+    var r = window.ftBalStatus(), bn = currentLang==='bn', sub = document.getElementById('balSub');
+    if(r.s){ card.setAttribute('data-bs', r.s); } else { card.removeAttribute('data-bs'); }
+  }
+  window.ftWarnPopup = function(msg){
+    var old = document.getElementById('ftWarnOv'); if(old) old.remove();
+    var short = !!(msg && msg === window.__ftShortMsg);
+    var lack = Math.max(1, Math.ceil(+window.__ftShortLack || 0));
+    var ov = document.createElement('div'); ov.id = 'ftWarnOv';
+    var box = document.createElement('div'); box.className = 'ftWarnBox'; box.setAttribute('role','alertdialog'); ov.appendChild(box);
+    var T = function(b,e){ return currentLang==='bn' ? b : e; };
+    var E = function(v){ return String(v==null?'':v).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+    var Fm = function(n){ try{ return window.ftReqApi && ftReqApi.F ? ftReqApi.F(n) : fmt(n); }catch(e){ return fmt(n); } };
+    var close = function(){ ov.remove(); };
+    var WARN = '<svg viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>';
+    var TICK = '<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7"/></svg>';
+    var SEND = '<svg viewBox="0 0 24 24"><path d="M21 3 10 14M21 3l-7 18-4-7-7-4z"/></svg>';
+    /* default payment method (falls back to the first saved one) */
+    function defMethod(){
+      try{
+        var q = window.ftReqApi; if(!q || !q.methods) return null;
+        var ms = q.methods(), id = (data && data.payDefault) || '', m = null;
+        if(id) m = ms.filter(function(x){ return x.v === 'pm:'+id; })[0] || null;
+        if(!m){ var pm = ((data && data.payMethods) || []).filter(function(x){ return x.on !== false; }); if(pm.length) m = ms.filter(function(x){ return x.v === 'pm:'+pm[0].id; })[0] || null; }
+        return m;
+      }catch(e){ return null; }
+    }
+    function methTxt(m){ return m ? E(m.label) + (m.payTo ? ' · ' + E(m.payTo) : '') : ''; }
+
+    function viewMain(){
+      box.innerHTML = '<div class="ftWarnIc">'+WARN+'</div><h4>'+T('ব্যালেন্স যথেষ্ট নয়','Insufficient balance')+'</h4><p>'+E(msg)+'</p>'
+        + (short ? '<div class="ftWarnAct"><button type="button" class="ftWarnLoan">'+T('লোন নিন','Take loan')+'</button><button type="button" class="ftWarnDep">'+T('ডিপোজিট','Deposit')+'</button></div>' : '')
+        + '<button type="button" class="ftWarnOk'+(short?' ghost':'')+'">'+T('ঠিক আছে','OK')+'</button>';
+      box.querySelector('.ftWarnOk').onclick = close;
+      if(short){
+        box.querySelector('.ftWarnLoan').onclick = viewFriends;
+        box.querySelector('.ftWarnDep').onclick = function(){ close(); try{ if(typeof quickAdd==='function') quickAdd('deposit'); }catch(e){} };
+      }
+    }
+
+    function viewFriends(){
+      var fr = window.ftFrInfo || {}, q = window.ftReqApi, ready = !!(q && q.ready && q.ready());
+      var ids = Object.keys(fr).sort(function(a,b){ return String(fr[a].n||fr[a].u||'').toLowerCase() < String(fr[b].n||fr[b].u||'').toLowerCase() ? -1 : 1; });
+      var h = '<button type="button" class="ftWarnBack">← '+T('ফিরে যান','Back')+'</button><h4 class="ftT2" style="text-align:left">'+T('বন্ধুর কাছে লোন চান','Ask a friend for a loan')+'</h4>'
+            + '<p class="ftWarnSub">'+T('আপনার প্রয়োজন কমপক্ষে ','You need at least ')+Fm(lack)+T(' । বন্ধু বেছে নিয়ে অনুরোধ পাঠান।','. Pick a friend and send a request.')+'</p>';
+      if(!ready || !ids.length){
+        h += '<p class="ftFrEmpty">'+(!ready ? T('অনুরোধ পাঠাতে অ্যাপে লগইন থাকতে হবে।','You need to be signed in to send a request.') : T('এখনো কোনো বন্ধু যোগ করা নেই। আগে বন্ধু যোগ করুন।','You have no friends added yet. Add a friend first.'))+'</p><button type="button" class="ftWarnOk ftGoFr">'+T('বন্ধু যোগ করুন','Add friends')+'</button>';
+        box.innerHTML = h;
+        box.querySelector('.ftWarnBack').onclick = viewMain;
+        box.querySelector('.ftGoFr').onclick = function(){ close(); var b = document.querySelector('#bottomNav .bnbtn[data-bn="friends"]'); if(b) b.click(); };
+        return;
+      }
+      h += '<div class="ftFrList">' + ids.map(function(u){
+        var f = fr[u], nm = f.n || f.u || '?', idt = f.u ? '@'+f.u : String(u).slice(0,10);
+        var av = f.pic ? '<img alt="" src="'+E(f.pic)+'">' : E(String(nm).trim().charAt(0).toUpperCase() || '?');
+        return '<div class="ftFr" data-u="'+E(u)+'"><div class="ftFrTop"><span class="ftFrAv">'+av+'</span><span class="ftFrNm"><b>'+E(nm)+'</b><small>'+E(idt)+'</small></span><button type="button" class="ftFrGo" aria-label="'+T('অনুরোধ পাঠান','Send request')+'">'+SEND+'</button></div></div>';
+      }).join('') + '</div><button type="button" class="ftWarnOk ghost">'+T('বন্ধ করুন','Close')+'</button>';
+      box.innerHTML = h;
+      box.querySelector('.ftWarnBack').onclick = viewMain;
+      box.querySelector('.ftWarnOk').onclick = close;
+      Array.prototype.forEach.call(box.querySelectorAll('.ftFr'), function(row){
+        row.querySelector('.ftFrGo').onclick = function(){
+          var open = row.querySelector('.ftFrFm');
+          Array.prototype.forEach.call(box.querySelectorAll('.ftFrFm'), function(x){ x.remove(); });
+          if(open) return;
+          var mt = defMethod(), fm = document.createElement('div'); fm.className = 'ftFrFm';
+          fm.innerHTML = '<label>'+T('পরিমাণ (টাকা)','Amount (Taka)')+'</label><input type="number" inputmode="decimal" min="1" step="any" value="'+lack+'">'
+            + '<div class="ftFrPm">'+(mt ? T('পেমেন্ট মাধ্যম: ','Payment method: ')+methTxt(mt) : T('ডিফল্ট পেমেন্ট মাধ্যম সেট করা নেই — মাধ্যম ছাড়াই অনুরোধ যাবে।','No default payment method set — the request will go without one.'))+'</div>'
+            + '<div class="ftFrEr"></div><button type="button" class="ftFrSend">'+T('অনুরোধ পাঠান','Send request')+'</button>';
+          row.appendChild(fm);
+          var inp = fm.querySelector('input'); try{ inp.focus(); inp.select(); }catch(e){}
+          fm.querySelector('.ftFrSend').onclick = function(){ doSend(row, row.getAttribute('data-u'), mt); };
+          inp.onkeydown = function(e){ if(e.key==='Enter') doSend(row, row.getAttribute('data-u'), mt); };
+        };
+      });
+    }
+
+    async function doSend(row, uid, mt){
+      var fr = window.ftFrInfo || {}, f = fr[uid] || {}, q = window.ftReqApi;
+      var inp = row.querySelector('input'), er = row.querySelector('.ftFrEr'), b = row.querySelector('.ftFrSend');
+      var amt = parseFloat(inp.value);
+      if(!(amt > 0)){ er.textContent = T('সঠিক পরিমাণ লিখুন','Enter a valid amount'); return; }
+      var lbl = b.textContent; b.disabled = true; b.textContent = T('পাঠানো হচ্ছে…','Sending…'); er.textContent = '';
+      var res;
+      try{ res = await q.sendTo({uid:uid, name:f.n||f.u||'', username:f.u||''}, {kind:'ask', amt:amt, note:'', method:mt?mt.label:'', payTo:mt?mt.payTo:''}); }
+      catch(e){ res = {ok:false, msg:T('পাঠানো যায়নি','Could not send')}; }
+      if(res && res.ok){ viewDone(f, amt, mt); }
+      else{ er.textContent = (res && res.msg) || T('পাঠানো যায়নি','Could not send'); b.disabled = false; b.textContent = lbl; }
+    }
+
+    function viewDone(f, amt, mt){
+      var nm = f.n || f.u || '';
+      box.innerHTML = '<div class="ftWarnIc ok">'+TICK+'</div><h4 style="color:#16a34a">'+T('অনুরোধ পাঠানো হয়েছে','Request sent')+'</h4>'
+        + '<p>'+E(nm)+T(' কে ',' was asked for ')+E(Fm(amt))+T(' এর লোনের অনুরোধ পাঠানো হয়েছে।',' as a loan.')+(mt ? '<br>'+T('পেমেন্ট মাধ্যম: ','Payment method: ')+methTxt(mt) : '')+'<br>'+T('তিনি গ্রহণ করলে আপনার লোন তালিকায় নিজে থেকে যোগ হবে।','Once they accept, it is added to your loan list automatically.')+'</p>'
+        + '<button type="button" class="ftWarnOk">'+T('ঠিক আছে','OK')+'</button>';
+      box.querySelector('.ftWarnOk').onclick = close;
+    }
+
+    ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
+    viewMain();
+    document.body.appendChild(ov);
+  };
+  /* shows the popup for the balance-shortage text, a normal alert for any other validation message */
+  window.ftAlertBad = function(m){ if(m && m===window.__ftShortMsg) window.ftWarnPopup(m); else alert(m); };
+  var prev = window.renderDash;
+  window.renderDash = function(){ var out = typeof prev==='function' ? prev.apply(this, arguments) : undefined; try{ paint(); }catch(e){} return out; };
+  try{ paint(); }catch(e){}
+})();
+</script>
+
 </body>
 </html>
