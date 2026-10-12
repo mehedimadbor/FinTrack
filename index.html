@@ -12915,5 +12915,143 @@ html body header.top.pfHasCv .pfAvatar::before{background:rgba(255,255,255,.9);}
 })();
 </script>
 
+
+<style id="ftCoverThemeCss">
+.phCt{display:flex;align-items:center;gap:12px;padding:12px 14px;margin:0 0 10px;border:1px solid var(--border);border-radius:18px;background:var(--card);color:var(--text);cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.phCt .phCtDot{width:34px;height:34px;border-radius:12px;flex:none;background:linear-gradient(135deg,var(--primary),var(--primary-d));box-shadow:0 6px 14px -6px var(--primary);}
+.phCt .phCtTx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.phCt .phCtTx b{font-size:14px;font-weight:800;color:var(--text);}
+.phCt .phCtTx small{font-size:12px;line-height:1.4;color:var(--muted);}
+.phCt input[type=checkbox]{-webkit-appearance:none;appearance:none;width:46px;height:26px;border-radius:20px;background:var(--border);position:relative;flex:none;margin:0;padding:0;transition:background .2s;cursor:pointer;}
+.phCt input[type=checkbox]::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+.phCt input[type=checkbox]:checked{background:var(--primary);}
+.phCt input[type=checkbox]:checked::after{transform:translateX(20px);}
+</style>
+<script id="ftCoverTheme">
+/* ===== Cover theme: when ON, the app's accent colour follows the profile cover photo ===== */
+(function(){
+  var LS=localStorage, KEY='ftCoverTheme_v1', CK='ftCoverThemeCol', CV='myCoverPic_v1', AK='customAccent_v1', de=document.documentElement;
+  var RE=/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/, HEX=/^#[0-9a-f]{6}$/i, sig='', busy=0;
+  var get=function(k){ try{ return LS.getItem(k)||''; }catch(e){ return ''; } };
+  function mix(hex,pct){ var n=parseInt(hex.slice(1),16), r=(n>>16)&255, g=(n>>8)&255, b=n&255, k=1-pct/100; var h=function(v){ return Math.round(v*k).toString(16).padStart(2,'0'); }; return '#'+h(r)+h(g)+h(b); }
+  function setAcc(hex){ de.style.setProperty('--primary',hex); de.style.setProperty('--primary-d',mix(hex,22)); }
+  function clearAcc(){ var ca=get(AK); if(HEX.test(ca)) setAcc(ca); else { de.style.removeProperty('--primary'); de.style.removeProperty('--primary-d'); } }
+  function hsl2hex(h,s,l){ var a=s*Math.min(l,1-l), f=function(n){ var k=(n+h/30)%12, c=l-a*Math.max(-1,Math.min(k-3,9-k,1)); return Math.round(255*c).toString(16).padStart(2,'0'); }; return '#'+f(0)+f(8)+f(4); }
+  /* most vivid, most common hue of the photo -> one accent colour */
+  function pick(url,cb){
+    var im=new Image();
+    im.onload=function(){
+      try{
+        var S=48, c=document.createElement('canvas'); c.width=c.height=S; var x=c.getContext('2d'); x.drawImage(im,0,0,S,S);
+        var d=x.getImageData(0,0,S,S).data, bins={};
+        for(var i=0;i<d.length;i+=4){
+          if(d[i+3]<200) continue;
+          var r=d[i]/255, g=d[i+1]/255, b=d[i+2]/255, mx=Math.max(r,g,b), mn=Math.min(r,g,b), l=(mx+mn)/2, dl=mx-mn;
+          if(dl<0.08||l<0.12||l>0.92) continue;
+          var s=dl/(1-Math.abs(2*l-1)), h;
+          if(mx===r) h=((g-b)/dl+(g<b?6:0)); else if(mx===g) h=(b-r)/dl+2; else h=(r-g)/dl+4; h*=60;
+          if(s<0.25) continue;
+          var k=Math.floor(h/20)%18, w=s*(1-Math.abs(l-0.5)*1.2), o=bins[k]||(bins[k]={w:0,h:0,s:0,l:0});
+          o.w+=w; o.h+=h*w; o.s+=s*w; o.l+=l*w;
+        }
+        var best=null; Object.keys(bins).forEach(function(k){ if(!best||bins[k].w>best.w) best=bins[k]; });
+        if(!best||best.w<=0){ cb(''); return; }
+        var H=best.h/best.w, Sx=Math.max(0.5,Math.min(0.85,best.s/best.w)), Lx=Math.max(0.42,Math.min(0.56,best.l/best.w));
+        cb(hsl2hex(H,Sx,Lx));
+      }catch(e){ cb(''); }
+    };
+    im.onerror=function(){ cb(''); };
+    im.src=url;
+  }
+  function apply(){
+    var on=get(KEY)==='1', cv=get(CV), has=RE.test(cv);
+    var chk=document.getElementById('phCtChk'); if(chk) chk.checked=on;
+    if(!on||!has){ sig=''; try{ LS.removeItem(CK); }catch(e){} clearAcc(); return; }
+    var sg=cv.length+':'+cv.slice(-48); if(sg===sig) return; sig=sg; var my=++busy;
+    pick(cv,function(hex){ if(my!==busy||get(KEY)!=='1') return; if(HEX.test(hex)){ setAcc(hex); try{ LS.setItem(CK,hex); }catch(e){} } else { clearAcc(); sig=''; } });
+  }
+  /* no colour flash on start: reuse the last extracted colour straight away */
+  try{ var c0=get(CK); if(get(KEY)==='1'&&HEX.test(c0)&&RE.test(get(CV))) setAcc(c0); }catch(e){}
+  /* re-apply when cover / custom accent / the switch change anywhere (profile page, studio, cloud restore, other tab) */
+  try{
+    var sp=Storage.prototype, _s=sp.setItem, _r=sp.removeItem;
+    var hit=function(k){ return k===CV||k===KEY||k===AK; };
+    sp.setItem=function(k){ var r=_s.apply(this,arguments); if(this===LS&&hit(k)) setTimeout(function(){ if(k===AK) sig=''; apply(); },0); return r; };
+    sp.removeItem=function(k){ var r=_r.apply(this,arguments); if(this===LS&&hit(k)) setTimeout(function(){ if(k===AK) sig=''; apply(); },0); return r; };
+  }catch(e){}
+  window.addEventListener('storage',function(e){ if(!e.key||e.key===CV||e.key===KEY||e.key===AK){ sig=''; apply(); } });
+  try{ if(typeof BACKUP_KEYS!=='undefined'&&BACKUP_KEYS.indexOf(KEY)<0) BACKUP_KEYS.push(KEY); }catch(e){}
+  /* the switch, right under the cover in Settings > Profile */
+  function mount(){
+    var hub=document.getElementById('phHub'); if(!hub) return false;
+    if(document.getElementById('phCt')) return true;
+    var hd=hub.querySelector('.phHd'); if(!hd) return false;
+    var row=document.createElement('label'); row.className='phCt'; row.id='phCt';
+    row.innerHTML='<i class="phCtDot"></i><span class="phCtTx"><b><span class="bn">কভার অনুযায়ী থিম</span><span class="en">Theme from cover</span></b><small><span class="bn">চালু করলে অ্যাপের রং আপনার কভার ছবির সাথে মিলে যাবে</span><span class="en">When on, the app colours match your cover photo</span></small></span><input type="checkbox" id="phCtChk" aria-label="Theme from cover">';
+    hd.insertAdjacentElement('afterend',row);
+    var chk=document.getElementById('phCtChk'); chk.checked=get(KEY)==='1';
+    chk.addEventListener('change',function(){
+      try{ LS.setItem(KEY,chk.checked?'1':'0'); }catch(e){}
+      sig=''; apply();
+      if(chk.checked&&!RE.test(get(CV))&&window.toast){ var bn=document.documentElement.lang!=='en'; window.toast(bn?'আগে একটি কভার ছবি দিন — তারপর রং মিলে যাবে':'Add a cover photo first — colours will match after that'); }
+    });
+    return true;
+  }
+  var tries=0, iv=setInterval(function(){ if(mount()||++tries>120) clearInterval(iv); },700);
+  mount(); apply();
+})();
+</script>
+
+<style id="ftCoverBgCss">
+#ftCvBg{position:fixed;left:0;right:0;top:0;bottom:0;z-index:-1;pointer-events:none;display:none;background-size:cover;background-position:center top;background-repeat:no-repeat;}
+#ftCvBg::after{content:"";position:absolute;left:0;right:0;top:0;bottom:0;background:linear-gradient(180deg,color-mix(in srgb,var(--bg) 12%,transparent) 0%,color-mix(in srgb,var(--bg) 42%,transparent) 40%,color-mix(in srgb,var(--bg) 78%,transparent) 100%);}
+html.ftCvBgOn #ftCvBg{display:block;}
+html.ftCvBgOn #sec-dash .box{background:color-mix(in srgb,var(--card) 82%,transparent)!important;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);}
+#phCbRow .phCtDot{background-size:cover;background-position:center;background-color:var(--border);box-shadow:none;border:1px solid var(--border);}
+</style>
+<script id="ftCoverBg">
+/* ===== Cover as dashboard background: ON -> cover photo behind the dashboard, OFF -> normal theme colour ===== */
+(function(){
+  var LS=localStorage, KEY='ftCoverBg_v1', CV='myCoverPic_v1', de=document.documentElement;
+  var RE=/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/, lastCv='\u0000';
+  var get=function(k){ try{ return LS.getItem(k)||''; }catch(e){ return ''; } };
+  function layer(){ var l=document.getElementById('ftCvBg'); if(!l){ l=document.createElement('div'); l.id='ftCvBg'; l.setAttribute('aria-hidden','true'); document.body.insertBefore(l,document.body.firstChild); } return l; }
+  function onDash(){ var d=document.getElementById('sec-dash'); return !d||d.classList.contains('active'); }
+  function apply(){
+    var cv=get(CV), has=RE.test(cv), on=get(KEY)==='1';
+    var chk=document.getElementById('phCbChk'); if(chk) chk.checked=on;
+    var dot=document.querySelector('#phCbRow .phCtDot'); if(dot&&cv!==dot.__cv){ dot.__cv=cv; dot.style.backgroundImage=has?'url("'+cv+'")':''; }
+    var show=on&&has&&onDash();
+    if(show){ var l=layer(); if(cv!==lastCv){ lastCv=cv; l.style.backgroundImage='url("'+cv+'")'; } }
+    de.classList.toggle('ftCvBgOn',!!show);
+  }
+  try{
+    var sp=Storage.prototype, _s=sp.setItem, _r=sp.removeItem;
+    sp.setItem=function(k){ var r=_s.apply(this,arguments); if(this===LS&&(k===CV||k===KEY)) setTimeout(apply,0); return r; };
+    sp.removeItem=function(k){ var r=_r.apply(this,arguments); if(this===LS&&(k===CV||k===KEY)) setTimeout(apply,0); return r; };
+  }catch(e){}
+  window.addEventListener('storage',function(e){ if(!e.key||e.key===CV||e.key===KEY) apply(); });
+  try{ if(typeof BACKUP_KEYS!=='undefined'&&BACKUP_KEYS.indexOf(KEY)<0) BACKUP_KEYS.push(KEY); }catch(e){}
+  /* show only while the dashboard tab is open */
+  try{ var d0=document.getElementById('sec-dash'); if(d0) new MutationObserver(apply).observe(d0,{attributes:true,attributeFilter:['class']}); }catch(e){}
+  /* the switch, in Settings > Theme (under the custom colour picker) */
+  function mount(){
+    if(document.getElementById('phCbRow')) return true;
+    var host=document.getElementById('swCustomBox')||document.getElementById('themeRow'); if(!host) return false;
+    var row=document.createElement('label'); row.className='phCt'; row.id='phCbRow'; row.style.marginTop='12px';
+    row.innerHTML='<i class="phCtDot"></i><span class="phCtTx"><b><span class="bn">কভার ফটো ব্যাকগ্রাউন্ড</span><span class="en">Cover photo background</span></b><small><span class="bn">চালু করলে ড্যাশবোর্ডের ব্যাকগ্রাউন্ডে আপনার কভার ছবি দেখাবে, বন্ধ থাকলে থিমের ডিফল্ট রং</span><span class="en">When on, your cover photo shows behind the dashboard; off keeps the theme colour</span></small></span><input type="checkbox" id="phCbChk" aria-label="Cover photo background">';
+    host.insertAdjacentElement('afterend',row);
+    var chk=document.getElementById('phCbChk'); chk.checked=get(KEY)==='1';
+    chk.addEventListener('change',function(){
+      try{ LS.setItem(KEY,chk.checked?'1':'0'); }catch(e){}
+      apply();
+      if(chk.checked&&!RE.test(get(CV))&&window.toast){ var bn=de.lang!=='en'; window.toast(bn?'আগে একটি কভার ছবি দিন — তারপর ব্যাকগ্রাউন্ডে দেখাবে':'Add a cover photo first — it will then show in the background'); }
+    });
+    return true;
+  }
+  var tries=0, iv=setInterval(function(){ if(mount()||++tries>120) clearInterval(iv); apply(); },700);
+  mount(); apply();
+})();
+</script>
 </body>
 </html>
