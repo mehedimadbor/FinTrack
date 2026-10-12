@@ -4337,8 +4337,8 @@ async function payLoan(kind, encName){
     okText: kind==='get' ? t('btn_loan_received') : t('btn_loan_paid')
   });
   if(val === null) return;
-  const amount = parseFloat(val);
-  if(!amount || amount <= 0){ alert(t('alert_enter_valid_amount')); return; }
+  const amount = parseFloat(String(val).replace(/[০-৯]/g,d=>'০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/,/g,''));   /* accept Bangla digits & commas */
+  if(!amount || amount <= 0 || !isFinite(amount)){ alert(t('alert_enter_valid_amount')); return; }
   if(amount > remaining){ alert(t('loan_over') + ' ' + fmt(remaining)); return; }
   if(kind!=='get'){ const nb = ftNeedBal('loan_repay_taken', amount, null); if(nb){ ftWarnPopup(nb); return; } }
   data.transactions.push({
@@ -5132,6 +5132,7 @@ function addTxFromChat(type, msg){
 }
 function undoLastChatTx(){
   if(!lastChatTxId) return t('chat_undo_none');
+  { const bad=validateTxSet(data.transactions.filter(tx=>tx.id!==lastChatTxId)); if(bad) return bad; }
   data.transactions = data.transactions.filter(tx=>tx.id!==lastChatTxId);
   saveData();
   lastChatTxId = null;
@@ -5142,9 +5143,12 @@ function undoLastChatTx(){
 // ---- Advanced chat: history browsing, targeted delete, person status ----
 let lastChatListIds = [];
 function deleteTxById(id){
+  const bad = validateTxSet(data.transactions.filter(tx=>tx.id!==id));
+  if(bad) return bad;   /* refuse: deleting it would push a balance / loan below zero */
   data.transactions = data.transactions.filter(tx=>tx.id!==id);
   saveData();
   renderDash(); renderAccounts(); renderLoans(); renderHistory(); populatePersonList();
+  return '';
 }
 function formatTxLine(tx, idx){
   const meta = TYPE_META[tx.type];
@@ -5181,7 +5185,7 @@ function showHistoryChat(msg){
 function deleteFromLastList(num){
   if(!lastChatListIds.length || num<1 || num>lastChatListIds.length) return t('chat_need_valid_number');
   const id = lastChatListIds[num-1];
-  deleteTxById(id);
+  const badD = deleteTxById(id); if(badD) return badD;
   lastChatListIds.splice(num-1,1);
   if(lastChatTxId===id) lastChatTxId = null;
   return t('chat_deleted_one');
@@ -5190,7 +5194,7 @@ function deleteLastTransaction(){
   if(!data.transactions.length) return t('chat_no_data');
   const sorted = [...data.transactions].sort((a,b)=> (b.date+b.time).localeCompare(a.date+a.time));
   const tx = sorted[0];
-  deleteTxById(tx.id);
+  const badL = deleteTxById(tx.id); if(badL) return badL;
   if(lastChatTxId===tx.id) lastChatTxId = null;
   return t('chat_deleted_one');
 }
@@ -5522,8 +5526,9 @@ if(devUnlocked){
   // delete with confirm dialog + Undo
   window.deleteTx=function(id){
     const tx=data.transactions.find(x=>x.id===id); if(!tx) return;
+    { const bad=validateTxSet(data.transactions.filter(x=>x.id!==id)); if(bad){ ftAlertBad(bad); return; } }   /* never let a delete break balances/loans */
     appDialog(t('confirm_delete'),{confirm:true},()=>{
-      const i=data.transactions.indexOf(tx); data.transactions.splice(i,1); saveData(); refreshAll();
+      const i=data.transactions.indexOf(tx); if(i<0) return; data.transactions.splice(i,1); saveData(); refreshAll();
       toast(bn()?'লেনদেন মুছে গেছে':'Transaction deleted', bn()?'ফিরিয়ে আনুন':'Undo', ()=>{
         data.transactions.splice(Math.min(i,data.transactions.length),0,tx); saveData(); refreshAll();
       });
@@ -9558,6 +9563,7 @@ function copyTxt(t){
 window.ftInvite={
   share:function(){ if(!need()) return; var u=link();
     if(navigator.share){ navigator.share({title:'FinTrack',text:msgText(),url:u}).catch(function(e){ if(!e||e.name!=='AbortError') copyTxt(u); }); } else copyTxt(u); },
+  url:function(){ return link()||BASE; },
   copy:function(){ if(!need()) return; copyTxt(link()); },
   wa:function(){ if(!need()) return; window.open('https://wa.me/?text='+encodeURIComponent(msgText()+' '+link()),'_blank','noopener'); }
 };
@@ -12488,7 +12494,61 @@ function toast(m){ try{ if(window.toast) window.toast(m); }catch(e){} }
 function persist(){ var v=function(i){ var e=$(i); return e?e.value.trim():null; }; var ch=false; ['Bio','Job','City'].forEach(function(k){ var x=v('ps'+k); if(x===null) return; if(x!==g('my'+k+'_v1')){ ch=true; try{ LS.setItem('my'+k+'_v1',x); }catch(e){} } }); return ch; }
 function sync(){ try{ if(window.ppRepub) window.ppRepub(); }catch(e){} try{ if(window.ftPhRefresh) window.ftPhRefresh(true); }catch(e){} }
 function save(){ persist(); toast(L('প্রোফাইল সংরক্ষিত হয়েছে','Profile saved')); render(true); sync(); }
-function share(){ var n=g('myName_v1'), u=g('myUsername_v1').replace(/^@/,''), m=g('myBio_v1'); var txt=(n||'FinTrack')+(u?' · @'+u:'')+(m?'\n'+m:'')+'\nFinTrack'; if(navigator.share){ navigator.share({text:txt}).catch(function(){}); } else if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(function(){ toast(L('প্রোফাইল কপি হয়েছে','Profile copied')); }); } }
+function shareUrl(){ var u=''; try{ if(window.ftInvite&&ftInvite.url) u=ftInvite.url(); }catch(e){} if(!u){ u=/^https?:$/.test(location.protocol)?(location.origin+location.pathname.replace(/index\.html$/,'')):'https://mehedimadbor.github.io/FinTrack/'; } return u; }
+function hexRgb(h){ h=(h||'').replace('#',''); return /^[0-9a-f]{6}$/i.test(h)?[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]:[37,99,235]; }
+function rgbS(c,k){ return 'rgb('+c.map(function(v){ return Math.max(0,Math.min(255,Math.round(v*k))); }).join(',')+')'; }
+function rr(c,x,y,w,h,r){ c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
+function wrapTxt(c,t,mw,max){ var w=t.split(/\s+/), ln=[], cur=''; for(var i=0;i<w.length;i++){ var tt=cur?cur+' '+w[i]:w[i]; if(c.measureText(tt).width>mw&&cur){ ln.push(cur); cur=w[i]; if(ln.length>=max) break; } else cur=tt; } if(cur&&ln.length<max) ln.push(cur); return ln; }
+function loadImg(src){ return new Promise(function(res){ if(!/^data:image\/(png|jpe?g|webp|gif);base64,/.test(src||'')) return res(null); var im=new Image(); im.onload=function(){ res(im); }; im.onerror=function(){ res(null); }; im.src=src; }); }
+async function cardBlob(){
+  var F='"Noto Sans Bengali","Segoe UI",Arial,sans-serif';
+  try{ if(document.fonts){ await Promise.all([document.fonts.load('800 60px "Noto Sans Bengali"'),document.fonts.load('500 30px "Noto Sans Bengali"')]); } }catch(e){}
+  var n=g('myName_v1')||L('FinTrack ব্যবহারকারী','FinTrack user'), un=g('myUsername_v1').replace(/^@/,''), bio=g('myBio_v1'), job=g('myJob_v1'), city=g('myCity_v1'), pic=g('myProfilePic_v1');
+  var acc=g('myAccent_v1'); if(!/^#[0-9a-f]{6}$/i.test(acc)){ try{ acc=getComputedStyle(document.documentElement).getPropertyValue('--primary').trim(); }catch(e){ acc=''; } }
+  var rgb=hexRgb(acc), W=1080, H=620, cv=document.createElement('canvas'); cv.width=W; cv.height=H; var c=cv.getContext('2d');
+  var gr=c.createLinearGradient(0,0,W,H); gr.addColorStop(0,rgbS(rgb,1.08)); gr.addColorStop(1,rgbS(rgb,.58));
+  rr(c,0,0,W,H,48); c.fillStyle=gr; c.fill(); c.save(); rr(c,0,0,W,H,48); c.clip();
+  c.fillStyle='rgba(255,255,255,.10)'; c.beginPath(); c.arc(W-120,40,260,0,7); c.fill();
+  c.fillStyle='rgba(255,255,255,.07)'; c.beginPath(); c.arc(W-380,H+60,230,0,7); c.fill(); c.restore();
+  /* brand */
+  rr(c,64,56,72,72,22); c.fillStyle='rgba(255,255,255,.95)'; c.fill();
+  c.strokeStyle=rgbS(rgb,.95); c.lineWidth=6; c.lineJoin='round'; rr(c,80,76,40,32,9); c.stroke(); c.beginPath(); c.moveTo(80,89); c.lineTo(120,89); c.stroke(); c.beginPath(); c.arc(106,98,3.2,0,7); c.fillStyle=rgbS(rgb,.95); c.fill();
+  c.fillStyle='#fff'; c.font='800 46px '+F; c.textBaseline='middle'; c.fillText('FinTrack',156,94);
+  /* avatar */
+  var ax=64, ay=190, ad=210; c.save(); c.beginPath(); c.arc(ax+ad/2,ay+ad/2,ad/2+9,0,7); c.fillStyle='rgba(255,255,255,.9)'; c.fill(); c.beginPath(); c.arc(ax+ad/2,ay+ad/2,ad/2,0,7); c.clip();
+  var im=await loadImg(pic);
+  if(im){ var sc=Math.max(ad/im.width,ad/im.height), dw=im.width*sc, dh=im.height*sc; c.drawImage(im,ax+(ad-dw)/2,ay+(ad-dh)/2,dw,dh); }
+  else { c.fillStyle=rgbS(rgb,.8); c.fillRect(ax,ay,ad,ad); c.fillStyle='#fff'; c.font='800 108px '+F; c.textAlign='center'; c.fillText((String(n).trim()[0]||'F').toUpperCase(),ax+ad/2,ay+ad/2+6); c.textAlign='left'; }
+  c.restore();
+  /* text */
+  var tx0=320, mw=W-tx0-64, y=232; c.textAlign='left'; c.textBaseline='alphabetic'; c.fillStyle='#fff';
+  var fs=66; c.font='800 '+fs+'px '+F; while(c.measureText(n).width>mw&&fs>34){ fs-=4; c.font='800 '+fs+'px '+F; }
+  c.fillText(n,tx0,y); y+=56;
+  if(un){ c.font='600 36px '+F; c.fillStyle='rgba(255,255,255,.88)'; c.fillText('@'+un,tx0,y); y+=52; }
+  var meta=[job,city].filter(Boolean).join('  ·  ');
+  if(meta){ c.font='500 30px '+F; c.fillStyle='rgba(255,255,255,.85)'; c.fillText(meta,tx0,y); y+=46; }
+  if(bio){ c.font='500 30px '+F; c.fillStyle='rgba(255,255,255,.8)'; wrapTxt(c,bio,mw,2).forEach(function(l){ c.fillText(l,tx0,y); y+=42; }); }
+  /* call to action */
+  var cta=L('আমার সাথে FinTrack-এ যোগ দিন','Join me on FinTrack'); c.font='700 34px '+F; var cw=c.measureText(cta).width+64;
+  rr(c,64,H-124,cw,76,38); c.fillStyle='#fff'; c.fill(); c.fillStyle=rgbS(rgb,.8); c.textBaseline='middle'; c.fillText(cta,96,H-86);
+  return await new Promise(function(r){ cv.toBlob(r,'image/png'); });
+}
+async function share(){
+  var n=g('myName_v1'), link=shareUrl();
+  var hasRef=/[?&]ref=/.test(link);
+  var intro=L((n?n+' ':'')+'আপনাকে FinTrack-এ ইনভাইট করছে — হিসাব রাখার সহজ অ্যাপ। এই লিংকে খুলে Google দিয়ে অ্যাকাউন্ট খুললে আমার সাথে চ্যাটে যুক্ত হবেন:','Join '+(n||'me')+' on FinTrack, an easy money-tracking app. Open this link and sign up with Google to connect with me in chat:');
+  if(!hasRef) toast(L('রেফারেল লিংক পেতে আগে লগইন করুন (এখন শুধু অ্যাপের লিংক যাবে)','Log in to include your referral (sharing app link for now)'));
+  var file=null; try{ var b=await cardBlob(); if(b) file=new File([b],'fintrack-profile.png',{type:'image/png'}); }catch(e){}
+  if(navigator.share){
+    try{
+      if(file&&navigator.canShare&&navigator.canShare({files:[file]})){ await navigator.share({files:[file],title:'FinTrack',text:intro+'\n'+link}); }
+      else { await navigator.share({title:'FinTrack',text:intro,url:link}); }
+    }catch(e){ if(e&&e.name==='AbortError') return; try{ await navigator.share({title:'FinTrack',text:intro,url:link}); }catch(x){} }
+    return;
+  }
+  if(file){ try{ var a=document.createElement('a'); a.href=URL.createObjectURL(file); a.download='fintrack-profile.png'; document.body.appendChild(a); a.click(); setTimeout(function(){ a.remove(); URL.revokeObjectURL(a.href); },1500); }catch(e){} }
+  if(navigator.clipboard){ navigator.clipboard.writeText(intro+'\n'+link).then(function(){ toast(L('কার্ড সেভ ও লিংক কপি হয়েছে','Card saved & link copied')); },function(){}); }
+}
 function mount(){
   if($('pfStudio')) return true; var h=document.querySelector('#sec-settings .setHero'); if(!h) return false;
   var b=document.createElement('div'); b.className='box psBox'; b.id='pfStudio'; h.after(b);
@@ -12851,19 +12911,20 @@ html:root .hc.hc-bal[data-bs="crit"] .hcVal{color:#ff3b3b !important;text-shadow
 /* ===== Home profile = cover hero (user's profile cover is the background) ===== */
 html body header.top{--cvH:262px;}
 html body header.top>h1,html body header.top>.pfStage,html body header.top>.hero{position:relative;z-index:1;}
-.pfCover{position:absolute;left:-14px;right:-14px;top:calc(-8px - env(safe-area-inset-top,0px));height:calc(var(--cvH) + env(safe-area-inset-top,0px));z-index:0;pointer-events:none;overflow:hidden;
+.pfCover{position:absolute;left:50%;right:auto;width:100vw;margin-left:-50vw;top:calc(-8px - env(safe-area-inset-top,0px));bottom:0;height:auto;max-height:var(--cvH);z-index:0;pointer-events:none;overflow:hidden;
   background:
     radial-gradient(120% 90% at 85% 0%,color-mix(in srgb,var(--primary) 34%,transparent),transparent 62%),
     linear-gradient(170deg,color-mix(in srgb,var(--primary) 20%,var(--bg)),color-mix(in srgb,var(--primary) 5%,var(--bg)) 80%);
-  -webkit-mask-image:linear-gradient(180deg,#000 0,#000 52%,rgba(0,0,0,.55) 78%,transparent 100%);
-          mask-image:linear-gradient(180deg,#000 0,#000 52%,rgba(0,0,0,.55) 78%,transparent 100%);}
+  -webkit-mask-image:linear-gradient(180deg,#000 0,#000 78%,rgba(0,0,0,.5) 92%,transparent 100%);
+          mask-image:linear-gradient(180deg,#000 0,#000 78%,rgba(0,0,0,.5) 92%,transparent 100%);}
 .pfCover>i{position:absolute;inset:0;display:block;background-size:cover;background-position:center 60%;background-repeat:no-repeat;opacity:0;transform:scale(1.03);transition:opacity .45s ease;}
 .pfCover>i.on{opacity:1;}
 .pfCover::after{content:"";position:absolute;inset:0;opacity:0;transition:opacity .45s;background:linear-gradient(180deg,rgba(0,0,0,.42) 0,rgba(0,0,0,.16) 48%,transparent 78%);}
 header.top.pfHasCv .pfCover::after{opacity:1;}
 
 /* profile row: no card, sits right on the cover */
-html body header.top .pfStage{margin:2px 0 0;padding:4px 0 58px;border-radius:0;}
+html body header.top .pfStage{margin:2px 0 0;padding:4px 0 34px;border-radius:0;}
+html body header.top.pfHasCv{margin-bottom:8px;}
 html body header.top .pfStage .profileBar{background:none !important;border:0 !important;box-shadow:none !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important;border-radius:0;padding:0 2px;gap:13px;}
 html body header.top .pfStage .profileBar .pfAvatar{width:62px;height:62px;}
 html body header.top .pfStage .profileBar .pfAvatar span{font-size:25px;}
