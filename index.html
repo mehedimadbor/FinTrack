@@ -1453,13 +1453,26 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   async function dbGet(path){ return withAuth(async function(){ var r=await call(await dbUrl(path)+'&t='+Date.now(),{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }); }
   function snapshot(){ var o={}; for(var i=0;i<LS.length;i++){ var k=LS.key(i); if(syncKey(k)) o[k]=LS.getItem(k); } return o; }
   async function push(){
-    var c0=chg, ts=Date.now();
-    await withAuth(async function(){ var rr=await call(await dbUrl('backup'),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:snapshot(),updatedAt:ts})}); if(!rr.ok) throw new Error('HTTP '+rr.status); return rr; });
-    _set.call(LS,BASE,String(ts)); _set.call(LS,LAST,String(Date.now())); _set.call(LS,PUSHK,String(Date.now()));
+    var c0=chg, ts=Date.now(), snap=snapshot();
+    try{ var pr=+LS.getItem(CNTK)||0, nn=cntRaw(); if(pr>=5&&nn<pr*0.5){ var cu=await dbGet('backup'); if(cu&&cu.data) await hPut('pre'+Date.now(),{at:Date.now(),n:pr,data:cu.data}); } }catch(e){}
+    await withAuth(async function(){ var rr=await call(await dbUrl('backup'),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:snap,updatedAt:ts})}); if(!rr.ok) throw new Error('HTTP '+rr.status); return rr; });
+    _set.call(LS,BASE,String(ts)); _set.call(LS,LAST,String(Date.now())); _set.call(LS,PUSHK,String(Date.now())); saveBase(snap.moneyAppData_v1);
     if(chg===c0) _set.call(LS,DIRTY,'0'); else { _set.call(LS,DIRTY,'1'); again=true; }   /* something changed while uploading -> upload again */
+    _set.call(LS,CNTK,String(cntRaw()));
+    try{ if(Date.now()-(+LS.getItem(HISTAT)||0)>3*36e5){ _set.call(LS,HISTAT,String(Date.now())); await hPut(dayKey(),{at:Date.now(),n:cntRaw(),data:snapshot()}); hTrim(); } }catch(e){}
   }
   /* ---- merge (never lose either side): transactions & lists are united by id, this phone wins on the same id ---- */
-  function mergeList(cloud,local){
+  var retryN=0, retryT=null;
+  function retrySoon(){ clearTimeout(retryT); retryT=setTimeout(function(){ if(ses()&&auto()&&navigator.onLine) sync(); },Math.min(300000,5000*Math.pow(2,retryN++))); }
+  /* ids that existed at the last successful sync -> lets the merge tell "deleted" apart from "new on another phone" */
+  function saveBase(raw){ try{ var m={}, o=JSON.parse(raw||'{}'); Object.keys(o).forEach(function(k){ if(Array.isArray(o[k])) m[k]=o[k].filter(function(x){return x&&typeof x==='object'&&x.id!=null;}).map(function(x){return String(x.id);}); }); _set.call(LS,'ftBaseIds',JSON.stringify(m)); }catch(e){} }
+  function mergeList(cloud,local,base){
+    var cid=function(x){ return (x&&typeof x==='object'&&x.id!=null)?String(x.id):null; };
+    if(base&&base.length){ var bs={}, cl={}, lo={}; base.forEach(function(i){ bs[i]=1; });
+      (cloud||[]).forEach(function(x){ var i=cid(x); if(i!=null) cl[i]=1; }); (local||[]).forEach(function(x){ var i=cid(x); if(i!=null) lo[i]=1; });
+      cloud=(cloud||[]).filter(function(x){ var i=cid(x); return !(i!=null&&bs[i]&&!lo[i]); });   /* deleted on this phone -> stay deleted */
+      local=(local||[]).filter(function(x){ var i=cid(x); return !(i!=null&&bs[i]&&!cl[i]); });   /* deleted on another phone -> stay deleted */
+    }
     var out=[], idx={}; function key(x){ return (x&&typeof x==='object'&&x.id!=null)?'id:'+x.id:'js:'+JSON.stringify(x); }
     (cloud||[]).forEach(function(x){ var k=key(x); if(!(k in idx)){ idx[k]=out.length; out.push(x); } });
     (local||[]).forEach(function(x){ var k=key(x); if(k in idx) out[idx[k]]=x; else { idx[k]=out.length; out.push(x); } });
@@ -1467,11 +1480,11 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   }
   function mergeApp(rawLocal,rawCloud){
     try{
-      var L=JSON.parse(rawLocal), R=JSON.parse(rawCloud);
+      var L=JSON.parse(rawLocal), R=JSON.parse(rawCloud), B={}; try{ B=JSON.parse(LS.getItem('ftBaseIds')||'{}')||{}; }catch(e0){}
       if(!L||typeof L!=='object') return rawCloud; if(!R||typeof R!=='object') return rawLocal;
       var o=Object.assign({},R,L);
       Object.keys(o).forEach(function(k){ var l=L[k], r=R[k];
-        if(Array.isArray(l)&&Array.isArray(r)) o[k]=mergeList(r,l);
+        if(Array.isArray(l)&&Array.isArray(r)) o[k]=mergeList(r,l,B[k]);
         else if(l&&r&&typeof l==='object'&&typeof r==='object'&&!Array.isArray(l)&&!Array.isArray(r)) o[k]=Object.assign({},r,l); });
       return JSON.stringify(o);
     }catch(e){ return rawLocal; }
@@ -1492,14 +1505,14 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
       del.forEach(function(k){ _rem.call(LS,k); });
       Object.keys(d).forEach(function(k){ if(syncKey(k)&&typeof d[k]==='string') _set.call(LS,k,d[k]); });
       _set.call(LS,'loginDone_v1','true');
-      _set.call(LS,BASE,String(rem.updatedAt||0)); _set.call(LS,DIRTY,'0'); _set.call(LS,LAST,String(Date.now()));
+      _set.call(LS,BASE,String(rem.updatedAt||0)); _set.call(LS,DIRTY,'0'); saveBase(d.moneyAppData_v1); _set.call(LS,LAST,String(Date.now()));
     } finally{ applying=false; }
     setTimeout(function(){ location.reload(); },400); return true;
   }
   function applyLogin(rem){
     try{
       var s0=ses();
-      if(s0&&lastUid&&lastUid===s0.uid&&LS.getItem('moneyAppData_v1')&&rem&&rem.data&&mergeRemote(rem)){
+      if(keepPrevR()&&s0&&(lastUid===s0.uid||(!lastUid&&cntRaw()>0))&&LS.getItem('moneyAppData_v1')&&rem&&rem.data&&mergeRemote(rem)){
         _set.call(LS,'loginDone_v1','true'); busy=true;
         push().catch(function(){}).then(function(){ busy=false; setTimeout(function(){ location.reload(); },400); });
         return true;
@@ -1514,10 +1527,10 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
       var ru=await dbGet('backup/updatedAt'), base=+LS.getItem(BASE)||0, dirty=LS.getItem(DIRTY)==='1';
       if(ru===null||typeof ru!=='number'){ await push(); }
       else if(ru===base){ if(dirty) await push(); }
-      else if(!dirty){ var full=await dbGet('backup'); if(applyRemote(full)) return; }
+      else if(!dirty){ var full=await dbGet('backup'); try{ keepPrev(); }catch(x){} if(applyRemote(full)) return; }
       else { var f2=await dbGet('backup'); if(mergeRemote(f2)){ await push(); setTimeout(function(){ location.reload(); },300); return; } await push(); }
-      try{ _rem.call(LS,DEADK); }catch(x){} dead=false; _set.call(LS,CHKK,String(Date.now())); doneMsg();
-    }catch(e){ status(errMsg(e),true); if(isDead(e)){ dead=true; try{ _set.call(LS,DEADK,'1'); }catch(x){} if(manual) askedRe=false; askRelogin(); } }
+      try{ _rem.call(LS,DEADK); }catch(x){} dead=false; retryN=0; _set.call(LS,CHKK,String(Date.now())); doneMsg();
+    }catch(e){ status(errMsg(e),true); if(!isDead(e)) retrySoon(); if(isDead(e)){ dead=true; try{ _set.call(LS,DEADK,'1'); }catch(x){} if(manual) askedRe=false; askRelogin(); } }
     finally{ busy=false; try{ bkRefresh(); }catch(x){} if(again){ again=false; setTimeout(function(){ if(ses()&&auto()&&navigator.onLine) sync(); },700); } }
   }
   async function firstSync(){
@@ -1652,7 +1665,50 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     return errMsg(e);
   }
   function saveField(key,val,hid){ try{ LS.setItem(key,val); }catch(e){} var h=$(hid); if(h) h.value=val; try{ if(typeof renderHomeProfile==='function') renderHomeProfile(); }catch(e){} ui(); }
-  function keepPrev(){ try{ _set.call(LS,'ftSyncPrev_v1',JSON.stringify({at:Date.now(),data:snapshot()})); }catch(e){} }
+  function keepPrev(){ try{ if(cntRaw()<=0&&LS.getItem('ftSyncPrev_v1')) return; _set.call(LS,'ftSyncPrev_v1',JSON.stringify({at:Date.now(),data:snapshot()})); }catch(e){} }
+  function keepPrevR(){ keepPrev(); return true; }
+  /* ---- safety net: rolling cloud history (7 daily copies + copies saved right before a big shrink) and restore points ---- */
+  var HISTAT='ftSyncHistAt_v1', CNTK='ftSyncCnt_v1';
+  function cntRaw(){ try{ var o=JSON.parse(LS.getItem('moneyAppData_v1')||'null'); return (o&&Array.isArray(o.transactions))?o.transactions.length:0; }catch(e){ return 0; } }
+  function dayKey(t){ var d=new Date(t||Date.now()); return 'd'+d.getFullYear()+('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2); }
+  async function hPut(key,obj){ await withAuth(async function(){ var r=await call(await dbUrl('history/'+key),{method:'PUT',headers:JH,body:JSON.stringify(obj)}); if(!r.ok) throw new Error('HTTP '+r.status); }); }
+  async function hKeys(){ var r=await withAuth(async function(){ var x=await call(await dbUrl('history')+'&shallow=true',{cache:'no-store'}); if(!x.ok) throw new Error('HTTP '+x.status); return x.json(); }); return r?Object.keys(r).sort():[]; }
+  async function hTrim(){ try{ var ks=await hKeys(), ds=ks.filter(function(k){return k.charAt(0)==='d';}), ps=ks.filter(function(k){return k.indexOf('pre')===0;}), del=ds.slice(0,Math.max(0,ds.length-7)).concat(ps.slice(0,Math.max(0,ps.length-3)));
+    for(var i=0;i<del.length;i++){ var k=del[i]; await withAuth(async function(){ await call(await dbUrl('history/'+k),{method:'DELETE'}); }); } }catch(e){} }
+  function nudge(){ if(ses()||!ok()||cntRaw()<5) return; var l=+LS.getItem('ftSyncNudge_v1')||0; if(Date.now()-l<3*864e5) return; _set.call(LS,'ftSyncNudge_v1',String(Date.now()));
+    setTimeout(function(){ try{ if(window.ftNotify) window.ftNotify({id:'cloudnudge-'+Date.now(),type:'info',title:tx('ডেটা শুধু এই ফোনে আছে','Your data is only on this phone'),body:tx('ফোন হারালে বা ডেটা মুছলে সব হিসাব চলে যাবে। অ্যাকাউন্ট খুলে ক্লাউড ব্যাকআপ চালু করুন।','If you lose or reset this phone your records are gone. Create an account to turn on cloud backup.')}); }catch(e){} },5000); }
+  async function restorePoint(key){
+    if(!confirm(tx('এই রিস্টোর পয়েন্টের ডেটা ফিরিয়ে আনবেন? বর্তমান ডেটা আগে সেভ করে রাখা হবে।','Restore this point? Your current data is saved first.'))) return;
+    try{
+      var d=null;
+      if(key==='__local'){ var pv=JSON.parse(LS.getItem('ftSyncPrev_v1')||'null'); d=pv&&pv.data; }
+      else { var item=await dbGet('history/'+key); d=item&&item.data; }
+      if(!d||typeof d!=='object') throw new Error('empty');
+      var cur=snapshot(); keepPrev(); applying=true;
+      try{ Object.keys(cur).forEach(function(k){ if(!(k in d)) _rem.call(LS,k); }); Object.keys(d).forEach(function(k){ if(syncKey(k)&&typeof d[k]==='string') _set.call(LS,k,d[k]); }); } finally{ applying=false; }
+      _set.call(LS,DIRTY,'1'); busy=true; try{ await push(); } finally{ busy=false; }
+      toast(tx('ডেটা ফিরিয়ে আনা হয়েছে','Data restored')); setTimeout(function(){ location.reload(); },600);
+    }catch(e){ toast(errMsg(e)); }
+  }
+  async function restoreOpen(){
+    if(!ses()||!ok()){ toast(tx('আগে ক্লাউড অ্যাকাউন্টে লগইন করুন','Sign in to your cloud account first')); return; }
+    if(isDeadNow()){ reModal(); return; }
+    var old=$('rpOv'); if(old) old.remove();
+    var ov=document.createElement('div'); ov.id='rpOv'; ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center';
+    ov.innerHTML='<div style="background:var(--card);color:var(--text);border-radius:22px 22px 0 0;padding:18px;width:100%;max-width:460px;max-height:80vh;overflow:auto"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b style="font-size:17px">'+tx('ব্যাকআপ রিস্টোর পয়েন্ট','Backup restore points')+'</b><button id="rpX" type="button" aria-label="Close" style="border:0;background:var(--bg);color:var(--text);border-radius:50%;width:32px;height:32px;font-size:18px;cursor:pointer">×</button></div><div style="font-size:12.5px;color:var(--muted);line-height:1.5;margin-bottom:10px">'+tx('প্রতিদিনের স্বয়ংক্রিয় কপি (শেষ ৭ দিন)। বেছে নিলে ওই সময়ের ডেটা ফিরে আসবে — বর্তমান ডেটাও আগে সেভ করে রাখা হয়।','Automatic daily copies (last 7 days). Pick one to go back to it — your current data is saved first.')+'</div><div id="rpList">'+tx('লোড হচ্ছে…','Loading…')+'</div></div>';
+    document.body.appendChild(ov); ov.onclick=function(e){ if(e.target===ov) ov.remove(); }; $('rpX').onclick=function(){ ov.remove(); };
+    var box=$('rpList'), rows=[];
+    var btn=function(k,title,sub){ return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--border)"><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:14px">'+escH(title)+'</div><div style="font-size:12px;color:var(--muted)">'+escH(sub)+'</div></div><button type="button" data-rk="'+escH(k)+'" style="border:0;border-radius:12px;padding:9px 14px;font-weight:800;font-size:13px;background:var(--primary);color:#fff;cursor:pointer">'+tx('ফিরিয়ে আনুন','Restore')+'</button></div>'; };
+    try{
+      var pv=null; try{ pv=JSON.parse(LS.getItem('ftSyncPrev_v1')||'null'); }catch(e){}
+      if(pv&&pv.data){ var pn=0; try{ pn=JSON.parse(pv.data.moneyAppData_v1).transactions.length; }catch(e){} rows.push(btn('__local',tx('এই ফোনের আগের ডেটা','This phone\'s earlier data'),fmtT(pv.at)+' · '+pn+' '+tx('লেনদেন','entries'))); }
+      var ks=(await hKeys()).reverse();
+      var metas=await Promise.all(ks.map(function(k){ return Promise.all([dbGet('history/'+k+'/at'),dbGet('history/'+k+'/n')]); }));
+      ks.forEach(function(k,i){ var at=metas[i][0]||0, n=metas[i][1]||0, pre=k.indexOf('pre')===0; rows.push(btn(k,pre?tx('ওভাররাইটের আগের ক্লাউড কপি','Cloud copy before an overwrite'):tx('দৈনিক কপি','Daily copy'),fmtT(at)+' · '+n+' '+tx('লেনদেন','entries'))); });
+      box.innerHTML=rows.length?rows.join(''):tx('এখনো কোনো রিস্টোর পয়েন্ট নেই — প্রতিদিন ব্যাকআপের সাথে নিজে থেকেই তৈরি হবে।','No restore points yet — one is created automatically with your daily backup.');
+      box.onclick=function(e){ var b=e.target.closest&&e.target.closest('[data-rk]'); if(b){ ov.remove(); restorePoint(b.getAttribute('data-rk')); } };
+    }catch(e){ box.textContent=/HTTP 40[13]/.test(String((e&&e.message)||e))?tx('রিস্টোর পয়েন্ট পাওয়া যায়নি — Firebase রুলসে users/$uid/history এ অনুমতি দিন','Could not load restore points — allow users/$uid/history in Firebase rules'):errMsg(e); }
+  }
   function grabTok(j,s){ idTok=j.idToken||idTok; idExp=Date.now()+(+j.expiresIn||3600)*1000; if(s&&j.refreshToken) s.rt=j.refreshToken; }
   async function sheetSave(){
     if(sh.busy) return;
@@ -1822,7 +1878,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     }catch(e){ lgStatus(errMsg(e),true); b.disabled=false; return; }
     b.disabled=false; $('lgPass').value=''; $('lgPass').type='password'; try{ $('lgEye').innerHTML='<span class="bn">দেখান</span><span class="en">Show</span>'; }catch(e){}
     if(typeof loginContinue==='function') loginContinue();
-    setTimeout(function(){ ui(); sync(); },1200);
+    setTimeout(function(){ ui(); Promise.resolve(sync(true)).then(function(){ try{ if(ses()&&!isDeadNow()&&LS.getItem(DIRTY)!=='1') toast(tx('লগইন হয়েছে — আপনার ডেটা এখন ক্লাউডে ব্যাকআপ আছে','Signed in — your data is now backed up in the cloud')); }catch(e){} }); },300);
   }
   function loginGuest(){ if(typeof loginContinue==='function') loginContinue(); }
   function loginMode(m){
@@ -1913,7 +1969,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     lgStatus('');
     if(typeof loginContinue==='function') loginContinue();
     setTimeout(checkUn,300);
-    setTimeout(function(){ ui(); sync(); },1200);
+    setTimeout(function(){ ui(); Promise.resolve(sync(true)).then(function(){ try{ if(ses()&&!isDeadNow()&&LS.getItem(DIRTY)!=='1') toast(tx('লগইন হয়েছে — আপনার ডেটা এখন ক্লাউডে ব্যাকআপ আছে','Signed in — your data is now backed up in the cloud')); }catch(e){} }); },300);
   }
   function gInit(){
     var cid=window.FT_GOOGLE_CLIENT_ID||'', box=$('lgGoogleBox'), host=$('lgGoogleBtn'); if(!cid||!ok()||!box||!host) return;
@@ -1986,6 +2042,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     else if(isDeadNow()){ cls='bad'; msg=tx('লগইনের মেয়াদ শেষ — ব্যাকআপ থেমে আছে','Login expired — backup is paused'); btn=tx('আবার লগইন করুন','Sign in again'); }
     else if(busy){ cls='wait'; msg=tx('সিঙ্ক হচ্ছে…','Syncing…'); }
     else if(!auto()){ cls='warn'; msg=tx('অটো সিঙ্ক বন্ধ আছে','Auto sync is off'); }
+    else if(LS.getItem(DIRTY)==='1'&&Date.now()-(+LS.getItem(PUSHK)||0)>2*864e5){ cls='bad'; msg=tx('২ দিনের বেশি ব্যাকআপ হয়নি — ইন্টারনেট দেখে আপডেট চাপুন','No backup for 2+ days — check internet and tap update'); }
     else if(LS.getItem(DIRTY)==='1'){ cls='warn'; msg=tx('নতুন পরিবর্তন আপলোডের অপেক্ষায়','New changes are waiting to upload'); }
     else { cls='ok'; msg=tx('সব ডেটা ক্লাউডে আপ-টু-ডেট','All data is up to date in the cloud'); }
     var last=s?fmtT(+LS.getItem(PUSHK)||+LS.getItem(LAST)||0):'—', chk=s?fmtT(+LS.getItem(CHKK)||+LS.getItem(LAST)||0):'—';
@@ -1993,7 +2050,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
       if(off){ r.style.display='none'; return; } r.style.display='';
       var q=function(c){ return r.querySelector(c); };
       q('.bkDot').className='bkDot '+cls; q('.bkSt').textContent=msg; q('.bkLastV').textContent=last; q('.bkChkV').textContent=chk;
-      var b=q('.bkBtn'); if(b){ b.textContent=btn; b.disabled=!!(busy&&s); b.style.display=(ok()&&s)?'':'none'; }
+      var rp=q('.bkRp'); if(rp) rp.style.display=(ok()&&s)?'':'none'; var b=q('.bkBtn'); if(b){ b.textContent=btn; b.disabled=!!(busy&&s); b.style.display=(ok()&&s)?'':'none'; }
     });
   }
   function bkAct(){ if(ses()&&isDeadNow()) reModal(); else sync(true); }
@@ -2084,7 +2141,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   setInterval(function(){ if(document.visibilityState==='visible') devPing(); },90000);
   document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible'&&Date.now()-devChkAt>45000){ devChkAt=Date.now(); setTimeout(devPing,800); } });
   window.ftCloud={
-    bkAct:bkAct, devOut:devOut, devOutAll:devOutAll, devLoad:devLoad,
+    bkAct:bkAct, restoreOpen:restoreOpen, devOut:devOut, devOutAll:devOutAll, devLoad:devLoad,
     _raw:function(){ return {ses:ses,token:token,call:call,CFG:CFG,ok:ok,errMsg:errMsg}; },
     loginSubmit:loginSubmit, loginGoogle:loginGoogle, loginMode:loginMode, loginReset:loginReset, resetOpen:resetOpen, resetSend:resetSend, resetClose:resetClose, loginGuest:loginGuest, loginEye:loginEye,
     edit:openSheet, profSave:profSave, pfTouch:pfTouch, pfEye:pfEye, sheetClose:sheetClose, sheetSave:sheetSave, sheetForgot:sheetForgot, eye:eyeToggle, toggle:toggleSync, refresh:function(){ ui(); },
@@ -2109,7 +2166,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     wipe:async function(){ if(!confirm(tx('ক্লাউড থেকে আপনার সব ডেটা মুছে যাবে। এই ফোনের ডেটা থাকবে। নিশ্চিত?','This deletes all your data from the cloud. Data on this phone stays. Sure?'))) return;
       try{ var r=await call(await dbUrl('backup'),{method:'DELETE'}); if(!r.ok) throw new Error('HTTP '+r.status); _rem.call(LS,BASE); _set.call(LS,DIRTY,'1'); status(tx('ক্লাউড ডেটা মুছে ফেলা হয়েছে','Cloud data deleted')); }catch(e){ status(errMsg(e),true); } }
   };
-  function init(){ ui(); try{ gInit(); }catch(e){} try{ devObserve(); }catch(e){} if(ses()&&ok()){ setTimeout(devPing,2600); doneMsg(); setTimeout(function(){ if(auto()) sync(); },1500); setTimeout(checkUn,2200); } }
+  function init(){ ui(); try{ nudge(); }catch(e){} try{ gInit(); }catch(e){} try{ devObserve(); }catch(e){} if(ses()&&ok()){ setTimeout(devPing,2600); doneMsg(); setTimeout(function(){ if(auto()) sync(); },1500); setTimeout(checkUn,2200); } }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
   window.addEventListener('online',function(){ if(ses()&&auto()) sync(); });
   var lastVis=0; document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible'&&ses()&&auto()&&Date.now()-lastVis>60000){ lastVis=Date.now(); sync(); } });
@@ -3074,8 +3131,9 @@ const TYPE_META = {
 };
 
 function fmt(n){
-  n = Math.round(+n || 0); if(n === 0) n = 0;
-  return (n < 0 ? '-' : '') + '৳' + Math.abs(n).toLocaleString('en-IN');
+  n = Math.round((+n || 0)*100)/100; if(n === 0) n = 0;
+  const a = Math.abs(n), frac = Math.abs(a - Math.round(a)) > 0.004;   /* show paisa only when there is any */
+  return (n < 0 ? '-' : '') + '৳' + a.toLocaleString('en-IN', frac ? {minimumFractionDigits:2, maximumFractionDigits:2} : {maximumFractionDigits:0});
 }
 // checks the whole list: no account or loan balance may go negative
 function validateTxSet(list){
@@ -3419,7 +3477,7 @@ function deleteTx(id){
 function calcBalance(){
   let bal = 0;
   data.transactions.forEach(tx=>{ if(tx.fund) return; bal += TYPE_META[tx.type].sign * tx.amount; });
-  return bal;
+  return Math.round(bal*100)/100;
 }
 function isExpenseLike(tx){
   return tx.type==='expense' || (tx.type==='loan_repay_taken' && !!tx.category);
@@ -3451,6 +3509,7 @@ function calcAccountBalances(){
     if(tx.type==='use_from_account') map[tx.account] = (map[tx.account]||0) - tx.amount;
     if(tx.fund && TYPE_META[tx.type] && TYPE_META[tx.type].sign<0 && tx.type!=='save_to_account') map[tx.fund] = (map[tx.fund]||0) - tx.amount;
   });
+  Object.keys(map).forEach(k=>{ map[k]=Math.round(map[k]*100)/100; });
   return map;
 }
 function renderAccounts(){
@@ -3464,6 +3523,16 @@ function renderAccounts(){
   ).join('') : `<div class="empty">${t('empty_no_account')}</div>`;
 }
 function calcLoans(){
+  /* same person in any letter-case / spacing = one person (matches validateTxSet), paisa-exact totals */
+  const getMap={}, oweMap={}, names={}, r2=v=>Math.round(v*100)/100;
+  const nm=p=>{ const raw=String(p==null?'':p).trim(), k=raw.toLowerCase(); if(!(k in names)) names[k]=raw||'অজানা'; return names[k]; };
+  data.transactions.forEach(tx=>{ const a=+tx.amount||0;
+    if(tx.type==='loan_given'||tx.type==='loan_repay_given'){ const k=nm(tx.person); getMap[k]=(getMap[k]||0)+(tx.type==='loan_given'?a:-a); }
+    if(tx.type==='loan_taken'||tx.type==='loan_repay_taken'){ const k=nm(tx.person); oweMap[k]=(oweMap[k]||0)+(tx.type==='loan_taken'?a:-a); } });
+  Object.keys(getMap).forEach(k=>{ getMap[k]=r2(getMap[k]); }); Object.keys(oweMap).forEach(k=>{ oweMap[k]=r2(oweMap[k]); });
+  return {getMap, oweMap};
+}
+function _calcLoansOld(){
   const getMap = {}, oweMap = {};
   data.transactions.forEach(tx=>{
     if(tx.type==='loan_given') getMap[tx.person] = (getMap[tx.person]||0) + tx.amount;
@@ -4503,7 +4572,7 @@ function applyRecurring(){
       const cur=y+'-'+String(m).padStart(2,'0'); if(cur>mk) break;
       const eff=Math.min(r.day,new Date(y,m,0).getDate());
       if(cur===mk && (dNow<eff || (dNow===eff && nowHM()<(r.time||'00:00')))) break;
-      data.transactions.push({id:Date.now()+'-'+Math.random().toString(36).slice(2,7)+n, type:r.type, amount:r.amount, category:r.category||null, source:r.source||null,
+      if(!data.transactions.some(t0=>t0.id==='rc-'+r.id+'-'+cur)) data.transactions.push({id:'rc-'+r.id+'-'+cur, type:r.type, amount:r.amount, category:r.category||null, source:r.source||null,
         person:null, account:r.account||null, due:null, note:('\u{1F501} '+(r.note||'')).trim(), date:cur+'-'+String(eff).padStart(2,'0'), time:r.time||'09:00'});
       r.lastMonth=cur; changed=true; added++;
       if(++m>12){m=1;y++;}
@@ -9941,6 +10010,11 @@ window.ftPicThumb=function(){ return new Promise(function(res){ try{
   window[n]=function(){ var r=f.apply(this,arguments); setTimeout(function(){ try{ window.dispatchEvent(new Event('ftPicChanged')); }catch(e){} },80); return r; }; });
 })();</script>
 <style id="ftCgStyle">
+.cgGrp{display:flex;align-items:center;gap:8px;margin:14px 2px 8px;font-weight:800;font-size:13px;color:var(--text);}.cgGrp:after{content:"";flex:1;height:1px;background:var(--border);order:5;}.cgGrp i{order:6;font-style:normal;font-size:11px;font-weight:700;padding:2px 9px;border-radius:10px;background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--primary);}
+#bottomNav .bnbtn[data-bn="challenge"]{position:relative;}
+#bottomNav .bnbtn.cgRunning::after{content:"";position:absolute;top:6px;left:calc(50% + 7px);width:9px;height:9px;border-radius:50%;background:#10b981;box-shadow:0 0 0 2px var(--card);pointer-events:none;animation:cgNavBlink 1.1s ease-in-out infinite;}
+@keyframes cgNavBlink{0%,100%{opacity:1;transform:scale(1);box-shadow:0 0 0 2px var(--card),0 0 0 0 rgba(16,185,129,.7)}50%{opacity:.35;transform:scale(.8);box-shadow:0 0 0 2px var(--card),0 0 0 6px rgba(16,185,129,0)}}
+@media (prefers-reduced-motion:reduce){#bottomNav .bnbtn.cgRunning::after{animation:none}}
 #sec-challenge .cgHero{display:flex;gap:14px;align-items:center;padding:16px;border-radius:22px;background:var(--grad,var(--primary));color:#fff;box-shadow:0 14px 30px -16px color-mix(in srgb,var(--primary) 60%,transparent);}
 .cgLv{width:58px;height:58px;border-radius:18px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:30px;flex:none;}
 .cgHeroMain{flex:1;min-width:0;}
@@ -10017,24 +10091,46 @@ const bl=(b,e)=>'<span class="bn">'+b+'</span><span class="en">'+e+'</span>';
 const nb=x=>bn()?String(x).replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]):String(x);
 const tt=m=>{ try{ if(window.toast) window.toast(m); }catch(e){} };
 const sv=(n,z)=>'<svg class="cgIc" width="'+(z||18)+'" height="'+(z||18)+'" viewBox="0 0 24 24" aria-hidden="true"><use href="#cg-'+n+'"/></svg>';
-const KI={save:sv('save'),noexp:sv('noexp'),under:sv('under'),log:sv('log')};
+const KI={save:sv('save'),noexp:sv('noexp'),under:sv('under'),log:sv('log'),cnt:sv('log')};
 const okI=z=>'<span style="color:#10b981">'+sv('check',z||15)+'</span>';
 const LV=[[0,'নতুন','Rookie',''],[100,'সঞ্চয়ী','Saver',''],[300,'দক্ষ','Pro',''],[700,'মাস্টার','Master',''],[1500,'লেজেন্ড','Legend','']];
 /* k: save = save >= amt in every block | noexp = no expense in block | under = expense <= amt in block | log = any entry in block
    n blocks of bd days; skip = misses allowed; pts = points */
+const K=(id,k,amt,n,bd,skip,pts,st,tb,te,db,de,x)=>Object.assign({id:id,k:k,amt:amt,n:n,bd:bd,skip:skip,pts:pts,st:st,tb:tb,te:te,db:db,de:de},x||{});
+const amtOf=c=>c.dl?Math.round((+data.dailyLimit||0)*c.dl):c.amt;
 const CAT=[
-{id:1,k:'noexp',amt:0,n:1,bd:1,skip:0,pts:20,st:1,tb:'নো-স্পেন্ড ডে',te:'No-Spend Day',db:'আজ একটাও খরচ করবেন না। দিন শেষে চ্যালেঞ্জ পূর্ণ হবে।',de:'Spend nothing today. Completes when the day ends.'},
-{id:2,k:'save',amt:1000,n:1,bd:1,skip:0,pts:40,st:2,tb:'আজ {a} সঞ্চয়',te:'Save {a} today',db:'আজই "একাউন্টে জমা রাখলাম" দিয়ে {a} জমান।',de:'Save {a} today with "Saved to Account".'},
-{id:3,k:'save',amt:100,n:30,bd:1,skip:0,pts:300,st:4,tb:'রোজ {a} · ১ মাস',te:'{a} every day · 1 month',db:'টানা ৩০ দিন, রোজ কমপক্ষে {a} সঞ্চয়। একদিন মিস হলেই ব্যর্থ!',de:'30 days straight, at least {a} daily. One miss and it fails!'},
-{id:4,k:'save',amt:100,n:1,bd:1,skip:0,pts:15,st:1,tb:'ছোট শুরু: আজ {a}',te:'Small start: {a} today',db:'আজ মাত্র {a} জমিয়ে শুরু করুন।',de:'Start small — save just {a} today.'},
-{id:5,k:'noexp',amt:0,n:3,bd:1,skip:0,pts:70,st:2,tb:'৩ দিন নো-স্পেন্ড',te:'3-Day No-Spend',db:'টানা ৩ দিন কোনো খরচ নয়।',de:'No spending for 3 days in a row.'},
-{id:6,k:'log',amt:0,n:7,bd:1,skip:1,pts:50,st:1,tb:'৭ দিন হিসাব লেখা',te:'7-Day Tracking Habit',db:'৭ দিনের মধ্যে ৬ দিন অন্তত একটা লেনদেন লিখুন।',de:'Log at least one entry on 6 of the next 7 days.'},
-{id:7,k:'save',amt:50,n:7,bd:1,skip:1,pts:70,st:2,tb:'৭ দিন · রোজ {a}',te:'7 days · {a} daily',db:'৭ দিনের মধ্যে ৬ দিন {a} করে জমান।',de:'Save {a} on 6 of the next 7 days.'},
-{id:8,k:'under',amt:300,n:7,bd:1,skip:1,pts:90,st:2,tb:'৭ দিন · খরচ {a}-এর নিচে',te:'7 days · spend under {a}',db:'রোজের খরচ {a}-এর মধ্যে রাখুন (১ দিন ছাড়)।',de:'Keep daily spending within {a} (1 day grace).'},
-{id:9,k:'noexp',amt:0,n:1,bd:7,skip:0,pts:150,st:4,tb:'নো-স্পেন্ড উইক',te:'No-Spend Week',db:'টানা ৭ দিন কোনো খরচ নয়!',de:'Zero spending for 7 days straight!'},
-{id:10,k:'save',amt:500,n:4,bd:7,skip:0,pts:150,st:3,tb:'সাপ্তাহিক {a} · ৪ সপ্তাহ',te:'{a} weekly · 4 weeks',db:'প্রতি সপ্তাহে {a}, টানা ৪ সপ্তাহ।',de:'{a} every week for 4 weeks.'},
-{id:11,k:'save',amt:5000,n:1,bd:30,skip:0,pts:200,st:3,tb:'এ মাসে {a} সঞ্চয়',te:'Save {a} this month',db:'৩০ দিনের মধ্যে মোট {a} জমান।',de:'Save a total of {a} within 30 days.'},
-{id:12,k:'save',amt:3000,n:3,bd:30,skip:0,pts:450,st:4,tb:'৩ মাস · মাসে {a}',te:'3 months · {a} monthly',db:'টানা ৩ মাস, প্রতি মাসে {a} সঞ্চয়।',de:'{a} every month for 3 months.'}
+K(1,'noexp',0,1,1,0,20,1,'নো-স্পেন্ড ডে','No-Spend Day','আজ একটাও খরচ করবেন না। দিন শেষে চ্যালেঞ্জ পূর্ণ হবে।','Spend nothing today. Completes when the day ends.',{nk:['পকেট-তালা','Pocket Lock']}),
+K(2,'save',1000,1,1,0,40,2,'আজ {a} সঞ্চয়','Save {a} today','আজই "একাউন্টে জমা রাখলাম" দিয়ে {a} জমান।','Save {a} today with "Saved to Account".'),
+K(3,'save',100,30,1,0,300,4,'রোজ {a} · ১ মাস','{a} every day · 1 month','টানা ৩০ দিন, রোজ কমপক্ষে {a} সঞ্চয়। একদিন মিস হলেই ব্যর্থ!','30 days straight, at least {a} daily. One miss and it fails!',{nk:['লৌহমানব','Iron Saver']}),
+K(4,'save',100,1,1,0,15,1,'ছোট শুরু: আজ {a}','Small start: {a} today','আজ মাত্র {a} জমিয়ে শুরু করুন।','Start small — save just {a} today.'),
+K(5,'noexp',0,3,1,0,70,2,'৩ দিন নো-স্পেন্ড','3-Day No-Spend','টানা ৩ দিন কোনো খরচ নয়।','No spending for 3 days in a row.'),
+K(6,'log',0,7,1,1,50,1,'৭ দিন হিসাব লেখা','7-Day Tracking Habit','৭ দিনের মধ্যে ৬ দিন অন্তত একটা লেনদেন লিখুন।','Log at least one entry on 6 of the next 7 days.'),
+K(7,'save',50,7,1,1,70,2,'৭ দিন · রোজ {a}','7 days · {a} daily','৭ দিনের মধ্যে ৬ দিন {a} করে জমান।','Save {a} on 6 of the next 7 days.'),
+K(8,'under',300,7,1,1,90,2,'৭ দিন · খরচ {a}-এর নিচে','7 days · spend under {a}','রোজের খরচ {a}-এর মধ্যে রাখুন (১ দিন ছাড়)।','Keep daily spending within {a} (1 day grace).'),
+K(9,'noexp',0,1,7,0,150,4,'নো-স্পেন্ড উইক','No-Spend Week','টানা ৭ দিন কোনো খরচ নয়!','Zero spending for 7 days straight!',{nk:['সন্ন্যাসী','The Monk']}),
+K(10,'save',500,4,7,0,150,3,'সাপ্তাহিক {a} · ৪ সপ্তাহ','{a} weekly · 4 weeks','প্রতি সপ্তাহে {a}, টানা ৪ সপ্তাহ।','{a} every week for 4 weeks.'),
+K(11,'save',5000,1,30,0,200,3,'এ মাসে {a} সঞ্চয়','Save {a} this month','৩০ দিনের মধ্যে মোট {a} জমান।','Save a total of {a} within 30 days.'),
+K(12,'save',3000,3,30,0,450,4,'৩ মাস · মাসে {a}','3 months · {a} monthly','টানা ৩ মাস, প্রতি মাসে {a} সঞ্চয়।','{a} every month for 3 months.',{nk:['ধনকুবেরের পথে','Road to Rich']}),
+K(13,'log',0,1,1,0,10,1,'আজ একটা হিসাব লিখুন','Log one entry today','আজ অন্তত একটা লেনদেন লিখে ফেলুন — অভ্যাসের শুরু!','Log at least one entry today — start the habit!',{nk:['প্রথম পদক্ষেপ','First Step']}),
+K(14,'noexp',0,1,1,0,15,1,'হাফ-ডে নো-স্পেন্ড','Half-Day No-Spend','এখন থেকে ১২ ঘণ্টা কোনো খরচ নয়। ঘড়ি চলছে!','No spending for the next 12 hours. The clock is ticking!',{hrs:12,nk:['হাফ-ডে হিরো','Half-Day Hero']}),
+K(15,'save',50,1,1,0,15,1,'আধা-দিনে {a} সঞ্চয়','Save {a} in half a day','১২ ঘণ্টার মধ্যে "একাউন্টে জমা রাখলাম" দিয়ে {a} জমান।','Save {a} within 12 hours using "Saved to Account".',{hrs:12}),
+K(16,'cnt',2,1,1,0,15,1,'আধা-দিনে ২টি হিসাব','2 entries in half a day','১২ ঘণ্টায় অন্তত ২টি লেনদেন লিখুন।','Log at least 2 entries within 12 hours.',{hrs:12}),
+K(17,'cnt',3,1,1,0,20,1,'আজ ৩টি হিসাব লিখুন','Log 3 entries today','আজ অন্তত ৩টি লেনদেন লিখুন — কিছুই বাদ নয়!','Log at least 3 entries today — miss nothing!'),
+K(18,'save',0,1,1,0,25,1,'বাজেটের অর্ধেক সঞ্চয়: {a}','Save half the daily budget: {a}','আজ ডেইলি লিমিটের অর্ধেক জমান।','Save half of your daily limit today.',{dl:.5,nk:['অর্ধেক-জাদু','Half Magic']}),
+K(19,'under',0,1,1,0,20,1,'আধা-দিনে খরচ {a}-এর নিচে','Half-day spend under {a}','১২ ঘণ্টায় খরচ ডেইলি লিমিটের অর্ধেক ({a}) ছাড়াবেন না।','Keep 12-hour spending under half your daily limit ({a}).',{hrs:12,dl:.5}),
+K(20,'under',0,1,1,0,30,2,'আজ বাজেটের মধ্যে: {a}','Stay in budget today: {a}','আজকের খরচ ডেইলি লিমিট {a}-এর মধ্যে রাখুন।','Keep today\'s spending within your daily limit {a}.',{dl:1}),
+K(21,'noexp',0,3,1,0,60,2,'৩ আধা-দিন নো-স্পেন্ড','3 Half-Days No-Spend','টানা ৩টি ১২ ঘণ্টার ব্লকে (দেড় দিন) কোনো খরচ নয়।','Zero spending across three 12-hour blocks (1.5 days).',{hrs:12}),
+K(22,'save',0,3,1,0,80,2,'৩ দিন · রোজ {a} সঞ্চয়','3 days · save {a} daily','টানা ৩ দিন ডেইলি লিমিটের অর্ধেক জমান।','Save half your daily limit for 3 days in a row.',{dl:.5}),
+K(23,'under',0,3,1,0,70,2,'৩ দিন বাজেটের মধ্যে','3 days within budget','টানা ৩ দিন খরচ ডেইলি লিমিট {a}-এর মধ্যে।','Keep spending within {a} for 3 days.',{dl:1}),
+K(24,'cnt',3,7,1,1,80,2,'৭ দিন · রোজ ৩টি হিসাব','7 days · 3 entries daily','৭ দিনের মধ্যে ৬ দিন অন্তত ৩টি করে লেনদেন লিখুন।','Log 3+ entries on 6 of the next 7 days.'),
+K(25,'save',0,7,1,1,140,3,'৭ দিন · বাজেটের অর্ধেক সঞ্চয়','7 days · save half the budget','৭ দিনের মধ্যে ৬ দিন ডেইলি লিমিটের অর্ধেক ({a}) জমান।','Save half your daily limit ({a}) on 6 of 7 days.',{dl:.5}),
+K(26,'under',0,7,1,1,160,3,'৭ দিন · বাজেটের অর্ধেকে চলুন','7 days · half the budget','রোজের খরচ ডেইলি লিমিটের অর্ধেক ({a})-এর মধ্যে রাখুন (১ দিন ছাড়)।','Keep daily spending under half your limit ({a}), 1 day grace.',{dl:.5,nk:['মিতব্যয়ী','Frugal Pro']}),
+K(27,'noexp',0,5,1,0,110,3,'৫ দিন নো-স্পেন্ড','5-Day No-Spend','টানা ৫ দিন কোনো খরচ নয়।','No spending for 5 days straight.'),
+K(28,'save',100,14,1,1,170,3,'১৪ দিন · রোজ {a}','14 days · {a} daily','১৪ দিনের মধ্যে ১৩ দিন {a} করে জমান।','Save {a} on 13 of the next 14 days.'),
+K(29,'log',0,14,1,1,90,2,'১৪ দিন হিসাব লেখা','14-Day Tracking Streak','১৪ দিনের মধ্যে ১৩ দিন অন্তত একটা লেনদেন লিখুন।','Log at least one entry on 13 of 14 days.'),
+K(30,'save',0,30,1,2,400,4,'৩০ দিন · বাজেটের অর্ধেক সঞ্চয়','30 days · save half the budget','৩০ দিনের মধ্যে ২৮ দিন ডেইলি লিমিটের অর্ধেক ({a}) জমান।','Save half your daily limit ({a}) on 28 of 30 days.',{dl:.5,nk:['সঞ্চয়ের সম্রাট','Saving Emperor']}),
+K(31,'under',0,30,1,2,350,4,'৩০ দিন বাজেটের মধ্যে','30 days within budget','৩০ দিনের মধ্যে ২৮ দিন খরচ ডেইলি লিমিট {a}-এর মধ্যে রাখুন।','Stay within {a} on 28 of 30 days.',{dl:1}),
+K(32,'log',0,30,1,2,200,3,'৩০ দিন হিসাব লেখা','30-Day Tracking Master','৩০ দিনের মধ্যে ২৮ দিন অন্তত একটা লেনদেন লিখুন।','Log at least one entry on 28 of 30 days.')
 ];
 const PRE={1:[7,15,30,60],7:[2,4,8,12],30:[1,3,6,12]};
 let view='all', filt=0, form=false, draft={bd:1,n:7,amt:''}, queue=[], showing=false;
@@ -10045,29 +10141,33 @@ function cg(){
   if(!Array.isArray(C.active)) C.active=[]; if(!Array.isArray(C.history)) C.history=[];
   C.xp=+C.xp||0; C.streak=+C.streak||0; return C;
 }
-const fill=(s,a)=>String(s||'').replace(/\{a\}/g,fmt(a));
-const T=c=>fill(L(c.tb,c.te),c.amt), D=c=>fill(L(c.db,c.de),c.amt);
+const fill=(s,a,k)=>String(s||'').replace(/\{a\}/g,k==='cnt'?nb(a):(a>0?fmt(a):'—'));
+const cur=c=>(c.dl&&!c.start)?amtOf(c):c.amt, T=c=>fill(L(c.tb,c.te),cur(c),c.k), D=c=>fill(L(c.db,c.de),cur(c),c.k);
+function addH(s,h){ const m=s.match(/(\d+)-(\d+)-(\d+) (\d+):(\d+)/); return new Date(Date.UTC(+m[1],m[2]-1,+m[3],+m[4],+m[5])+h*36e5).toISOString().slice(0,16).replace('T',' '); }
+const msOf=s=>Date.parse(s.replace(' ','T')+':00Z');
 function addD(s,n){ const p=s.split('-').map(Number); return new Date(Date.UTC(p[0],p[1]-1,p[2]+n)).toISOString().slice(0,10); }
 function diffD(a,b){ const f=s=>{const p=s.split('-').map(Number);return Date.UTC(p[0],p[1]-1,p[2]);}; return Math.round((f(b)-f(a))/864e5); }
 function lv(xp){ let i=0; LV.forEach((l,j)=>{ if(xp>=l[0]) i=j; }); const nx=LV[i+1]; return {i,name:L(LV[i][1],LV[i][2]),emo:LV[i][3],next:nx?nx[0]:0,pct:nx?Math.round((xp-LV[i][0])/(nx[0]-LV[i][0])*100):100}; }
 /* evaluate one active challenge */
 function ev(c){
-  const today=todayStr(), bs=[]; let oks=0, miss=0;
+  const today=todayStr(), nowS=today+' '+nowTime(), bs=[]; let oks=0, miss=0;
   for(let i=0;i<c.n;i++){
-    const d0=addD(c.start,i*c.bd), d1=addD(c.start,(i+1)*c.bd-1), ended=today>d1;
-    const tx=data.transactions.filter(x=>x.date>=d0&&x.date<=d1&&(x.date+' '+x.time)>=c.startAt);
+    let d0,d1,ended,tx;
+    if(c.hrs){ const w0=addH(c.startAt,i*c.hrs), w1=addH(c.startAt,(i+1)*c.hrs); d0=w0.slice(0,10); d1=w1.slice(0,10); ended=nowS>=w1; tx=data.transactions.filter(x=>{ const q=x.date+' '+x.time; return q>=w0&&q<w1; }); }
+    else { d0=addD(c.start,i*c.bd); d1=addD(c.start,(i+1)*c.bd-1); ended=today>d1; tx=data.transactions.filter(x=>x.date>=d0&&x.date<=d1&&(x.date+' '+x.time)>=c.startAt); }
     const sum=ty=>tx.filter(x=>x.type===ty).reduce((a,x)=>a+x.amount,0);
     let st='open', val=0;
     if(c.k==='save'){ val=sum('save_to_account'); st=val>=c.amt?'ok':ended?'miss':'open'; }
     else if(c.k==='noexp'){ val=sum('expense'); st=val>0?'miss':ended?'ok':'open'; }
     else if(c.k==='under'){ val=sum('expense'); st=val>c.amt?'miss':ended?'ok':'open'; }
+    else if(c.k==='cnt'){ val=tx.length; st=val>=c.amt?'ok':ended?'miss':'open'; }
     else { val=tx.length; st=val>0?'ok':ended?'miss':'open'; }
     if(st==='ok') oks++; if(st==='miss') miss++;
     bs.push({st,val,d0,d1,ended});
   }
   const need=c.n-(c.skip||0);
   let cur=bs.findIndex(b=>!b.ended); if(cur<0) cur=c.n-1;
-  const left=Math.max(0,diffD(today,addD(c.start,c.n*c.bd-1))+1);
+  const left=c.hrs?Math.max(0,Math.ceil((msOf(addH(c.startAt,c.n*c.hrs))-msOf(nowS))/36e6)):Math.max(0,diffD(today,addD(c.start,c.n*c.bd-1))+1);
   return {bs,oks,miss,need,cur,left,state:miss>(c.skip||0)?'failed':oks>=need?'done':'active'};
 }
 function stats(){
@@ -10103,30 +10203,32 @@ function formHtml(){
 }
 function customPts(){ const d=draft.n*draft.bd; return Math.min(500,Math.round(10+d*1.5+Math.log10((+draft.amt||0)+1)*10)); }
 function sum(){ const e=$('cgSum'); if(!e) return; const a=+draft.amt||0; e.textContent=a>0?L(`মোট ${fmt(a*draft.n)} জমাতে হবে · জিতলে +${nb(customPts())} পয়েন্ট`,`Save ${fmt(a*draft.n)} in total · win +${customPts()} pts`):''; }
+const GL=[[1,'সহজ','Easy'],[2,'মাঝারি','Medium'],[3,'কঠিন','Hard'],[4,'চ্যাম্পিয়ন','Champion']];
 function allView(){
   const run=cg().active.map(c=>c.id).filter(Boolean);
-  const chips=[[0,L('সব','All')],[1,L('দৈনিক','Daily')],[7,L('সাপ্তাহিক','Weekly')],[30,L('মাসিক','Monthly')]].map(x=>`<button type="button" class="chip${filt===x[0]?' on':''}" onclick="cgFilt(${x[0]})">${x[1]}</button>`).join('');
-  const items=CAT.filter(c=>!filt||c.bd===filt).map(c=>{
-    const w=wins(c.id), on=run.indexOf(c.id)>=0;
-    return `<div class="cgItem"><div class="cgNo">#${nb(c.id)}</div><div class="cgBody"><div class="cgT">${KI[c.k]} ${esc(T(c))}</div><div class="cgD">${esc(D(c))}</div><div class="cgTags"><span class="st">${stars(c.st)}</span><span>+${nb(c.pts)} ${L('পয়েন্ট','pts')}</span><span>${perL(c.bd)}</span>${w?`<span>${sv('check',12)} ×${nb(w)}</span>`:''}</div></div><button class="cgGo" ${on?'disabled':''} onclick="cgStart(${c.id})">${on?L('চলছে','Active'):L('শুরু','Start')}</button></div>`;
-  }).join('');
+  const chips=[[0,L('সব','All')],['h',L('আধা-দিন','Half-day')],[1,L('দৈনিক','Daily')],['b',L('বাজেট','Budget')],[7,L('সাপ্তাহিক','Weekly')],[30,L('মাসিক','Monthly')]].map(x=>`<button type="button" class="chip${filt===x[0]?' on':''}" onclick="cgFilt('${x[0]}')">${x[1]}</button>`).join('');
+  const m=c=>!filt||(filt==='h'?!!c.hrs:filt==='b'?!!c.dl:filt===1?(c.bd===1&&!c.hrs):c.bd===filt);
+  const item=c=>{ const w=wins(c.id), on=run.indexOf(c.id)>=0;
+    return `<div class="cgItem"><div class="cgNo">#${nb(c.id)}</div><div class="cgBody"><div class="cgT">${KI[c.k]} ${esc(T(c))}</div><div class="cgD">${esc(D(c))}</div><div class="cgTags"><span class="st">${stars(c.st)}</span><span>+${nb(c.pts)} ${L('পয়েন্ট','pts')}</span><span>${c.hrs?L('আধা-দিন','Half-day'):perL(c.bd)}</span>${c.dl?`<span>${L('বাজেট','Budget')}</span>`:''}${c.nk?`<span>${esc(L(c.nk[0],c.nk[1]))}</span>`:''}${w?`<span>${sv('check',12)} ×${nb(w)}</span>`:''}</div></div><button class="cgGo" ${on?'disabled':''} onclick="cgStart(${c.id})">${on?L('চলছে','Active'):L('শুরু','Start')}</button></div>`; };
+  const items=GL.map(g=>{ const l=CAT.filter(c=>c.st===g[0]&&m(c)).sort((x,y)=>x.pts-y.pts); return l.length?`<div class="cgGrp">${stars(g[0])}<span>${L(g[1],g[2])}</span><i>${nb(l.length)}</i></div>`+l.map(item).join(''):''; }).join('');
   return `<button class="typebtn" style="width:100%;margin-bottom:10px;" onclick="cgForm()">${form?L('ফর্ম বন্ধ করুন','Close form'):sv('plus',14)+' '+L('নিজের চ্যালেঞ্জ বানান','Create your own challenge')}</button>${form?formHtml():''}
-  <div class="chips" style="margin-bottom:10px;">${chips}</div>${items}`;
+  <div class="chips" style="margin-bottom:6px;">${chips}</div>${items}`;
 }
 function runView(){
   const A=cg().active;
   if(!A.length) return `<div class="cgEmpty"><br>${L('কোনো চ্যালেঞ্জ চলছে না।<br>"চ্যালেঞ্জ" ট্যাব থেকে একটা বেছে নিন!','No challenge running.<br>Pick one from the "Challenges" tab!')}</div>`;
   return A.map(c=>{
-    const r=ev(c), pct=Math.min(100,Math.round(r.oks/r.need*100)), b=r.bs[r.cur], per=c.bd===1?L('আজ','Today'):c.bd===7?L('এ সপ্তাহে','This week'):L('এ মাসে','This month');
+    const r=ev(c), pct=Math.min(100,Math.round(r.oks/r.need*100)), b=r.bs[r.cur], per=c.hrs?L('এই ১২ ঘণ্টায়','In these 12h'):c.bd===1?L('আজ','Today'):c.bd===7?L('এ সপ্তাহে','This week'):L('এ মাসে','This month');
     let hint='';
     if(c.k==='save') hint=`${per}: ${fmt(b.val)} / ${fmt(c.amt)} ${b.st==='ok'?okI(14):''}`;
     else if(c.k==='noexp') hint=L('এখন পর্যন্ত কোনো খরচ হয়নি','No spending so far')+' '+okI(14);
     else if(c.k==='under') hint=`${per} ${L('খরচ','spent')}: ${fmt(b.val)} / ${fmt(c.amt)}`;
+    else if(c.k==='cnt') hint=`${per}: ${nb(b.val)} / ${nb(c.amt)} ${L('টি','entries')} ${b.st==='ok'?okI(14):''}`;
     else hint=`${per}: ${b.val?L('লেখা হয়েছে','logged')+' '+okI(14):L('এখনো লেখা হয়নি','not logged yet')}`;
     const dots=c.n<=60?`<div class="cgDots">${r.bs.map((x,i)=>`<i class="${x.st==='ok'?'ok':''}${i===r.cur?' now':''}"></i>`).join('')}</div>`:'';
     return `<div class="cgRun"><div class="cgRunH"><span>${c.id?'#'+nb(c.id)+' ':' '}${KI[c.k]} ${esc(T(c))}</span><button class="cgX" aria-label="cancel" onclick="cgCancel('${c.uid}')">${sv('x',16)}</button></div>
     <div class="barbg"><div class="barfg" style="width:${pct}%"></div></div>
-    <div class="cgD" style="margin-top:7px;">${L('সম্পন্ন','Done')}: ${nb(r.oks)}/${nb(r.need)} · ${L('বাকি','left')}: ${nb(r.left)} ${L('দিন','days')} · +${nb(c.pts)} ${L('পয়েন্ট','pts')}<br>${hint}</div>${dots}
+    <div class="cgD" style="margin-top:7px;">${L('সম্পন্ন','Done')}: ${nb(r.oks)}/${nb(r.need)} · ${L('বাকি','left')}: ${nb(r.left)} ${c.hrs?L('ঘণ্টা','hrs'):L('দিন','days')} · +${nb(c.pts)} ${L('পয়েন্ট','pts')}<br>${hint}</div>${dots}
     ${c.k==='save'?`<button class="main" style="margin-top:10px;" onclick="quickAdd('save_to_account')">${L('এখনই সঞ্চয় করুন','Save now')}</button>`:''}</div>`;
   }).join('');
 }
@@ -10154,11 +10256,12 @@ function renderDashCard(){
   else mini=`<div class="cgD" style="margin-top:6px;">${L('একটা চ্যালেঞ্জ নিয়ে পয়েন্ট জিতুন — ট্যাপ করুন','Take a challenge and win points — tap here')}</div>`;
   b.innerHTML=`<div class="cgRow"><div class="cgLv" style="width:44px;height:44px;font-size:23px;background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary);">${sv('lv'+(l.i+1),28)}</div><div style="flex:1;min-width:0;"><div style="font-weight:800;font-size:14px;">${L('চ্যালেঞ্জ','Challenges')} · ${L('লেভেল','Lv')} ${nb(l.i+1)}</div><div class="cgD">${nb(C.xp)} ${L('পয়েন্ট','pts')} · ${L('স্ট্রিক','streak')} ${nb(C.streak)}</div></div></div>${mini}`;
 }
-const renderAll=()=>{ try{ renderTab(); renderDashCard(); }catch(e){ console.error(e); } };
+function navDot(){ const b=document.querySelector('#bottomNav .bnbtn[data-bn="challenge"]'); if(b) b.classList.toggle('cgRunning',cg().active.length>0); }
+const renderAll=()=>{ try{ renderTab(); renderDashCard(); navDot(); }catch(e){ console.error(e); } };
 
 /* ---------- actions ---------- */
 window.cgView=v=>{ view=v; renderTab(); };
-window.cgFilt=f=>{ filt=f; renderTab(); };
+window.cgFilt=f=>{ filt=(f==='h'||f==='b')?f:+f; renderTab(); };
 window.cgForm=()=>{ form=!form; renderTab(); };
 window.cgBd=v=>{ draft.bd=v; draft.n=PRE[v][0]; cgAmtIn(); renderTab(); };
 window.cgN=n=>{ draft.n=n; cgAmtIn(); renderTab(); };
@@ -10167,8 +10270,9 @@ function begin(d){
   const C=cg();
   if(C.active.length>=5){ alert(L('একসাথে সর্বোচ্চ ৫টি চ্যালেঞ্জ চালানো যায়।','You can run up to 5 challenges at once.')); return false; }
   if(d.id&&C.active.some(c=>c.id===d.id)) return false;
+  if(d.dl&&amtOf(d)<=0){ alert(L('আগে সেটিংসে "ডেইলি খরচের লিমিট" সেট করুন — তারপর এই চ্যালেঞ্জ নেওয়া যাবে।','Set your daily spending limit in Settings first, then you can take this challenge.')); return false; }
   const now=todayStr();
-  C.active.push({uid:Date.now().toString(36)+Math.random().toString(36).slice(2,5),id:d.id||0,k:d.k,amt:d.amt,n:d.n,bd:d.bd,skip:d.skip||0,pts:d.pts,st:d.st,tb:d.tb,te:d.te,db:d.db,de:d.de,start:now,startAt:now+' '+nowTime()});
+  C.active.push({uid:Date.now().toString(36)+Math.random().toString(36).slice(2,5),id:d.id||0,k:d.k,amt:d.dl?amtOf(d):d.amt,n:d.n,bd:d.bd,hrs:d.hrs||0,skip:d.skip||0,pts:d.pts,st:d.st,tb:d.tb,te:d.te,db:d.db,de:d.de,start:now,startAt:now+' '+nowTime()});
   saveData(); view='run'; renderAll(); tt(L('চ্যালেঞ্জ শুরু!  শুভকামনা','Challenge started!  Good luck'));
   return true;
 }
@@ -10186,16 +10290,20 @@ window.cgCancel=uid=>{
 };
 
 /* ---------- result popup ---------- */
-const WISH=[['অভিনন্দন! আপনি পেরেছেন! ','Congratulations — you did it! '],['দারুণ কাজ! নিয়মিত সঞ্চয়ই বড় সম্পদ গড়ে। ','Great job! Steady saving builds wealth. '],['আপনার ধৈর্য ও শৃঙ্খলাকে স্যালুট! ','Salute to your discipline! ']];
+const WISH=[['অভিনন্দন! আপনি পেরেছেন! ','Congratulations — you did it! '],['দারুণ কাজ! নিয়মিত সঞ্চয়ই বড় সম্পদ গড়ে। ','Great job! Steady saving builds wealth. '],['আপনার ধৈর্য ও শৃঙ্খলাকে স্যালুট! ','Salute to your discipline! '],['শুভেচ্ছা রইল! আজকের জয় আগামীর স্বাধীনতা। ','Best wishes! Today\'s win is tomorrow\'s freedom. '],['চমৎকার! আপনি সত্যিই আর্থিক চ্যাম্পিয়ন! ','Wonderful! You are a true money champion! '],['সাবাশ! এভাবেই এগিয়ে যান, সামনে আরও বড় জয় অপেক্ষা করছে। ','Well done! Keep going — bigger wins are waiting. ']];
 function confetti(){ const w=$('cgConf'); if(!w) return; const cols=['#f59e0b','#10b981','#6366f1','#ef4444','#0ea5e9','#ec4899']; w.innerHTML=''; for(let i=0;i<28;i++){ const s=document.createElement('span'); s.style.left=(Math.random()*100)+'%'; s.style.background=cols[i%cols.length]; s.style.animationDelay=(Math.random()*1.6)+'s'; s.style.animationDuration=(2+Math.random()*1.6)+'s'; w.appendChild(s); } }
 function pump(){
   if(showing||!queue.length) return; const q=queue.shift(); showing=true;
   if(q.t==='done'){
     const w=WISH[Math.floor(Math.random()*WISH.length)];
-    $('cgWishIcon').innerHTML=sv('trophy',54); $('cgWishTitle').textContent=L(w[0],w[1]);
+    $('cgWishIcon').innerHTML=sv('trophy',54); { const nm=(localStorage.getItem('myName_v1')||'').trim(); $('cgWishTitle').textContent=(nm?nm+', ':'')+L(w[0],w[1]); }
     $('cgWishMsg').textContent=L(`আপনি #${q.c.id||'★'} "${T(q.c)}" চ্যালেঞ্জ জিতেছেন!\n+${nb(q.earned)} পয়েন্ট${q.bonus?` (স্ট্রিক বোনাস +${nb(q.bonus)})`:''}`,`You won #${q.c.id||'★'} "${T(q.c)}"!\n+${q.earned} points${q.bonus?` (streak bonus +${q.bonus})`:''}`)+(q.up?'\n'+L(` লেভেল আপ! এখন আপনি ${q.up.name}`,` Level up! You are now ${q.up.name}`):'');
     confetti(); if(navigator.vibrate){ try{ navigator.vibrate([120,60,120,60,200]); }catch(e){} }
     try{ if(window.ftNotify) window.ftNotify({id:'cg-'+q.c.uid,title:L('চ্যালেঞ্জ জিতেছেন! ','Challenge won! '),body:T(q.c)+' +'+q.earned,type:'info'}); }catch(e){}
+  }else if(q.t==='rem'){
+    $('cgWishIcon').innerHTML=sv('flag',54); $('cgWishTitle').textContent=L('চ্যালেঞ্জ চলছে — লেগে থাকুন!','Challenge in progress — keep going!');
+    $('cgWishMsg').textContent=q.list.join('\n')+(q.more?'\n'+L(`+ আরও ${nb(q.more)}টি চলছে`,`+ ${q.more} more running`):'');
+    $('cgConf').innerHTML='';
   }else{
     $('cgWishIcon').innerHTML=sv('flag',54); $('cgWishTitle').textContent=L('এবার হয়নি — আবার চেষ্টা করুন!','Not this time — try again!');
     $('cgWishMsg').textContent=L(`#${q.c.id||'★'} "${T(q.c)}" পূর্ণ হয়নি। ব্যর্থতায় কোনো পয়েন্ট কাটা যায়নি।`,`#${q.c.id||'★'} "${T(q.c)}" was not completed. No points were deducted.`);
@@ -10241,6 +10349,17 @@ tab.addEventListener('click',()=>activateTab('challenge'));
 const sec=document.createElement('div'); sec.className='section'; sec.id='sec-challenge';
 const st=$('sec-settings'); if(st) st.parentNode.insertBefore(sec,st);
 renderAll(); setTimeout(check,1200); setInterval(check,60000);
+/* reminder popup: when the app opens (and when you come back after a while) and a challenge is running */
+let lastRem=0;
+function remTxt(c,r){ const b=r.bs[r.cur]||{val:0}, per=c.hrs?L('এই ১২ ঘণ্টায়','In these 12h'):c.bd===1?L('আজ','Today'):c.bd===7?L('এ সপ্তাহে','This week'):L('এ মাসে','This month'); let h;
+  if(c.k==='save') h=`${per}: ${fmt(b.val)}/${fmt(c.amt)}`; else if(c.k==='under') h=`${per} ${L('খরচ','spent')}: ${fmt(b.val)}/${fmt(c.amt)}`;
+  else if(c.k==='noexp') h=b.val>0?L('খরচ হয়ে গেছে','Already spent'):L('এখনো কোনো খরচ হয়নি — চালিয়ে যান!','No spending yet — keep going!');
+  else if(c.k==='cnt') h=`${per}: ${nb(b.val)}/${nb(c.amt)} ${L('টি','entries')}`; else h=`${per}: ${b.val?L('লেখা হয়েছে','logged'):L('এখনো লেখা হয়নি','not logged yet')}`;
+  return `• ${T(c)}\n   ${h} · ${L('বাকি','left')} ${nb(r.left)} ${c.hrs?L('ঘণ্টা','hrs'):L('দিন','days')}`; }
+function ready(){ const h=document.documentElement, vis=e=>e&&getComputedStyle(e).display!=='none'; return !h.classList.contains('locked')&&!vis($('loginScreen'))&&!vis($('lockOverlay')); }
+function remind(force){ if(!force&&Date.now()-lastRem<30*6e4) return; const A=cg().active; if(!A.length) return; lastRem=Date.now(); queue.push({t:'rem',list:A.slice(0,3).map(c=>remTxt(c,ev(c))),more:Math.max(0,A.length-3)}); pump(); }
+let tries=0; (function wait(){ if(ready()) setTimeout(()=>remind(true),1800); else if(tries++<180) setTimeout(wait,1000); })();
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&ready()) remind(false); });
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden) check(); });
 })();
 </script>
@@ -10546,7 +10665,7 @@ function frAct(info){
 function hdr(info,own,col,chips){
   const cv=(okPic(info.cv)||(own&&okLoc(info.cv)))?info.cv:'', lk=!!info.lk&&!own&&!info.rq;
   const cb=own?'<div class="ppCovBtns"><button type="button" aria-label="cover" onclick="document.getElementById(\'ppCvIn\').click()">'+ic('pp-cam',17)+'</button>'+(cv?'<button type="button" aria-label="remove" onclick="ppCvDel()">'+ic('pp-x',16)+'</button>':'')+'</div><input type="file" id="ppCvIn" accept="image/*" style="display:none" onchange="ppCover(this)">':'';
-  const act=own?'<button type="button" class="ppAct" onclick="activateTab(\'settings\')">'+ic('pp-user',16)+' '+L('এডিট','Edit')+'</button>':frAct(info);
+  const act=own?'<button type="button" class="ppAct" onclick="ftSetOpen(\'settings_profile\',\'profile\')">'+ic('pp-user',16)+' '+L('এডিট','Edit')+'</button>':frAct(info);
   const txt=lk?'':'<div class="ppNm">'+esc(info.name||L('নাম নেই','No name'))+'</div>'+(info.un?'<div class="ppUn">@'+esc(info.un)+'</div>':'')+socHtml(info.soc)+(chips?'<div class="ppChips">'+chips+'</div>':'');
   return '<div class="ppHead" style="--r:'+col+'"><div class="ppCov"'+(cv?' style="background-image:url(\''+cv+'\')"':'')+'>'+cb+'</div><div class="ppBody"><div class="ppTop"><div class="ppAv" data-su="'+esc(info.uid||'')+'" data-own="'+(own?1:0)+'">'+avatar(lk?'':info.name,info.pic,own)+'</div>'+act+'</div>'+txt+'</div></div>';
 }
@@ -10816,7 +10935,7 @@ function bkCard(){
   return '<div class="bkRow bkLive" style="display:none;"><div class="bkTop"><span class="bkDot off"></span><b class="bkSt"></b><span class="bkTag">LIVE</span></div>'
     +'<div class="bkLn"><span>'+L('সর্বশেষ ক্লাউড ব্যাকআপ','Last cloud backup')+'</span><b class="bkLastV">—</b></div>'
     +'<div class="bkLn"><span>'+L('সর্বশেষ সিঙ্ক যাচাই','Last sync check')+'</span><b class="bkChkV">—</b></div>'
-    +'<button type="button" class="typebtn bkBtn" onclick="ftCloud.bkAct()"></button></div>';
+    +'<button type="button" class="typebtn bkBtn" onclick="ftCloud.bkAct()"></button><button type="button" class="typebtn bkRp" style="margin-top:8px;width:100%" onclick="ftCloud.restoreOpen()"><span class="bn">রিস্টোর পয়েন্ট দেখুন</span><span class="en">Restore points</span></button></div>';
 }
 function build(force){
   let host=$('ftSetList');
@@ -12154,5 +12273,197 @@ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded'
   setTimeout(check,2500);
 })();
 </script>
+
+<style id="ftPsStyle">
+/* unified icon language: one stroke weight, round caps/joins on every inline icon */
+svg[stroke-width]:not(.cgIc){stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.bnbtn svg,.hcIcon svg,.abIc svg,.abDI svg{stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+svg,.mi{shape-rendering:geometricPrecision;}
+.mi{vertical-align:-.17em;}
+.qi,.txic,.setIco{background-image:linear-gradient(145deg,color-mix(in srgb,var(--c) 22%,transparent),color-mix(in srgb,var(--c) 8%,transparent));}
+html[data-pfacc] .setHero{background:linear-gradient(135deg,var(--pfAcc),color-mix(in srgb,var(--pfAcc) 58%,#000));box-shadow:0 16px 30px -12px color-mix(in srgb,var(--pfAcc) 65%,transparent);}
+html[data-pfacc] .ppAv{--r:var(--pfAcc);}
+.psBox h3{display:flex;align-items:center;gap:8px;}
+.psTop{display:flex;align-items:center;gap:14px;}
+.psRing{--p:0;width:64px;height:64px;border-radius:50%;flex:none;background:conic-gradient(var(--pfAcc,var(--primary)) calc(var(--p)*1%),var(--border) 0);display:flex;align-items:center;justify-content:center;}
+.psRing>b{width:50px;height:50px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text);}
+.psTop p{margin:2px 0 0;font-size:12px;color:var(--muted);line-height:1.45;}
+.psTop strong{font-size:15px;color:var(--text);}
+.psMiss{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
+.psMiss button{display:inline-flex;align-items:center;gap:5px;border:1px dashed color-mix(in srgb,var(--primary) 45%,var(--border));background:color-mix(in srgb,var(--primary) 7%,transparent);color:var(--primary);border-radius:20px;padding:6px 11px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;}
+.psMiss .ok{border-style:solid;border-color:transparent;background:color-mix(in srgb,#10b981 14%,transparent);color:#059669;cursor:default;}
+.psStats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0;}
+.psStats div{background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:10px 4px;text-align:center;}
+.psStats b{display:block;font-size:15px;color:var(--text);}.psStats span{font-size:10.5px;color:var(--muted);}
+.psLbl{font-size:12.5px;font-weight:700;color:var(--muted);margin:12px 0 6px;display:flex;align-items:center;gap:6px;}
+.psAcc{display:flex;gap:10px;flex-wrap:wrap;}
+.psAcc button{width:32px;height:32px;border-radius:50%;border:3px solid var(--card);background:var(--c);box-shadow:0 0 0 1.5px var(--border);cursor:pointer;padding:0;}
+.psAcc button.on{box-shadow:0 0 0 2.5px var(--c);}
+.psFld{display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:0 12px;margin-top:8px;}
+.psFld .mi{color:var(--pfAcc,var(--primary));font-size:18px;}
+.psFld input{flex:1;min-width:0;border:0;background:transparent;color:var(--text);font:inherit;font-size:14px;padding:12px 0;outline:0;}
+.psAct{display:flex;gap:8px;margin-top:12px;}
+.psAct button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:42px;border-radius:14px;border:1px solid var(--border);background:var(--bg);color:var(--text);font:inherit;font-size:13.5px;font-weight:800;cursor:pointer;}
+.psAct button.pri{background:var(--pfAcc,var(--primary));border-color:transparent;color:#fff;}
+</style>
+<script id="ftProfileStudio">
+/* ===== Profile studio: completeness, stats, accent colour, bio / job / city, share ===== */
+(function(){
+var LS=localStorage, bn=function(){try{return currentLang==='bn';}catch(e){return true;}}, L=function(b,e){return bn()?b:e;};
+var $=function(i){return document.getElementById(i);};
+var nb=function(x){return bn()?String(x).replace(/\d/g,function(d){return '০১২৩৪৫৬৭৮৯'[d];}):String(x);};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
+var ACC=['#2563eb','#7c3aed','#db2777','#ef4444','#f97316','#16a34a','#0d9488','#475569'];
+var g=function(k){try{return LS.getItem(k)||'';}catch(e){return '';}};
+var mi=function(n){return '<i class="mi" style="--m:var(--ic-'+n+')"></i>';};
+function accent(){ var a=g('myAccent_v1'); var r=document.documentElement; if(/^#[0-9a-f]{6}$/i.test(a)){ r.style.setProperty('--pfAcc',a); r.setAttribute('data-pfacc','1'); } else { r.removeAttribute('data-pfacc'); r.style.removeProperty('--pfAcc'); } }
+function ses(){ try{return JSON.parse(g('ftSync_v1')||'null');}catch(e){return null;} }
+function hasPhoto(){ var i=$('profilePicImg'); return !!(i&&i.getAttribute('src')&&i.style.display!=='none'); }
+function level(){ var xp=0; try{ xp=+(data.challenge&&data.challenge.xp)||0; }catch(e){} var T=[0,100,300,700,1500], i=0; T.forEach(function(v,j){ if(xp>=v) i=j; }); return i+1; }
+function days(){ var j=+g('myJoined_v1'); if(!j){ j=Date.now(); try{ LS.setItem('myJoined_v1',String(j)); }catch(e){} } return Math.max(1,Math.ceil((Date.now()-j)/864e5)); }
+function items(){ var s=ses(); return [
+ ['photo',L('ছবি','Photo'),hasPhoto(),'image',function(){ var f=$('profilePicInput'); if(f) f.click(); }],
+ ['pfn',L('নাম','Name'),!!g('myName_v1'),'user'],['pfu',L('ইউজারনেম','Username'),!!g('myUsername_v1'),'tag'],
+ ['pfe',L('ইমেইল','Email'),!!(s&&s.email),'message'],['pfp',L('মোবাইল','Mobile'),!!g('myPhone_v1'),'bell'],
+ ['psBio',L('বায়ো','Bio'),!!g('myBio_v1'),'edit'],['psJob',L('পেশা','Work'),!!g('myJob_v1'),'bag'],['psCity',L('শহর','City'),!!g('myCity_v1'),'pin']]; }
+function render(force){
+  var b=$('pfStudio'); if(!b) return;
+  if(!force&&b.contains(document.activeElement)&&document.activeElement.tagName==='INPUT') return;
+  var it=items(), done=it.filter(function(x){return x[2];}).length, pct=Math.round(done/it.length*100), s=ses(), acc=g('myAccent_v1')||ACC[0], tx=0;
+  try{ tx=data.transactions.length; }catch(e){}
+  b.innerHTML='<h3>'+mi('user')+L('আমার প্রোফাইল স্টুডিও','My profile studio')+'</h3>'
+  +'<div class="psTop"><div class="psRing" style="--p:'+pct+'"><b>'+nb(pct)+'%</b></div><div><strong>'+(pct===100?L('প্রোফাইল সম্পূর্ণ!','Profile complete!'):L('প্রোফাইল সম্পূর্ণ করুন','Complete your profile'))+'</strong><p>'+L('সম্পূর্ণ প্রোফাইলে বন্ধুরা সহজে চিনতে পারে এবং অ্যাকাউন্ট রিকভারি সহজ হয়।','A complete profile helps friends find you and makes account recovery easier.')+'</p></div></div>'
+  +'<div class="psMiss">'+it.map(function(x,i){ return x[2]?'<button type="button" class="ok" disabled>'+mi('check')+esc(x[1])+'</button>':'<button type="button" data-i="'+i+'">'+mi(x[3])+esc(x[1])+'</button>'; }).join('')+'</div>'
+  +'<div class="psStats"><div><b>'+nb(tx)+'</b><span>'+L('লেনদেন','Entries')+'</span></div><div><b>'+nb(days())+'</b><span>'+L('দিন সাথে','Days')+'</span></div><div><b>'+L('লেভেল ','Lv ')+nb(level())+'</b><span>'+L('চ্যালেঞ্জ','Challenge')+'</span></div><div><b>'+(s?L('চালু','On'):L('বন্ধ','Off'))+'</b><span>'+L('ক্লাউড','Cloud')+'</span></div></div>'
+  +'<div class="psLbl">'+mi('palette')+L('প্রোফাইল রঙ','Profile colour')+'</div><div class="psAcc">'+ACC.map(function(c){ return '<button type="button" aria-label="'+c+'" data-c="'+c+'" style="--c:'+c+'" class="'+(c.toLowerCase()===acc.toLowerCase()?'on':'')+'"></button>'; }).join('')+'</div>'
+  +'<div class="psLbl">'+mi('edit')+L('আমার সম্পর্কে','About me')+'</div>'
+  +'<label class="psFld">'+mi('edit')+'<input id="psBio" maxlength="80" placeholder="'+L('ছোট বায়ো (সর্বোচ্চ ৮০ অক্ষর)','Short bio (max 80 characters)')+'" value="'+esc(g('myBio_v1'))+'"></label>'
+  +'<label class="psFld">'+mi('bag')+'<input id="psJob" maxlength="40" placeholder="'+L('পেশা (যেমন: ব্যবসায়ী, ছাত্র)','Occupation (e.g. Business, Student)')+'" value="'+esc(g('myJob_v1'))+'"></label>'
+  +'<label class="psFld">'+mi('pin')+'<input id="psCity" maxlength="40" placeholder="'+L('শহর / জেলা','City / District')+'" value="'+esc(g('myCity_v1'))+'"></label>'
+  +'<div class="psAct"><button type="button" id="psShare">'+mi('share')+L('প্রোফাইল শেয়ার','Share profile')+'</button><button type="button" class="pri" id="psSave">'+mi('check')+L('সংরক্ষণ','Save')+'</button></div>';
+}
+function toast(m){ try{ if(window.toast) window.toast(m); }catch(e){} }
+function save(){ var v=function(i){ var e=$(i); return e?e.value.trim():''; }; ['Bio','Job','City'].forEach(function(k){ try{ LS.setItem('my'+k+'_v1',v('ps'+k)); }catch(e){} }); toast(L('প্রোফাইল সংরক্ষিত হয়েছে','Profile saved')); render(true); }
+function share(){ var n=g('myName_v1'), u=g('myUsername_v1').replace(/^@/,''), m=g('myBio_v1'); var txt=(n||'FinTrack')+(u?' · @'+u:'')+(m?'\n'+m:'')+'\nFinTrack'; if(navigator.share){ navigator.share({text:txt}).catch(function(){}); } else if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(function(){ toast(L('প্রোফাইল কপি হয়েছে','Profile copied')); }); } }
+function mount(){
+  if($('pfStudio')) return true; var h=document.querySelector('#sec-settings .setHero'); if(!h) return false;
+  var b=document.createElement('div'); b.className='box psBox'; b.id='pfStudio'; h.after(b);
+  b.addEventListener('click',function(e){
+    var m=e.target.closest('.psMiss button[data-i]'); if(m){ var x=items()[+m.dataset.i]; if(x[4]) x[4](); else { var el=$(x[0]); if(el){ var d=el.closest('details'); if(d) d.open=true; el.scrollIntoView({behavior:'smooth',block:'center'}); setTimeout(function(){ try{el.focus();}catch(e){} },300); } } return; }
+    var c=e.target.closest('.psAcc button'); if(c){ try{ LS.setItem('myAccent_v1',c.dataset.c); }catch(x){} accent(); render(true); return; }
+    if(e.target.closest('#psSave')) save(); else if(e.target.closest('#psShare')) share();
+  });
+  render(true); return true;
+}
+accent();
+function boot(){ if(!mount()) setTimeout(boot,500); else setInterval(function(){ if(document.visibilityState==='visible') render(); },4000); }
+var _at=window.activateTab; if(_at) window.activateTab=function(n){ var r=_at.apply(this,arguments); if(n==='settings') setTimeout(function(){ mount(); render(true); },50); return r; };
+var _al=window.applyLanguage; if(_al) window.applyLanguage=function(){ var r=_al.apply(this,arguments); try{ render(true); }catch(e){} return r; };
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+})();
+</script>
+
+<style id="ftMinPopup">
+/* ===== Minimal popup system: light scrim, flat card, plain icon, calm buttons ===== */
+@keyframes ftMinIn{from{opacity:0;transform:translateY(6px) scale(.97)}to{opacity:1;transform:none}}
+.notifPopupOverlay,.askOverlay,#appDlg,#cgWishOverlay,#csReOv{background:rgba(15,18,25,.38)!important;-webkit-backdrop-filter:blur(3px)!important;backdrop-filter:blur(3px)!important;}
+.notifPopupCard,.askCard,#appDlg>div,#cgWishCard,#csReOv>div{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:18px!important;box-shadow:0 10px 30px -12px rgba(0,0,0,.25)!important;animation:ftMinIn .18s ease both!important;}
+.notifPopupCard,#cgWishCard{padding:22px 20px 18px!important;max-width:330px!important;}
+.notifPopupIcon,#cgWishIcon{font-size:28px!important;margin:0 auto 10px!important;color:var(--primary);display:flex;justify-content:center;}
+#cgWishIcon svg{width:30px;height:30px;}
+.notifPopupTitle,#cgWishTitle{font-size:16px!important;font-weight:700!important;margin-bottom:6px!important;letter-spacing:.1px;}
+.notifPopupMsg,#cgWishMsg{font-size:13.5px!important;line-height:1.6!important;color:var(--muted)!important;white-space:pre-line;}
+.cgConf{display:none!important;}
+.notifPopupCard .main,#cgWishOk{width:100%;margin-top:16px!important;height:44px;border-radius:12px!important;border:0;background:var(--primary);color:#fff;font:inherit;font-size:14px;font-weight:700;box-shadow:none!important;cursor:pointer;}
+#appDlg>div{padding:20px 18px 14px!important;max-width:320px!important;}
+#appDlg>div>div:first-child{background:none!important;width:auto!important;height:auto!important;margin:0 auto 8px!important;font-size:28px!important;}
+#appDlg>div>div:nth-child(2){color:var(--text)!important;font-size:14.5px!important;line-height:1.55!important;}
+#appDlg button,#csReOv button,#rpOv button{border-radius:12px!important;min-height:42px;font-weight:700!important;box-shadow:none!important;}
+#appDlg button:first-child:not(:last-child){background:transparent!important;border:1px solid var(--border)!important;}
+#csReOv>div{max-width:340px!important;}
+.askCard h4{font-size:15.5px;font-weight:700;}
+#toast,.pfToast{border-radius:12px!important;box-shadow:none!important;font-size:13px!important;font-weight:600!important;padding:10px 14px!important;}
+@media (prefers-reduced-motion:reduce){.notifPopupCard,.askCard,#appDlg>div,#cgWishCard,#csReOv>div{animation:none!important;}}
+</style>
+
+<style id="ftHubStyle">
+#phHub{margin:0 0 6px;}
+.phHd{border:1px solid var(--border);border-radius:22px;overflow:hidden;background:var(--card);margin-bottom:10px;}
+.phCv{height:92px;background:var(--grad) center/cover no-repeat;position:relative;}
+.phCv>div{position:absolute;top:8px;right:8px;display:flex;gap:6px;}
+.phIb{width:34px;height:34px;border-radius:50%;border:0;background:rgba(0,0,0,.45);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;font-size:17px;}
+.phRow{display:flex;align-items:center;gap:12px;padding:0 14px 14px;margin-top:-28px;position:relative;}
+.phAv{width:68px;height:68px;border-radius:50%;border:3px solid var(--card);background:var(--grad);color:#fff;font-weight:800;font-size:26px;display:flex;align-items:center;justify-content:center;flex:none;position:relative;cursor:pointer;}
+.phAv img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
+.phAv i.mi{position:absolute;right:-2px;bottom:-2px;width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;border:2px solid var(--card);font-size:12px;display:flex;align-items:center;justify-content:center;}
+.phTx{flex:1;min-width:0;margin-top:30px;}.phTx b{display:block;font-size:17px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.phTx span{display:block;font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.phPct{margin-top:30px;flex:none;font-size:11.5px;font-weight:800;padding:4px 10px;border-radius:99px;background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary);}
+.phNav{display:flex;gap:6px;overflow-x:auto;position:sticky;top:0;z-index:3;background:var(--bg);padding:4px 0 10px;scrollbar-width:none;}.phNav::-webkit-scrollbar{display:none;}
+.phNav button{flex:none;border:1px solid var(--border);background:var(--card);color:var(--text);font:inherit;font-size:13px;font-weight:700;padding:8px 14px;border-radius:99px;cursor:pointer;}
+.phNav button.on{background:var(--primary);border-color:transparent;color:#fff;}
+.phP{display:none;}.phP.on{display:block;}
+#phHub .psBox{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;margin:12px 0 0!important;}#phHub .psBox>h3:first-child{display:none;}
+#sec-settings details.setBox>.setBody>p[data-i18n="profile_note"]{display:none;}
+details.psMv{border:0!important;box-shadow:none!important;background:transparent!important;margin:0 0 10px!important;}
+details.psMv+details.psMv{border-top:1px dashed var(--border)!important;padding-top:10px;}
+details.psMv>summary{pointer-events:none;padding:4px 2px!important;background:none!important;}
+details.psMv>summary .setIco,details.psMv>summary .setChev{display:none!important;}
+details.psMv>.setBody{padding:6px 2px 4px!important;}
+</style>
+<script id="ftProfileHub">
+/* ===== Profile hub: every profile option (photo, cover, details, login, social, privacy, account) in ONE Settings page ===== */
+(function(){
+var $=function(i){return document.getElementById(i);}, bn=function(){try{return currentLang==='bn';}catch(e){return true;}}, L=function(b,e){return bn()?b:e;};
+var g=function(k){try{return localStorage.getItem(k)||'';}catch(e){return '';}};
+var P=[['me','প্রোফাইল','Profile'],['login','লগইন ও যোগাযোগ','Login & contact'],['soc','সোশ্যাল ও প্রাইভেসি','Social & privacy'],['acct','অ্যাকাউন্ট','Account']];
+var KEY={settings_profile:'me',inviteBox:'acct',cloudSyncBox:'acct',accountBox:'acct'};
+var OK=/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/, sig='';
+var mi=function(n){return '<i class="mi" style="--m:var(--ic-'+n+')"></i>';};
+function det(){ var h=document.querySelector('#sec-settings details.setBox h3[data-i18n="settings_profile"]'); return h?h.closest('details'):null; }
+function show(k){ var hub=$('phHub'); if(!hub) return; [].forEach.call(hub.querySelectorAll('.phP'),function(p){ p.classList.toggle('on',p.id==='phP_'+k); }); [].forEach.call(hub.querySelectorAll('.phNav button'),function(b){ b.classList.toggle('on',b.dataset.k===k); }); }
+function labels(){ var hub=$('phHub'); if(!hub) return; [].forEach.call(hub.querySelectorAll('.phNav button'),function(b){ var p=P.filter(function(x){return x[0]===b.dataset.k;})[0]; b.textContent=L(p[1],p[2]); }); }
+function refresh(force){
+  var av=$('phAv'); if(!av) return; var nm=g('myName_v1'), un=g('myUsername_v1').replace(/^@/,''), pic=g('myProfilePic_v1'), cv=g('myCoverPic_v1'), r=document.querySelector('#pfStudio .psRing b');
+  var s=[nm,un,pic.length,cv.length,r?r.textContent:'',bn()].join('|'); if(!force&&s===sig) return; sig=s;
+  av.innerHTML=(OK.test(pic)?'<img alt="" src="'+pic+'">':(nm.trim()[0]||'U').toUpperCase().replace(/[<>&]/g,''))+mi('edit');
+  $('phCv').style.backgroundImage=OK.test(cv)?'url("'+cv+'")':'';
+  $('phCvX').style.display=cv?'flex':'none';
+  $('phNm').textContent=nm||L('নাম দিন','Add your name'); $('phUn').textContent=un?'@'+un:L('ইউজারনেম দিন','Add a username');
+  $('phPct').textContent=r?r.textContent+' '+L('সম্পূর্ণ','done'):''; $('phPct').style.display=r?'':'none'; labels();
+}
+function build(){
+  var d=det(); if(!d) return null; var hub=$('phHub'); if(hub) return hub; var b=d.querySelector(':scope > .setBody'); if(!b) return null;
+  hub=document.createElement('div'); hub.id='phHub';
+  hub.innerHTML='<div class="phHd"><div class="phCv" id="phCv"><div><button type="button" class="phIb" id="phCvB" aria-label="cover">'+mi('image')+'</button><button type="button" class="phIb" id="phCvX" aria-label="remove cover">'+mi('trash')+'</button></div></div><div class="phRow"><div class="phAv" id="phAv"></div><div class="phTx"><b id="phNm"></b><span id="phUn"></span></div><span class="phPct" id="phPct"></span></div></div><input type="file" id="phCvIn" accept="image/*" hidden>'
+   +'<div class="phNav">'+P.map(function(p){return '<button type="button" data-k="'+p[0]+'"></button>';}).join('')+'</div>'+P.map(function(p){return '<div class="phP" id="phP_'+p[0]+'"></div>';}).join('');
+  b.insertBefore(hub,b.firstChild);
+  hub.addEventListener('click',function(e){
+    var n=e.target.closest('.phNav button'); if(n){ show(n.dataset.k); return; }
+    if(e.target.closest('#phAv')){ var f=$('profilePicInput'); if(f) f.click(); return; }
+    if(e.target.closest('#phCvB')){ $('phCvIn').click(); return; }
+    if(e.target.closest('#phCvX')){ try{ ppCvDel(); }catch(x){} setTimeout(function(){ refresh(true); },300); }
+  });
+  hub.addEventListener('click',function(e){ var m=e.target.closest('.psMiss button[data-i]'); if(m&&+m.dataset.i>=1&&+m.dataset.i<=4) show('login'); },true);
+  $('phCvIn').addEventListener('change',function(){ try{ ppCover(this); }catch(x){} setTimeout(function(){ refresh(true); },1500); });
+  show('me'); refresh(true); setInterval(function(){ if(document.visibilityState==='visible') refresh(); },2500);
+  return hub;
+}
+function put(id,n){ var p=$('phP_'+id); if(p&&n&&n.parentNode!==p) p.appendChild(n); }
+function pass(){
+  var hub=build(); if(!hub) return false; var miss=0, pw=$('profilePicWrap'), st=$('pfStudio'), pn=$('pfn'), ps=$('ppSetBox');
+  if(pw){ put('me',pw.parentNode); put('me',$('profilePicResetBtn')); } else miss++;
+  if(st) put('me',st); else miss++;
+  if(pn&&pn.closest('.pfCard')) put('login',pn.closest('.pfCard')); else miss++;
+  if(ps) put('soc',ps); else miss++;
+  ['inviteBox','cloudSyncBox','accountBox'].forEach(function(k){ var e=$(k); if(!e){ miss++; return; } if(e.tagName==='DETAILS'){ e.classList.add('psMv'); e.open=true; } put('acct',e); });
+  return miss===0;
+}
+var n=0; (function tick(){ var ok=false; try{ ok=pass(); }catch(e){} if(!ok&&n++<40) setTimeout(tick,500); })();
+var so=window.ftSetOpen; if(so) window.ftSetOpen=function(k){ var t=KEY[k], a=[].slice.call(arguments); if(t) a[0]='settings_profile'; var r=so.apply(this,a); if(t){ try{ pass(); }catch(e){} show(t); } return r; };
+var at=window.activateTab; if(at) window.activateTab=function(x){ var r=at.apply(this,arguments); if(x==='settings') setTimeout(function(){ try{ pass(); refresh(true); }catch(e){} },80); return r; };
+var al=window.applyLanguage; if(al) window.applyLanguage=function(){ var r=al.apply(this,arguments); try{ refresh(true); }catch(e){} return r; };
+})();
+</script>
+
 </body>
 </html>
