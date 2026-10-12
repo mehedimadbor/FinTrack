@@ -1351,6 +1351,14 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   function isDeadNow(){ return dead||LS.getItem(DEADK)==='1'; }
   function status(m,bad){ var e=$('csStatus'); if(e){ e.textContent=m||''; e.style.color=bad?'var(--red)':'var(--primary)'; } try{ bkRefresh(); }catch(x){} }
   function timeStr(){ var t=+LS.getItem(LAST)||0; return t?new Date(t).toLocaleString(bnL()?'bn-BD':'en-GB',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):''; }
+  /* ---- live sync pill: shows saving / uploading / synced / offline / error ---- */
+  var liveT=0;
+  function live(st,m){
+    var e=$('ftLive'); if(!e){ e=document.createElement('div'); e.id='ftLive'; e.setAttribute('role','status'); e.innerHTML='<i></i><span></span>'; e.onclick=function(){ if(e.dataset.s==='err'||e.dataset.s==='off'){ try{ sync(true); }catch(x){} } }; document.body.appendChild(e); }
+    e.dataset.s=st; e.lastChild.textContent=m; e.classList.add('on'); clearTimeout(liveT);
+    if(st==='ok') liveT=setTimeout(function(){ e.classList.remove('on'); },2600);
+  }
+  function liveOk(){ var t=timeStr(); live('ok',tx('সিঙ্ক হয়েছে','Synced')+(t?' · '+t:'')); }
   function doneMsg(){ if(ses()&&isDeadNow()){ status(errMsg('TOKEN_EXPIRED'),true); return; } var t=timeStr(); status(tx('সিঙ্ক হয়েছে','Synced')+(t?' · '+t:'')); }
   function acRefresh(){ var w=$('acWho'); if(!w) return; var s=ses(), n=''; try{ n=localStorage.getItem('myName_v1')||''; }catch(e){}
     w.textContent = s ? ((n?n+' · ':'')+(s.email||'')) : tx((n?n+' · ':'')+'গেস্ট (শুধু এই ফোনে)',(n?n+' · ':'')+'Guest (this phone only)'); }
@@ -1456,6 +1464,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     var c0=chg, ts=Date.now(), snap=snapshot();
     try{ var pr=+LS.getItem(CNTK)||0, nn=cntRaw(); if(pr>=5&&nn<pr*0.5){ var cu=await dbGet('backup'); if(cu&&cu.data) await hPut('pre'+Date.now(),{at:Date.now(),n:pr,data:cu.data}); } }catch(e){}
     await withAuth(async function(){ var rr=await call(await dbUrl('backup'),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:snap,updatedAt:ts})}); if(!rr.ok) throw new Error('HTTP '+rr.status); return rr; });
+    var vf=await dbGet('backup/updatedAt'); if(vf!==ts) throw new Error('VERIFY_FAILED');   /* confirm the cloud really holds this version */
     _set.call(LS,BASE,String(ts)); _set.call(LS,LAST,String(Date.now())); _set.call(LS,PUSHK,String(Date.now())); saveBase(snap.moneyAppData_v1);
     if(chg===c0) _set.call(LS,DIRTY,'0'); else { _set.call(LS,DIRTY,'1'); again=true; }   /* something changed while uploading -> upload again */
     _set.call(LS,CNTK,String(cntRaw()));
@@ -1463,7 +1472,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   }
   /* ---- merge (never lose either side): transactions & lists are united by id, this phone wins on the same id ---- */
   var retryN=0, retryT=null;
-  function retrySoon(){ clearTimeout(retryT); retryT=setTimeout(function(){ if(ses()&&auto()&&navigator.onLine) sync(); },Math.min(300000,5000*Math.pow(2,retryN++))); }
+  function retrySoon(){ clearTimeout(retryT); retryT=setTimeout(function(){ if(ses()&&auto()&&navigator.onLine) sync(); },Math.min(60000,3000*Math.pow(2,retryN++))); }
   /* ids that existed at the last successful sync -> lets the merge tell "deleted" apart from "new on another phone" */
   function saveBase(raw){ try{ var m={}, o=JSON.parse(raw||'{}'); Object.keys(o).forEach(function(k){ if(Array.isArray(o[k])) m[k]=o[k].filter(function(x){return x&&typeof x==='object'&&x.id!=null;}).map(function(x){return String(x.id);}); }); _set.call(LS,'ftBaseIds',JSON.stringify(m)); }catch(e){} }
   function mergeList(cloud,local,base){
@@ -1523,14 +1532,14 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   async function sync(manual){
     if(busy){ again=true; return; } if(!ses()||!ok()) return; if(dead&&!manual) return; busy=true;
     try{
-      status(tx('সিঙ্ক হচ্ছে…','Syncing…'));
+      status(tx('সিঙ্ক হচ্ছে…','Syncing…')); live('sync',tx('ক্লাউডে সিঙ্ক হচ্ছে…','Syncing to cloud…'));
       var ru=await dbGet('backup/updatedAt'), base=+LS.getItem(BASE)||0, dirty=LS.getItem(DIRTY)==='1';
       if(ru===null||typeof ru!=='number'){ await push(); }
       else if(ru===base){ if(dirty) await push(); }
       else if(!dirty){ var full=await dbGet('backup'); try{ keepPrev(); }catch(x){} if(applyRemote(full)) return; }
       else { var f2=await dbGet('backup'); if(mergeRemote(f2)){ await push(); setTimeout(function(){ location.reload(); },300); return; } await push(); }
-      try{ _rem.call(LS,DEADK); }catch(x){} dead=false; retryN=0; _set.call(LS,CHKK,String(Date.now())); doneMsg();
-    }catch(e){ status(errMsg(e),true); if(!isDead(e)) retrySoon(); if(isDead(e)){ dead=true; try{ _set.call(LS,DEADK,'1'); }catch(x){} if(manual) askedRe=false; askRelogin(); } }
+      try{ _rem.call(LS,DEADK); }catch(x){} dead=false; retryN=0; _set.call(LS,CHKK,String(Date.now())); doneMsg(); if(LS.getItem(DIRTY)!=='1') liveOk();
+    }catch(e){ status(errMsg(e),true); live(navigator.onLine?'err':'off',navigator.onLine?tx('সিঙ্ক হয়নি — আবার চেষ্টা হচ্ছে (ট্যাপ করুন)','Sync failed — retrying (tap to retry)'):tx('অফলাইন — নেট এলে অটো সিঙ্ক হবে','Offline — will sync when online')); if(!isDead(e)) retrySoon(); if(isDead(e)){ dead=true; try{ _set.call(LS,DEADK,'1'); }catch(x){} if(manual) askedRe=false; askRelogin(); } }
     finally{ busy=false; try{ bkRefresh(); }catch(x){} if(again){ again=false; setTimeout(function(){ if(ses()&&auto()&&navigator.onLine) sync(); },700); } }
   }
   async function firstSync(){
@@ -1540,8 +1549,8 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     if(!hasLocal||confirm(tx('ক্লাউডে আপনার ডেটা পাওয়া গেছে। এই ফোনের ডেটা বদলে ক্লাউডের ডেটা নেবেন?\nOK = ক্লাউডের ডেটা নেবেন\nCancel = এই ফোনের ডেটা ক্লাউডে আপলোড হবে','Cloud data found. Replace this phone\'s data with it?\nOK = use the cloud data\nCancel = upload this phone\'s data to the cloud'))){ if(applyLogin(rem)) return; }
     await push(); doneMsg();
   }
-  function schedule(){ clearTimeout(timer); timer=setTimeout(function(){ if(navigator.onLine&&auto()) sync(); },1500); }
-  function onChange(k){ if(applying||!syncKey(k)||!ses()) return; chg++; _set.call(LS,DIRTY,'1'); if(auto()) schedule(); }
+  function schedule(){ clearTimeout(timer); timer=setTimeout(function(){ if(navigator.onLine&&auto()) sync(); else if(!navigator.onLine) live('off',tx('অফলাইন — ডেটা ফোনে সেভ আছে, নেট এলে সিঙ্ক হবে','Offline — saved on phone, will sync when online')); },900); }
+  function onChange(k){ if(applying||!syncKey(k)||!ses()) return; chg++; _set.call(LS,DIRTY,'1'); if(auto()){ live('pend',tx('সেভ হয়েছে · আপলোড হচ্ছে…','Saved · uploading…')); schedule(); } }
   Storage.prototype.setItem=function(k){ var r=_set.apply(this,arguments); if(this===LS){ try{onChange(k)}catch(e){} } return r; };
   Storage.prototype.removeItem=function(k){ var r=_rem.apply(this,arguments); if(this===LS){ try{onChange(k)}catch(e){} } return r; };
   /* ---- profile rows + account sheet (name / username / phone / email / password) ---- */
@@ -2169,6 +2178,17 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   function init(){ ui(); try{ nudge(); }catch(e){} try{ gInit(); }catch(e){} try{ devObserve(); }catch(e){} if(ses()&&ok()){ setTimeout(devPing,2600); doneMsg(); setTimeout(function(){ if(auto()) sync(); },1500); setTimeout(checkUn,2200); } }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
   window.addEventListener('online',function(){ if(ses()&&auto()) sync(); });
+  window.addEventListener('offline',function(){ if(ses()) live('off',tx('অফলাইন — ডেটা ফোনে সেভ আছে','Offline — data is safe on this phone')); });
+  /* live pull: every 4s (tiny request) check whether another device changed the cloud copy; apply when idle */
+  var pollBusy=false;
+  setInterval(async function(){
+    if(pollBusy||busy||dead||!ses()||!ok()||!auto()||!navigator.onLine||document.visibilityState!=='visible') return;
+    if(LS.getItem(DIRTY)==='1'||timer) return;
+    var a=document.activeElement; if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return;
+    pollBusy=true;
+    try{ var ru=await dbGet('backup/updatedAt'), base=+LS.getItem(BASE)||0; if(typeof ru==='number'&&ru!==base&&LS.getItem(DIRTY)!=='1'&&!timer){ live('sync',tx('নতুন ডেটা আসছে…','Getting new data…')); await sync(); } }catch(e){}
+    pollBusy=false;
+  },4000);
   var lastVis=0; document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible'&&ses()&&auto()&&Date.now()-lastVis>60000){ lastVis=Date.now(); sync(); } });
   function flush(){ try{ if(!dead&&ses()&&auto()&&navigator.onLine&&LS.getItem(DIRTY)==='1'){ clearTimeout(timer); sync(); } }catch(e){} }
   document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='hidden') flush(); });
@@ -2525,17 +2545,20 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   <div class="box">
     <h3 data-i18n="settings_profile">প্রোফাইল</h3>
     <p style="font-size:12.5px; color:var(--muted); margin:0 0 6px;" data-i18n="profile_note">নিচে তথ্য দিয়ে রাখুন, QR শেয়ার করার সময় বন্ধুরা এই নামে আপনাকে চিনবে।</p>
-    <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
-      <div id="profilePicWrap" style="width:56px; height:56px; border-radius:50%; overflow:hidden; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; background:var(--bg); flex-shrink:0;">
+    <div class="psPhoto">
+      <div id="profilePicWrap">
         <span id="profilePicEmoji" style="font-size:26px;">U</span>
         <img id="profilePicImg" style="display:none; width:100%; height:100%; object-fit:cover;">
       </div>
-      <div style="flex:1;">
+      <div class="psPhT">
+        <b data-i18n="">প্রোফাইল ছবি</b><small>JPG / PNG</small>
         <input type="file" id="profilePicInput" accept="image/*" style="display:none;" onchange="handleProfilePicUpload(this)">
-        <button class="typebtn" style="width:100%;" onclick="document.getElementById('profilePicInput').click()" data-i18n="btn_change_photo">ছবি পরিবর্তন করুন</button>
+        <div class="psPhB">
+          <button type="button" class="typebtn psB1" onclick="document.getElementById('profilePicInput').click()"><i class="mi" style="--m:var(--ic-image)"></i><span data-i18n="btn_change_photo">ছবি পরিবর্তন করুন</span></button>
+          <button type="button" class="typebtn psB2" id="profilePicResetBtn" style="display:none;" onclick="resetProfilePic()" aria-label="remove"><i class="mi" style="--m:var(--ic-trash)"></i><span data-i18n="btn_reset_photo">ছবি সরিয়ে দিন</span></button>
+        </div>
       </div>
     </div>
-    <button class="typebtn" id="profilePicResetBtn" style="width:100%; display:none; margin-bottom:8px;" onclick="resetProfilePic()" data-i18n="btn_reset_photo">ছবি সরিয়ে দিন</button>
     <div class="pfCard">
       <div class="pfHd"><i class="a"></i><i class="b"></i>
         <div class="pfHdT"><span class="bn">আপনার তথ্য</span><span class="en">Your details</span></div>
@@ -3921,7 +3944,7 @@ function loadSavedProfilePic(){
 }
 
 // ---- Local backup (download / restore file) ----
-const BACKUP_KEYS = ['moneyAppData_v1','myName_v1','myUsername_v1','myPhone_v1','myProfilePic_v1','myCoverPic_v1','mySocial_v1','ftProfLock_v1','customLogo_v1','appLang_v1','appTheme_v1'];
+const BACKUP_KEYS = ['moneyAppData_v1','myName_v1','myUsername_v1','myPhone_v1','myProfilePic_v1','myCoverPic_v1','myBio_v1','myJob_v1','myCity_v1','myAccent_v1','mySocial_v1','ftProfLock_v1','customLogo_v1','appLang_v1','appTheme_v1'];
 function downloadBackup(){
   const payload = {};
   BACKUP_KEYS.forEach(k=>{ try{ const v = localStorage.getItem(k); if(v!==null) payload[k]=v; }catch(e){} });
@@ -10647,6 +10670,10 @@ const myUn=()=>{ try{ return (localStorage.getItem('myUsername_v1')||'').trim().
 const myName=()=>{ try{ return localStorage.getItem('myName_v1')||''; }catch(e){ return ''; } };
 const myPic=()=>{ try{ return localStorage.getItem('myProfilePic_v1')||''; }catch(e){ return ''; } };
 const myCover=()=>{ try{ return localStorage.getItem('myCoverPic_v1')||''; }catch(e){ return ''; } };
+const lsv=(k,n)=>{ try{ return String(localStorage.getItem(k)||'').trim().slice(0,n); }catch(e){ return ''; } };
+const myAbout=()=>({b:lsv('myBio_v1',80),j:lsv('myJob_v1',40),c:lsv('myCity_v1',40)});
+const recAbout=r=>({b:String((r&&r.b)||'').slice(0,80),j:String((r&&r.j)||'').slice(0,40),c:String((r&&r.c)||'').slice(0,40)});
+function aboutHtml(a){ if(!a||!(a.b||a.j||a.c)) return ''; const ch=(n,t)=>t?'<span><i class="mi" style="--m:var(--ic-'+n+')"></i>'+esc(t)+'</span>':''; return '<div class="ppAbout">'+(a.b?'<p>'+esc(a.b)+'</p>':'')+((a.j||a.c)?'<div class="ppAbC">'+ch('bag',a.j)+ch('pin',a.c)+'</div>':'')+'</div>'; }
 const meUid=()=>{ try{ const r=R(); return r&&r.ses&&r.ses()?r.ses().uid:''; }catch(e){ return ''; } };
 const LK='ftProfLock_v1';
 const mySoc=()=>{ try{ return cleanSoc(JSON.parse(localStorage.getItem('mySocial_v1')||'{}')); }catch(e){ return {}; } };
@@ -10666,7 +10693,7 @@ function hdr(info,own,col,chips){
   const cv=(okPic(info.cv)||(own&&okLoc(info.cv)))?info.cv:'', lk=!!info.lk&&!own&&!info.rq;
   const cb=own?'<div class="ppCovBtns"><button type="button" aria-label="cover" onclick="document.getElementById(\'ppCvIn\').click()">'+ic('pp-cam',17)+'</button>'+(cv?'<button type="button" aria-label="remove" onclick="ppCvDel()">'+ic('pp-x',16)+'</button>':'')+'</div><input type="file" id="ppCvIn" accept="image/*" style="display:none" onchange="ppCover(this)">':'';
   const act=own?'<button type="button" class="ppAct" onclick="ftSetOpen(\'settings_profile\',\'profile\')">'+ic('pp-user',16)+' '+L('এডিট','Edit')+'</button>':frAct(info);
-  const txt=lk?'':'<div class="ppNm">'+esc(info.name||L('নাম নেই','No name'))+'</div>'+(info.un?'<div class="ppUn">@'+esc(info.un)+'</div>':'')+socHtml(info.soc)+(chips?'<div class="ppChips">'+chips+'</div>':'');
+  const txt=lk?'':'<div class="ppNm">'+esc(info.name||L('নাম নেই','No name'))+'</div>'+(info.un?'<div class="ppUn">@'+esc(info.un)+'</div>':'')+socHtml(info.soc)+aboutHtml(info.ab)+(chips?'<div class="ppChips">'+chips+'</div>':'');
   return '<div class="ppHead" style="--r:'+col+'"><div class="ppCov"'+(cv?' style="background-image:url(\''+cv+'\')"':'')+'>'+cb+'</div><div class="ppBody"><div class="ppTop"><div class="ppAv" data-su="'+esc(info.uid||'')+'" data-own="'+(own?1:0)+'">'+avatar(lk?'':info.name,info.pic,own)+'</div>'+act+'</div>'+txt+'</div></div>';
 }
 function socCard(){
@@ -10730,7 +10757,7 @@ function renderTab(){
   const s=$('sec-profile'); if(!s) return;
   try{ renderSet(); }catch(e){}
   const a=document.activeElement; if(a&&(a.id==='ppQ'||a.classList.contains('ppSi'))) return;
-  s.innerHTML=(pane==='me'?profHtml({name:myName(),un:myUn(),pic:myPic(),cv:myCover(),soc:mySoc(),p:mine()}):findHtml());
+  s.innerHTML=(pane==='me'?profHtml({name:myName(),un:myUn(),pic:myPic(),cv:myCover(),soc:mySoc(),ab:myAbout(),p:mine()}):findHtml());
 }
 function renderRes(){ const e=$('ppRes'); if(e) e.innerHTML=resHtml(); }
 /* ---------- cloud ---------- */
@@ -10746,7 +10773,7 @@ async function pub(force){
     if(localStorage.getItem(PUB)==='0') return;
     const r=R(); if(!r||!r.ok()||!r.ses()){ pubSt={k:'login',t:''}; return; }
     let pic=''; try{ if(window.ftPicThumb) pic=await window.ftPicThumb(); }catch(e){}
-    const p=mine(), lk=localStorage.getItem(LK)==='1', soc=mySoc(), rec=lk?{pic:pic||'',cv:myCover(),lk:1,t:Date.now()}:{n:myName(),u:myUn(),pic:pic||'',cv:myCover(),soc,p,t:Date.now()}, sig=JSON.stringify([lk,rec.n,rec.u,(pic||'').length,myCover().length,soc,p]);
+    const p=mine(), lk=localStorage.getItem(LK)==='1', soc=mySoc(), ab=myAbout(), rec=lk?{pic:pic||'',cv:myCover(),lk:1,t:Date.now()}:{n:myName(),u:myUn(),pic:pic||'',cv:myCover(),soc,b:ab.b,j:ab.j,c:ab.c,p,t:Date.now()}, sig=JSON.stringify([lk,rec.n,rec.u,(pic||'').length,myCover().length,soc,ab,p]);
     if(!force&&sig===lastSig) return;
     await db('profiles/'+r.ses().uid,{method:'PUT',headers:J,body:JSON.stringify(rec)});
     lastSig=sig; pubSt={k:'ok',t:''};
@@ -10782,8 +10809,8 @@ async function open(uid){
     const rec=await db('profiles/'+uid);
     busy=false;
     if(rec&&rec.lk){ viewed={uid,name:rq?(f.name||''):'',un:rq?(f.username||''):'',pic:okPic(rec.pic)?rec.pic:f.pic||'',cv:okPic(rec.cv)?rec.cv:'',lk:1,rq,p:null}; sel=''; renderTab(); window.scrollTo(0,0); return; }
-    if(!rec||!rec.p){ viewed={uid,name:f.name||'',un:f.username||'',pic:f.pic||'',cv:rec&&okPic(rec.cv)?rec.cv:'',rq,p:null}; sel=''; renderTab(); window.scrollTo(0,0); return; }
-    viewed={uid,name:String(rec.n||f.name||'').slice(0,60),un:String(rec.u||f.username||'').slice(0,40),pic:okPic(rec.pic)?rec.pic:f.pic||'',cv:okPic(rec.cv)?rec.cv:'',soc:cleanSoc(rec.soc),rq,p:clean(rec.p)}; sel=''; renderTab(); window.scrollTo(0,0);
+    if(!rec||!rec.p){ viewed={uid,name:f.name||'',un:f.username||'',pic:f.pic||'',cv:rec&&okPic(rec.cv)?rec.cv:'',ab:recAbout(rec),rq,p:null}; sel=''; renderTab(); window.scrollTo(0,0); return; }
+    viewed={uid,name:String(rec.n||f.name||'').slice(0,60),un:String(rec.u||f.username||'').slice(0,40),pic:okPic(rec.pic)?rec.pic:f.pic||'',cv:okPic(rec.cv)?rec.cv:'',soc:cleanSoc(rec.soc),ab:recAbout(rec),rq,p:clean(rec.p)}; sel=''; renderTab(); window.scrollTo(0,0);
   }catch(e){ busy=false; if(rq){ viewed={uid,name:f.name||'',un:f.username||'',pic:f.pic||'',cv:'',rq,p:null}; sel=''; renderTab(); return; } msgBad=true; msg=L('প্রোফাইল আনা যায়নি।','Could not load profile.'); results=[f]; renderRes(); }
 }
 /* ---------- actions ---------- */
@@ -10804,6 +10831,7 @@ window.ppOpen=uid=>{ fromFr=false; open(uid); };
 window.ppViewed=()=>viewed;
 window.ppView=(uid,seed)=>{ if(seed) seeds[uid]=seed; else delete seeds[uid]; fromFr=!!seed; pane='find'; viewed=null; results=[]; msg=''; sel=''; keepPane=true; try{ activateTab('profile'); }catch(e){} keepPane=false; renderTab(); open(uid); };
 window.addEventListener('ftFrChange',()=>{ try{ const e=$('sec-profile'); if(e&&e.classList.contains('active')) renderTab(); }catch(x){} });
+window.ppRepub=()=>{ lastSig=''; try{ pub(true); }catch(e){} try{ renderTab(); }catch(e){} };
 window.ppLock=on=>{ try{ localStorage.setItem(LK,on?'1':'0'); }catch(e){} lastSig=''; renderTab(); pub(true); };
 window.ppSocSave=()=>{ const o={}; ['fb','ig','tg','wa'].forEach(k=>{ const e=$('ppS_'+k); if(e) o[k]=e.value; }); try{ localStorage.setItem('mySocial_v1',JSON.stringify(cleanSoc(o))); }catch(e){} lastSig=''; try{ document.activeElement.blur(); }catch(e){} renderTab(); pub(true); if(window.toast) window.toast(L('সেভ হয়েছে','Saved')); };
 window.ppCover=inp=>{ const f=inp.files&&inp.files[0]; inp.value=''; if(!f) return;
@@ -12332,18 +12360,20 @@ function render(force){
   var it=items(), done=it.filter(function(x){return x[2];}).length, pct=Math.round(done/it.length*100), s=ses(), acc=g('myAccent_v1')||ACC[0], tx=0;
   try{ tx=data.transactions.length; }catch(e){}
   b.innerHTML='<h3>'+mi('user')+L('আমার প্রোফাইল স্টুডিও','My profile studio')+'</h3>'
-  +'<div class="psTop"><div class="psRing" style="--p:'+pct+'"><b>'+nb(pct)+'%</b></div><div><strong>'+(pct===100?L('প্রোফাইল সম্পূর্ণ!','Profile complete!'):L('প্রোফাইল সম্পূর্ণ করুন','Complete your profile'))+'</strong><p>'+L('সম্পূর্ণ প্রোফাইলে বন্ধুরা সহজে চিনতে পারে এবং অ্যাকাউন্ট রিকভারি সহজ হয়।','A complete profile helps friends find you and makes account recovery easier.')+'</p></div></div>'
+  +'<div class="psTop psCard"><div class="psRing" style="--p:'+pct+'"><b>'+nb(pct)+'%</b></div><div><strong>'+(pct===100?L('প্রোফাইল সম্পূর্ণ!','Profile complete!'):L('প্রোফাইল সম্পূর্ণ করুন','Complete your profile'))+'</strong><p>'+L('সম্পূর্ণ প্রোফাইলে বন্ধুরা সহজে চিনতে পারে এবং অ্যাকাউন্ট রিকভারি সহজ হয়।','A complete profile helps friends find you and makes account recovery easier.')+'</p></div></div>'
   +'<div class="psMiss">'+it.map(function(x,i){ return x[2]?'<button type="button" class="ok" disabled>'+mi('check')+esc(x[1])+'</button>':'<button type="button" data-i="'+i+'">'+mi(x[3])+esc(x[1])+'</button>'; }).join('')+'</div>'
-  +'<div class="psStats"><div><b>'+nb(tx)+'</b><span>'+L('লেনদেন','Entries')+'</span></div><div><b>'+nb(days())+'</b><span>'+L('দিন সাথে','Days')+'</span></div><div><b>'+L('লেভেল ','Lv ')+nb(level())+'</b><span>'+L('চ্যালেঞ্জ','Challenge')+'</span></div><div><b>'+(s?L('চালু','On'):L('বন্ধ','Off'))+'</b><span>'+L('ক্লাউড','Cloud')+'</span></div></div>'
-  +'<div class="psLbl">'+mi('palette')+L('প্রোফাইল রঙ','Profile colour')+'</div><div class="psAcc">'+ACC.map(function(c){ return '<button type="button" aria-label="'+c+'" data-c="'+c+'" style="--c:'+c+'" class="'+(c.toLowerCase()===acc.toLowerCase()?'on':'')+'"></button>'; }).join('')+'</div>'
-  +'<div class="psLbl">'+mi('edit')+L('আমার সম্পর্কে','About me')+'</div>'
-  +'<label class="psFld">'+mi('edit')+'<input id="psBio" maxlength="80" placeholder="'+L('ছোট বায়ো (সর্বোচ্চ ৮০ অক্ষর)','Short bio (max 80 characters)')+'" value="'+esc(g('myBio_v1'))+'"></label>'
-  +'<label class="psFld">'+mi('bag')+'<input id="psJob" maxlength="40" placeholder="'+L('পেশা (যেমন: ব্যবসায়ী, ছাত্র)','Occupation (e.g. Business, Student)')+'" value="'+esc(g('myJob_v1'))+'"></label>'
-  +'<label class="psFld">'+mi('pin')+'<input id="psCity" maxlength="40" placeholder="'+L('শহর / জেলা','City / District')+'" value="'+esc(g('myCity_v1'))+'"></label>'
+  +'<div class="psStats"><div style="--k:#2563eb">'+mi('sheet')+'<b>'+nb(tx)+'</b><span>'+L('লেনদেন','Entries')+'</span></div><div style="--k:#f59e0b">'+mi('calendar')+'<b>'+nb(days())+'</b><span>'+L('দিন সাথে','Days')+'</span></div><div style="--k:#7c3aed">'+mi('target')+'<b>'+L('লেভেল ','Lv ')+nb(level())+'</b><span>'+L('চ্যালেঞ্জ','Challenge')+'</span></div><div style="--k:'+(s?'#10b981':'#94a3b8')+'">'+mi('cloud')+'<b>'+(s?L('চালু','On'):L('বন্ধ','Off'))+'</b><span>'+L('ক্লাউড','Cloud')+'</span></div></div>'
+  +'<div class="psSec"><div class="psLbl">'+mi('palette')+L('প্রোফাইল রঙ','Profile colour')+'</div><div class="psAcc">'+ACC.map(function(c){ return '<button type="button" aria-label="'+c+'" data-c="'+c+'" style="--c:'+c+'" class="'+(c.toLowerCase()===acc.toLowerCase()?'on':'')+'"></button>'; }).join('')+'</div></div>'
+  +'<div class="psSec"><div class="psLbl">'+mi('user')+L('আমার সম্পর্কে','About me')+'<em>'+L('প্রোফাইলে সবাই দেখবে','Shown on your profile')+'</em></div>'
+  +'<label class="psFld"><span class="psFi" style="--k:#2563eb">'+mi('edit')+'</span><span class="psFt"><small>'+L('বায়ো','Bio')+'</small><input id="psBio" maxlength="80" placeholder="'+L('ছোট বায়ো (সর্বোচ্চ ৮০ অক্ষর)','Short bio (max 80 characters)')+'" value="'+esc(g('myBio_v1'))+'"></span></label>'
+  +'<label class="psFld"><span class="psFi" style="--k:#f59e0b">'+mi('bag')+'</span><span class="psFt"><small>'+L('পেশা','Work')+'</small><input id="psJob" maxlength="40" placeholder="'+L('পেশা (যেমন: ব্যবসায়ী, ছাত্র)','Occupation (e.g. Business, Student)')+'" value="'+esc(g('myJob_v1'))+'"></span></label>'
+  +'<label class="psFld"><span class="psFi" style="--k:#10b981">'+mi('pin')+'</span><span class="psFt"><small>'+L('শহর','City')+'</small><input id="psCity" maxlength="40" placeholder="'+L('শহর / জেলা','City / District')+'" value="'+esc(g('myCity_v1'))+'"></span></label></div>'
   +'<div class="psAct"><button type="button" id="psShare">'+mi('share')+L('প্রোফাইল শেয়ার','Share profile')+'</button><button type="button" class="pri" id="psSave">'+mi('check')+L('সংরক্ষণ','Save')+'</button></div>';
 }
 function toast(m){ try{ if(window.toast) window.toast(m); }catch(e){} }
-function save(){ var v=function(i){ var e=$(i); return e?e.value.trim():''; }; ['Bio','Job','City'].forEach(function(k){ try{ LS.setItem('my'+k+'_v1',v('ps'+k)); }catch(e){} }); toast(L('প্রোফাইল সংরক্ষিত হয়েছে','Profile saved')); render(true); }
+function persist(){ var v=function(i){ var e=$(i); return e?e.value.trim():null; }; var ch=false; ['Bio','Job','City'].forEach(function(k){ var x=v('ps'+k); if(x===null) return; if(x!==g('my'+k+'_v1')){ ch=true; try{ LS.setItem('my'+k+'_v1',x); }catch(e){} } }); return ch; }
+function sync(){ try{ if(window.ppRepub) window.ppRepub(); }catch(e){} try{ if(window.ftPhRefresh) window.ftPhRefresh(true); }catch(e){} }
+function save(){ persist(); toast(L('প্রোফাইল সংরক্ষিত হয়েছে','Profile saved')); render(true); sync(); }
 function share(){ var n=g('myName_v1'), u=g('myUsername_v1').replace(/^@/,''), m=g('myBio_v1'); var txt=(n||'FinTrack')+(u?' · @'+u:'')+(m?'\n'+m:'')+'\nFinTrack'; if(navigator.share){ navigator.share({text:txt}).catch(function(){}); } else if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(function(){ toast(L('প্রোফাইল কপি হয়েছে','Profile copied')); }); } }
 function mount(){
   if($('pfStudio')) return true; var h=document.querySelector('#sec-settings .setHero'); if(!h) return false;
@@ -12353,6 +12383,7 @@ function mount(){
     var c=e.target.closest('.psAcc button'); if(c){ try{ LS.setItem('myAccent_v1',c.dataset.c); }catch(x){} accent(); render(true); return; }
     if(e.target.closest('#psSave')) save(); else if(e.target.closest('#psShare')) share();
   });
+  b.addEventListener('change',function(e){ if(e.target&&/^ps(Bio|Job|City)$/.test(e.target.id)&&persist()) sync(); });
   render(true); return true;
 }
 accent();
@@ -12415,26 +12446,27 @@ details.psMv>.setBody{padding:6px 2px 4px!important;}
 (function(){
 var $=function(i){return document.getElementById(i);}, bn=function(){try{return currentLang==='bn';}catch(e){return true;}}, L=function(b,e){return bn()?b:e;};
 var g=function(k){try{return localStorage.getItem(k)||'';}catch(e){return '';}};
-var P=[['me','প্রোফাইল','Profile'],['login','লগইন ও যোগাযোগ','Login & contact'],['soc','সোশ্যাল ও প্রাইভেসি','Social & privacy'],['acct','অ্যাকাউন্ট','Account']];
+var P=[['me','প্রোফাইল','Profile','user'],['login','লগইন ও যোগাযোগ','Login & contact','key'],['soc','সোশ্যাল ও প্রাইভেসি','Social & privacy','shield'],['acct','অ্যাকাউন্ট','Account','settings']];
 var KEY={settings_profile:'me',inviteBox:'acct',cloudSyncBox:'acct',accountBox:'acct'};
 var OK=/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/, sig='';
 var mi=function(n){return '<i class="mi" style="--m:var(--ic-'+n+')"></i>';};
 function det(){ var h=document.querySelector('#sec-settings details.setBox h3[data-i18n="settings_profile"]'); return h?h.closest('details'):null; }
 function show(k){ var hub=$('phHub'); if(!hub) return; [].forEach.call(hub.querySelectorAll('.phP'),function(p){ p.classList.toggle('on',p.id==='phP_'+k); }); [].forEach.call(hub.querySelectorAll('.phNav button'),function(b){ b.classList.toggle('on',b.dataset.k===k); }); }
-function labels(){ var hub=$('phHub'); if(!hub) return; [].forEach.call(hub.querySelectorAll('.phNav button'),function(b){ var p=P.filter(function(x){return x[0]===b.dataset.k;})[0]; b.textContent=L(p[1],p[2]); }); }
+function labels(){ var hub=$('phHub'); if(!hub) return; [].forEach.call(hub.querySelectorAll('.phNav button'),function(b){ var p=P.filter(function(x){return x[0]===b.dataset.k;})[0]; b.innerHTML=mi(p[3])+'<span>'+L(p[1],p[2])+'</span>'; }); }
 function refresh(force){
   var av=$('phAv'); if(!av) return; var nm=g('myName_v1'), un=g('myUsername_v1').replace(/^@/,''), pic=g('myProfilePic_v1'), cv=g('myCoverPic_v1'), r=document.querySelector('#pfStudio .psRing b');
-  var s=[nm,un,pic.length,cv.length,r?r.textContent:'',bn()].join('|'); if(!force&&s===sig) return; sig=s;
+  var bi=g('myBio_v1'),jb=g('myJob_v1'),ct=g('myCity_v1'); var s=[nm,un,pic.length,cv.length,r?r.textContent:'',bn(),bi,jb,ct].join('|'); if(!force&&s===sig) return; sig=s;
   av.innerHTML=(OK.test(pic)?'<img alt="" src="'+pic+'">':(nm.trim()[0]||'U').toUpperCase().replace(/[<>&]/g,''))+mi('edit');
   $('phCv').style.backgroundImage=OK.test(cv)?'url("'+cv+'")':'';
   $('phCvX').style.display=cv?'flex':'none';
   $('phNm').textContent=nm||L('নাম দিন','Add your name'); $('phUn').textContent=un?'@'+un:L('ইউজারনেম দিন','Add a username');
+  var ab=$('phAbout'); if(ab){ var esc=function(x){return String(x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}; ab.innerHTML=(bi?'<p>'+esc(bi)+'</p>':'')+((jb||ct)?'<div>'+(jb?'<span>'+mi('bag')+esc(jb)+'</span>':'')+(ct?'<span>'+mi('pin')+esc(ct)+'</span>':'')+'</div>':''); ab.style.display=(bi||jb||ct)?'':'none'; }
   $('phPct').textContent=r?r.textContent+' '+L('সম্পূর্ণ','done'):''; $('phPct').style.display=r?'':'none'; labels();
 }
 function build(){
   var d=det(); if(!d) return null; var hub=$('phHub'); if(hub) return hub; var b=d.querySelector(':scope > .setBody'); if(!b) return null;
   hub=document.createElement('div'); hub.id='phHub';
-  hub.innerHTML='<div class="phHd"><div class="phCv" id="phCv"><div><button type="button" class="phIb" id="phCvB" aria-label="cover">'+mi('image')+'</button><button type="button" class="phIb" id="phCvX" aria-label="remove cover">'+mi('trash')+'</button></div></div><div class="phRow"><div class="phAv" id="phAv"></div><div class="phTx"><b id="phNm"></b><span id="phUn"></span></div><span class="phPct" id="phPct"></span></div></div><input type="file" id="phCvIn" accept="image/*" hidden>'
+  hub.innerHTML='<div class="phHd"><div class="phCv" id="phCv"><div><button type="button" class="phIb" id="phCvB" aria-label="cover">'+mi('image')+'</button><button type="button" class="phIb" id="phCvX" aria-label="remove cover">'+mi('trash')+'</button></div></div><div class="phRow"><div class="phAv" id="phAv"></div><div class="phTx"><b id="phNm"></b><span id="phUn"></span></div><span class="phPct" id="phPct"></span></div><div class="phAbout" id="phAbout"></div></div><input type="file" id="phCvIn" accept="image/*" hidden>'
    +'<div class="phNav">'+P.map(function(p){return '<button type="button" data-k="'+p[0]+'"></button>';}).join('')+'</div>'+P.map(function(p){return '<div class="phP" id="phP_'+p[0]+'"></div>';}).join('');
   b.insertBefore(hub,b.firstChild);
   hub.addEventListener('click',function(e){
@@ -12449,9 +12481,10 @@ function build(){
   return hub;
 }
 function put(id,n){ var p=$('phP_'+id); if(p&&n&&n.parentNode!==p) p.appendChild(n); }
+window.ftPhRefresh=function(f){ try{ refresh(f); }catch(e){} };
 function pass(){
   var hub=build(); if(!hub) return false; var miss=0, pw=$('profilePicWrap'), st=$('pfStudio'), pn=$('pfn'), ps=$('ppSetBox');
-  if(pw){ put('me',pw.parentNode); put('me',$('profilePicResetBtn')); } else miss++;
+  if(pw){ put('me',pw.parentNode); } else miss++;
   if(st) put('me',st); else miss++;
   if(pn&&pn.closest('.pfCard')) put('login',pn.closest('.pfCard')); else miss++;
   if(ps) put('soc',ps); else miss++;
@@ -12465,5 +12498,67 @@ var al=window.applyLanguage; if(al) window.applyLanguage=function(){ var r=al.ap
 })();
 </script>
 
+<style id="ftPsPro">
+/* ===== Profile settings: professional styling ===== */
+#phHub .phHd{border-radius:24px;box-shadow:0 14px 34px -20px rgba(0,0,0,.35);}
+#phHub .phCv{height:104px;}.phCv::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.28));pointer-events:none;}.phCv>div{z-index:1;}
+#phHub .phAv{width:74px;height:74px;box-shadow:0 0 0 3px var(--pfAcc,var(--primary)),0 8px 18px -8px rgba(0,0,0,.4);border-color:var(--card);}
+#phHub .phAv img{width:100%;height:100%;border-radius:50%;object-fit:cover;}
+.phAbout{padding:0 16px 14px;}.phAbout p{margin:0 0 8px;font-size:13px;line-height:1.5;color:var(--text);}
+.phAbout div{display:flex;flex-wrap:wrap;gap:6px;}.phAbout span,.ppAbC span{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--muted);background:var(--bg);border:1px solid var(--border);padding:4px 10px;border-radius:99px;}
+.phAbout .mi,.ppAbC .mi{font-size:14px;color:var(--pfAcc,var(--primary));}
+.ppAbout{margin:10px 0 2px;}.ppAbout p{margin:0 0 8px;font-size:13.5px;line-height:1.55;color:var(--text);}.ppAbC{display:flex;flex-wrap:wrap;gap:6px;}
+#phHub .phNav{gap:4px;padding:4px;margin:2px 0 12px;background:var(--card);border:1px solid var(--border);border-radius:16px;top:6px;box-shadow:0 8px 20px -14px rgba(0,0,0,.35);}
+#phHub .phNav button{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;color:var(--muted);padding:9px 13px;border-radius:12px;transition:.18s;}
+#phHub .phNav button .mi{font-size:16px;}
+#phHub .phNav button.on{background:var(--pfAcc,var(--primary));color:#fff;box-shadow:0 8px 16px -8px var(--pfAcc,var(--primary));}
+.psPhoto{display:flex;align-items:center;gap:14px;padding:14px;margin:0 0 12px;background:var(--card);border:1px solid var(--border);border-radius:20px;}
+.psPhoto #profilePicWrap{width:68px!important;height:68px!important;box-shadow:0 0 0 3px var(--pfAcc,var(--primary));border:2px solid var(--card)!important;flex:none;overflow:hidden;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--bg);}
+.psPhT{flex:1;min-width:0;}.psPhT b{display:block;font-size:14.5px;color:var(--text);}.psPhT small{display:block;font-size:11.5px;color:var(--muted);margin:1px 0 8px;}
+.psPhB{display:flex;gap:8px;flex-wrap:wrap;}
+.psPhB button{display:inline-flex!important;align-items:center;justify-content:center;gap:6px;height:38px;padding:0 14px;border-radius:12px;font:inherit;font-size:12.5px;font-weight:800;cursor:pointer;width:auto!important;margin:0!important;}
+.psPhB .mi{font-size:16px;}
+.psPhB .psB1{flex:1;background:var(--pfAcc,var(--primary));color:#fff;border:0;box-shadow:0 8px 16px -10px var(--pfAcc,var(--primary));}
+.psPhB .psB2{background:color-mix(in srgb,#ef4444 9%,transparent);color:#dc2626;border:1px solid color-mix(in srgb,#ef4444 30%,transparent);}
+.psPhB .psB2[style*="none"]{display:none!important;}
+#phHub .psCard,#phHub .psSec{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:14px;margin:0 0 12px;}
+#phHub .psTop.psCard{margin-top:0;}
+.psRing{width:68px;height:68px;box-shadow:0 8px 18px -12px var(--pfAcc,var(--primary));}.psRing>b{width:54px;height:54px;font-size:14.5px;font-weight:800;}
+#phHub .psMiss{margin:0 0 12px;}
+#phHub .psMiss button{padding:5px 11px;font-size:12px;}
+#phHub .psMiss .ok{background:color-mix(in srgb,#10b981 13%,transparent);color:#059669;}
+#phHub .psStats{gap:8px;margin:0 0 12px;}
+#phHub .psStats div{display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 4px 10px;border-radius:16px;background:var(--card);position:relative;overflow:hidden;}
+#phHub .psStats div::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--k);opacity:.85;}
+#phHub .psStats .mi{font-size:18px;color:var(--k);margin-bottom:2px;}
+#phHub .psStats b{font-size:14px;}
+.psLbl{margin:0 0 10px;font-size:13px;color:var(--text);}.psLbl .mi{color:var(--pfAcc,var(--primary));}
+.psLbl em{margin-left:auto;font-style:normal;font-size:11px;font-weight:600;color:var(--muted);}
+.psAcc{gap:12px;}.psAcc button{width:34px;height:34px;position:relative;transition:transform .15s;}.psAcc button:active{transform:scale(.9);}
+.psAcc button.on{transform:scale(1.08);box-shadow:0 0 0 2.5px var(--card),0 0 0 5px var(--c);}
+.psAcc button.on::after{content:"";position:absolute;inset:0;margin:auto;width:14px;height:14px;background:#fff;-webkit-mask:var(--ic-check) center/contain no-repeat;mask:var(--ic-check) center/contain no-repeat;}
+.psFld{gap:12px;padding:8px 12px 8px 8px;border-radius:16px;margin-top:8px;transition:border-color .15s,box-shadow .15s;}
+.psFld:focus-within{border-color:var(--pfAcc,var(--primary));box-shadow:0 0 0 3px color-mix(in srgb,var(--pfAcc,var(--primary)) 16%,transparent);}
+.psFi{width:40px;height:40px;flex:none;border-radius:12px;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--k) 14%,transparent);}
+.psFld .psFi .mi{color:var(--k);font-size:19px;}
+.psFt{flex:1;min-width:0;display:flex;flex-direction:column;}.psFt small{font-size:10.5px;font-weight:800;letter-spacing:.3px;color:var(--muted);text-transform:uppercase;}
+.psFt input{padding:2px 0 0;font-size:14px;font-weight:600;}
+.psAct button{height:46px;border-radius:16px;}
+.psAct button.pri{background:linear-gradient(135deg,var(--pfAcc,var(--primary)),color-mix(in srgb,var(--pfAcc,var(--primary)) 62%,#000));box-shadow:0 12px 22px -12px var(--pfAcc,var(--primary));}
+#phHub .ppSetCard,#phHub .pfCard{border-radius:20px;}
+#phHub .ppSetCard h4{font-size:13.5px;font-weight:800;}
+</style>
+<style id="ftLiveCss">
+#ftLive{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);transform:translate(-50%,-140%);z-index:99999;display:flex;align-items:center;gap:8px;max-width:calc(100% - 28px);padding:8px 14px;border-radius:99px;background:var(--card,#fff);color:var(--text,#111);border:1px solid var(--border,#e5e7eb);box-shadow:0 10px 26px -10px rgba(0,0,0,.35);font:600 12.5px/1.2 inherit;font-family:inherit;opacity:0;transition:transform .25s ease,opacity .25s;pointer-events:none}
+#ftLive.on{transform:translate(-50%,0);opacity:1}
+#ftLive[data-s=err],#ftLive[data-s=off]{pointer-events:auto;cursor:pointer}
+#ftLive i{width:9px;height:9px;border-radius:50%;flex:none;background:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.2)}
+#ftLive[data-s=sync] i,#ftLive[data-s=pend] i{background:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.22);animation:ftLvP 1s ease-in-out infinite}
+#ftLive[data-s=off] i{background:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.25)}
+#ftLive[data-s=err] i{background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.22)}
+#ftLive[data-s=err]{color:#dc2626}
+@keyframes ftLvP{50%{transform:scale(1.5);opacity:.55}}
+@media (prefers-reduced-motion:reduce){#ftLive i{animation:none!important}}
+</style>
 </body>
 </html>
