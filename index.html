@@ -12946,7 +12946,7 @@ html body header.top.pfHasCv .pfAvatar::before{background:rgba(255,255,255,.9);}
 </style>
 <script id="ftCoverHeroJs">
 (function(){
-  var K='myCoverPic_v1', RE=/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/, last=null;
+  var K='myCoverPic_v1', K2='ftCoverBg_v1', RE=/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/, last=null;
   function hdr(){ return document.querySelector('header.top'); }
   function ensure(){
     var h=hdr(); if(!h) return null;
@@ -12958,6 +12958,8 @@ html body header.top.pfHasCv .pfAvatar::before{background:rgba(255,255,255,.9);}
     var c=ensure(), h=hdr(); if(!c||!h) return;
     var v=''; try{ v=localStorage.getItem(K)||''; }catch(e){}
     if(!RE.test(v)) v='';
+    var on=true; try{ on=localStorage.getItem(K2)!=='0'; }catch(e){}
+    if(!on) v='';
     if(v===last) return; last=v;
     var i=c.firstChild;
     if(v){ i.style.backgroundImage='url("'+v+'")'; i.classList.add('on'); h.classList.add('pfHasCv'); }
@@ -12966,12 +12968,12 @@ html body header.top.pfHasCv .pfAvatar::before{background:rgba(255,255,255,.9);}
   /* re-apply whenever the cover is saved / removed anywhere in the app (profile page, studio, cloud restore) */
   try{
     var sp=Storage.prototype, _s=sp.setItem, _r=sp.removeItem, _c=sp.clear;
-    sp.setItem=function(k){ var r=_s.apply(this,arguments); if(k===K) setTimeout(apply,0); return r; };
-    sp.removeItem=function(k){ var r=_r.apply(this,arguments); if(k===K) setTimeout(apply,0); return r; };
+    sp.setItem=function(k){ var r=_s.apply(this,arguments); if(k===K||k===K2) setTimeout(apply,0); return r; };
+    sp.removeItem=function(k){ var r=_r.apply(this,arguments); if(k===K||k===K2) setTimeout(apply,0); return r; };
     sp.clear=function(){ var r=_c.apply(this,arguments); setTimeout(apply,0); return r; };
   }catch(e){}
   try{ if(typeof renderHomeProfile==='function'){ var _h=renderHomeProfile; renderHomeProfile=function(){ var x=_h.apply(this,arguments); try{ apply(); }catch(e){} return x; }; } }catch(e){}
-  window.addEventListener('storage',function(e){ if(!e.key||e.key===K) apply(); });
+  window.addEventListener('storage',function(e){ if(!e.key||e.key===K||e.key===K2) apply(); });
   apply();
 })();
 </script>
@@ -13079,12 +13081,10 @@ html.ftCvBgOn #sec-dash .box{background:color-mix(in srgb,var(--card) 82%,transp
   function layer(){ var l=document.getElementById('ftCvBg'); if(!l){ l=document.createElement('div'); l.id='ftCvBg'; l.setAttribute('aria-hidden','true'); document.body.insertBefore(l,document.body.firstChild); } return l; }
   function onDash(){ var d=document.getElementById('sec-dash'); return !d||d.classList.contains('active'); }
   function apply(){
-    var cv=get(CV), has=RE.test(cv), on=get(KEY)==='1';
+    var cv=get(CV), has=RE.test(cv), on=get(KEY)!=='0';
     var chk=document.getElementById('phCbChk'); if(chk) chk.checked=on;
     var dot=document.querySelector('#phCbRow .phCtDot'); if(dot&&cv!==dot.__cv){ dot.__cv=cv; dot.style.backgroundImage=has?'url("'+cv+'")':''; }
-    var show=on&&has&&onDash();
-    if(show){ var l=layer(); if(cv!==lastCv){ lastCv=cv; l.style.backgroundImage='url("'+cv+'")'; } }
-    de.classList.toggle('ftCvBgOn',!!show);
+    de.classList.remove('ftCvBgOn');
   }
   try{
     var sp=Storage.prototype, _s=sp.setItem, _r=sp.removeItem;
@@ -13100,13 +13100,13 @@ html.ftCvBgOn #sec-dash .box{background:color-mix(in srgb,var(--card) 82%,transp
     if(document.getElementById('phCbRow')) return true;
     var host=document.getElementById('swCustomBox')||document.getElementById('themeRow'); if(!host) return false;
     var row=document.createElement('label'); row.className='phCt'; row.id='phCbRow'; row.style.marginTop='12px';
-    row.innerHTML='<i class="phCtDot"></i><span class="phCtTx"><b><span class="bn">কভার ফটো ব্যাকগ্রাউন্ড</span><span class="en">Cover photo background</span></b><small><span class="bn">চালু করলে ড্যাশবোর্ডের ব্যাকগ্রাউন্ডে আপনার কভার ছবি দেখাবে, বন্ধ থাকলে থিমের ডিফল্ট রং</span><span class="en">When on, your cover photo shows behind the dashboard; off keeps the theme colour</span></small></span><input type="checkbox" id="phCbChk" aria-label="Cover photo background">';
+    row.innerHTML='<i class="phCtDot"></i><span class="phCtTx"><b><span class="bn">কভার ফটো ব্যাকগ্রাউন্ড</span><span class="en">Cover photo background</span></b><small><span class="bn">চালু থাকলে ড্যাশবোর্ডের উপরে আপনার কভার ছবি দেখাবে, বন্ধ করলে থিমের ডিফল্ট রং</span><span class="en">When on, your cover photo shows at the top of the dashboard; off keeps the default theme colour</span></small></span><input type="checkbox" id="phCbChk" aria-label="Cover photo background">';
     host.insertAdjacentElement('afterend',row);
-    var chk=document.getElementById('phCbChk'); chk.checked=get(KEY)==='1';
+    var chk=document.getElementById('phCbChk'); chk.checked=get(KEY)!=='0';
     chk.addEventListener('change',function(){
       try{ LS.setItem(KEY,chk.checked?'1':'0'); }catch(e){}
       apply();
-      if(chk.checked&&!RE.test(get(CV))&&window.toast){ var bn=de.lang!=='en'; window.toast(bn?'আগে একটি কভার ছবি দিন — তারপর ব্যাকগ্রাউন্ডে দেখাবে':'Add a cover photo first — it will then show in the background'); }
+      if(chk.checked&&!RE.test(get(CV))&&window.toast){ var bn=de.lang!=='en'; window.toast(bn?'আগে একটি কভার ছবি দিন — তারপর ড্যাশবোর্ডে দেখাবে':'Add a cover photo first — it will then show on the dashboard'); }
     });
     return true;
   }
@@ -13114,5 +13114,11 @@ html.ftCvBgOn #sec-dash .box{background:color-mix(in srgb,var(--card) 82%,transp
   mount(); apply();
 })();
 </script>
+<style id="ftHeroShadow">
+/* swipe cards: shadow fades out softly instead of being cut by a straight line */
+html body .heroTrack{padding-bottom:46px;margin-bottom:-34px;}
+html body .hc{box-shadow:0 14px 26px -14px var(--hcs,rgba(0,0,0,.4));}
+html body .heroDots{position:relative;z-index:2;}
+</style>
 </body>
 </html>
