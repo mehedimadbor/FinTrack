@@ -10192,6 +10192,28 @@ window.ftPicThumb=function(){ return new Promise(function(res){ try{
 .cgHist{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;padding:8px 0;border-bottom:1px dashed var(--border);color:var(--text);} .cgHist small{color:var(--muted);}
 .cgPick{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px;}
 .cgEmpty{text-align:center;color:var(--muted);font-size:13px;padding:22px 8px;}
+.lbHead{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;font-weight:700;margin:2px 2px 10px;color:var(--text);} .lbHead .pd{display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;margin-right:6px;animation:cgCdBlink 1.2s ease-in-out infinite;} .lbHead small{color:var(--muted);font-weight:600;}
+.lbMe{display:flex;align-items:center;gap:12px;border-radius:18px;padding:12px 14px;margin:0 0 12px;color:#fff;background:linear-gradient(135deg,var(--primary),color-mix(in srgb,var(--primary) 60%,#000));box-shadow:0 6px 18px color-mix(in srgb,var(--primary) 30%,transparent);}
+.lbMe.off{background:var(--card);color:var(--text);border:1px dashed var(--border);box-shadow:none;}
+.lbMeNo{flex:none;font-size:26px;font-weight:900;line-height:1;display:flex;flex-direction:column;align-items:center;} .lbMeNo small{font-size:10px;font-weight:600;opacity:.85;margin-top:4px;}
+.lbMeMid{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;} .lbMeMid b{font-size:15px;} .lbMeMid small{font-size:11.5px;opacity:.9;}
+.lbMe.off .lbMeMid small{color:var(--muted);opacity:1;}
+.lbMv{font-size:10.5px;font-weight:800;margin-left:6px;} .lbMv.up{color:#10b981;} .lbMv.dn{color:#ef4444;} .lbMe .lbMv{color:#fff;background:rgba(255,255,255,.22);padding:2px 7px;border-radius:99px;margin:0;}
+.lbPodium{display:flex;align-items:flex-end;justify-content:center;gap:8px;margin:4px 0 14px;}
+.lbPod{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;} .lbPod b{font-size:12.5px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);} .lbPod small{font-size:10.5px;color:var(--muted);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lbCrown{height:18px;font-size:15px;line-height:18px;}
+.lbAv.big{width:50px;height:50px;font-size:20px;border:3px solid var(--border);} .lbPod.p1 .lbAv.big{width:60px;height:60px;font-size:24px;border-color:#f59e0b;} .lbPod.p2 .lbAv.big{border-color:#94a3b8;} .lbPod.p3 .lbAv.big{border-color:#c2763a;}
+.lbPod.me .lbAv.big{box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 35%,transparent);}
+.lbPodPt{font-size:14px;font-weight:900;color:var(--primary);}
+.lbPodBase{width:100%;border-radius:12px 12px 0 0;color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;} .lbPod.p1 .lbPodBase{height:54px;background:#f59e0b;} .lbPod.p2 .lbPodBase{height:40px;background:#94a3b8;} .lbPod.p3 .lbPodBase{height:30px;background:#c2763a;}
+.lbRow{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:10px 12px;margin-bottom:8px;}
+.lbRow.me{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 8%,var(--card));}
+.lbNo{flex:none;width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;background:var(--bg);color:var(--muted);}
+.lbNo.n1{background:#f59e0b;color:#fff;} .lbNo.n2{background:#94a3b8;color:#fff;} .lbNo.n3{background:#c2763a;color:#fff;}
+.lbAv{flex:none;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:var(--primary);background:color-mix(in srgb,var(--primary) 14%,transparent);}
+.lbWho{flex:1;min-width:0;display:flex;flex-direction:column;} .lbWho b{font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;} .lbWho small{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lbPt{flex:none;text-align:right;display:flex;flex-direction:column;} .lbPt b{font-size:16px;color:var(--primary);} .lbPt small{font-size:11px;color:var(--muted);}
+@media (prefers-reduced-motion:reduce){.lbHead .pd{animation:none}}
 .cgConf{position:absolute;inset:0;overflow:hidden;pointer-events:none;border-radius:22px;}
 .cgConf span{position:absolute;top:-12px;width:8px;height:12px;border-radius:2px;opacity:.9;animation:cgFall 2.6s linear infinite;}
 @keyframes cgFall{to{transform:translateY(440px) rotate(540deg);opacity:.2;}}
@@ -10355,7 +10377,7 @@ function hero(){
 }
 function seg(){
   const n=cg().active.length, b=(k,t)=>`<button class="${view===k?'on':''}" onclick="cgView('${k}')">${t}</button>`;
-  return `<div class="cgSeg">${b('all',L('চ্যালেঞ্জ','Challenges'))}${b('run',L('চলমান','Running')+(n?' ('+nb(n)+')':''))}${b('trophy',L('অর্জন','Trophies'))}</div>`;
+  return `<div class="cgSeg">${b('all',L('চ্যালেঞ্জ','Challenges'))}${b('run',L('চলমান','Running')+(n?' ('+nb(n)+')':''))}${b('rank',L('র‍্যাঙ্ক','Ranking'))}${b('trophy',L('অর্জন','Trophies'))}</div>`;
 }
 function formHtml(){
   const bt=(v,t)=>`<button type="button" class="chip${draft.bd===v?' on':''}" onclick="cgBd(${v})">${t}</button>`;
@@ -10410,7 +10432,7 @@ function renderTab(){
   const s=$('sec-challenge'); if(!s) return;
   const act=document.activeElement;
   if(act&&act.id==='cgAmt') return;
-  s.innerHTML=hero()+seg()+(view==='all'?allView():view==='run'?runView():trophyView());
+  s.innerHTML=hero()+seg()+(view==='all'?allView():view==='run'?runView():view==='rank'?rankView():trophyView());
   if(form&&view==='all') sum();
 }
 function renderDashCard(){
@@ -10427,7 +10449,93 @@ function navDot(){ const b=document.querySelector('#bottomNav .bnbtn[data-bn="ch
 const renderAll=()=>{ try{ renderTab(); renderDashCard(); navDot(); }catch(e){ console.error(e); } };
 
 /* ---------- actions ---------- */
-window.cgView=v=>{ view=v; renderTab(); };
+/* ---------- live leaderboard: Firebase RTDB  leaderboard/<uid> = {n,u,xp,w,s,t}  (only people who started a challenge) ---------- */
+const lbR=()=>{ try{ return window.ftCloud&&ftCloud._raw?ftCloud._raw():null; }catch(e){ return null; } };
+const lbMe=()=>{ try{ const r=lbR(); return r&&r.ses&&r.ses()?r.ses().uid:''; }catch(e){ return ''; } };
+const lbOk=u=>/^[A-Za-z0-9_-]{6,64}$/.test(u);
+const lbPlays=()=>{ const C=cg(); return C.active.length>0||C.history.length>0; };
+let LB={rows:[],err:'',at:0,sig:''}, lbBusy=false, lbT=0, lbSig='';
+async function lbDb(path,opt,q){
+  const r=lbR(); if(!r||!r.ok()||!r.ses()) throw new Error('LOGIN');
+  const base=String(r.CFG.dbUrl).replace(/\/+$/,''), tk=await r.token();
+  const res=await r.call(base+'/'+path+'.json?'+(q?q+'&':'')+'auth='+encodeURIComponent(tk),opt);
+  if(!res.ok){ const e=new Error('HTTP '+res.status); e.status=res.status; throw e; }
+  return res.json();
+}
+function lbPushSoon(){ clearTimeout(lbT); lbT=setTimeout(lbPush,1500); }
+async function lbPush(){
+  const me=lbMe(); if(!me) return;
+  try{
+    if(!lbPlays()){ if(lbSig!=='none'){ await lbDb('leaderboard/'+me,{method:'DELETE'}); lbSig='none'; } return; }
+    const C=cg(), rec={n:(localStorage.getItem('myName_v1')||'').trim().slice(0,40),u:(localStorage.getItem('myUsername_v1')||'').trim().replace(/^@/,'').slice(0,30),xp:C.xp,w:stats().done,s:C.streak};
+    const sig=JSON.stringify(rec); if(sig===lbSig) return;
+    rec.t=Date.now();
+    await lbDb('leaderboard/'+me,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(rec)});
+    lbSig=sig;
+  }catch(e){ if(view==='rank') lbSetErr(e); }
+}
+function lbSetErr(e){
+  const m=String((e&&e.message)||e||''), st=e&&e.status;
+  const n=m==='LOGIN'?'LOGIN':(st===401||st===403)?'RULES':/abort|Failed to fetch|NetworkError/i.test(m)?'NET':'ERR';
+  if(LB.err!==n){ LB.err=n; renderTab(); }
+}
+function lbParse(d){
+  const rows=[]; Object.keys(d||{}).forEach(uid=>{ const v=d[uid]; if(!lbOk(uid)||!v||typeof v!=='object') return;
+    const xp=+v.xp; if(!isFinite(xp)||xp<0) return;
+    rows.push({uid,n:String(v.n||'').slice(0,40),u:String(v.u||'').slice(0,30),xp:Math.floor(xp),w:Math.max(0,+v.w||0),s:Math.max(0,+v.s||0),t:+v.t||0,mv:0}); });
+  rows.sort((a,b)=>b.xp-a.xp||b.w-a.w||a.t-b.t);
+  return rows.slice(0,100);
+}
+async function lbFetch(){
+  if(lbBusy) return; if(!lbMe()){ lbSetErr(new Error('LOGIN')); return; }
+  lbBusy=true;
+  try{
+    let d; try{ d=await lbDb('leaderboard',undefined,'orderBy=%22xp%22&limitToLast=100'); }catch(e){ if(e&&e.status===400) d=await lbDb('leaderboard'); else throw e; }
+    const rows=lbParse(d), sig=JSON.stringify(rows.map(r=>[r.uid,r.n,r.u,r.xp,r.w]));
+    const ch=sig!==LB.sig||LB.err||!LB.at;
+    if(ch){ const old={}; LB.rows.forEach((r,i)=>{ old[r.uid]=i; }); const first=!LB.at;
+      rows.forEach((r,i)=>{ r.mv=(!first&&old[r.uid]!=null)?old[r.uid]-i:0; }); LB={rows,err:'',at:Date.now(),sig}; if(view==='rank') renderTab(); }
+    else LB.at=Date.now();
+  }catch(e){ lbSetErr(e); }
+  finally{ lbBusy=false; }
+}
+async function lbOpen(){ try{ await lbPush(); }catch(e){} lbFetch(); }
+const lbActive=()=>{ const e=$('sec-challenge'); return !!(e&&e.classList.contains('active')); };
+setInterval(()=>{ if(view==='rank'&&!document.hidden&&lbActive()) lbFetch(); },8000);
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&view==='rank'&&lbActive()) lbFetch(); });
+function rankView(){
+  const me=lbMe();
+  if(LB.err==='LOGIN'||!me) return `<div class="cgEmpty">${L('র\u200d্যাঙ্কিং দেখতে ও অংশ নিতে ইমেইল দিয়ে লগইন করুন।','Log in with your email to see and join the ranking.')}</div>`;
+  if(LB.err==='RULES') return `<div class="cgEmpty">${L('ডাটাবেস রুলস অনুমতি দিচ্ছে না — Firebase Rules-এ leaderboard যোগ করতে হবে।','Database rules denied access — add the leaderboard rules in Firebase.')}</div>`;
+  if(LB.err==='NET') return `<div class="cgEmpty">${L('ইন্টারনেট সংযোগ নেই।','No internet connection.')}</div>`;
+  if(LB.err) return `<div class="cgEmpty">${L('র\u200d্যাঙ্কিং লোড হয়নি, আবার চেষ্টা করুন।','Could not load the ranking, try again.')}</div>`;
+  if(!LB.at) return `<div class="cgEmpty">${L('লোড হচ্ছে…','Loading…')}</div>`;
+  const rows=LB.rows, myI=rows.findIndex(r=>r.uid===me), pl=lbPlays();
+  const nmOf=r=>r.n||r.u||'—', initOf=r=>([...nmOf(r)][0]||'?').toUpperCase();
+  const mvH=r=>r.mv>0?`<span class="lbMv up">▲${nb(r.mv)}</span>`:r.mv<0?`<span class="lbMv dn">▼${nb(-r.mv)}</span>`:'';
+  let h=`<div class="lbHead"><span><i class="pd"></i>${L('লাইভ র‍্যাঙ্কিং','Live ranking')}</span><small>${nb(rows.length)} ${L('জন অংশ নিচ্ছেন','players')}</small></div>`;
+  /* my position card */
+  if(pl&&myI>=0){
+    const m=rows[myI], l=lv(m.xp), up=myI>0?rows[myI-1]:null, dn=myI<rows.length-1?rows[myI+1]:null;
+    const gap=up?(up.xp-m.xp):0;
+    const msg=!up?L('আপনি এখন সবার শীর্ষে','You are on top right now'):L('পরের জনকে ছাড়াতে আর '+nb(gap+1)+' পয়েন্ট দরকার','Need '+nb(gap+1)+' more pts to pass the next player');
+    h+=`<div class="lbMe"><div class="lbMeNo">#${nb(myI+1)}<small>${L('আপনার র‍্যাঙ্ক','Your rank')}</small></div><div class="lbMeMid"><b>${nb(m.xp)} ${L('পয়েন্ট','pts')}</b><small>${esc(l.name)} · ${msg}</small>${dn?`<small>${L('পেছনে আছেন','Behind you')}: ${nb(m.xp-dn.xp)} ${L('পয়েন্ট ব্যবধানে','pts gap')}</small>`:''}</div>${mvH(m)}</div>`;
+  } else if(!pl){
+    h+=`<div class="lbMe off"><div class="lbMeMid"><b>${L('আপনি এখনো র‍্যাঙ্কিংয়ে নেই','You are not on the ranking yet')}</b><small>${L('একটি চ্যালেঞ্জ শুরু করলেই আপনার আইডি এখানে দেখা যাবে।','Start a challenge and your ID will appear here.')}</small></div><button class="main" style="width:auto;padding:8px 14px;font-size:13px;" onclick="cgView('all')">${L('শুরু করুন','Start')}</button></div>`;
+  }
+  if(!rows.length) return h+`<div class="cgEmpty">${L('এখনো কেউ চ্যালেঞ্জ শুরু করেনি।','Nobody has started a challenge yet.')}</div>`;
+  /* podium */
+  if(rows.length>=3){
+    const pod=[1,0,2].map(k=>{ const r=rows[k], l=lv(r.xp); return `<div class="lbPod p${k+1}${r.uid===me?' me':''}"><div class="lbCrown">${k===0?'👑':''}</div><div class="lbAv big">${esc(initOf(r))}</div><b>${esc(nmOf(r))}</b><small>${r.u?'@'+esc(r.u):esc(l.name)}</small><div class="lbPodPt">${nb(r.xp)}</div><div class="lbPodBase">${nb(k+1)}</div></div>`; }).join('');
+    h+=`<div class="lbPodium">${pod}</div>`;
+  }
+  const start=rows.length>=3?3:0;
+  h+=rows.slice(start).map((r,k)=>{ const i=k+start, l=lv(r.xp);
+    return `<div class="lbRow${r.uid===me?' me':''}"><span class="lbNo n${i<3?i+1:0}">${nb(i+1)}</span><div class="lbAv">${esc(initOf(r))}</div><div class="lbWho"><b>${esc(nmOf(r))}${mvH(r)}</b><small>${r.u?'@'+esc(r.u)+' · ':''}${esc(l.name)}${r.s>1?' · 🔥'+nb(r.s):''}</small></div><div class="lbPt"><b>${nb(r.xp)}</b><small>${r.w?nb(r.w)+' '+L('সম্পন্ন','done'):L('পয়েন্ট','pts')}</small></div></div>`; }).join('');
+  return h;
+}
+
+window.cgView=v=>{ view=v; renderTab(); if(v==='rank') lbOpen(); };
 window.cgFilt=f=>{ filt=(f==='h'||f==='b')?f:+f; renderTab(); };
 window.cgForm=()=>{ form=!form; renderTab(); };
 window.cgBd=v=>{ draft.bd=v; draft.n=PRE[v][0]; cgAmtIn(); renderTab(); };
@@ -10498,6 +10606,7 @@ function check(){
     });
     if(ch){ C.history=C.history.slice(-100); _sd.call(window); }
     renderAll(); pump();
+    try{ lbPushSoon(); }catch(e){}
   }catch(e){ console.error(e); }
 }
 const _sd=window.saveData;
@@ -10505,7 +10614,7 @@ window.saveData=function(){ const x=_sd.apply(this,arguments); setTimeout(check,
 const _rd=window.renderDash;
 window.renderDash=function(){ const r=_rd.apply(this,arguments); try{ renderDashCard(); }catch(e){ console.error(e); } return r; };
 const _at=window.activateTab;
-window.activateTab=function(n){ const r=_at.apply(this,arguments); if(n==='challenge'){ renderAll(); window.scrollTo(0,0); } return r; };
+window.activateTab=function(n){ const r=_at.apply(this,arguments); if(n==='challenge'){ renderAll(); window.scrollTo(0,0); if(view==='rank') lbOpen(); } return r; };
 const _al=window.applyLanguage;
 if(_al) window.applyLanguage=function(){ const r=_al.apply(this,arguments); try{ renderAll(); }catch(e){} return r; };
 
