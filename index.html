@@ -9890,7 +9890,7 @@ function adv(){
   const hasY=T.some(x=>x.date&&x.date<=yStr), yLimit=hasY?Math.max(0,bal-netT+spY-resv)/yDl:null, dY=yLimit==null?null:liveLim-yLimit;
   const tomLimit=dl>1?Math.max(0,startBal-spT)/(dl-1):null, dT=tomLimit==null?null:tomLimit-liveLim;
   const cmpRow=(lbl,v,d,cmpLbl)=>'<div class="advDRow"><span>'+lbl+'</span><b>'+fmt(v)+Lg(' /দিন',' /day')+'</b></div><div class="advDRow" style="margin-top:-4px"><span></span><b style="font-size:12px;color:'+(Math.abs(d)<0.005?'var(--muted)':d>0?'var(--green)':'var(--red)')+'">'+(Math.abs(d)<0.005?'● '+Lg('একই','same'):(d>0?'▲ ':'▼ ')+fmt(Math.abs(d))+' '+(d>0?Lg('বেশি','more'):Lg('কম','less')))+' '+cmpLbl+'</b></div>';
-  const dmsg=startBal<=0&&spT<=0?Lg('ব্যালেন্স নেই — আয় বা জমা যোগ করুন','No balance left — add income or a deposit'):remT>=0?Lg('আজ আর '+fmt(remT)+' খরচ করতে পারবেন','You can still spend '+fmt(remT)+' today'):Lg('আজ সীমার চেয়ে '+fmt(-remT)+' বেশি খরচ হয়েছে','You are '+fmt(-remT)+' over today\'s limit');
+  const dmsg=startBal<=0&&spT<=0?Lg('ব্যালেন্স নেই — আয় বা জমা যোগ করুন','No balance left — add income or a deposit'):remT>=0?Lg('আজ দিনের শুরুর সীমার মধ্যে আছেন','Within today\'s starting limit'):Lg('আজ সীমার চেয়ে '+fmt(-remT)+' বেশি খরচ হয়েছে','You are '+fmt(-remT)+' over today\'s limit');
   const dlt=(d,base)=>d==null?'<em style="color:var(--muted)">—</em>':Math.abs(d)<0.005?'<em style="color:var(--muted)">● '+Lg('একই','same')+'</em>':'<em style="color:'+(d>0?'var(--green)':'var(--red)')+'">'+(d>0?'▲ ':'▼ ')+fmt(Math.abs(d))+' '+(d>0?Lg('বেশি','more'):Lg('কম','less'))+'</em>';
   const C=2*Math.PI*40, off=C*(1-Math.min(100,usedPct)/100);
   const daily='<div class="advDaily" style="--ac:'+dcol+'"><div class="advDH">'+ic('gauge')+' '+Lg('আজ কত খরচ করতে পারবেন','How much you can spend today')+'<span class="advChip">'+Lg(dl+' দিন বাকি · মাস '+dim+' দিনের',dl+' days left · '+dim+'-day month')+'</span></div>'
@@ -10193,6 +10193,9 @@ window.ftPicThumb=function(){ return new Promise(function(res){ try{
 .cgPick{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px;}
 .cgEmpty{text-align:center;color:var(--muted);font-size:13px;padding:22px 8px;}
 .lbHead{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;font-weight:700;margin:2px 2px 10px;color:var(--text);} .lbHead .pd{display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;margin-right:6px;animation:cgCdBlink 1.2s ease-in-out infinite;} .lbHead small{color:var(--muted);font-weight:600;}
+.lbHide{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:10px 14px;margin:0 0 10px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.lbHideT{flex:1;min-width:0;display:flex;flex-direction:column;} .lbHideT b{font-size:13.5px;color:var(--text);} .lbHideT small{font-size:11.5px;color:var(--muted);}
+.lbSw{flex:none;width:46px;height:26px;border-radius:99px;background:var(--border);position:relative;transition:background .2s;} .lbSw i{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);transition:transform .2s;} .lbSw.on{background:var(--primary);} .lbSw.on i{transform:translateX(20px);}
 .lbMe{display:flex;align-items:center;gap:12px;border-radius:18px;padding:12px 14px;margin:0 0 12px;color:#fff;background:linear-gradient(135deg,var(--primary),color-mix(in srgb,var(--primary) 60%,#000));box-shadow:0 6px 18px color-mix(in srgb,var(--primary) 30%,transparent);}
 .lbMe.off{background:var(--card);color:var(--text);border:1px dashed var(--border);box-shadow:none;}
 .lbMeNo{flex:none;font-size:26px;font-weight:900;line-height:1;display:flex;flex-direction:column;align-items:center;} .lbMeNo small{font-size:10px;font-weight:600;opacity:.85;margin-top:4px;}
@@ -10466,7 +10469,7 @@ function lbPushSoon(){ clearTimeout(lbT); lbT=setTimeout(lbPush,1500); }
 async function lbPush(){
   const me=lbMe(); if(!me) return;
   try{
-    if(!lbPlays()){ if(lbSig!=='none'){ await lbDb('leaderboard/'+me,{method:'DELETE'}); lbSig='none'; } return; }
+    if(!lbPlays()||cg().lbHide){ if(lbSig!=='none'){ await lbDb('leaderboard/'+me,{method:'DELETE'}); lbSig='none'; } return; }
     const C=cg(), rec={n:(localStorage.getItem('myName_v1')||'').trim().slice(0,40),u:(localStorage.getItem('myUsername_v1')||'').trim().replace(/^@/,'').slice(0,30),xp:C.xp,w:stats().done,s:C.streak};
     const sig=JSON.stringify(rec); if(sig===lbSig) return;
     rec.t=Date.now();
@@ -10510,16 +10513,19 @@ function rankView(){
   if(LB.err==='NET') return `<div class="cgEmpty">${L('ইন্টারনেট সংযোগ নেই।','No internet connection.')}</div>`;
   if(LB.err) return `<div class="cgEmpty">${L('র\u200d্যাঙ্কিং লোড হয়নি, আবার চেষ্টা করুন।','Could not load the ranking, try again.')}</div>`;
   if(!LB.at) return `<div class="cgEmpty">${L('লোড হচ্ছে…','Loading…')}</div>`;
-  const rows=LB.rows, myI=rows.findIndex(r=>r.uid===me), pl=lbPlays();
+  const rows=LB.rows, myI=rows.findIndex(r=>r.uid===me), hid=!!cg().lbHide, pl=lbPlays()&&!hid;
   const nmOf=r=>r.n||r.u||'—', initOf=r=>([...nmOf(r)][0]||'?').toUpperCase();
   const mvH=r=>r.mv>0?`<span class="lbMv up">▲${nb(r.mv)}</span>`:r.mv<0?`<span class="lbMv dn">▼${nb(-r.mv)}</span>`:'';
   let h=`<div class="lbHead"><span><i class="pd"></i>${L('লাইভ র‍্যাঙ্কিং','Live ranking')}</span><small>${nb(rows.length)} ${L('জন অংশ নিচ্ছেন','players')}</small></div>`;
+  h+=`<div class="lbHide" onclick="cgHide()" role="switch" aria-checked="${hid}"><div class="lbHideT"><b>${L('র‍্যাঙ্কিংয়ে আমাকে লুকান','Hide me from ranking')}</b><small>${hid?L('চালু — অন্যরা আপনাকে দেখতে পাচ্ছে না','On — others cannot see you'):L('বন্ধ — আপনার আইডি সবাই দেখতে পাবে','Off — everyone can see your ID')}</small></div><span class="lbSw${hid?' on':''}"><i></i></span></div>`;
   /* my position card */
   if(pl&&myI>=0){
     const m=rows[myI], l=lv(m.xp), up=myI>0?rows[myI-1]:null, dn=myI<rows.length-1?rows[myI+1]:null;
     const gap=up?(up.xp-m.xp):0;
     const msg=!up?L('আপনি এখন সবার শীর্ষে','You are on top right now'):L('পরের জনকে ছাড়াতে আর '+nb(gap+1)+' পয়েন্ট দরকার','Need '+nb(gap+1)+' more pts to pass the next player');
     h+=`<div class="lbMe"><div class="lbMeNo">#${nb(myI+1)}<small>${L('আপনার র‍্যাঙ্ক','Your rank')}</small></div><div class="lbMeMid"><b>${nb(m.xp)} ${L('পয়েন্ট','pts')}</b><small>${esc(l.name)} · ${msg}</small>${dn?`<small>${L('পেছনে আছেন','Behind you')}: ${nb(m.xp-dn.xp)} ${L('পয়েন্ট ব্যবধানে','pts gap')}</small>`:''}</div>${mvH(m)}</div>`;
+  } else if(hid){
+    h+=`<div class="lbMe off"><div class="lbMeMid"><b>${L('আপনি র‍্যাঙ্কিং থেকে লুকানো আছেন','You are hidden from the ranking')}</b><small>${L('চ্যালেঞ্জ চলবে, পয়েন্টও জমবে — শুধু তালিকায় আপনার আইডি দেখা যাবে না।','Your challenges and points continue — your ID just stays off the list.')}</small></div></div>`;
   } else if(!pl){
     h+=`<div class="lbMe off"><div class="lbMeMid"><b>${L('আপনি এখনো র‍্যাঙ্কিংয়ে নেই','You are not on the ranking yet')}</b><small>${L('একটি চ্যালেঞ্জ শুরু করলেই আপনার আইডি এখানে দেখা যাবে।','Start a challenge and your ID will appear here.')}</small></div><button class="main" style="width:auto;padding:8px 14px;font-size:13px;" onclick="cgView('all')">${L('শুরু করুন','Start')}</button></div>`;
   }
@@ -10535,6 +10541,7 @@ function rankView(){
   return h;
 }
 
+window.cgHide=()=>{ const C=cg(); C.lbHide=!C.lbHide; saveData(); clearTimeout(lbT); lbSig=''; renderTab(); lbPush().then(()=>lbFetch()).catch(()=>{}); tt(C.lbHide?L('আপনি এখন র‍্যাঙ্কিংয়ে লুকানো','You are now hidden from the ranking'):L('আপনি এখন র‍্যাঙ্কিংয়ে দেখা যাচ্ছেন','You are visible on the ranking again')); };
 window.cgView=v=>{ view=v; renderTab(); if(v==='rank') lbOpen(); };
 window.cgFilt=f=>{ filt=(f==='h'||f==='b')?f:+f; renderTab(); };
 window.cgForm=()=>{ form=!form; renderTab(); };
