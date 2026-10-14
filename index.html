@@ -9882,25 +9882,27 @@ function adv(){
   const tile=(l,v,s2)=>'<div class="advT"><small>'+l+'</small><b>'+v+'</b><small>'+s2+'</small></div>';
   const dl=left+1, spT=sum(T.filter(x=>isExpenseLike(x)&&x.date===today)), resv=(data.recurring||[]).filter(r=>(r.type==='expense'||r.type==='save_to_account')&&r.lastMonth!==key).reduce((a,r)=>a+(+r.amount||0),0), startBal=Math.max(0,bal+spT-resv), perLeft=startBal/dl, remT=perLeft-spT, usedPct=perLeft>0?Math.min(100,spT/perLeft*100):(spT>0?100:0);
   const dcol=remT<0?'var(--red)':usedPct>=80?'var(--amber)':'var(--green)';
+  /* এখনকার সীমা = বর্তমান ব্যালেন্স ÷ আজসহ বাকি দিন (প্রতি লেনদেনের পর বদলায়); perLeft = দিনের শুরুর সীমা */
+  const liveLim=Math.max(0,bal-resv)/dl;
   /* গতকালের সীমা: গতকাল শেষে ব্যালেন্স ÷ গতকাল থেকে সেই মাসের বাকি দিন (বাস্তব ক্যালেন্ডার অনুযায়ী ২৮/২৯/৩০/৩১) */
   const _yd=new Date(today+'T00:00:00'); _yd.setDate(_yd.getDate()-1); const yStr=fmtDate(_yd), yDim=new Date(_yd.getFullYear(),_yd.getMonth()+1,0).getDate(), yDl=yDim-_yd.getDate()+1;
   const netT=data.transactions.reduce((a,tx)=>a+((tx.fund||tx.date!==today)?0:TYPE_META[tx.type].sign*tx.amount),0), spY=sum(T.filter(x=>isExpenseLike(x)&&x.date===yStr));
-  const hasY=T.some(x=>x.date&&x.date<=yStr), yLimit=hasY?Math.max(0,bal-netT+spY-resv)/yDl:null, dY=yLimit==null?null:perLeft-yLimit;
-  const tomLimit=dl>1?Math.max(0,startBal-spT)/(dl-1):null, dT=tomLimit==null?null:tomLimit-perLeft;
+  const hasY=T.some(x=>x.date&&x.date<=yStr), yLimit=hasY?Math.max(0,bal-netT+spY-resv)/yDl:null, dY=yLimit==null?null:liveLim-yLimit;
+  const tomLimit=dl>1?Math.max(0,startBal-spT)/(dl-1):null, dT=tomLimit==null?null:tomLimit-liveLim;
   const cmpRow=(lbl,v,d,cmpLbl)=>'<div class="advDRow"><span>'+lbl+'</span><b>'+fmt(v)+Lg(' /দিন',' /day')+'</b></div><div class="advDRow" style="margin-top:-4px"><span></span><b style="font-size:12px;color:'+(Math.abs(d)<0.005?'var(--muted)':d>0?'var(--green)':'var(--red)')+'">'+(Math.abs(d)<0.005?'● '+Lg('একই','same'):(d>0?'▲ ':'▼ ')+fmt(Math.abs(d))+' '+(d>0?Lg('বেশি','more'):Lg('কম','less')))+' '+cmpLbl+'</b></div>';
-  const dmsg=startBal<=0&&spT<=0?Lg('ব্যালেন্স নেই — আয় বা জমা যোগ করুন','No balance left — add income or a deposit'):remT>=0?Lg('আজ আর '+fmt(remT)+' খরচ করতে পারবেন — এভাবে চললে বর্তমান ব্যালেন্সে মাস শেষ পর্যন্ত চলবে','You can still spend '+fmt(remT)+' today — at this pace your balance lasts to month end'):Lg('আজ সীমার চেয়ে '+fmt(-remT)+' বেশি খরচ হয়েছে — বাকি দিনগুলোতে একটু কম খরচ করুন','You are '+fmt(-remT)+' over today\'s limit — spend a little less on the remaining days');
+  const dmsg=startBal<=0&&spT<=0?Lg('ব্যালেন্স নেই — আয় বা জমা যোগ করুন','No balance left — add income or a deposit'):remT>=0?Lg('আজ আর '+fmt(remT)+' খরচ করতে পারবেন','You can still spend '+fmt(remT)+' today'):Lg('আজ সীমার চেয়ে '+fmt(-remT)+' বেশি খরচ হয়েছে','You are '+fmt(-remT)+' over today\'s limit');
   const dlt=(d,base)=>d==null?'<em style="color:var(--muted)">—</em>':Math.abs(d)<0.005?'<em style="color:var(--muted)">● '+Lg('একই','same')+'</em>':'<em style="color:'+(d>0?'var(--green)':'var(--red)')+'">'+(d>0?'▲ ':'▼ ')+fmt(Math.abs(d))+' '+(d>0?Lg('বেশি','more'):Lg('কম','less'))+'</em>';
   const C=2*Math.PI*40, off=C*(1-Math.min(100,usedPct)/100);
   const daily='<div class="advDaily" style="--ac:'+dcol+'"><div class="advDH">'+ic('gauge')+' '+Lg('আজ কত খরচ করতে পারবেন','How much you can spend today')+'<span class="advChip">'+Lg(dl+' দিন বাকি · মাস '+dim+' দিনের',dl+' days left · '+dim+'-day month')+'</span></div>'
     +'<div class="advTop"><div class="advRing"><svg viewBox="0 0 100 100"><circle class="tr" cx="50" cy="50" r="40"/><circle class="fg" cx="50" cy="50" r="40" stroke="'+dcol+'" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'"/></svg>'
     +'<div class="advRingC"><b style="color:'+dcol+'">'+(remT<0?'−':'')+fmt(Math.abs(remT))+'</b><small>'+(remT<0?Lg('বেশি খরচ','over'):Lg('আজ বাকি','left'))+'</small></div></div>'
-    +'<div class="advTopR"><div class="lbl">'+Lg('আজকের সীমা','Today\'s limit')+'</div><div class="big" style="color:'+dcol+'">'+fmt(perLeft)+'</div>'
+    +'<div class="advTopR"><div class="lbl">'+Lg('আজকের সীমা','Today\'s limit')+'</div><div class="big" style="color:'+dcol+'">'+fmt(liveLim)+'</div>'
+    +'<div class="sp">'+Lg('দিনের শুরুতে সীমা ছিল','Limit at start of day')+' <b>'+fmt(perLeft)+'</b></div>'
     +'<div class="sp">'+Lg('আজ খরচ','Spent')+' <b>'+fmt(spT)+'</b> · '+Math.round(usedPct)+'%</div>'
     +(resv>0?'<div class="sp">'+Lg('নিয়মিত খরচের জন্য রাখা','Reserved for recurring')+' <b>'+fmt(resv)+'</b></div>':'')+'</div></div>'
     +'<div class="advTri"><div><small>'+Lg('গতকাল','Yesterday')+'</small><b>'+(yLimit==null?'—':fmt(yLimit))+'</b><em style="color:var(--muted)">'+Lg('সীমা ছিল','limit')+'</em></div>'
-    +'<div class="now"><small>'+Lg('আজ','Today')+'</small><b style="color:'+dcol+'">'+fmt(perLeft)+'</b>'+dlt(dY)+'</div>'
+    +'<div class="now"><small>'+Lg('আজ','Today')+'</small><b style="color:'+dcol+'">'+fmt(liveLim)+'</b>'+dlt(dY)+'</div>'
     +'<div><small>'+Lg('আগামীকাল','Tomorrow')+'</small><b>'+(tomLimit==null?'—':fmt(tomLimit))+'</b>'+dlt(dT)+'</div></div>'
-    +'<div class="advNote">'+Lg('সীমা = ব্যালেন্স ÷ মাসের বাকি দিন · প্রতিদিন দিন কমে, তাই সীমা নিজে থেকে বদলায়','Limit = balance ÷ days left in the month · it re-adjusts every day')+'</div>'
     +'<div class="advPill" style="color:'+dcol+';background:color-mix(in srgb,'+dcol+' 10%,transparent)">'+dmsg+'</div></div>';
   let h=head+daily+'<div class="advG"><div class="advT w"><small>'+ic('gauge')+' '+Lg('আর্থিক স্বাস্থ্য স্কোর','Financial health score')+'</small><b style="color:'+sc+'">'+score+'/100 · '+lb+'</b><div class="advBar"><i style="width:'+score+'%;background:'+sc+'"></i></div></div>'
    +tile(Lg('সঞ্চয়ের হার','Savings rate'),sr==null?'—':sr+'%',Lg('এই মাসের আয় থেকে','of this month\'s income'))
