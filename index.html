@@ -1890,6 +1890,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     if(up&&!un){ lgStatus(tx('ইউজারনেম লিখুন','Enter a username'),true); return; }
     if(up&&!UNRE.test(un)){ lgStatus(tx('ইউজারনেম ৩–২৪ অক্ষরের হতে হবে (অক্ষর, সংখ্যা, _ বা .)','Username must be 3–24 characters (letters, numbers, _ or .)'),true); return; }
     if(up&&!isMail){ lgStatus(tx('সঠিক ইমেইল দিন','Enter a valid email'),true); return; }
+    if(up&&window.ftBlood){ var _be=window.ftBlood.lgCheck(); if(_be){ lgStatus(_be,true); return; } }
     if(!up&&!id){ lgStatus(tx('ইমেইল বা ইউজারনেম দিন','Enter your email or username'),true); return; }
     if(!up&&!isMail&&!asUser){ lgStatus(tx('সঠিক ইমেইল বা ইউজারনেম দিন','Enter a valid email or username'),true); return; }
     if(!pw){ lgStatus(tx('পাসওয়ার্ড দিন','Enter your password'),true); return; }
@@ -1899,6 +1900,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
       var em=id;
       if(up){ if(!(await unFree(un))) throw new Error('USERNAME_TAKEN'); }
       else if(asUser){ em=await lmGet(id.replace(/^@/,''),pw); }
+      if(up){ try{ window.ftBlood&&window.ftBlood.lgSave(); }catch(e0){} }
       var res=await loginAuth(lgMode,em,pw,un);
       if(res==='restored'){ lgStatus(tx('আপনার ডেটা ফিরিয়ে আনা হচ্ছে…','Restoring your data…')); setTimeout(function(){ b.disabled=false; },8000); return; }
     }catch(e){ lgStatus(errMsg(e),true); b.disabled=false; return; }
@@ -2596,6 +2598,10 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     <div style="display:none;">
       <input type="text" id="myNameInput"><input type="text" id="myUsernameInput"><input type="tel" id="myPhoneInput">
     </div>
+  </div>
+  <div class="box" id="bdSetBox">
+    <h3><span class="bn">ইমারজেন্সি হেল্প (রক্তদাতা)</span><span class="en">Emergency help (blood donor)</span></h3>
+    <div id="bdSetBody"></div>
   </div>
   <div class="box" id="inviteBox">
     <h3><span class="bn">বন্ধুদের ইনভাইট করুন</span><span class="en">Invite friends</span></h3>
@@ -5485,7 +5491,7 @@ if(devUnlocked){
   const ICONS={settings_theme:['palette','#8b5cf6'],settings_lang:['globe','#0ea5e9'],settings_profile:['user','#2563eb'],backup_heading:['cloud','#14b8a6'],
     settings_budget:['target','#f97316'],settings_goal:['flag','#eab308'],settings_recurring:['repeat','#06b6d4'],settings_logo:['image','#ec4899'],
     lock_heading:['lock','#64748b'],pin_heading:['key','#ef4444'],contact_heading:['message','#22c55e'],dev_heading:['settings','#475569'],dev_mode_title:['settings','#7c3aed']}
-  const ICON_ID={installBox:['download','#16a34a'],inviteBox:['share','#10b981'],ntBox:['bell','#f59e0b'],spSetBox:['bank','#6366f1'],wgSetBox:['bolt','#f59e0b'],accountBox:['power','#ef4444']};;
+  const ICON_ID={bdSetBox:['drop','#e11d48'],installBox:['download','#16a34a'],inviteBox:['share','#10b981'],ntBox:['bell','#f59e0b'],spSetBox:['bank','#6366f1'],wgSetBox:['bolt','#f59e0b'],accountBox:['power','#ef4444']};;
   document.querySelectorAll('#sec-settings > .box').forEach(box=>{
     const h=box.querySelector(':scope > h3'); if(!h) return;
     const key=h.getAttribute('data-i18n')||'', ic=ICON_ID[box.id]||ICONS[key]||['settings','#64748b'];
@@ -10099,7 +10105,7 @@ var sec=document.getElementById('sec-settings'); if(!sec) return;
 var bl=function(b,e){ return '<span class="bn">'+b+'</span><span class="en">'+e+'</span>'; };
 var CATS=[
  ['look','চেহারা ও ভাষা','Appearance & language',['settings_theme','settings_lang','settings_logo']],
- ['acct','অ্যাকাউন্ট ও প্রোফাইল','Account & profile',['settings_profile','inviteBox','accountBox']],
+ ['acct','অ্যাকাউন্ট ও প্রোফাইল','Account & profile',['settings_profile','bdSetBox','inviteBox','accountBox']],
  ['money','অর্থ ও বাজেট','Money & budget',['settings_budget','settings_goal','spSetBox','settings_recurring','payBox']],
  ['remind','রিমাইন্ডার ও নোটিফিকেশন','Reminders & notifications',['rmBox','ntSetBox','ntBox']],
  ['secu','নিরাপত্তা ও লক','Security & lock',['lock_heading','pin_heading','secPlusBox']],
@@ -11202,7 +11208,7 @@ const okPic=s=>typeof s==='string'&&/^data:image\/(png|jpe?g|webp|gif);base64,[A
 const CHEV='<svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>';
 const SUB={
  settings_theme:['লাইট/ডার্ক মোড ও রঙ','Light, dark & colours'],settings_lang:['বাংলা বা English','Bangla or English'],settings_logo:['অ্যাপের লোগো বদলান','Change the app logo'],
- settings_profile:['নাম, ছবি, ইউজারনেম ও ইমেইল','Name, photo, username & email'],inviteBox:['বন্ধুদের ইনভাইট ও রেফারেল','Invite friends & referrals'],installBox:['হোম স্ক্রিনে অ্যাপ হিসেবে যোগ করুন','Add to your home screen'],accountBox:['অ্যাকাউন্ট থেকে সাইন আউট','Sign out of your account'],
+ settings_profile:['নাম, ছবি, ইউজারনেম ও ইমেইল','Name, photo, username & email'],bdSetBox:['রক্তদাতা প্রোফাইল ও জরুরি সহায়তা','Blood donor profile & urgent help'],inviteBox:['বন্ধুদের ইনভাইট ও রেফারেল','Invite friends & referrals'],installBox:['হোম স্ক্রিনে অ্যাপ হিসেবে যোগ করুন','Add to your home screen'],accountBox:['অ্যাকাউন্ট থেকে সাইন আউট','Sign out of your account'],
  settings_budget:['খাতভিত্তিক মাসিক সীমা','Monthly limits by category'],settings_goal:['সঞ্চয়ের লক্ষ্য ঠিক করুন','Set your savings goal'],spSetBox:['নিয়মিত সঞ্চয় পরিকল্পনা','Regular savings plan'],
  settings_recurring:['স্বয়ংক্রিয় নিয়মিত এন্ট্রি','Automatic recurring entries'],rmBox:['রিমাইন্ডার সেট করুন','Set reminders'],ntSetBox:['নোটিফিকেশন পছন্দ','Notification preferences'],ntBox:['নোটিফিকেশনের অবস্থা','Notification status'],
  lock_heading:['ফিঙ্গারপ্রিন্ট দিয়ে লক','Lock with fingerprint'],pin_heading:['পিন দিয়ে অ্যাপ লক','Lock the app with a PIN'],secPlusBox:['অতিরিক্ত নিরাপত্তা','Extra security'],
@@ -11276,7 +11282,7 @@ build(); [600,1500,3200,6500].forEach(ms=>setTimeout(()=>build(),ms));
 const TABS=[
  ['everyday','প্রতিদিন','Everyday',[['dash','হোম','Home','home','#6366f1'],['add','যোগ করুন','Add entry','plus','#10b981'],['tx','লেনদেন','Transactions','clipboard','#0ea5e9'],['hist','হিস্ট্রি','History','clock','#f59e0b'],['acc','একাউন্ট','Accounts','wallet','#14b8a6']]],
  ['money','অর্থ ও লক্ষ্য','Money & goals',[['loan','লোন','Loans','bank','#ef4444'],['challenge','চ্যালেঞ্জ','Challenges','svg:cg-trophy','#f59e0b'],['zakat','যাকাত','Zakat','coin','#22c55e']]],
- ['more','ইনসাইট ও আরও','Insights & more',[['report','রিপোর্ট','Reports','bars','#6366f1'],['chat','চ্যাট','Chat','bot','#8b5cf6'],['profile','প্রোফাইল','Profile','user','#ec4899'],['@search','ইউজার খুঁজুন','Find users','search','#0ea5e9']]]
+ ['more','ইনসাইট ও আরও','Insights & more',[['report','রিপোর্ট','Reports','bars','#6366f1'],['chat','চ্যাট','Chat','bot','#8b5cf6'],['profile','প্রোফাইল','Profile','user','#ec4899'],['@search','ইউজার খুঁজুন','Find users','search','#0ea5e9'],['@blood','ইমারজেন্সি হেল্প','Emergency help','drop','#e11d48']]]
 ];
 const icon=n=>n.indexOf('svg:')===0?'<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#'+n.slice(4)+'"/></svg>':'<i class="mi" style="--m:var(--ic-'+n+')"></i>';
 const cur=()=>{ const s=document.querySelector('.section.active'); return s?s.id.replace('sec-',''):''; };
@@ -11290,7 +11296,7 @@ function fillMenu(){
   const mv=dets().filter(isMoved).map(d=>{ const ch=chipOf(d), k=kOf(d); return tile('mset',k,ch.c,ch.i,titleHtml(d),det&&det===k); });
   const mvHtml=mv.length?'<div class="mnSec">'+L('অর্থ ও বাজেট','Money & budget')+'</div><div class="mnGrid">'+mv.join('')+'</div>':'';
   TABS.forEach(g=>{
-    const items=g[3].filter(x=>x[0]==='@search'?!!window.ppGoSearch:(!!$('sec-'+x[0])||x[0]==='tx')).map(x=>tile(x[0]==='@search'?'search':'tab',x[0],x[4],icon(x[3]),L(x[1],x[2]),x[0]===c&&c!=='settings'));
+    const items=g[3].filter(x=>x[0]==='@search'?!!window.ppGoSearch:x[0]==='@blood'?!!window.ftBlood:(!!$('sec-'+x[0])||x[0]==='tx')).map(x=>tile(x[0]==='@search'?'search':x[0]==='@blood'?'blood':'tab',x[0],x[4],icon(x[3]),L(x[1],x[2]),x[0]===c&&c!=='settings'));
     if(items.length) h+='<div class="mnSec">'+L(g[1],g[2])+'</div><div class="mnGrid">'+items.join('')+'</div>';
     if(g[0]==='money') h+=mvHtml;
   });
@@ -11312,6 +11318,7 @@ function onMenu(e){
     else if(a==='mset') window.ftSetOpen(k,from);
     else if(a==='set') window.ftSetOpen(k);
     else if(a==='search'&&window.ppGoSearch) window.ppGoSearch();
+    else if(a==='blood'&&window.ftBlood) window.ftBlood.open('');
  else if(a==='about'&&window.ftAbout) window.ftAbout();
     else if(a==='install'&&window.ftInstall) window.ftInstall.open();
     window.scrollTo(0,0);
@@ -13266,5 +13273,387 @@ html body .heroTrack{padding-bottom:46px;margin-bottom:-34px;}
 html body .hc{box-shadow:0 14px 26px -14px var(--hcs,rgba(0,0,0,.4));}
 html body .heroDots{position:relative;z-index:2;}
 </style>
+<style id="ftBloodCss">
+:root{--ic-drop:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3s6.2 6.6 6.2 11.1a6.2 6.2 0 0 1-12.4 0C5.8 9.6 12 3 12 3z'/%3E%3C/svg%3E");--bdR:#e11d48;--bdR2:#be123c;}
+/* chips */
+.bdChips{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0}.bdChips .bdChip{min-width:0;padding:10px 4px}
+.bdChip{min-width:54px;padding:9px 12px;border-radius:14px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-weight:800;font-size:14px;text-align:center;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.bdChip.on{background:linear-gradient(135deg,var(--bdR),var(--bdR2));border-color:transparent;color:#fff;box-shadow:0 6px 14px -6px var(--bdR)}
+.bdScroll{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:none}.bdScroll::-webkit-scrollbar{display:none}.bdScroll .bdChip{flex:none;min-width:50px;padding:8px 12px}
+/* shortcut in search */
+.bdShort{width:100%;display:flex;align-items:center;gap:12px;padding:12px 14px;border:0;border-radius:18px;color:#fff;background:linear-gradient(135deg,var(--bdR),var(--bdR2));box-shadow:0 10px 22px -12px var(--bdR);cursor:pointer;text-align:left;margin:2px 0 12px}
+.bdShort .ic{flex:none;width:42px;height:42px;border-radius:14px;background:rgba(255,255,255,.2);display:grid;place-items:center;font-size:22px}
+.bdShort b{display:block;font-size:15px}.bdShort small{display:block;opacity:.9;font-size:12px;margin-top:2px}.bdShort .go{margin-left:auto;font-size:20px;opacity:.9}
+.bdSecT{display:flex;align-items:center;justify-content:space-between;margin:14px 2px 8px;font-weight:800;font-size:14px;color:var(--text)}.bdSecT small{font-weight:600;color:var(--muted);font-size:12px}
+.bdSecT a{color:var(--bdR);font-weight:800;font-size:12.5px;cursor:pointer}
+/* donor card */
+.bdCard{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border);border-radius:20px;background:var(--card);box-shadow:0 8px 20px -16px rgba(0,0,0,.35);margin-bottom:10px}
+.bdAv{flex:none;width:52px;height:52px;border-radius:18px;overflow:hidden;background:linear-gradient(135deg,#fecdd3,#fda4af);color:#9f1239;display:grid;place-items:center;font-weight:900;font-size:20px;border:2px solid color-mix(in srgb,var(--bdR) 30%,transparent)}
+.bdAv img{width:100%;height:100%;object-fit:cover}
+.bdWho{flex:1;min-width:0}.bdWho b{display:block;font-size:14.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bdWho small{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bdBg{flex:none;min-width:46px;padding:7px 10px;border-radius:14px;background:color-mix(in srgb,var(--bdR) 12%,transparent);color:var(--bdR);font-weight:900;font-size:16px;text-align:center;border:1px solid color-mix(in srgb,var(--bdR) 28%,transparent)}
+.bdAct{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.bdBtn{display:inline-flex;align-items:center;gap:6px;padding:8px 13px;border-radius:12px;border:0;font-weight:800;font-size:12.5px;cursor:pointer;text-decoration:none;-webkit-tap-highlight-color:transparent}
+.bdBtn.msg{background:var(--bdR);color:#fff}.bdBtn.tel{background:color-mix(in srgb,#16a34a 14%,transparent);color:#15803d;border:1px solid color-mix(in srgb,#16a34a 35%,transparent)}
+.bdCard.col{align-items:flex-start}.bdCard .bdMain{flex:1;min-width:0}
+.bdTop{display:flex;align-items:center;gap:10px}.bdSlide .bdTop{gap:12px}
+.bdEmpty{padding:22px 12px;text-align:center;color:var(--muted);font-size:13px;line-height:1.55;border:1.5px dashed var(--border);border-radius:18px}
+.bdEmpty b{display:block;color:var(--text);margin-bottom:4px;font-size:14px}.bdEmpty button{margin-top:10px}
+.bdMain2{border:0;padding:10px 16px;border-radius:12px;background:var(--bdR);color:#fff;font-weight:800;cursor:pointer;font-size:13px}
+/* emergency page */
+#bdEmg{position:fixed;inset:0;z-index:99990;background:var(--bg);display:none;flex-direction:column;padding-top:env(safe-area-inset-top,0)}
+#bdEmg.on{display:flex;animation:bdIn .22s ease}
+@keyframes bdIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.bdHd{position:relative;padding:14px 16px 18px;color:#fff;background:linear-gradient(135deg,var(--bdR),var(--bdR2) 70%,#7f1d1d);border-radius:0 0 26px 26px;box-shadow:0 14px 30px -18px var(--bdR);overflow:hidden;flex:none}
+.bdHd::after{content:"";position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.1);pointer-events:none}
+.bdHdRow{display:flex;align-items:center;gap:10px;position:relative;z-index:1}
+.bdBack{width:38px;height:38px;border-radius:13px;border:0;background:rgba(255,255,255,.2);color:#fff;font-size:20px;cursor:pointer;flex:none}
+.bdHdT b{display:block;font-size:19px;font-weight:900}.bdHdT small{display:block;opacity:.9;font-size:12px;margin-top:2px}
+.bdHdIc{margin-left:auto;font-size:26px;z-index:1;opacity:.95}
+.bdBody{flex:1;overflow-y:auto;padding:14px 14px 90px;-webkit-overflow-scrolling:touch}
+.bdHero{position:relative;margin-bottom:6px}
+.bdTrack{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;scrollbar-width:none;padding:2px}.bdTrack::-webkit-scrollbar{display:none}
+.bdSlide{flex:0 0 100%;scroll-snap-align:center;border-radius:24px;padding:16px;color:var(--text);background:var(--card);border:1px solid var(--border);box-shadow:0 14px 30px -20px rgba(0,0,0,.45);position:relative;overflow:hidden}
+.bdSlide::before{content:"";position:absolute;right:-24px;top:-24px;width:110px;height:110px;border-radius:50%;background:color-mix(in srgb,var(--bdR) 9%,transparent)}
+.bdSlide .bdTop{position:relative}.bdSlide .bdAv{width:60px;height:60px;border-radius:20px;font-size:24px}
+.bdSlide .bdBg{font-size:22px;padding:9px 14px;border-radius:16px}
+.bdDots{display:flex;justify-content:center;gap:6px;margin:10px 0 2px}.bdDots i{width:7px;height:7px;border-radius:99px;background:var(--border);transition:all .25s}.bdDots i.on{width:20px;background:var(--bdR)}
+.bdCnt{display:flex;align-items:center;justify-content:space-between;margin:2px 2px 10px;font-size:12.5px;color:var(--muted);font-weight:600}
+.bdLive{display:inline-flex;align-items:center;gap:6px}.bdLive i{width:8px;height:8px;border-radius:50%;background:#16a34a;box-shadow:0 0 0 0 rgba(22,163,74,.6);animation:bdP 1.6s infinite}
+@keyframes bdP{70%{box-shadow:0 0 0 8px rgba(22,163,74,0)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}}
+.bdList .bdCard{animation:bdUp .35s both}@keyframes bdUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+/* sheet */
+#bdSheetOv{position:fixed;inset:0;z-index:99995;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center}
+#bdSheetOv.on{display:flex}
+.bdSheet{width:100%;max-width:520px;background:var(--card);color:var(--text);border-radius:28px 28px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom,0));max-height:92vh;overflow-y:auto;animation:bdSl .26s ease}
+@keyframes bdSl{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.bdSheet .gr{width:42px;height:5px;border-radius:9px;background:var(--border);margin:0 auto 12px}
+.bdSheet h3{margin:0 0 4px;font-size:18px;display:flex;align-items:center;gap:8px}.bdSheet h3 .d{color:var(--bdR)}
+.bdSheet p.s{margin:0 0 10px;color:var(--muted);font-size:12.5px;line-height:1.5}
+.bdLbl{display:block;font-size:12px;font-weight:800;color:var(--muted);margin:12px 0 2px;letter-spacing:.2px}
+.bdIn{width:100%;box-sizing:border-box;padding:13px 14px;border-radius:14px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:15px;outline:none}.bdIn:focus{border-color:var(--bdR)}
+.bdRow{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--border);margin-top:6px}
+.bdRow .t{flex:1;min-width:0}.bdRow .t b{display:block;font-size:13.5px}.bdRow .t small{display:block;color:var(--muted);font-size:11.5px;margin-top:2px;line-height:1.4}
+.bdSw{position:relative;flex:none;width:48px;height:28px}.bdSw input{opacity:0;position:absolute;inset:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:2}.bdSw i{position:absolute;inset:0;border-radius:99px;background:var(--border);transition:background .2s}.bdSw i::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);transition:transform .2s}.bdSw input:checked+i{background:var(--bdR)}.bdSw input:checked+i::after{transform:translateX(20px)}
+.bdSw input:disabled+i{opacity:.45}
+.bdSave{width:100%;margin-top:12px;padding:14px;border:0;border-radius:16px;font-weight:900;font-size:15px;color:#fff;background:linear-gradient(135deg,var(--bdR),var(--bdR2));cursor:pointer;box-shadow:0 12px 24px -14px var(--bdR)}
+.bdLater{width:100%;margin-top:8px;padding:12px;border:0;background:transparent;color:var(--muted);font-weight:700;cursor:pointer;font-size:13.5px}
+.bdMsg{min-height:18px;margin-top:8px;font-size:12.5px;font-weight:700;color:var(--muted)}.bdMsg.bad{color:var(--red)}.bdMsg.ok{color:#16a34a}
+/* dashboard banner */
+.bdBan{display:flex;align-items:center;gap:12px;margin:0 0 12px;padding:12px 14px;border-radius:20px;color:#fff;background:linear-gradient(135deg,var(--bdR),var(--bdR2));box-shadow:0 12px 24px -16px var(--bdR);cursor:pointer}
+.bdBan .ic{flex:none;width:40px;height:40px;border-radius:13px;background:rgba(255,255,255,.2);display:grid;place-items:center;font-size:21px}
+.bdBan b{display:block;font-size:13.5px}.bdBan small{display:block;font-size:11.5px;opacity:.92;margin-top:2px}.bdBan .go{margin-left:auto;font-weight:900;font-size:18px}
+/* signup */
+.bdLg{margin:2px 0 8px;text-align:left}.bdLgT{font-size:12.5px;font-weight:800;color:var(--muted);margin:2px 2px 6px}.bdLgT em{color:var(--bdR);font-style:normal}
+.bdLg .bdChips{margin:0 0 8px;gap:6px}.bdLg .bdChip{padding:9px 2px;font-size:13.5px}
+.bdLgChk{display:flex;align-items:flex-start;gap:10px;font-size:12.5px;line-height:1.45;color:var(--muted);margin:6px 2px 10px;text-align:left}.bdLgChk input{margin-top:2px;accent-color:var(--bdR);width:18px;height:18px;flex:none}
+</style>
+<script id="ftBloodJs">
+/* ===== Blood donors & Emergency help ===== */
+(function(){
+'use strict';
+var LS=localStorage, K={bg:'myBlood_v1',on:'myBloodOn_v1',pub:'myPhonePub_v1',ph:'myPhone_v1',rem:'ftBdRemAt_v1'};
+var GROUPS=['A+','A-','B+','B-','AB+','AB-','O+','O-'];
+var PICRE=/^data:image\/(?:jpeg|jpg|png|webp);base64,[A-Za-z0-9+\/=]+$/;
+var $=function(i){return document.getElementById(i);};
+var bn=function(){return document.documentElement.lang!=='en';}, tx=function(b,e){return bn()?b:e;};
+var nbr=function(n){ n=String(n); return bn()?n.replace(/\d/g,function(d){return '০১২৩৪৫৬৭৮৯'[d];}):n; };
+function esc(v){ return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function ls(k){ try{return LS.getItem(k)||'';}catch(e){return '';} }
+function lset(k,v){ try{ LS.setItem(k,v); }catch(e){} }
+function R(){ try{return window.ftCloud&&ftCloud._raw?ftCloud._raw():null;}catch(e){return null;} }
+function ses(){ var r=R(); try{ return r&&r.ok()&&r.ses()?r.ses():null; }catch(e){return null;} }
+function myBg(){ var v=ls(K.bg); return GROUPS.indexOf(v)>-1?v:''; }
+function myPh(){ return ls(K.ph).trim(); }
+function phOk(p){ p=String(p||'').trim(); var d=p.replace(/\D/g,''); return /^\+?[0-9\-\s]{6,18}$/.test(p)&&d.length>=10&&d.length<=15; }
+function isOn(){ return ls(K.on)==='1'; }
+function isPub(){ return ls(K.pub)==='1'; }
+function complete(){ return !!myBg()&&phOk(myPh()); }
+var ic=function(n){ return '<i class="mi" style="--m:var(--ic-'+n+')"></i>'; };
+var DROP=ic('drop');
+function toast(m){ try{ if(window.toast) window.toast(m); }catch(e){} }
+var J={'Content-Type':'application/json'};
+async function db(path,opt,qs){
+  var r=R(); if(!r||!r.ok()||!r.ses()) throw new Error('LOGIN');
+  var base=String(r.CFG.dbUrl).replace(/\/+$/,''), tk=await r.token();
+  var res=await r.call(base+'/'+path+'.json?auth='+encodeURIComponent(tk)+(qs?'&'+qs:''),opt);
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  return res.json();
+}
+/* ---------- parse any typed blood group (A+, o negative, এবি+ …) ---------- */
+function parseGroup(q){
+  var s=String(q||'').toLowerCase().replace(/\s+/g,'');
+  s=s.replace(/এবি/g,'ab').replace(/এ/g,'a').replace(/বি/g,'b').replace(/ও/g,'o').replace(/পজিটিভ|positive|pos/g,'+').replace(/নেগেটিভ|negative|neg/g,'-');
+  var m=s.match(/^(ab|a|b|o)([+\-])$/); if(!m) return '';
+  var g=m[1].toUpperCase()+m[2]; return GROUPS.indexOf(g)>-1?g:'';
+}
+function isBloodWord(q){ q=String(q||'').trim().toLowerCase(); return q==='blood'||q==='রক্ত'||q==='ব্লাড'||q==='রক্তদাতা'||q==='donor'; }
+
+/* ---------- publish my donor card ---------- */
+var lastSig='', pubBusy=false;
+async function pub(force){
+  if(pubBusy) return; var s=ses(); if(!s) return; pubBusy=true;
+  try{
+    var uid=s.uid, on=isOn(), bg=myBg(), ph=myPh();
+    if(!on||!bg||!phOk(ph)){ if(force||lastSig!=='none'){ try{ await db('bloodDonors/'+uid,{method:'DELETE'}); }catch(e){ if(!/HTTP 40[13]/.test(String(e&&e.message))) throw e; } lastSig='none'; } return; }
+    var pic=''; try{ if(window.ftPicThumb) pic=await window.ftPicThumb(); }catch(e){}
+    if(!PICRE.test(pic||'')||(pic||'').length>60000) pic='';
+    var rec={n:ls('myName_v1').slice(0,40),u:ls('myUsername_v1').replace(/^@/,'').slice(0,30),bg:bg,t:Date.now()};
+    if(!rec.n&&!rec.u) return;
+    if(pic) rec.pic=pic; if(isPub()) rec.ph=ph.replace(/\s+/g,'').slice(0,20);
+    var sig=JSON.stringify([rec.n,rec.u,rec.bg,rec.ph||'',pic.length]);
+    if(!force&&sig===lastSig) return;
+    await db('bloodDonors/'+uid,{method:'PUT',headers:J,body:JSON.stringify(rec)}); lastSig=sig;
+  }catch(e){ /* retried on next tick */ }
+  finally{ pubBusy=false; }
+}
+
+/* ---------- load donors ---------- */
+var cache={at:0,rows:[],err:''}, loading=null;
+function parseRows(o){
+  var me=ses(), rows=[];
+  Object.keys(o||{}).forEach(function(uid){
+    var v=o[uid]; if(!v||typeof v!=='object'||(me&&uid===me.uid)) return;
+    if(GROUPS.indexOf(v.bg)<0) return;
+    var n=typeof v.n==='string'?v.n.slice(0,40):'', u=typeof v.u==='string'?v.u.slice(0,30):''; if(!n&&!u) return;
+    var ph=(typeof v.ph==='string'&&/^\+?[0-9\-\s]{10,20}$/.test(v.ph))?v.ph:'';
+    var pic=(typeof v.pic==='string'&&PICRE.test(v.pic)&&v.pic.length<60000)?v.pic:'';
+    rows.push({uid:uid,n:n,u:u,bg:v.bg,ph:ph,pic:pic,t:+v.t||0});
+  });
+  rows.sort(function(a,b){ return b.t-a.t; });
+  return rows;
+}
+function load(force){
+  if(!force&&cache.at&&Date.now()-cache.at<40000) return Promise.resolve(cache);
+  if(loading) return loading;
+  loading=(async function(){
+    try{
+      var o=await db('bloodDonors',undefined,'orderBy='+encodeURIComponent('"$key"')+'&limitToFirst=300');
+      cache={at:Date.now(),rows:parseRows(o),err:''};
+    }catch(e){
+      var m=String(e&&e.message||e);
+      cache={at:Date.now(),rows:[],err:m==='LOGIN'?'login':/HTTP 40[13]/.test(m)?'rules':'net'};
+    }
+    loading=null; return cache;
+  })();
+  return loading;
+}
+
+/* ---------- donor card html ---------- */
+function initial(r){ return esc(([].concat(Array.from(r.n||r.u||'?'))[0]||'?').toUpperCase()); }
+function avHtml(r){ return '<div class="bdAv">'+(r.pic?'<img alt="" src="'+r.pic+'">':initial(r))+'</div>'; }
+function actHtml(r){
+  var h='<button type="button" class="bdBtn msg" data-bd="msg" data-uid="'+esc(r.uid)+'">'+tx('মেসেজ','Message')+'</button>';
+  if(r.ph) h+='<a class="bdBtn tel" href="tel:'+esc(r.ph.replace(/[^\d+]/g,''))+'">'+esc(r.ph)+'</a>';
+  return h;
+}
+function cardHtml(r,delay){
+  return '<div class="bdCard col" style="animation-delay:'+(delay||0)+'ms">'+avHtml(r)+'<div class="bdMain"><div class="bdTop"><div class="bdWho"><b>'+esc(r.n||r.u)+'</b><small>'+(r.u?'@'+esc(r.u):'')+'</small></div><span class="bdBg">'+esc(r.bg)+'</span></div><div class="bdAct">'+actHtml(r)+'</div></div></div>';
+}
+function slideHtml(r){
+  return '<div class="bdSlide"><div class="bdTop">'+avHtml(r)+'<div class="bdWho"><b>'+esc(r.n||r.u)+'</b><small>'+(r.u?'@'+esc(r.u):'')+'</small></div><span class="bdBg">'+esc(r.bg)+'</span></div><div class="bdAct">'+actHtml(r)+'</div></div>';
+}
+function emptyHtml(c,filter){
+  if(c.err==='login') return '<div class="bdEmpty"><b>'+tx('লগইন প্রয়োজন','Login required')+'</b>'+tx('রক্তদাতাদের তালিকা দেখতে ক্লাউড অ্যাকাউন্টে লগইন করুন (সেটিংস → অ্যাকাউন্ট)।','Log in to your cloud account to see donors (Settings → Account).')+'</div>';
+  if(c.err==='rules') return '<div class="bdEmpty"><b>'+tx('ডাটাবেস রুলস যোগ করা হয়নি','Database rules are missing')+'</b>'+tx('Firebase Rules-এ "bloodDonors" অংশটি যোগ করুন।','Add the "bloodDonors" part to your Firebase Rules.')+'</div>';
+  if(c.err==='net') return '<div class="bdEmpty"><b>'+tx('তালিকা আনা যায়নি','Could not load the list')+'</b>'+tx('ইন্টারনেট চেক করে আবার চেষ্টা করুন।','Check your connection and try again.')+'<br><button type="button" class="bdMain2" data-bd="reload">'+tx('আবার চেষ্টা করুন','Retry')+'</button></div>';
+  return '<div class="bdEmpty"><b>'+(filter?tx(filter+' গ্রুপের কোনো রক্তদাতা পাওয়া যায়নি','No '+filter+' donors found'):tx('এখনো কোনো রক্তদাতা যুক্ত হননি','No donors have joined yet'))+'</b>'+tx('আপনি রক্ত দিতে ইচ্ছুক হলে নিজের প্রোফাইল চালু করে রাখুন।','If you are willing to donate, enable your donor profile.')+'<br><button type="button" class="bdMain2" data-bd="sheet">'+tx('আমি রক্ত দিতে চাই','I want to donate')+'</button></div>';
+}
+
+/* ---------- message ---------- */
+function message(uid){
+  var r=null; for(var i=0;i<cache.rows.length;i++) if(cache.rows[i].uid===uid) r=cache.rows[i];
+  try{ var m=JSON.parse(ls('ftReqLink_v1')||'{}')||{}; m[uid]={name:(r&&r.n)||'',email:'',un:(r&&r.u)||''}; lset('ftReqLink_v1',JSON.stringify(m)); }catch(e){}
+  if(!ses()){ toast(tx('মেসেজ পাঠাতে ক্লাউড অ্যাকাউন্টে লগইন করুন।','Log in to your cloud account to send messages.')); return; }
+  closeEmg();
+  setTimeout(function(){ if(window.ftChatOpen) window.ftChatOpen([uid]); else toast(tx('মেসেজ এখন চালু নেই।','Messaging is unavailable.')); },120);
+}
+
+/* ---------- Emergency page ---------- */
+var EF='all', slideIx=0, autoT=0, pauseUntil=0;
+function ensureEmg(){
+  var e=$('bdEmg'); if(e) return e;
+  e=document.createElement('div'); e.id='bdEmg'; e.setAttribute('role','dialog'); e.setAttribute('aria-label','Emergency help');
+  e.innerHTML='<div class="bdHd"><div class="bdHdRow"><button class="bdBack" type="button" data-bd="close" aria-label="back">‹</button><div class="bdHdT"><b>'+tx('ইমারজেন্সি হেল্প','Emergency help')+'</b><small>'+tx('জরুরি রক্তের প্রয়োজনে সরাসরি রক্তদাতার সাথে যোগাযোগ করুন','Reach a blood donor directly in an emergency')+'</small></div><span class="bdHdIc">'+DROP+'</span></div></div><div class="bdBody" id="bdEmgBody"></div>';
+  e.addEventListener('click',onClick); document.body.appendChild(e); return e;
+}
+function openEmg(g){
+  EF=g&&GROUPS.indexOf(g)>-1?g:'all'; var e=ensureEmg(); e.classList.add('on'); document.documentElement.style.overflow='hidden';
+  renderEmg(); load(true).then(function(){ if(e.classList.contains('on')) renderEmg(); });
+  clearInterval(autoT); autoT=setInterval(autoSlide,5200);
+}
+function closeEmg(){ var e=$('bdEmg'); if(e) e.classList.remove('on'); document.documentElement.style.overflow=''; clearInterval(autoT); }
+function filtered(){ return EF==='all'?cache.rows:cache.rows.filter(function(r){return r.bg===EF;}); }
+function renderEmg(){
+  var b=$('bdEmgBody'); if(!b) return; var rows=filtered(), keep=b.scrollTop;
+  var chips='<div class="bdScroll"><button type="button" class="bdChip'+(EF==='all'?' on':'')+'" data-bd="f" data-g="all">'+tx('সব','All')+'</button>'+GROUPS.map(function(g){return '<button type="button" class="bdChip'+(EF===g?' on':'')+'" data-bd="f" data-g="'+g+'">'+g+'</button>';}).join('')+'</div>';
+  var h=chips+'<div class="bdCnt"><span class="bdLive"><i></i>'+tx('লাইভ তালিকা','Live list')+'</span><span>'+nbr(rows.length)+' '+tx('জন রক্তদাতা','donors')+'</span></div>';
+  if(!cache.at&&!cache.rows.length) h+='<div class="bdEmpty">'+tx('রক্তদাতাদের খোঁজা হচ্ছে…','Looking for donors…')+'</div>';
+  else if(!rows.length) h+=emptyHtml(cache,EF==='all'?'':EF);
+  else{
+    var hero=rows.slice(0,8);
+    h+='<div class="bdHero"><div class="bdTrack" id="bdTrack">'+hero.map(slideHtml).join('')+'</div><div class="bdDots" id="bdDots">'+hero.map(function(_,i){return '<i'+(i===0?' class="on"':'')+'></i>';}).join('')+'</div></div>';
+    h+='<div class="bdSecT"><span>'+tx('সব রক্তদাতা','All donors')+'</span><small>'+tx('নতুন আগে','Newest first')+'</small></div><div class="bdList">'+rows.map(function(r,i){return cardHtml(r,Math.min(i,10)*40);}).join('')+'</div>';
+  }
+  b.innerHTML=h; b.scrollTop=keep; slideIx=0; bindTrack();
+}
+function bindTrack(){
+  var t=$('bdTrack'); if(!t) return;
+  var pause=function(){ pauseUntil=Date.now()+12000; };
+  t.addEventListener('touchstart',pause,{passive:true}); t.addEventListener('pointerdown',pause);
+  t.addEventListener('scroll',function(){ var w=t.clientWidth||1, i=Math.round(t.scrollLeft/(w+12)); if(i!==slideIx){ slideIx=i; dots(i); } },{passive:true});
+}
+function dots(i){ var d=$('bdDots'); if(!d) return; Array.prototype.forEach.call(d.children,function(x,k){ x.classList.toggle('on',k===i); }); }
+function autoSlide(){
+  var t=$('bdTrack'); if(!t||Date.now()<pauseUntil||document.hidden) return;
+  var n=t.children.length; if(n<2) return; var i=(slideIx+1)%n, w=t.clientWidth+12;
+  slideIx=i; try{ t.scrollTo({left:i*w,behavior:'smooth'}); }catch(e){ t.scrollLeft=i*w; } dots(i);
+}
+
+/* ---------- shared click handling ---------- */
+function onClick(ev){
+  var b=ev.target.closest&&ev.target.closest('[data-bd]'); if(!b) return;
+  var a=b.getAttribute('data-bd');
+  if(a==='close') closeEmg();
+  else if(a==='f'){ EF=b.getAttribute('data-g'); renderEmg(); }
+  else if(a==='msg') message(b.getAttribute('data-uid'));
+  else if(a==='reload'){ load(true).then(function(){ renderEmg(); renderSearch(); }); }
+  else if(a==='sheet') openSheet();
+  else if(a==='all') openEmg(sg==='all'?'':sg);
+}
+
+/* ---------- Search page integration ---------- */
+var sg='';   /* selected group in search */
+function searchHost(){ return $('ftBdBox'); }
+function inject(){
+  var q=$('ppQ'), res=$('ppRes'); if(!q||!res||searchHost()) return;
+  var box=document.createElement('div'); box.id='ftBdBox'; box.addEventListener('click',onClick);
+  res.parentNode.insertBefore(box,res); renderSearch(); load(false).then(renderSearch);
+}
+function renderSearch(){
+  var box=searchHost(); if(!box) return; var q=$('ppQ'), typed=q?q.value:'', tg=parseGroup(typed);
+  if(tg) sg=tg; else if(typed.trim()&&!isBloodWord(typed)) sg='';
+  var res=$('ppRes'), hasQ=!!typed.trim(), bloodQ=!!tg||isBloodWord(typed);
+  if(res) res.style.display=(bloodQ)?'none':'';
+  var rows=sg?cache.rows.filter(function(r){return r.bg===sg;}):cache.rows;
+  var h='<button type="button" class="bdShort" data-bd="all"><span class="ic">'+DROP+'</span><span><b>'+tx('ব্লাড খুঁজুন','Find blood')+'</b><small>'+tx('যেকোনো রক্তের গ্রুপের ডোনার খুঁজুন — ইমারজেন্সি হেল্প','Search donors of any blood group — Emergency help')+'</small></span><span class="go">›</span></button>';
+  h+='<div class="bdScroll">'+GROUPS.map(function(g){return '<button type="button" class="bdChip'+(sg===g?' on':'')+'" data-bd="sg" data-g="'+g+'">'+g+'</button>';}).join('')+'</div>';
+  if(!hasQ||bloodQ){
+    var list=rows.slice(0,5);
+    h+='<div class="bdSecT"><span>'+(sg?tx(sg+' গ্রুপের রক্তদাতা',sg+' donors'):tx('রিকমেন্ডেড রক্তদাতা','Recommended donors'))+'</span>'+(rows.length>5?'<a data-bd="all">'+tx('সব দেখুন','See all')+' ('+nbr(rows.length)+')</a>':'')+'</div>';
+    if(!cache.at) h+='<div class="bdEmpty">'+tx('খোঁজা হচ্ছে…','Searching…')+'</div>';
+    else if(!list.length) h+=emptyHtml(cache,sg);
+    else h+=list.map(function(r,i){return cardHtml(r,i*40);}).join('');
+  }
+  box.innerHTML=h;
+}
+document.addEventListener('click',function(ev){
+  var b=ev.target.closest&&ev.target.closest('#ftBdBox [data-bd="sg"]'); if(!b) return;
+  var g=b.getAttribute('data-g'); sg=(sg===g)?'':g; var q=$('ppQ'); if(q&&parseGroup(q.value)){ q.value=''; try{ window.ppQin&&ppQin(''); }catch(e){} } renderSearch();
+},true);
+document.addEventListener('input',function(ev){ if(ev.target&&ev.target.id==='ppQ'){ setTimeout(renderSearch,0); } });
+try{ var sp=document.getElementById('sec-profile'); if(sp) new MutationObserver(function(){ if($('ppQ')) inject(); else { var b=searchHost(); if(b&&!$('ppQ')) b.remove(); } }).observe(sp,{childList:true}); }catch(e){}
+
+/* ---------- Donor form (sheet / settings / signup share the chips) ---------- */
+function chipsHtml(sel,idp){ return '<div class="bdChips" id="'+idp+'">'+GROUPS.map(function(g){return '<button type="button" class="bdChip'+(sel===g?' on':'')+'" data-g="'+g+'">'+g+'</button>';}).join('')+'</div>'; }
+function bindChips(id,cb){ var c=$(id); if(!c||c._b) return; c._b=1; c.addEventListener('click',function(ev){ var b=ev.target.closest('.bdChip'); if(!b) return; Array.prototype.forEach.call(c.children,function(x){x.classList.toggle('on',x===b);}); if(cb) cb(b.getAttribute('data-g')); }); }
+function chipVal(id){ var c=$(id); if(!c) return ''; var b=c.querySelector('.bdChip.on'); return b?b.getAttribute('data-g'):''; }
+function saveFields(bg,ph,on,pb){
+  lset(K.bg,bg); lset(K.ph,ph.trim()); lset(K.on,on?'1':'0'); lset(K.pub,pb?'1':'0');
+  ['myPhoneInput','pfp'].forEach(function(i){ var e=$(i); if(e) e.value=ph.trim(); });
+  try{ if(window.ftCloud&&ftCloud.refresh) ftCloud.refresh(); }catch(e){}
+  try{ if(typeof renderHomeProfile==='function') renderHomeProfile(); }catch(e){}
+  try{ document.dispatchEvent(new Event('ftBloodChanged')); }catch(e){}
+  setTimeout(function(){ pub(true); },200);
+  ensureBanner();
+}
+/* the reminder / quick-edit sheet */
+function openSheet(){
+  var ov=$('bdSheetOv'); if(!ov){ ov=document.createElement('div'); ov.id='bdSheetOv'; document.body.appendChild(ov); ov.addEventListener('click',function(e){ if(e.target===ov) closeSheet(true); }); }
+  var guest=!ses();
+  ov.innerHTML='<div class="bdSheet" role="dialog"><div class="gr"></div><h3><span class="d">'+DROP+'</span>'+tx('রক্তদাতা প্রোফাইল','Blood donor profile')+'</h3><p class="s">'+tx('জরুরি মুহূর্তে কারও রক্ত লাগলে যেন আপনাকে খুঁজে পায় — রক্তের গ্রুপ ও ফোন নম্বর দিয়ে রাখুন।','So people can reach you when blood is urgently needed — add your blood group and phone number.')+'</p>'
+   +'<span class="bdLbl">'+tx('রক্তের গ্রুপ *','Blood group *')+'</span>'+chipsHtml(myBg(),'bdShBg')
+   +'<span class="bdLbl">'+tx('মোবাইল নম্বর *','Mobile number *')+'</span><input class="bdIn" id="bdShPh" type="tel" inputmode="tel" autocomplete="tel" placeholder="01XXXXXXXXX" value="'+esc(myPh())+'">'
+   +'<div class="bdRow"><div class="t"><b>'+tx('আমি রক্ত দিতে ইচ্ছুক','I am willing to donate')+'</b><small>'+(guest?tx('এটি চালু করতে ক্লাউড অ্যাকাউন্টে লগইন করুন।','Log in to your cloud account to turn this on.'):tx('চালু করলে আপনার নাম, ছবি ও রক্তের গ্রুপ অন্যরা দেখতে পারবে।','Others can see your name, photo and blood group.'))+'</small></div><label class="bdSw"><input type="checkbox" id="bdShOn" '+(isOn()&&!guest?'checked':'')+(guest?' disabled':'')+'><i></i></label></div>'
+   +'<div class="bdRow"><div class="t"><b>'+tx('আমার ফোন নম্বর পাবলিক','Show my phone number')+'</b><small>'+tx('বন্ধ থাকলে অন্যরা শুধু মেসেজ দিতে পারবে, নম্বর দেখবে না।','If off, others can only message you and will not see the number.')+'</small></div><label class="bdSw"><input type="checkbox" id="bdShPub" '+(isPub()?'checked':'')+'><i></i></label></div>'
+   +'<div class="bdMsg" id="bdShMsg"></div><button type="button" class="bdSave" id="bdShSave">'+tx('সংরক্ষণ করুন','Save')+'</button><button type="button" class="bdLater" id="bdShLater">'+tx('পরে মনে করান','Remind me later')+'</button></div>';
+  ov.classList.add('on'); bindChips('bdShBg');
+  $('bdShLater').onclick=function(){ closeSheet(true); };
+  $('bdShSave').onclick=function(){
+    var bg=chipVal('bdShBg'), ph=$('bdShPh').value.trim(), m=$('bdShMsg');
+    if(!bg){ m.className='bdMsg bad'; m.textContent=tx('রক্তের গ্রুপ বেছে নিন','Select your blood group'); return; }
+    if(!phOk(ph)){ m.className='bdMsg bad'; m.textContent=tx('সঠিক মোবাইল নম্বর দিন','Enter a valid mobile number'); return; }
+    saveFields(bg,ph,!guest&&$('bdShOn').checked,$('bdShPub').checked);
+    toast(tx('রক্তদাতা তথ্য সংরক্ষিত হয়েছে','Donor details saved')); closeSheet(false);
+  };
+}
+function closeSheet(later){ var ov=$('bdSheetOv'); if(ov) ov.classList.remove('on'); if(later) lset(K.rem,String(Date.now())); }
+
+/* ---------- Settings box ---------- */
+function renderSettings(){
+  var b=$('bdSetBody'); if(!b) return; if(b.contains(document.activeElement)&&document.activeElement.tagName==='INPUT') return;
+  var guest=!ses(), st=complete()?(isOn()&&!guest?tx('রক্তদাতা হিসেবে যুক্ত আছেন','You are listed as a donor'):tx('তথ্য দেওয়া আছে, তবে রক্তদাতা হিসেবে চালু নেই','Details saved, donor listing is off')):tx('রক্তের গ্রুপ ও ফোন নম্বর যোগ করুন','Add your blood group and phone');
+  b.innerHTML='<p class="s" style="color:var(--muted);font-size:12.5px;margin:0 0 8px;line-height:1.5">'+tx('এই তথ্য দিয়ে রাখলে জরুরি অবস্থায় অন্যরা আপনাকে সার্চ ও ইমারজেন্সি হেল্প থেকে খুঁজে পাবে।','Others can find you in search and Emergency help in urgent cases.')+'</p>'
+   +'<div class="bdBan" style="cursor:default;margin-bottom:10px"><span class="ic">'+DROP+'</span><div><b>'+(myBg()?esc(myBg())+' · ':'')+st+'</b><small>'+(myPh()?esc(myPh()):tx('ফোন নম্বর নেই','No phone number'))+'</small></div></div>'
+   +'<span class="bdLbl">'+tx('রক্তের গ্রুপ','Blood group')+'</span>'+chipsHtml(myBg(),'bdStBg')
+   +'<span class="bdLbl">'+tx('মোবাইল নম্বর','Mobile number')+'</span><input class="bdIn" id="bdStPh" type="tel" inputmode="tel" placeholder="01XXXXXXXXX" value="'+esc(myPh())+'">'
+   +'<div class="bdRow"><div class="t"><b>'+tx('আমি রক্ত দিতে ইচ্ছুক','I am willing to donate')+'</b><small>'+(guest?tx('এটি চালু করতে ক্লাউড অ্যাকাউন্টে লগইন করুন।','Log in to your cloud account to turn this on.'):tx('চালু থাকলে আপনার আইডি রক্তদাতা তালিকায় দেখাবে।','Your ID will appear in the donor list.'))+'</small></div><label class="bdSw"><input type="checkbox" id="bdStOn" '+(isOn()&&!guest?'checked':'')+(guest?' disabled':'')+'><i></i></label></div>'
+   +'<div class="bdRow"><div class="t"><b>'+tx('আমার ফোন নম্বর পাবলিক','Show my phone number')+'</b><small>'+tx('বন্ধ থাকলে শুধু মেসেজের অপশন দেখাবে, নম্বর দেখাবে না।','If off, only the message option is shown, not the number.')+'</small></div><label class="bdSw"><input type="checkbox" id="bdStPub" '+(isPub()?'checked':'')+'><i></i></label></div>'
+   +'<div class="bdMsg" id="bdStMsg"></div><button type="button" class="bdSave" id="bdStSave">'+tx('সংরক্ষণ করুন','Save')+'</button>'
+   +'<button type="button" class="bdSave" id="bdStOpen" style="margin-top:10px;background:var(--card);color:var(--bdR);border:1.5px solid var(--bdR);box-shadow:none">'+tx('ইমারজেন্সি হেল্প খুলুন','Open Emergency help')+'</button>';
+  bindChips('bdStBg');
+  $('bdStOpen').onclick=function(){ openEmg(''); };
+  $('bdStSave').onclick=function(){
+    var bg=chipVal('bdStBg'), ph=$('bdStPh').value.trim(), m=$('bdStMsg'), on=!guest&&$('bdStOn').checked;
+    if(!bg){ m.className='bdMsg bad'; m.textContent=tx('রক্তের গ্রুপ বেছে নিন','Select your blood group'); return; }
+    if(!phOk(ph)){ m.className='bdMsg bad'; m.textContent=tx('সঠিক মোবাইল নম্বর দিন','Enter a valid mobile number'); return; }
+    saveFields(bg,ph,on,$('bdStPub').checked); m.className='bdMsg ok'; m.textContent=tx('সংরক্ষিত হয়েছে ✓','Saved ✓'); setTimeout(renderSettings,900);
+  };
+}
+
+/* ---------- Signup form hooks ---------- */
+function signupInit(){
+  var host=$('lgUpOnly'); if(!host||$('lgBg')) return;
+  var d=document.createElement('div'); d.className='bdLg';
+  d.innerHTML='<div class="bdLgT">'+tx('রক্তের গ্রুপ','Blood group')+' <em>*</em></div>'+chipsHtml('','lgBg')+'<input type="tel" inputmode="tel" class="lgIn lgInName" id="lgPhone" placeholder="'+tx('মোবাইল নম্বর (01XXXXXXXXX)','Mobile number (01XXXXXXXXX)')+'" autocomplete="tel"><label class="bdLgChk"><input type="checkbox" id="lgBdOn"><span>'+tx('আমি রক্ত দিতে ইচ্ছুক — জরুরি প্রয়োজনে অন্যরা আমাকে খুঁজে পাবে','I am willing to donate blood — others can find me in an emergency')+'</span></label>';
+  host.appendChild(d); bindChips('lgBg');
+}
+function lgGet(){ return {bg:chipVal('lgBg'),ph:(($('lgPhone')||{}).value||'').trim(),on:!!($('lgBdOn')&&$('lgBdOn').checked)}; }
+function lgCheck(){ var v=lgGet(); if(!v.bg) return tx('রক্তের গ্রুপ বেছে নিন','Select your blood group'); if(!phOk(v.ph)) return tx('সঠিক মোবাইল নম্বর দিন','Enter a valid mobile number'); return ''; }
+function lgSave(){ var v=lgGet(); if(v.bg&&phOk(v.ph)){ lset(K.bg,v.bg); lset(K.ph,v.ph); lset(K.on,v.on?'1':'0'); if(!ls(K.pub)) lset(K.pub,'0'); setTimeout(function(){ pub(true); },2500); } }
+
+/* ---------- Home banner + repeated reminders ---------- */
+function appReady(){ return ls('loginDone_v1')==='true'; }
+function ensureBanner(){
+  var d=$('sec-dash'), old=$('bdBanner');
+  if(!d||complete()||!appReady()){ if(old) old.remove(); return; }
+  if(old&&old.parentNode===d) return; if(old) old.remove();
+  var b=document.createElement('div'); b.id='bdBanner'; b.className='bdBan';
+  b.innerHTML='<span class="ic">'+DROP+'</span><div><b>'+tx('রক্তের গ্রুপ ও ফোন নম্বর যোগ করুন','Add your blood group & phone')+'</b><small>'+tx('জরুরি সময়ে মানুষ আপনাকে খুঁজে পাবে — মাত্র ১ মিনিট','People can reach you in emergencies — takes a minute')+'</small></div><span class="go">›</span>';
+  b.onclick=openSheet; d.insertBefore(b,d.firstChild);
+}
+function remind(){
+  if(!appReady()||complete()) return;
+  if($('bdSheetOv')&&$('bdSheetOv').classList.contains('on')) return;
+  var last=+ls(K.rem)||0; if(Date.now()-last<25*60*1000) return;
+  openSheet(); lset(K.rem,String(Date.now()));
+}
+
+/* ---------- public API ---------- */
+window.ftBlood={open:openEmg,close:closeEmg,sheet:openSheet,lgCheck:lgCheck,lgSave:lgSave,lgGet:lgGet,publish:function(){return pub(true);},complete:complete};
+window.ftBloodOpen=function(){ openEmg(''); };
+try{ if(typeof BACKUP_KEYS!=='undefined'){ [K.bg,K.on,K.pub].forEach(function(k){ if(BACKUP_KEYS.indexOf(k)<0) BACKUP_KEYS.push(k); }); } }catch(e){}
+
+function boot(){
+  signupInit(); renderSettings(); ensureBanner(); inject();
+  setInterval(function(){ signupInit(); renderSettings(); ensureBanner(); },2500);
+  setInterval(function(){ if(ses()) pub(false); },90000);
+  setTimeout(function(){ if(ses()) pub(true); },4500);
+  setTimeout(remind,6000); setInterval(remind,5*60*1000);
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden) setTimeout(remind,1500); });
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+})();
+</script>
 </body>
 </html>
