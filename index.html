@@ -1367,8 +1367,10 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   var liveT=0;
   function live(st,m){
     var e=$('ftLive'); if(!e){ e=document.createElement('div'); e.id='ftLive'; e.setAttribute('role','status'); e.innerHTML='<i></i><span></span>'; e.onclick=function(){ if(e.dataset.s==='err'||e.dataset.s==='off'){ try{ sync(true); }catch(x){} } }; document.body.appendChild(e); }
-    e.dataset.s=st; e.lastChild.textContent=m; e.classList.add('on'); clearTimeout(liveT);
-    if(st==='ok') liveT=setTimeout(function(){ e.classList.remove('on'); },2600);
+    e.dataset.s=st; e.lastChild.textContent=m; clearTimeout(liveT);
+    /* শুধু সিঙ্ক ব্যর্থ হলে দেখাবে; সেভ/আপলোড/সফল/অফলাইন নোটিফিকেশন ব্যাকগ্রাউন্ডে চলবে, দেখাবে না */
+    if(st!=='err'){ e.classList.remove('on'); return; }
+    e.classList.add('on'); liveT=setTimeout(function(){ e.classList.remove('on'); },8000);
   }
   function liveOk(){ var t=timeStr(); live('ok',tx('সিঙ্ক হয়েছে','Synced')+(t?' · '+t:'')); }
   function doneMsg(){ if(ses()&&isDeadNow()){ status(errMsg('TOKEN_EXPIRED'),true); return; } var t=timeStr(); status(tx('সিঙ্ক হয়েছে','Synced')+(t?' · '+t:'')); }
@@ -9901,7 +9903,7 @@ function adv(){
     +'<div class="advRingC"><b style="color:'+dcol+'">'+fmt(spT)+'</b><small>'+Lg('আজ খরচ','spent today')+'</small></div></div>'
     +'<div class="advTopR"><div class="lbl">'+Lg('আজকের সীমা','Today\'s limit')+'</div><div class="big" style="color:'+dcol+'">'+fmt(liveLim)+'</div>'
     +'<div class="sp">'+Lg('দিনের শুরুতে সীমা ছিল','Limit at start of day')+' <b>'+fmt(perLeft)+'</b></div>'
-    +'<div class="sp">'+Lg('আজ খরচ','Spent')+' <b>'+fmt(spT)+'</b> · '+Math.round(usedPct)+'%</div>'
+    +'<div class="sp">'+Lg('আজ খরচ','Spent')+' <b>'+fmt(spT)+'</b> · '+Math.round(perLeft>0?spT/perLeft*100:(spT>0?100:0))+'%</div>'
     +(resv>0?'<div class="sp">'+Lg('নিয়মিত খরচের জন্য রাখা','Reserved for recurring')+' <b>'+fmt(resv)+'</b></div>':'')+'</div></div>'
     +'<div class="advTri"><div><small>'+Lg('গতকাল','Yesterday')+'</small><b>'+(yLimit==null?'—':fmt(yLimit))+'</b><em style="color:var(--muted)">'+Lg('সীমা ছিল','limit')+'</em></div>'
     +'<div class="now"><small>'+Lg('আজ','Today')+'</small><b style="color:'+dcol+'">'+fmt(liveLim)+'</b>'+dlt(dY)+'</div>'
@@ -10305,7 +10307,8 @@ K(28,'save',100,14,1,1,170,3,'১৪ দিন · রোজ {a}','14 days · {a}
 K(29,'log',0,14,1,1,90,2,'১৪ দিন হিসাব লেখা','14-Day Tracking Streak','১৪ দিনের মধ্যে ১৩ দিন অন্তত একটা লেনদেন লিখুন।','Log at least one entry on 13 of 14 days.'),
 K(30,'save',0,30,1,2,400,4,'৩০ দিন · বাজেটের অর্ধেক সঞ্চয়','30 days · save half the budget','৩০ দিনের মধ্যে ২৮ দিন ডেইলি লিমিটের অর্ধেক ({a}) জমান।','Save half your daily limit ({a}) on 28 of 30 days.',{dl:.5,nk:['সঞ্চয়ের সম্রাট','Saving Emperor']}),
 K(31,'under',0,30,1,2,350,4,'৩০ দিন বাজেটের মধ্যে','30 days within budget','৩০ দিনের মধ্যে ২৮ দিন খরচ ডেইলি লিমিট {a}-এর মধ্যে রাখুন।','Stay within {a} on 28 of 30 days.',{dl:1}),
-K(32,'log',0,30,1,2,200,3,'৩০ দিন হিসাব লেখা','30-Day Tracking Master','৩০ দিনের মধ্যে ২৮ দিন অন্তত একটা লেনদেন লিখুন।','Log at least one entry on 28 of 30 days.')
+K(32,'log',0,30,1,2,200,3,'৩০ দিন হিসাব লেখা','30-Day Tracking Master','৩০ দিনের মধ্যে ২৮ দিন অন্তত একটা লেনদেন লিখুন।','Log at least one entry on 28 of 30 days.'),
+K(33,'cnt',100,1,30,0,300,3,'মাসে {a}+ লেনদেন','{a}+ transactions in a month','৩০ দিনের মধ্যে কমপক্ষে {a}টি লেনদেন লিখুন — জিতলে ৩০০ পয়েন্ট!','Log at least {a} transactions within 30 days — win 300 points!',{nk:['হিসাবের রাজা','Ledger King']})
 ];
 const PRE={1:[7,15,30,60],7:[2,4,8,12],30:[1,3,6,12]};
 let view='all', filt=0, form=false, draft={bd:1,n:7,amt:''}, queue=[], showing=false;
