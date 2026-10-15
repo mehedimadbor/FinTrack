@@ -1394,11 +1394,14 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     if(/WEAK_PASSWORD/.test(m)) return tx('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের দিন','Password must be at least 6 characters');
     if(/TOO_MANY/.test(m)) return tx('অনেকবার চেষ্টা হয়েছে, কিছুক্ষণ পর আবার চেষ্টা করুন','Too many attempts, try again later');
     if(/OPERATION_NOT_ALLOWED/.test(m)) return tx('Firebase এ Email/Password লগইন চালু করা নেই','Email/Password sign-in is not enabled in Firebase');
+    if(/VERIFY_FAILED/.test(m)) return tx('ক্লাউডে সেভ নিশ্চিত হয়নি','Could not confirm the cloud save');
+    if(/HTTP 413/.test(m)) return tx('ডেটা অনেক বড় (ছবি ছোট করুন)','Data too large (use a smaller photo)');
+    if(/HTTP 5\d\d/.test(m)) return tx('সার্ভারে সাময়িক সমস্যা','Temporary server problem');
     if(/Permission|401|403/.test(m)) return tx('ডাটাবেস রুলস অনুমতি দিচ্ছে না','Database rules denied access');
     if(/abort|Failed to fetch|NetworkError/i.test(m)) return tx('ইন্টারনেট সংযোগ নেই','No internet connection');
     return tx('সমস্যা হয়েছে: ','Error: ')+m;
   }
-  async function call(url,opt){ var c=new AbortController(), t=setTimeout(function(){c.abort()},15000); try{ opt=opt||{}; opt.signal=c.signal; return await fetch(url,opt); } finally{ clearTimeout(t); } }
+  async function call(url,opt){ var c=new AbortController(), t=setTimeout(function(){c.abort()},(opt&&opt.method&&opt.method!=='GET')?60000:25000); try{ opt=opt||{}; opt.signal=c.signal; return await fetch(url,opt); } finally{ clearTimeout(t); } }
   async function authReq(ep,body){
     var r=await call('https://identitytoolkit.googleapis.com/v1/accounts:'+ep+'?key='+encodeURIComponent(CFG.apiKey),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     var j=await r.json(); if(!r.ok) throw new Error((j.error&&j.error.message)||('HTTP '+r.status)); return j;
@@ -1476,7 +1479,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     var c0=chg, ts=Date.now(), snap=snapshot();
     try{ var pr=+LS.getItem(CNTK)||0, nn=cntRaw(); if(pr>=5&&nn<pr*0.5){ var cu=await dbGet('backup'); if(cu&&cu.data) await hPut('pre'+Date.now(),{at:Date.now(),n:pr,data:cu.data}); } }catch(e){}
     await withAuth(async function(){ var rr=await call(await dbUrl('backup'),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:snap,updatedAt:ts})}); if(!rr.ok) throw new Error('HTTP '+rr.status); return rr; });
-    var vf=await dbGet('backup/updatedAt'); if(vf!==ts) throw new Error('VERIFY_FAILED');   /* confirm the cloud really holds this version */
+    var vf=await dbGet('backup/updatedAt'); if(vf!==ts){ await new Promise(function(r){ setTimeout(r,900); }); vf=await dbGet('backup/updatedAt'); } if(vf!==ts) throw new Error('VERIFY_FAILED');   /* confirm the cloud really holds this version */
     _set.call(LS,BASE,String(ts)); _set.call(LS,LAST,String(Date.now())); _set.call(LS,PUSHK,String(Date.now())); saveBase(snap.moneyAppData_v1);
     if(chg===c0) _set.call(LS,DIRTY,'0'); else { _set.call(LS,DIRTY,'1'); again=true; }   /* something changed while uploading -> upload again */
     _set.call(LS,CNTK,String(cntRaw()));
@@ -1551,7 +1554,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
       else if(!dirty){ var full=await dbGet('backup'); try{ keepPrev(); }catch(x){} if(applyRemote(full)) return; }
       else { var f2=await dbGet('backup'); if(mergeRemote(f2)){ await push(); setTimeout(function(){ location.reload(); },300); return; } await push(); }
       try{ _rem.call(LS,DEADK); }catch(x){} dead=false; retryN=0; _set.call(LS,CHKK,String(Date.now())); doneMsg(); if(LS.getItem(DIRTY)!=='1') liveOk();
-    }catch(e){ status(errMsg(e),true); live(navigator.onLine?'err':'off',navigator.onLine?tx('সিঙ্ক হয়নি — আবার চেষ্টা হচ্ছে (ট্যাপ করুন)','Sync failed — retrying (tap to retry)'):tx('অফলাইন — নেট এলে অটো সিঙ্ক হবে','Offline — will sync when online')); if(!isDead(e)) retrySoon(); if(isDead(e)){ dead=true; try{ _set.call(LS,DEADK,'1'); }catch(x){} if(manual) askedRe=false; askRelogin(); } }
+    }catch(e){ status(errMsg(e),true); live(navigator.onLine?'err':'off',navigator.onLine?tx('সিঙ্ক হয়নি: ','Sync failed: ')+errMsg(e)+tx(' (ট্যাপ করুন)',' (tap to retry)'):tx('অফলাইন — নেট এলে অটো সিঙ্ক হবে','Offline — will sync when online')); if(!isDead(e)) retrySoon(); if(isDead(e)){ dead=true; try{ _set.call(LS,DEADK,'1'); }catch(x){} if(manual) askedRe=false; askRelogin(); } }
     finally{ busy=false; try{ bkRefresh(); }catch(x){} if(again){ again=false; setTimeout(function(){ if(ses()&&auto()&&navigator.onLine) sync(); },700); } }
   }
   async function firstSync(){
@@ -9895,7 +9898,7 @@ function adv(){
   const C=2*Math.PI*40, off=C*(1-Math.min(100,usedPct)/100);
   const daily='<div class="advDaily" style="--ac:'+dcol+'"><div class="advDH">'+ic('gauge')+' '+Lg('আজ কত খরচ করতে পারবেন','How much you can spend today')+'<span class="advChip">'+Lg(dl+' দিন বাকি · মাস '+dim+' দিনের',dl+' days left · '+dim+'-day month')+'</span></div>'
     +'<div class="advTop"><div class="advRing"><svg viewBox="0 0 100 100"><circle class="tr" cx="50" cy="50" r="40"/><circle class="fg" cx="50" cy="50" r="40" stroke="'+dcol+'" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'"/></svg>'
-    +'<div class="advRingC"><b style="color:'+dcol+'">'+(remT<0?'−':'')+fmt(Math.abs(remT))+'</b><small>'+(remT<0?Lg('বেশি খরচ','over'):Lg('আজ বাকি','left'))+'</small></div></div>'
+    +'<div class="advRingC"><b style="color:'+dcol+'">'+fmt(spT)+'</b><small>'+Lg('আজ খরচ','spent today')+'</small></div></div>'
     +'<div class="advTopR"><div class="lbl">'+Lg('আজকের সীমা','Today\'s limit')+'</div><div class="big" style="color:'+dcol+'">'+fmt(liveLim)+'</div>'
     +'<div class="sp">'+Lg('দিনের শুরুতে সীমা ছিল','Limit at start of day')+' <b>'+fmt(perLeft)+'</b></div>'
     +'<div class="sp">'+Lg('আজ খরচ','Spent')+' <b>'+fmt(spT)+'</b> · '+Math.round(usedPct)+'%</div>'
@@ -10523,7 +10526,7 @@ function rankView(){
     const m=rows[myI], l=lv(m.xp), up=myI>0?rows[myI-1]:null, dn=myI<rows.length-1?rows[myI+1]:null;
     const gap=up?(up.xp-m.xp):0;
     const msg=!up?L('আপনি এখন সবার শীর্ষে','You are on top right now'):L('পরের জনকে ছাড়াতে আর '+nb(gap+1)+' পয়েন্ট দরকার','Need '+nb(gap+1)+' more pts to pass the next player');
-    h+=`<div class="lbMe"><div class="lbMeNo">#${nb(myI+1)}<small>${L('আপনার র‍্যাঙ্ক','Your rank')}</small></div><div class="lbMeMid"><b>${nb(m.xp)} ${L('পয়েন্ট','pts')}</b><small>${esc(l.name)} · ${msg}</small>${dn?`<small>${L('পেছনে আছেন','Behind you')}: ${nb(m.xp-dn.xp)} ${L('পয়েন্ট ব্যবধানে','pts gap')}</small>`:''}</div>${mvH(m)}</div>`;
+    h+=`<div class="lbMe"><div class="lbMeNo">#${nb(myI+1)}<small>${L('আপনার র‍্যাঙ্ক','Your rank')}</small></div><div class="lbMeMid"><b>${nb(m.xp)} ${L('পয়েন্ট','pts')}</b><small>${esc(l.name)} · ${msg}</small>${dn?`<small>${L('পরের জন আছেন','Next player is')} ${nb(m.xp-dn.xp)} ${L('পয়েন্ট পেছনে','pts behind')}</small>`:''}</div>${mvH(m)}</div>`;
   } else if(hid){
     h+=`<div class="lbMe off"><div class="lbMeMid"><b>${L('আপনি র‍্যাঙ্কিং থেকে লুকানো আছেন','You are hidden from the ranking')}</b><small>${L('চ্যালেঞ্জ চলবে, পয়েন্টও জমবে — শুধু তালিকায় আপনার আইডি দেখা যাবে না।','Your challenges and points continue — your ID just stays off the list.')}</small></div></div>`;
   } else if(!pl){
