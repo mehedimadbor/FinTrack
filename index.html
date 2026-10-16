@@ -10105,7 +10105,7 @@ var sec=document.getElementById('sec-settings'); if(!sec) return;
 var bl=function(b,e){ return '<span class="bn">'+b+'</span><span class="en">'+e+'</span>'; };
 var CATS=[
  ['look','চেহারা ও ভাষা','Appearance & language',['settings_theme','settings_lang','settings_logo']],
- ['acct','অ্যাকাউন্ট ও প্রোফাইল','Account & profile',['settings_profile','bdSetBox','inviteBox','accountBox']],
+ ['acct','অ্যাকাউন্ট ও প্রোফাইল','Account & profile',['settings_profile','accountBox','bdSetBox','inviteBox']],
  ['money','অর্থ ও বাজেট','Money & budget',['settings_budget','settings_goal','spSetBox','settings_recurring','payBox']],
  ['remind','রিমাইন্ডার ও নোটিফিকেশন','Reminders & notifications',['rmBox','ntSetBox','ntBox']],
  ['secu','নিরাপত্তা ও লক','Security & lock',['lock_heading','pin_heading','secPlusBox']],
@@ -11258,12 +11258,11 @@ function build(force){
     if(!open){ html+=pend+'<div class="ftGc">'; pend=''; open=true; }
     const c=chipOf(n), s=subOf(n);
     html+='<div class="ftRow" data-k="'+esc(kOf(n))+'"><span class="setIco" style="--c:'+c.c+'">'+c.i+'</span><div class="ftRt"><b>'+titleHtml(n)+'</b>'+(s?'<span class="s">'+esc(s)+'</span>':'')+'</div>'+CHEV+'</div>';
-    if(kOf(n)==='settings_profile') html+='<div class="ftRow ftOut" data-act="logout" role="button" tabindex="0"><span class="setIco" style="--c:#ef4444"><i class="mi" style="--m:var(--ic-power)"></i></span><div class="ftRt"><b>'+L('লগআউট','Logout')+'</b><span class="s">'+L('অ্যাকাউন্ট থেকে সাইন আউট','Sign out of your account')+'</span></div>'+CHEV+'</div>';
   });
   close();
   $('ftGroups').innerHTML=html; $('ftBkSlot').innerHTML=bkCard(); try{ if(window.ftCloud) ftCloud.refresh(); }catch(e){}
 }
-function onList(e){ const b=e.target.closest('.ftBan'); if(b){ window.ftSetOpen('settings_profile'); return; } const r=e.target.closest('.ftRow'); if(!r) return; if(r.dataset.act==='logout'){ if(window.ftCloud&&ftCloud.accountLogout) ftCloud.accountLogout(); return; } window.ftSetOpen(r.dataset.k); }
+function onList(e){ const b=e.target.closest('.ftBan'); if(b){ window.ftSetOpen('settings_profile'); return; } const r=e.target.closest('.ftRow'); if(r) window.ftSetOpen(r.dataset.k); }
 function ensureBar(){
   let bar=$('ftDetBar'); if(bar) return bar;
   bar=document.createElement('div'); bar.id='ftDetBar'; bar.innerHTML='<button type="button" aria-label="back"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></button><div class="t"></div>';
@@ -12781,7 +12780,7 @@ details.psMv>.setBody{padding:6px 2px 4px!important;}
 var $=function(i){return document.getElementById(i);}, bn=function(){try{return currentLang==='bn';}catch(e){return true;}}, L=function(b,e){return bn()?b:e;};
 var g=function(k){try{return localStorage.getItem(k)||'';}catch(e){return '';}};
 var P=[['me','প্রোফাইল','Profile','user'],['login','লগইন ও যোগাযোগ','Login & contact','key'],['soc','সোশ্যাল ও প্রাইভেসি','Social & privacy','shield'],['acct','অ্যাকাউন্ট','Account','settings']];
-var KEY={settings_profile:'me',inviteBox:'acct',cloudSyncBox:'acct',accountBox:'acct'};
+var KEY={settings_profile:'me',inviteBox:'acct',cloudSyncBox:'acct'};
 var OK=/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/, sig='';
 var mi=function(n){return '<i class="mi" style="--m:var(--ic-'+n+')"></i>';};
 function det(){ var h=document.querySelector('#sec-settings details.setBox h3[data-i18n="settings_profile"]'); return h?h.closest('details'):null; }
@@ -12822,7 +12821,7 @@ function pass(){
   if(st) put('me',st); else miss++;
   if(pn&&pn.closest('.pfCard')) put('login',pn.closest('.pfCard')); else miss++;
   if(ps) put('soc',ps); else miss++;
-  ['inviteBox','cloudSyncBox','accountBox'].forEach(function(k){ var e=$(k); if(!e){ miss++; return; } if(e.tagName==='DETAILS'){ e.classList.add('psMv'); e.open=true; } put('acct',e); });
+  ['inviteBox','cloudSyncBox'].forEach(function(k){ var e=$(k); if(!e){ miss++; return; } if(e.tagName==='DETAILS'){ e.classList.add('psMv'); e.open=true; } put('acct',e); });
   return miss===0;
 }
 var n=0; (function tick(){ var ok=false; try{ ok=pass(); }catch(e){} if(!ok&&n++<40) setTimeout(tick,500); })();
@@ -13398,7 +13397,6 @@ html body .heroDots{position:relative;z-index:2;}
 .ppRow .ppBd i{width:6px;height:6px;border-radius:50%;background:#16a34a}.ppRow .ppBd.off i{background:#94a3b8}
 .ppRow .ppFr{padding:2px 8px;border-radius:99px;background:color-mix(in srgb,#2563eb 13%,transparent);color:#3b82f6;font-weight:700;font-size:10.5px}
 </style>
-<style id="ftLogoutRowCss">.ftRow.ftOut{cursor:pointer}.ftRow.ftOut .ftRt b{color:var(--red,#ef4444)}</style>
 <script id="ftBloodJs">
 /* ===== Blood donors & Emergency help ===== */
 (function(){
