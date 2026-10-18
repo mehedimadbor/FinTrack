@@ -1093,6 +1093,75 @@ html body #sec-friends .frReqB .frB:not(.y){background:color-mix(in srgb,#ef4444
 html body #sec-friends .frRow{border-radius:18px;}
 html body #sec-friends .frAv{border-radius:16px;background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 18%,var(--bg)),var(--bg));}
 </style>
+
+<style id="ntsCss">
+#bottomNav .bnbtn{flex:1 1 0;min-width:0}
+#bottomNav .bnbtn.fab{flex:0 0 58px}
+#bottomNav .bnbtn .lbl{font-size:9.5px}
+#sec-notes{position:fixed;inset:0;z-index:99980;background:var(--bg);display:none;flex-direction:column;padding-top:env(safe-area-inset-top,0)}
+#sec-notes.on{display:flex;animation:nsIn .22s ease}
+@keyframes nsIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+.nsHd{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--grad,var(--primary));color:#fff;flex:none}
+.nsHd button{width:38px;height:38px;border-radius:13px;border:0;background:rgba(255,255,255,.2);color:#fff;font-size:20px;cursor:pointer;flex:none}
+.nsHd b{display:block;font-size:17px}.nsHd small{opacity:.85;font-size:12px}
+.nsBody{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:14px 16px calc(28px + env(safe-area-inset-bottom,0px))}
+.nsTop{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.nsSearch{flex:1;display:flex;align-items:center;gap:10px;height:46px;padding:0 16px;border-radius:26px;border:1.5px solid var(--border);background:var(--card)}
+.nsSearch svg,.nsIc svg{width:20px;height:20px;stroke:var(--muted,#888);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nsSearch input{flex:1;border:0;outline:0;background:transparent;color:var(--text);font-size:15px;min-width:0}
+.nsIc{width:40px;height:46px;border:0;background:transparent;display:grid;place-items:center;cursor:pointer}
+.nsSeg{display:flex;gap:6px;padding:4px;border-radius:22px;background:color-mix(in srgb,var(--primary) 10%,transparent);margin-bottom:16px}
+.nsSeg button{flex:1;border:0;padding:9px;border-radius:18px;background:transparent;color:var(--text);font-weight:700;font-size:14px;cursor:pointer}
+.nsSeg button.on{background:var(--primary);color:#fff}
+.nsH{display:flex;align-items:center;gap:6px;margin:6px 4px 12px;font-size:19px;font-weight:800;color:var(--text)}
+.nsCols{display:flex;gap:12px;overflow-x:auto;padding-bottom:10px;margin-bottom:8px}
+.nsCol{flex:0 0 150px;height:112px;border-radius:22px;padding:12px;display:flex;flex-direction:column;justify-content:space-between;color:#1b1633;cursor:pointer;position:relative}
+.nsCol b{font-size:14px}.nsCol i{font-style:normal;width:22px;height:22px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:11px;font-weight:800}
+.nsCol.all{background:transparent;border:1.5px dashed var(--border);color:var(--text);align-items:center;justify-content:center;font-weight:700}
+.nsGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.nsCard{border:2px solid var(--border);border-radius:22px;padding:16px 14px;min-height:118px;display:flex;flex-direction:column;gap:6px;background:transparent;color:var(--text);cursor:pointer;overflow:hidden;position:relative}
+.nsCard b{font-size:15px}.nsCard p{margin:0;font-size:13px;line-height:1.35;opacity:.85;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap;word-break:break-word}
+.nsCard small{margin-top:auto;font-weight:700;opacity:.55;font-size:12px}
+.nsCard.pin::after{content:"📌";position:absolute;top:8px;right:10px;font-size:12px}
+.nsTask{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1.5px solid var(--border);border-radius:18px;margin-bottom:10px}
+.nsTask input{width:22px;height:22px;accent-color:var(--primary);flex:none}
+.nsTask span{flex:1;font-size:15px;word-break:break-word}.nsTask.done span{text-decoration:line-through;opacity:.5}
+.nsTask button{border:0;background:transparent;color:#ef4444;font-size:20px;cursor:pointer}
+.nsTaskAdd{display:flex;gap:8px;margin-bottom:14px}
+.nsTaskAdd input{flex:1;height:46px;border-radius:24px;border:1.5px solid var(--border);background:var(--card);color:var(--text);padding:0 16px;font-size:15px}
+.nsTaskAdd button{border:0;border-radius:24px;padding:0 20px;background:var(--primary);color:#fff;font-weight:700}
+.nsEmpty{text-align:center;opacity:.6;padding:34px 10px;font-size:14px}
+#nsSheet{position:fixed;inset:0;z-index:99990;background:rgba(0,0,0,.55);display:none;align-items:flex-end}
+#nsSheet.show{display:flex}
+#nsSheet .in{width:100%;max-height:92vh;overflow:auto;background:var(--bg);border-radius:26px 26px 0 0;padding:18px 18px 28px;display:flex;flex-direction:column;gap:12px}
+#nsSheet input,#nsSheet textarea{width:100%;box-sizing:border-box;border:1.5px solid var(--border);background:var(--card);color:var(--text);border-radius:16px;padding:12px 14px;font-size:15px;font-family:inherit}
+#nsSheet textarea{min-height:180px;resize:vertical}
+#nsSheet .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.nsDot{width:28px;height:28px;border-radius:50%;border:3px solid transparent;cursor:pointer}.nsDot.on{border-color:var(--text)}
+#nsSheet .btn{border:0;border-radius:18px;padding:12px 18px;font-weight:800;font-size:14px;cursor:pointer}
+.nsPrim{background:var(--primary);color:#fff;flex:1}.nsGhost{background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--text)}.nsDel{background:#ef444422;color:#ef4444}
+
+.nsFt{display:flex;align-items:center;justify-content:space-between;margin-top:auto}
+.nsFt small{margin-top:0!important}
+.nsClk{border:0;background:color-mix(in srgb,var(--text) 8%,transparent);border-radius:50%;width:32px;height:32px;font-size:16px;line-height:1;cursor:pointer;display:grid;place-items:center;flex:none;filter:grayscale(1);opacity:.7;color:inherit!important}
+.nsClk.on{filter:none;opacity:1;background:color-mix(in srgb,var(--primary) 18%,transparent)}
+.nsRt{display:block;font-style:normal;font-size:12px;font-weight:700;color:var(--primary);margin-top:3px}
+.nsCard .nsRt{margin:0}
+#nsRem{position:fixed;inset:0;z-index:99995;background:rgba(0,0,0,.55);display:none;align-items:flex-end}
+#nsRem.show{display:flex}
+#nsRem .in{width:100%;background:var(--bg);color:var(--text);border-radius:26px 26px 0 0;padding:20px 18px calc(24px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px}
+#nsRem h4{margin:0;font-size:17px}
+#nsRem input[type=datetime-local]{width:100%;box-sizing:border-box;height:48px;border:1.5px solid var(--border);background:var(--card);color:var(--text);border-radius:16px;padding:0 14px;font-size:15px}
+#nsRem .row{display:flex;gap:8px;flex-wrap:wrap}
+#nsRem .ch{border:0;border-radius:18px;padding:9px 14px;font-weight:700;font-size:13px;background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--text);cursor:pointer}
+#nsRem .btn{border:0;border-radius:18px;padding:12px 18px;font-weight:800;font-size:14px;cursor:pointer}
+#nsRemErr{color:#ef4444;font-size:13px;min-height:16px}
+#nsToast{position:fixed;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top,0px));z-index:99999;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.nsTo{pointer-events:auto;background:var(--card);color:var(--text);border:1.5px solid var(--primary);border-radius:20px;padding:14px;box-shadow:0 14px 34px rgba(0,0,0,.3);animation:nsIn .25s ease}
+.nsTo b{display:block;font-size:14px;color:var(--primary)}.nsTo p{margin:4px 0 10px;font-size:15px;word-break:break-word}
+.nsTo .row{display:flex;gap:8px}.nsTo button{border:0;border-radius:14px;padding:9px 14px;font-weight:700;font-size:13px;cursor:pointer;background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--text)}
+.nsTo button.p{background:var(--primary);color:#fff}
+</style>
 </head>
 <body>
 <style id="rsStyle">
@@ -2833,6 +2902,34 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   </div>
 </div>
 
+
+<div id="sec-notes" role="dialog" aria-label="Notes">
+  <div class="nsHd"><button type="button" onclick="NS.closePage()" aria-label="back">←</button><div><b>নোট ও টাস্ক</b><small>Notes &amp; tasks</small></div></div>
+  <div class="nsBody">
+  <div class="nsTop">
+    <div class="nsSearch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="nsQ" placeholder="নোট খুঁজুন / Search Notes" oninput="NS.render()"></div>
+    <button class="nsIc" onclick="NS.sort()" title="Sort"><svg viewBox="0 0 24 24"><path d="M4 7h16M7 12h10M10 17h4"/></svg></button>
+  </div>
+  <div class="nsSeg"><button id="nsTabN" class="on" onclick="NS.mode('n')">নোট</button><button id="nsTabT" onclick="NS.mode('t')">টাস্ক</button></div>
+  <div id="nsNotesView">
+    <div class="nsH">Collections</div>
+    <div class="nsCols" id="nsCols"></div>
+    <div class="nsH" id="nsNH">Notes<button onclick="NS.open(null)" style="margin-left:auto;border:0;border-radius:18px;padding:8px 14px;background:var(--primary);color:#fff;font-weight:800;font-size:13px;cursor:pointer">＋ নতুন নোট</button></div>
+    <div class="nsGrid" id="nsGrid"></div>
+  </div>
+  <div id="nsTasksView" style="display:none">
+    <div class="nsTaskAdd"><input id="nsTI" placeholder="নতুন টাস্ক লিখুন" onkeydown="if(event.key==='Enter')NS.addTask()"><button onclick="NS.addTask()">যোগ</button></div>
+    <div id="nsTList"></div>
+  </div>
+  </div>
+</div>
+<div id="nsSheet" onclick="if(event.target===this)NS.close()"><div class="in">
+  <input id="nsT" placeholder="Title / শিরোনাম">
+  <textarea id="nsB" placeholder="Write your note... / নোট লিখুন"></textarea>
+  <div class="row"><input id="nsC" list="nsCL" placeholder="Collection (যেমন: hisab)" style="flex:1"><datalist id="nsCL"></datalist></div>
+  <div class="row" id="nsColors"></div>
+  <div class="row"><button class="btn nsGhost" onclick="NS.pin()" id="nsPinB">📌 Pin</button><button class="btn nsDel" id="nsDelB" onclick="NS.del()">Delete</button><button class="btn nsPrim" onclick="NS.save()">Save</button></div>
+</div></div>
 </div>
 
 <nav class="bottomnav" id="bottomNav">
@@ -2865,7 +2962,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     <span class="dot"></span>
     <span class="lbl" data-i18n="bn_challenge">চ্যালেঞ্জ</span>
   </button>
-  <button class="bnbtn" data-bn="settings">
+    <button class="bnbtn" data-bn="settings">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     <span class="dot"></span>
     <span class="lbl" data-i18n="bn_profile">প্রোফাইল</span>
@@ -11287,7 +11384,7 @@ build(); [600,1500,3200,6500].forEach(ms=>setTimeout(()=>build(),ms));
 const TABS=[
  ['everyday','প্রতিদিন','Everyday',[['dash','হোম','Home','home','#6366f1'],['add','যোগ করুন','Add entry','plus','#10b981'],['tx','লেনদেন','Transactions','clipboard','#0ea5e9'],['hist','হিস্ট্রি','History','clock','#f59e0b'],['acc','একাউন্ট','Accounts','wallet','#14b8a6']]],
  ['money','অর্থ ও লক্ষ্য','Money & goals',[['loan','লোন','Loans','bank','#ef4444'],['challenge','চ্যালেঞ্জ','Challenges','svg:cg-trophy','#f59e0b'],['zakat','যাকাত','Zakat','coin','#22c55e']]],
- ['more','ইনসাইট ও আরও','Insights & more',[['report','রিপোর্ট','Reports','bars','#6366f1'],['chat','চ্যাট','Chat','bot','#8b5cf6'],['profile','প্রোফাইল','Profile','user','#ec4899'],['@search','ইউজার খুঁজুন','Find users','search','#0ea5e9'],['@blood','ইমারজেন্সি হেল্প','Emergency help','drop','#e11d48']]]
+ ['more','ইনসাইট ও আরও','Insights & more',[['report','রিপোর্ট','Reports','bars','#6366f1'],['chat','চ্যাট','Chat','bot','#8b5cf6'],['notes','নোট ও টাস্ক','Notes & tasks','clipboard','#a78bfa'],['profile','প্রোফাইল','Profile','user','#ec4899'],['@search','ইউজার খুঁজুন','Find users','search','#0ea5e9'],['@blood','ইমারজেন্সি হেল্প','Emergency help','drop','#e11d48']]]
 ];
 const icon=n=>n.indexOf('svg:')===0?'<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#'+n.slice(4)+'"/></svg>':'<i class="mi" style="--m:var(--ic-'+n+')"></i>';
 const cur=()=>{ const s=document.querySelector('.section.active'); return s?s.id.replace('sec-',''):''; };
@@ -13852,6 +13949,115 @@ function boot(){
   document.addEventListener('visibilitychange',function(){ if(!document.hidden) setTimeout(remind,1500); });
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+})();
+</script>
+
+<script id="ntsJs">
+(function(){ /* sec-notes landed inside the (hidden) settings section: re-parent it so it can show */
+ var w=document.querySelector('.wrap'),sn=document.getElementById('sec-notes'),sh=document.getElementById('nsSheet');
+ if(sn&&sn.parentElement!==document.body)document.body.appendChild(sn);
+ if(sh&&sh.parentElement!==document.body)document.body.appendChild(sh);
+})();
+const NS=(function(){
+const K='ft_notes_v1',COL=['#cdbdff','#ffd6a5','#b8f0c8','#ffc2d4','#a8dcff','#fff3a3'];
+let D;try{D=JSON.parse(localStorage.getItem(K))||{}}catch(e){D={}}
+if(!D||typeof D!=='object')D={};D.notes=Array.isArray(D.notes)?D.notes:[];D.tasks=Array.isArray(D.tasks)?D.tasks:[];D.cols=(D.cols&&typeof D.cols==='object')?D.cols:{};D.desc=!!D.desc;
+const okc=c=>/^#[0-9a-fA-F]{6}$/.test(c||'')?c:COL[0];
+let cur=null,view='n',colF=null,pinned=false,color=COL[0];
+const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(D))}catch(e){}};
+function when(t){const d=new Date(t),n=new Date(),dd=Math.floor((new Date(n.getFullYear(),n.getMonth(),n.getDate())-new Date(d.getFullYear(),d.getMonth(),d.getDate()))/864e5);
+ if(dd<=0)return'Today';if(dd===1)return'Yesterday';if(dd<7)return d.toLocaleDateString('en',{weekday:'long'});return d.toLocaleDateString('en',{weekday:'short',month:'short',day:'numeric'})}
+const fmtR=ms=>new Date(ms).toLocaleString('en',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+const loc=ms=>{const d=new Date(ms);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)};
+let remItem=null;
+function remHost(){let e=$('nsRem');if(e)return e;e=document.createElement('div');e.id='nsRem';
+ e.innerHTML='<div class="in"><h4>\u23f0 \u09b0\u09bf\u09ae\u09be\u0987\u09a8\u09cd\u09a1\u09be\u09b0 / Reminder</h4><div id="nsRemFor" style="opacity:.7;font-size:13px;word-break:break-word"></div><input type="datetime-local" id="nsRemAt"><div class="row"><button class="ch" data-q="10">+10 min</button><button class="ch" data-q="60">+1 hour</button><button class="ch" data-q="tm">Tomorrow 9:00</button></div><div id="nsRemErr"></div><div class="row"><button class="btn" id="nsRemDel" style="background:#ef444422;color:#ef4444">Remove</button><button class="btn" id="nsRemX" style="background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--text)">Cancel</button><button class="btn" id="nsRemOk" style="background:var(--primary);color:#fff;flex:1">Set reminder</button></div></div>';
+ document.body.appendChild(e);
+ e.addEventListener('click',function(ev){if(ev.target===e)remClose();const q=ev.target.getAttribute&&ev.target.getAttribute('data-q');
+  if(q){let t;if(q==='tm'){t=new Date();t.setDate(t.getDate()+1);t.setHours(9,0,0,0);t=t.getTime()}else t=Date.now()+(+q)*60000;$('nsRemAt').value=loc(t);$('nsRemErr').textContent=''}});
+ $('nsRemX').onclick=remClose;
+ $('nsRemDel').onclick=function(){if(remItem){delete remItem.r;delete remItem.rf;save();render()}remClose()};
+ $('nsRemOk').onclick=function(){const ms=new Date($('nsRemAt').value).getTime();
+  if(!ms){$('nsRemErr').textContent='\u09b8\u09ae\u09af\u09bc \u09ac\u09c7\u099b\u09c7 \u09a8\u09bf\u09a8 / Pick a date & time';return}
+  if(ms<=Date.now()+5000){$('nsRemErr').textContent='\u09ad\u09ac\u09bf\u09b7\u09cd\u09af\u09a4\u09c7\u09b0 \u09b8\u09ae\u09af\u09bc \u09a6\u09bf\u09a8 / Pick a future time';return}
+  remItem.r=ms;remItem.rf=0;save();
+  try{if('Notification' in window&&Notification.permission==='default')Notification.requestPermission()}catch(e){}
+  remClose();render();};
+ return e}
+function remOpen(k,id){remItem=(k==='n'?D.notes:D.tasks).find(x=>x.id===id);if(!remItem)return;
+ const e=remHost();$('nsRemFor').textContent=(k==='n'?(remItem.t||remItem.b):remItem.t).slice(0,80);
+ $('nsRemAt').value=loc(remItem.r&&remItem.r>Date.now()?remItem.r:Math.ceil((Date.now()+3600000)/300000)*300000);
+ $('nsRemErr').textContent='';$('nsRemDel').style.display=remItem.r?'':'none';e.classList.add('show')}
+function remClose(){const e=$('nsRem');if(e)e.classList.remove('show');remItem=null}
+function toastHost(){let e=$('nsToast');if(!e){e=document.createElement('div');e.id='nsToast';document.body.appendChild(e)}return e}
+function alarm(k,x){const title=k==='n'?(x.t||x.b||'Note'):x.t;
+ const d=document.createElement('div');d.className='nsTo';
+ d.innerHTML='<b>\u23f0 \u09b0\u09bf\u09ae\u09be\u0987\u09a8\u09cd\u09a1\u09be\u09b0 / Reminder</b><p>'+esc(String(title).slice(0,120))+'</p><div class="row"><button class="p" data-a="open">Open</button><button data-a="snz">Snooze 10m</button><button data-a="ok">Dismiss</button></div>';
+ d.addEventListener('click',function(ev){const a=ev.target.getAttribute&&ev.target.getAttribute('data-a');if(!a)return;
+  if(a==='snz'){x.r=Date.now()+600000;x.rf=0;save();render()}
+  if(a==='open'){NS.openPage();NS.mode(k==='n'?'n':'t')}
+  d.remove()});
+ toastHost().appendChild(d);
+ try{if(navigator.vibrate)navigator.vibrate([200,100,200])}catch(e){}
+ try{if('Notification' in window&&Notification.permission==='granted')new Notification('\u23f0 '+title,{body:'FinTrack reminder'})}catch(e){}}
+function tick(){const now=Date.now();let f=[];
+ D.notes.forEach(x=>{if(x.r&&!x.rf&&x.r<=now){x.rf=1;f.push(['n',x])}});
+ D.tasks.forEach(x=>{if(x.r&&!x.rf&&x.r<=now&&!x.d){x.rf=1;f.push(['t',x])}});
+ if(f.length){save();f.forEach(a=>alarm(a[0],a[1]));render()}}
+function render(){
+ const q=($('nsQ').value||'').toLowerCase();
+ const cn={};D.notes.forEach(n=>{if(n.col)cn[n.col]=(cn[n.col]||0)+1});
+ $('nsCols').innerHTML=(colF?'<div class="nsCol all" data-c="">✕ '+esc(colF)+'</div>':'')+Object.keys(cn).map(c=>'<div class="nsCol" style="background:'+okc(D.cols[c])+'" data-c="'+esc(c)+'"><i>'+cn[c]+'</i><b>'+esc(c)+'</b></div>').join('')||'<div class="nsEmpty" style="padding:8px">কোনো কালেকশন নেই</div>';
+ $('nsCL').innerHTML=Object.keys(cn).map(c=>'<option value="'+esc(c)+'">').join('');
+ let L=D.notes.filter(n=>(!colF||n.col===colF)&&(!q||(n.t+' '+n.b).toLowerCase().includes(q)));
+ L.sort((a,b)=>(b.pin?1:0)-(a.pin?1:0)||(D.desc?a.u-b.u:b.u-a.u));
+ $('nsGrid').innerHTML=L.map(n=>'<div class="nsCard'+(n.pin?' pin':'')+'" onclick="NS.open(\''+n.id+'\')"><b>'+esc(n.t||'Note')+'</b><p>'+esc(n.b)+'</p>'+(n.r?'<em class="nsRt">⏰ '+fmtR(n.r)+'</em>':'')+'<div class="nsFt"><small>'+when(n.u)+'</small><button class="nsClk'+(n.r&&!n.rf?' on':'')+'" data-rem="n:'+n.id+'" aria-label="Reminder">⏰</button></div></div>').join('')||'<div class="nsEmpty" style="grid-column:1/3">কোনো নোট নেই — নিচের + চাপ দিন</div>';
+ const T=D.tasks.filter(t=>!q||t.t.toLowerCase().includes(q));
+ $('nsTList').innerHTML=T.map(t=>'<div class="nsTask'+(t.d?' done':'')+'"><input type="checkbox" '+(t.d?'checked':'')+' onchange="NS.tog(\''+t.id+'\')"><span>'+esc(t.t)+(t.r?'<em class="nsRt">⏰ '+fmtR(t.r)+'</em>':'')+'</span><button class="nsClk'+(t.r&&!t.rf?' on':'')+'" data-rem="t:'+t.id+'" aria-label="Reminder">⏰</button><button onclick="NS.rmT(\''+t.id+'\')">×</button></div>').join('')||'<div class="nsEmpty">কোনো টাস্ক নেই</div>';
+}
+function open(id){cur=id?D.notes.find(n=>n.id===id):null;
+ $('nsT').value=cur?cur.t:'';$('nsB').value=cur?cur.b:'';$('nsC').value=cur?cur.col||'':colF||'';
+ pinned=cur?!!cur.pin:false;color=okc(cur&&cur.col&&D.cols[cur.col]);
+ $('nsDelB').style.display=cur?'':'none';paint();$('nsSheet').classList.add('show');}
+function paint(){$('nsPinB').textContent=pinned?'📌 Pinned':'📌 Pin';
+ $('nsColors').innerHTML='<span style="font-size:13px;opacity:.7">Colour:</span>'+COL.map(c=>'<span class="nsDot'+(c===color?' on':'')+'" style="background:'+c+'" onclick="NS.setC(\''+c+'\')"></span>').join('');}
+document.addEventListener('click',function(e){const el=e.target.closest&&e.target.closest('#nsCols .nsCol');if(el){const c=el.getAttribute('data-c');colF=c||null;render();}});
+document.addEventListener('keydown',function(e){if(e.key!=='Escape')return;if($('nsSheet').classList.contains('show'))NS.close();else if($('sec-notes').classList.contains('on'))NS.closePage();});
+function openPage(){const e=$('sec-notes');e.classList.add('on');document.documentElement.style.overflow='hidden';render();}
+function closePage(){const e=$('sec-notes');e.classList.remove('on');$('nsSheet').classList.remove('show');document.documentElement.style.overflow='';}
+document.addEventListener('click',function(e){const b=e.target.closest&&e.target.closest('[data-rem]');if(!b)return;
+ e.stopPropagation();e.preventDefault();const p=b.getAttribute('data-rem').split(':');remOpen(p[0],p[1]);},true);
+setInterval(tick,15000);setTimeout(tick,1500);
+document.addEventListener('visibilitychange',function(){if(!document.hidden)tick()});
+return{render,open,openPage,closePage,tick,
+ close(){$('nsSheet').classList.remove('show')},
+ pin(){pinned=!pinned;paint()},setC(c){color=c;paint()},
+ save(){const t=$('nsT').value.trim(),b=$('nsB').value.trim(),c=$('nsC').value.trim();
+  if(!t&&!b){this.close();return}
+  if(c)D.cols[c]=color;
+  if(cur){Object.assign(cur,{t,b,col:c,pin:pinned,u:Date.now()})}else D.notes.push({id:'n'+Date.now(),t,b,col:c,pin:pinned,u:Date.now()});
+  if(cur&&cur.col!==c){}
+  Object.keys(D.cols).forEach(k=>{if(!D.notes.some(n=>n.col===k))delete D.cols[k]});
+  save();this.close();render();},
+ del(){if(cur&&confirm('Delete this note?')){D.notes=D.notes.filter(n=>n!==cur);if(colF&&!D.notes.some(n=>n.col===colF))colF=null;Object.keys(D.cols).forEach(k=>{if(!D.notes.some(n=>n.col===k))delete D.cols[k]});save();this.close();render()}},
+ filter(c){colF=c;render()},sort(){D.desc=!D.desc;save();render()},
+ mode(m){view=m;$('nsNotesView').style.display=m==='n'?'':'none';$('nsTasksView').style.display=m==='t'?'':'none';
+  $('nsTabN').classList.toggle('on',m==='n');$('nsTabT').classList.toggle('on',m==='t');},
+ addTask(){const v=$('nsTI').value.trim();if(!v)return;D.tasks.unshift({id:'t'+Date.now(),t:v,d:0});$('nsTI').value='';save();render()},
+ tog(id){const t=D.tasks.find(x=>x.id===id);t.d=t.d?0:1;save();render()},
+ rmT(id){D.tasks=D.tasks.filter(x=>x.id!==id);save();render()},
+ add(){if(view==='t'){const i=$('nsTI');i.focus()}else open(null)},
+ get view(){return view}};
+})();
+(function(){
+ // + button on Notes tab opens new note/task; elsewhere keeps original behaviour
+ const _a=window.activateTab;
+ window.activateTab=function(name){ if(name==='notes'){ NS.openPage(); return; } if($('sec-notes')&&$('sec-notes').classList.contains('on'))NS.closePage(); return _a.apply(this,arguments); };
+ function $(i){return document.getElementById(i)}
+ document.querySelectorAll('.bnbtn').forEach(b=>{ if(b.dataset.bn==='add'){
+   b.addEventListener('click',e=>{ if(document.getElementById('sec-notes').classList.contains('active')){ e.stopImmediatePropagation(); e.preventDefault(); NS.add(); } },true);
+ }});
 })();
 </script>
 </body>
