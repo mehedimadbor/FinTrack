@@ -1161,6 +1161,7 @@ html body #sec-friends .frAv{border-radius:16px;background:linear-gradient(135de
 .nsTo b{display:block;font-size:14px;color:var(--primary)}.nsTo p{margin:4px 0 10px;font-size:15px;word-break:break-word}
 .nsTo .row{display:flex;gap:8px}.nsTo button{border:0;border-radius:14px;padding:9px 14px;font-weight:700;font-size:13px;cursor:pointer;background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--text)}
 .nsTo button.p{background:var(--primary);color:#fff}
+html.locked #sec-notes,html.locked #nsSheet,html.locked #nsRem,html.locked #nsToast{display:none!important}
 </style>
 </head>
 <body>
@@ -1397,13 +1398,16 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     try{ var r=await fetch(base()+'/stats/users.json?t='+Date.now(),{cache:'no-store',signal:tmo(7000)}); if(!r.ok) return;
       var n=await r.json(); if(typeof n==='number'&&n>0){ try{localStorage.setItem(KEY,String(n))}catch(x){} show(n,true); } }catch(x){}
   }
-  /* count this device once (on first login), then refresh the number */
-  window.ftCountUser=async function(){
+  /* count each NEW account id once (key 'acc:<uid>'), plus this device once on first plain login ('dev'); then refresh the number */
+  window.ftCountUser=async function(key){
     if(!base()) return;
-    var done=false; try{ done=localStorage.getItem('userCounted_v1')==='1'; }catch(x){}
-    if(!done && localStorage.getItem('loginDone_v1')==='true'){
+    key=key||'dev';
+    var list=[]; try{ list=JSON.parse(localStorage.getItem('userCountedIds_v1')||'[]'); if(!Array.isArray(list)) list=[]; }catch(x){ list=[]; }
+    try{ if(localStorage.getItem('userCounted_v1')==='1' && list.indexOf('dev')<0) list.push('dev'); }catch(x){}
+    var ok = key!=='dev' || localStorage.getItem('loginDone_v1')==='true';
+    if(ok && list.indexOf(key)<0){
       try{ var r=await fetch(base()+'/stats/users.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({'.sv':{increment:1}}),signal:tmo(8000)});
-        if(r.ok){ try{localStorage.setItem('userCounted_v1','1')}catch(x){} } }catch(x){}
+        if(r.ok){ list.push(key); try{ localStorage.setItem('userCountedIds_v1',JSON.stringify(list.slice(-200))); if(key==='dev') localStorage.setItem('userCounted_v1','1'); }catch(x){} } }catch(x){}
     }
     fetchCount();
   };
@@ -1691,7 +1695,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
         catch(e1){ if(/EMAIL_EXISTS/.test(String((e1&&e1.message)||e1))){ existed=true; j=await authReq('signInWithPassword',{email:em,password:pw,returnSecureToken:true}); } else throw e1; }
         idTok=j.idToken; idExp=Date.now()+(+j.expiresIn||3600)*1000;
         setSes({uid:j.localId,rt:j.refreshToken,email:j.email||em}); _set.call(LS,AUTO,'1');
-        var rem=null;
+        var rem=null; try{ if(!existed&&window.ftCountUser) window.ftCountUser('acc:'+j.localId); }catch(e){}
         if(existed){
           try{ rem=await dbGet('backup'); }catch(e2){ setSes(null); idTok=''; throw e2; }
           if(rem&&rem.data){ keepPrev(); toast(tx('আপনার ক্লাউড ডেটা ফিরিয়ে আনা হচ্ছে…','Restoring your cloud data…')); await syncUnOnLogin(rem,j.email||em,pw); applyLogin(rem); return; }
@@ -1843,7 +1847,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
           else throw e1;
         }
         idTok=j.idToken; idExp=Date.now()+(+j.expiresIn||3600)*1000;
-        setSes({uid:j.localId,rt:j.refreshToken,email:j.email||em}); _set.call(LS,AUTO,'1');
+        setSes({uid:j.localId,rt:j.refreshToken,email:j.email||em}); _set.call(LS,AUTO,'1'); try{ if(!existed&&window.ftCountUser) window.ftCountUser('acc:'+j.localId); }catch(e){}
         if(existed){
           var rem=null; try{ rem=await dbGet('backup'); }catch(e2){ setSes(null); idTok=''; throw e2; }
           if(rem&&rem.data){ keepPrev(); sh.busy=false; sheetClose(); toast(tx('আপনার ডেটা ফিরিয়ে আনা হচ্ছে…','Restoring your data…')); await syncUnOnLogin(rem,j.email||em,pw); applyLogin(rem); return; }
@@ -1939,7 +1943,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     var j=await authReq(kind==='up'?'signUp':'signInWithPassword',{email:em,password:pw,returnSecureToken:true});
     idTok=j.idToken; idExp=Date.now()+(+j.expiresIn||3600)*1000;
     setSes({uid:j.localId,rt:j.refreshToken,email:j.email||em});
-    if(kind==='up'){
+    if(kind==='up'){ try{ window.ftCountUser&&window.ftCountUser('acc:'+j.localId); }catch(e){}
       un=String(un||'').replace(/^@/,'');
       await claimNew(un,j.idToken,true);
       try{ LS.setItem('myUsername_v1',un); }catch(e){}
@@ -2056,7 +2060,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
       var j=await authReq('signInWithIdp',{postBody:'id_token='+encodeURIComponent(cred)+'&providerId=google.com',requestUri:/^https?:/.test(location.origin)?location.origin:'http://localhost',returnIdpCredential:true,returnSecureToken:true});
       if(j.needConfirmation||!j.idToken) throw new Error('GOOGLE_NEEDS_PASSWORD');
       idTok=j.idToken; idExp=Date.now()+(+j.expiresIn||3600)*1000;
-      setSes({uid:j.localId,rt:j.refreshToken,email:j.email||'',g:1});
+      setSes({uid:j.localId,rt:j.refreshToken,email:j.email||'',g:1}); try{ if(j.isNewUser&&window.ftCountUser) window.ftCountUser('acc:'+j.localId); }catch(e){}
       var rem=null; try{ rem=await dbGet('backup'); }catch(e){ setSes(null); idTok=''; throw e; }
       if(rem&&rem.data&&applyLogin(rem)){ lgStatus(tx('আপনার ডেটা ফিরিয়ে আনা হচ্ছে…','Restoring your data…')); return; }
       var ni=$('loginNameInput'); if(ni&&!(ni.value||'').trim()&&!lsGet('myName_v1')) ni.value=j.displayName||'';
@@ -2362,7 +2366,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     <button onclick="quickAdd('expense')"><span class="qi" style="--c:#ef4444"><i class="mi" style="--m:var(--ic-arrow-out)"></i></span><span class="bn">খরচ</span><span class="en">Expense</span></button>
     <button onclick="quickAdd('deposit')"><span class="qi" style="--c:#22c55e"><i class="mi" style="--m:var(--ic-arrow-in)"></i></span><span class="bn">জমা</span><span class="en">Income</span></button>
     <button onclick="quickAdd('loan_given')"><span class="qi" style="--c:#f59e0b"><i class="mi" style="--m:var(--ic-loan-out)"></i></span><span class="bn">লোন</span><span class="en">Loan</span></button>
-    <button onclick="quickAdd('save_to_account')"><span class="qi" style="--c:#6366f1"><i class="mi" style="--m:var(--ic-bank)"></i></span><span class="bn">সঞ্চয়</span><span class="en">Save</span></button>
+    <button onclick="NS.openPage();NS.mode('n')"><span class="qi" style="--c:#8b5cf6"><i class="mi" style="--m:var(--ic-clipboard)"></i></span><span class="bn">নোট</span><span class="en">Notes</span></button>
   </div>
   <div class="box monthBox">
     <h3><span class="bn">এই মাসের সারসংক্ষেপ</span><span class="en">This month at a glance</span><span class="mDelta" id="mDelta"></span></h3>
@@ -13963,7 +13967,9 @@ const K='ft_notes_v1',COL=['#cdbdff','#ffd6a5','#b8f0c8','#ffc2d4','#a8dcff','#f
 let D;try{D=JSON.parse(localStorage.getItem(K))||{}}catch(e){D={}}
 if(!D||typeof D!=='object')D={};D.notes=Array.isArray(D.notes)?D.notes:[];D.tasks=Array.isArray(D.tasks)?D.tasks:[];D.cols=(D.cols&&typeof D.cols==='object')?D.cols:{};D.desc=!!D.desc;
 const okc=c=>/^#[0-9a-fA-F]{6}$/.test(c||'')?c:COL[0];
-let cur=null,view='n',colF=null,pinned=false,color=COL[0];
+let cur=null,view='n',colF=null,pinned=false,color=COL[0],hPushed=false;
+function fresh(){try{const x=JSON.parse(localStorage.getItem(K));if(x&&typeof x==='object'){D=x;D.notes=Array.isArray(D.notes)?D.notes:[];D.tasks=Array.isArray(D.tasks)?D.tasks:[];D.cols=(D.cols&&typeof D.cols==='object')?D.cols:{};D.desc=!!D.desc}}catch(e){}}
+const isLocked=()=>document.documentElement.classList.contains('locked');
 const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(D))}catch(e){}};
 function when(t){const d=new Date(t),n=new Date(),dd=Math.floor((new Date(n.getFullYear(),n.getMonth(),n.getDate())-new Date(d.getFullYear(),d.getMonth(),d.getDate()))/864e5);
@@ -14001,7 +14007,7 @@ function alarm(k,x){const title=k==='n'?(x.t||x.b||'Note'):x.t;
  toastHost().appendChild(d);
  try{if(navigator.vibrate)navigator.vibrate([200,100,200])}catch(e){}
  try{if('Notification' in window&&Notification.permission==='granted')new Notification('\u23f0 '+title,{body:'FinTrack reminder'})}catch(e){}}
-function tick(){const now=Date.now();let f=[];
+function tick(){if(isLocked())return;if(!$('sec-notes').classList.contains('on'))fresh();const now=Date.now();let f=[];
  D.notes.forEach(x=>{if(x.r&&!x.rf&&x.r<=now){x.rf=1;f.push(['n',x])}});
  D.tasks.forEach(x=>{if(x.r&&!x.rf&&x.r<=now&&!x.d){x.rf=1;f.push(['t',x])}});
  if(f.length){save();f.forEach(a=>alarm(a[0],a[1]));render()}}
@@ -14024,10 +14030,11 @@ function paint(){$('nsPinB').textContent=pinned?'📌 Pinned':'📌 Pin';
  $('nsColors').innerHTML='<span style="font-size:13px;opacity:.7">Colour:</span>'+COL.map(c=>'<span class="nsDot'+(c===color?' on':'')+'" style="background:'+c+'" onclick="NS.setC(\''+c+'\')"></span>').join('');}
 document.addEventListener('click',function(e){const el=e.target.closest&&e.target.closest('#nsCols .nsCol');if(el){const c=el.getAttribute('data-c');colF=c||null;render();}});
 document.addEventListener('keydown',function(e){if(e.key!=='Escape')return;if($('nsSheet').classList.contains('show'))NS.close();else if($('sec-notes').classList.contains('on'))NS.closePage();});
-function openPage(){const e=$('sec-notes');e.classList.add('on');document.documentElement.style.overflow='hidden';render();}
-function closePage(){const e=$('sec-notes');e.classList.remove('on');$('nsSheet').classList.remove('show');document.documentElement.style.overflow='';}
+function openPage(){const e=$('sec-notes');fresh();e.classList.add('on');document.documentElement.style.overflow='hidden';render();if(!hPushed){try{history.pushState({nsPage:1},'');hPushed=true}catch(x){}}}
+function closePage(fromPop){const e=$('sec-notes');e.classList.remove('on');$('nsSheet').classList.remove('show');document.documentElement.style.overflow='';if(hPushed){hPushed=false;if(fromPop!==true){try{history.back()}catch(x){}}}}
 document.addEventListener('click',function(e){const b=e.target.closest&&e.target.closest('[data-rem]');if(!b)return;
  e.stopPropagation();e.preventDefault();const p=b.getAttribute('data-rem').split(':');remOpen(p[0],p[1]);},true);
+window.addEventListener('popstate',function(){if($('sec-notes').classList.contains('on'))closePage(true)});
 setInterval(tick,15000);setTimeout(tick,1500);
 document.addEventListener('visibilitychange',function(){if(!document.hidden)tick()});
 return{render,open,openPage,closePage,tick,
