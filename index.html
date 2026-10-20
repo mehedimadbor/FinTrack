@@ -2354,7 +2354,6 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     <div class="tab active" data-tab="dash" data-i18n="tab_dash">ড্যাশবোর্ড</div>
     <div class="tab" data-tab="add" data-i18n="tab_add">যোগ করুন</div>
     <div class="tab" data-tab="acc" data-i18n="tab_acc">একাউন্ট</div>
-    <div class="tab" data-tab="loan" data-i18n="tab_loan">লোন</div>
     <div class="tab" data-tab="hist" data-i18n="tab_hist">হিস্ট্রি</div>
     <div class="tab" data-tab="report" data-i18n="tab_report">রিপোর্ট</div>
     <div class="tab" data-tab="settings" data-i18n="tab_settings">সেটিংস</div>
@@ -2365,7 +2364,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   <div class="quick">
     <button onclick="quickAdd('expense')"><span class="qi" style="--c:#ef4444"><i class="mi" style="--m:var(--ic-arrow-out)"></i></span><span class="bn">খরচ</span><span class="en">Expense</span></button>
     <button onclick="quickAdd('deposit')"><span class="qi" style="--c:#22c55e"><i class="mi" style="--m:var(--ic-arrow-in)"></i></span><span class="bn">জমা</span><span class="en">Income</span></button>
-    <button onclick="quickAdd('loan_given')"><span class="qi" style="--c:#f59e0b"><i class="mi" style="--m:var(--ic-loan-out)"></i></span><span class="bn">লোন</span><span class="en">Loan</span></button>
+    <button onclick="calcOpen()"><span class="qi" style="--c:#f59e0b"><i class="mi" style="--m:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%224.5%22 y=%222.5%22 width=%2215%22 height=%2219%22 rx=%223%22/%3E%3Cpath d=%22M8 7h8M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 16h.01M12 16h.01M15.5 16h.01%22/%3E%3C/svg%3E')"></i></span><span class="bn">ক্যালকুলেটর</span><span class="en">Calculator</span></button>
     <button onclick="NS.openPage();NS.mode('n')"><span class="qi" style="--c:#8b5cf6"><i class="mi" style="--m:var(--ic-clipboard)"></i></span><span class="bn">নোট</span><span class="en">Notes</span></button>
   </div>
   <div class="box monthBox">
@@ -2493,6 +2492,337 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     <div id="accList"><div class="empty" data-i18n="empty_no_account">কোনো একাউন্ট নেই</div></div>
   </div>
 </div>
+
+<!-- CALCULATOR (full screen) -->
+<div id="calcPage" aria-hidden="true">
+  <div class="cpBar">
+    <button type="button" class="cpIc" onclick="calcClose()" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div class="cpTitle"><span class="bn">হিসাব ক্যালকুলেটর</span><span class="en">Quick budget calculator</span></div>
+    <button type="button" class="cpIc" onclick="calcClear()" aria-label="Clear all"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12M9 7V4h6v3"/></svg></button>
+  </div>
+  <div class="cpBody">
+    <div class="cHeroWrap">
+      <div class="cHero" id="cHero">
+        <div class="chTop"><div class="chLbl" id="chLbl"></div><div class="chVal" id="chVal">৳0</div></div>
+        <div class="chBar"><i id="chBarIn"></i><i id="chBarEx"></i></div>
+        <div class="chStats"><b id="chIn"></b><b id="chEx"></b></div>
+        <div class="cpTape" id="cTape"><div class="rcInner"><div id="calcList"></div><div id="calcResult"></div></div></div>
+        <div class="cScr" id="cScr">
+          <div class="cScrLbl" id="cScrLbl"></div>
+          <div class="cScrRow"><span class="cur">৳</span><input id="calcAmt" type="text" readonly inputmode="none" placeholder="0" autocomplete="off" aria-label="Amount"></div>
+        </div>
+      </div>
+    </div>
+    <div class="cpDock">
+      <div class="cEntry" id="cEntry">
+        <div class="cEditTag" id="cEditTag"><span id="cEditTxt"></span><span class="edb"><button type="button" onclick="calcDelEdit()"><span class="bn">মুছুন</span><span class="en">Delete</span></button><button type="button" onclick="calcCancelEdit()">✕</button></span></div>
+        <div class="calcRow"><input id="calcLbl" type="text" placeholder="Salary / Food / Loan..." autocomplete="off" enterkeyhint="done"></div>
+        <div class="cChips" id="cChips"></div>
+        <div class="cPad" id="cPad">
+          <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button><button type="button" class="fn" data-k="back" aria-label="Backspace"><svg viewBox="0 0 24 24"><path d="M21 5H9l-6 7 6 7h12a1 1 0 001-1V6a1 1 0 00-1-1zM17 9.5l-5 5M12 9.5l5 5"/></svg></button>
+          <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button><button type="button" class="fn" data-k="ac">C</button>
+          <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button><button type="button" class="op p" data-k="plus" aria-label="Add">+</button>
+          <button type="button" data-k="0">0</button><button type="button" data-k="00">00</button><button type="button" data-k=".">.</button><button type="button" class="op m" data-k="minus" aria-label="Subtract">−</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="calcToast"></div>
+</div>
+<style>
+html.locked #calcPage{display:none!important}
+#calcToast{position:absolute;left:14px;right:14px;bottom:calc(18px + env(safe-area-inset-bottom,0px));background:#111;color:#fff;border-radius:14px;padding:12px 14px;display:none;align-items:center;justify-content:space-between;gap:10px;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.35);z-index:5}
+#calcToast.on{display:flex;animation:cUp .2s ease-out}
+#calcToast button{border:0;background:#3b82f6;color:#fff;font:inherit;font-weight:700;border-radius:10px;padding:7px 12px;cursor:pointer}
+#calcPage{position:fixed;inset:0;z-index:100000;display:none;flex-direction:column;background:var(--bg);color:var(--text);padding-top:env(safe-area-inset-top,0px)}
+#calcPage.open{display:flex}
+#calcPage svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.cpBar{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;flex:none}
+.cpTitle{font-weight:800;font-size:16px}
+.cpIc{border:0;background:transparent;color:inherit;width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.cpIc:active{background:color-mix(in srgb,var(--muted) 20%,transparent)}
+.cpScroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 14px calc(24px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;max-width:520px;width:100%;margin:0 auto}
+
+/* hero */
+.cHero{border-radius:24px;padding:20px 18px 16px;color:#fff;background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 92%,#000),color-mix(in srgb,var(--primary) 55%,#7c3aed));box-shadow:0 12px 30px color-mix(in srgb,var(--primary) 30%,transparent);transition:background .3s;position:relative;overflow:hidden}
+.cHero::after{content:"";position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.1)}
+.cHero.due{background:linear-gradient(135deg,#dc2626,#9f1239);box-shadow:0 12px 30px rgba(220,38,38,.3)}
+.chLbl{font-size:12.5px;font-weight:700;opacity:.85;letter-spacing:.2px}
+.chVal{font-size:38px;font-weight:900;line-height:1.2;margin:2px 0 12px;font-variant-numeric:tabular-nums;word-break:break-word;position:relative;z-index:1}
+.chBar{display:flex;height:8px;border-radius:8px;background:rgba(255,255,255,.2);overflow:hidden;gap:2px}
+.chBar i{display:block;height:100%;width:0;transition:width .45s cubic-bezier(.2,.8,.2,1)}
+.chBar #chBarIn{background:#86efac;border-radius:8px}.chBar #chBarEx{background:#fca5a5;border-radius:8px}
+.chStats{display:flex;gap:10px;margin-top:14px;position:relative;z-index:1}
+.chS{flex:1;display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.14);border-radius:14px;padding:9px 11px;min-width:0}
+.chS small{display:block;font-size:11px;opacity:.85;font-weight:600}
+.chS b{font-size:14.5px;font-weight:800;word-break:break-word}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}.dot.g{background:#86efac}.dot.r{background:#fca5a5}
+
+/* cards */
+.cCard{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:14px}
+.cCard h3{margin:0;font-size:15px;font-weight:800}
+.cEditTag{display:none;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;padding:8px 8px 8px 12px;border-radius:12px;background:color-mix(in srgb,var(--amber) 16%,var(--card));color:var(--amber);font-size:12.5px;font-weight:700}
+.cEditTag.on{display:flex}
+.cEditTag button{border:0;background:transparent;color:inherit;font-size:15px;padding:2px 8px;cursor:pointer}
+.calcRow{display:flex;gap:8px}
+.calcRow input{min-width:0;width:100%;border:1.5px solid var(--border);background:var(--bg);color:inherit;border-radius:14px;padding:13px 14px;font:inherit;font-size:15px;outline:none;transition:border-color .15s,box-shadow .15s}
+.calcRow input:focus{border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 18%,transparent)}
+.calcRow>input{flex:1.5}
+.amtWrap{flex:1;position:relative;min-width:0}
+.amtWrap span{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);font-weight:700;pointer-events:none}
+.amtWrap input{padding-left:30px;text-align:right;font-weight:800;font-size:16px}
+.cChips{display:flex;gap:7px;overflow-x:auto;margin:10px -2px 0;padding:2px;scrollbar-width:none}
+.cChips::-webkit-scrollbar{display:none}
+.cChips button{flex:none;border:1px solid var(--border);background:var(--bg);color:var(--text);border-radius:20px;padding:6px 12px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.cChips button:active{background:color-mix(in srgb,var(--primary) 16%,var(--bg))}
+.calcBtns{display:flex;gap:10px;margin-top:12px}
+.calcBtns button{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:16px;padding:14px 8px;font:inherit;font-weight:800;font-size:15px;color:#fff;cursor:pointer;transition:transform .1s;-webkit-tap-highlight-color:transparent}
+.calcBtns button:active{transform:scale(.96)}
+.calcBtns .cPlus{background:linear-gradient(180deg,#22c55e,#16a34a);box-shadow:0 6px 14px rgba(22,163,74,.28)}
+.calcBtns .cMinus{background:linear-gradient(180deg,#f87171,#ef4444);box-shadow:0 6px 14px rgba(239,68,68,.28)}
+.cBal{margin-top:10px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px dashed var(--border);background:transparent;color:var(--muted);border-radius:14px;padding:10px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.cBal:active{background:color-mix(in srgb,var(--primary) 10%,transparent)}
+.calcHint{font-size:12px;color:var(--muted);margin:10px 2px 0;line-height:1.55}
+
+/* list */
+.cListHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.cListHead em{font-style:normal;font-size:11.5px;font-weight:800;background:color-mix(in srgb,var(--primary) 15%,transparent);color:var(--primary);border-radius:20px;padding:2px 8px;margin-left:4px}
+.cSeg{display:flex;background:var(--bg);border-radius:12px;padding:3px;gap:2px}
+.cSeg button{border:0;background:transparent;color:var(--muted);font:inherit;font-size:12px;font-weight:700;padding:5px 11px;border-radius:9px;cursor:pointer}
+.cSeg button.on{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.calcItem{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid color-mix(in srgb,var(--border) 70%,transparent);animation:cUp .22s ease-out;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.calcItem:last-child{border-bottom:0}
+.calcItem .ci{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none}
+.calcItem .ci.p{background:color-mix(in srgb,var(--green) 16%,transparent);color:var(--green)}
+.calcItem .ci.m{background:color-mix(in srgb,var(--red) 16%,transparent);color:var(--red)}
+.calcItem .cm{flex:1;min-width:0}
+.calcItem .cn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;font-size:14.5px}
+.calcItem .cp{height:4px;border-radius:4px;background:var(--border);margin-top:6px;overflow:hidden}
+.calcItem .cp i{display:block;height:100%;border-radius:4px}
+.calcItem .ci.p~.cm .cp i{background:var(--green)}.calcItem .ci.m~.cm .cp i{background:var(--red)}
+.calcItem .cs{font-size:11px;color:var(--muted);margin-top:3px;font-weight:600}
+.calcItem .ca{font-weight:800;font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.calcItem .ca.p{color:var(--green)}.calcItem .ca.m{color:var(--red)}
+.calcItem .cx{border:0;background:transparent;color:var(--muted);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
+.calcItem .cx svg{width:16px;height:16px}
+.calcItem .cx:active{background:color-mix(in srgb,var(--red) 18%,transparent);color:var(--red)}
+.calcEmpty{color:var(--muted);text-align:center;padding:22px 0 16px;font-size:13px;line-height:1.6}
+.calcEmpty b{display:block;font-size:30px;margin-bottom:4px;filter:grayscale(.2)}
+.calcSum,.calcFinal{display:none}
+.calcTools{display:flex;gap:8px;margin-top:10px}
+.calcTools button{flex:1;border:1.5px solid var(--border);background:transparent;color:var(--text);border-radius:14px;padding:12px 6px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.calcOut{margin-top:12px}
+.calcOut .cSave{background:var(--primary,#3b82f6);color:#fff;border-color:transparent}
+/* calculator look */
+.cHero{background:linear-gradient(165deg,#0b1220,#1b2538);box-shadow:0 12px 30px rgba(0,0,0,.35),inset 0 0 0 1px rgba(255,255,255,.06);padding:16px 16px 14px}
+.cHero.due{background:linear-gradient(165deg,#1a0b10,#3b1220);box-shadow:0 12px 30px rgba(220,38,38,.22),inset 0 0 0 1px rgba(255,255,255,.06)}
+.cHero::after{display:none}
+.chLbl{color:#94a3b8;opacity:1;font-size:12px;text-transform:none}
+.chVal{font-size:30px;color:#86efac;margin:0 0 10px;text-align:right;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;letter-spacing:-.5px}
+.cHero.due .chVal{color:#fca5a5}
+.chS{background:rgba(255,255,255,.06)}
+.cScr{margin-top:14px;padding-top:12px;border-top:1px dashed rgba(255,255,255,.16);transition:transform .1s}
+.cScr.bad{animation:cShake .35s}
+.cScr.bad input{color:#f87171}
+.cScrLbl{font-size:12.5px;color:#94a3b8;min-height:18px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cScrRow{display:flex;align-items:center;justify-content:flex-end;gap:6px}
+.cScrRow .cur{font-size:26px;color:#64748b;font-weight:700}
+#calcAmt{flex:1;min-width:0;width:100%;border:0!important;background:transparent!important;box-shadow:none!important;outline:none;padding:0!important;text-align:right;color:#fff;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:44px;font-weight:700;line-height:1.15;caret-color:transparent}
+#calcAmt::placeholder{color:#475569}
+.cPad{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+.cPad button{height:58px;border:0;border-radius:18px;background:var(--bg);color:var(--text);font:inherit;font-size:23px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 2px 0 color-mix(in srgb,var(--border) 90%,transparent),inset 0 0 0 1px var(--border);transition:transform .07s,background .12s}
+.cPad button:active{transform:scale(.93);background:color-mix(in srgb,var(--primary) 16%,var(--bg))}
+.cPad button.fn{background:color-mix(in srgb,var(--muted) 16%,var(--bg));color:var(--muted);font-size:20px}
+.cPad button.op{color:#fff;font-size:30px;box-shadow:none}
+.cPad button.op.p{background:linear-gradient(180deg,#22c55e,#16a34a);box-shadow:0 6px 14px rgba(22,163,74,.28)}
+.cPad button.op.m{background:linear-gradient(180deg,#f87171,#ef4444);box-shadow:0 6px 14px rgba(239,68,68,.28)}
+.cPad button.op:active{filter:brightness(.9);background:revert-layer}
+.cOpLbl{display:flex;justify-content:flex-end;gap:14px;margin-top:8px;font-size:11px;font-weight:700}
+.cOpLbl .g{color:var(--green)}.cOpLbl .r{color:var(--red)}
+/* layout: tape on top, display + keypad docked at bottom */
+.cpBody{flex:1;min-height:0;display:flex;flex-direction:column;max-width:520px;width:100%;margin:0 auto}
+.cpTape{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 14px 10px;display:flex;flex-direction:column}
+.cTapeCard{margin-top:auto}
+.cpDock{flex:none;padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px));background:var(--bg);border-top:1px solid var(--border);box-shadow:0 -8px 24px rgba(0,0,0,.12)}
+.cEntry{margin-top:10px}
+.cpDock .cHero{padding:12px 14px 10px;border-radius:20px}
+.chTop{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.cpDock .chVal{font-size:24px;margin:0;flex:none}
+.cpDock .chLbl{font-size:11.5px}
+.cpDock .chBar{height:5px;margin-top:8px}
+.chStats{margin-top:8px;gap:14px}
+.chS{background:none;padding:0;border-radius:0;gap:6px;flex:none}
+.chS small{display:inline;font-size:11px}
+.chS b{font-size:12.5px;color:#e2e8f0}
+.cScr{margin-top:8px;padding-top:6px}
+.cScrLbl{font-size:12px;min-height:16px}
+#calcAmt{font-size:38px}
+.cScrRow .cur{font-size:22px}
+.cpDock .calcRow input{padding:10px 14px;font-size:14px}
+.cpDock .cChips{margin-top:8px}
+.cpDock .cChips button{padding:5px 11px;font-size:12px}
+.cPad{gap:8px;margin-top:10px}
+.cPad button{height:52px;border-radius:16px;font-size:22px}
+@media (max-height:700px){.cPad button{height:44px;font-size:19px}#calcAmt{font-size:30px}.cpDock .cChips{display:none}}
+.cBal{margin-top:6px}
+.calcOut{margin-top:10px}
+/* receipt inside the display */
+.cHeroWrap{flex:1;min-height:0;display:flex;padding:4px 14px 10px}
+.cHeroWrap .cHero{flex:1;min-height:0;display:flex;flex-direction:column;padding:14px 16px 12px}
+.chTop,.chBar,.chStats{display:none!important}
+.cHeroWrap .cpTape{flex:1;min-height:0;overflow-y:auto;padding:0;display:flex;flex-direction:column;-webkit-overflow-scrolling:touch}
+.rcInner{margin-top:auto}
+.rcL{font-size:16px;line-height:1.5;padding:5px 0;color:#e2e8f0;font-weight:600;cursor:pointer;word-break:break-word;animation:cUp .2s ease-out;-webkit-tap-highlight-color:transparent}
+.rcL.ed{background:rgba(251,191,36,.12);border-radius:8px;padding-left:6px}
+.rcL .sg{font-weight:800}.rcL .p{color:#4ade80}.rcL .m{color:#f87171}
+.rcL b{font-weight:800}
+.rcSep{color:#475569;letter-spacing:1px;margin:4px 0 2px;overflow:hidden;white-space:nowrap}
+.rcT{font-size:15px;line-height:1.7;color:#cbd5e1;font-weight:600}.rcT b{color:#fff}
+.rcF{font-size:19px;line-height:1.7;font-weight:800;margin-top:2px}.rcF.p{color:#4ade80}.rcF.m{color:#f87171}
+.rcEmpty{color:#64748b;font-size:13.5px;text-align:center;padding:10px 0}
+.cHeroWrap .cScr{flex:none}
+.cEditTag .edb{display:flex;align-items:center;gap:2px}
+.cEditTag .edb button:first-child{font-size:12.5px;font-weight:800;color:var(--red)}
+@keyframes cShake{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+@keyframes cUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.calcItem,#calcToast.on{animation:none}.chBar i{transition:none}}
+</style>
+<script>
+(function(){
+  var KEY='calcDraft_v1', items=[], flt=0, editIdx=null, lastDel=null, shown=0, tw=null;
+  function load(){try{var v=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(v)?v:[]}catch(e){return[]}}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(items))}catch(e){}}
+  function money(n){return (typeof fmt==='function')?fmt(n):'৳'+Math.round(n*100)/100}
+  function bnL(){return typeof currentLang!=='undefined'&&currentLang==='bn'}
+  function $(i){return document.getElementById(i)}
+  function num(str){
+    str=String(str||'').replace(/[০-৯]/g,function(d){return '০১২৩৪৫৬৭৮৯'.indexOf(d)}).replace(/,/g,'');
+    var m=str.match(/\d+(\.\d+)?/);return m?parseFloat(m[0]):NaN;
+  }
+  function esc2(x){return String(x).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  var IUP='<svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg>', IDN='<svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 9v8H9"/></svg>', IX='<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  var page=$('calcPage'); if(page&&page.parentNode!==document.body)document.body.appendChild(page);
+  var pushed=false;
+  window.calcOpen=function(){page.classList.add('open');page.setAttribute('aria-hidden','false');document.documentElement.style.overflow='hidden';render(true);
+    if(!pushed){try{history.pushState({calcPage:1},'');pushed=true}catch(e){}}};
+  window.calcClose=function(fromPop,noBack){page.classList.remove('open');page.setAttribute('aria-hidden','true');document.documentElement.style.overflow='';
+    $('calcToast').classList.remove('on');calcCancelEdit();
+    if(pushed){pushed=false;if(fromPop!==true&&noBack!==true){try{history.back()}catch(e){}}}};
+  window.addEventListener('popstate',function(){if(page.classList.contains('open'))calcClose(true)});
+  new MutationObserver(function(){if(document.documentElement.classList.contains('locked')&&page.classList.contains('open'))calcClose(false,true)}).observe(document.documentElement,{attributes:true,attributeFilter:['class']});
+
+  function chips(){
+    var a=bnL()?['বেতন','খাবার','ভাড়া','বিল','যাতায়াত','লোন','বাজার']:['Salary','Food','Rent','Bills','Transport','Loan','Groceries'];
+    $('cChips').innerHTML=a.map(function(x){return '<button type="button">'+x+'</button>'}).join('');
+  }
+  $('cChips').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;$('calcLbl').value=b.textContent;scrLbl()});
+  
+
+  window.calcAdd=function(sign){
+    var l=$('calcLbl'), a=$('calcAmt');
+    var label=l.value.trim(), amt=num(a.value);
+    if(isNaN(amt)){
+      var m=label.match(/^(.*?)[\s:=-]*([০-৯\d][০-৯\d,]*(?:\.\d+)?)\s*$/);
+      if(m){amt=num(m[2]);label=m[1].trim()}
+      else{m=label.match(/^([০-৯\d][০-৯\d,]*(?:\.\d+)?)\s+(.+)$/);if(m){amt=num(m[1]);label=m[2].trim()}}
+    }
+    if(isNaN(amt)||amt<=0){
+      var sc=$('cScr');sc.classList.remove('bad');void sc.offsetWidth;sc.classList.add('bad');setTimeout(function(){sc.classList.remove('bad')},600);return}
+    var it={n:label||(sign>0?(bnL()?'আয়':'Income'):(bnL()?'খরচ':'Expense')),a:amt,s:sign};
+    if(editIdx!==null&&items[editIdx]){items[editIdx]=it}else items.push(it);
+    editIdx=null;$('cEditTag').classList.remove('on');
+    save();l.value='';a.value='';render();scrLbl();
+  };
+  window.calcEdit=function(i){var it=items[i];if(!it)return;editIdx=i;
+    $('calcLbl').value=it.n;$('calcAmt').value=fa(String(it.a));
+    $('cEditTxt').textContent=(bnL()?'এডিট করছেন — এখন + বা − চাপুন':'Editing — now tap + or −');
+    $('cEditTag').classList.add('on');render();scrLbl();
+    try{$('cEntry').scrollIntoView({behavior:'smooth',block:'nearest'})}catch(e){}};
+  window.calcDelEdit=function(){if(editIdx!==null)calcDel(editIdx)};
+  window.calcCancelEdit=function(){if(editIdx===null)return;editIdx=null;$('cEditTag').classList.remove('on');$('calcLbl').value='';$('calcAmt').value='';render()};
+  window.calcDel=function(i){
+    var it=items.splice(i,1)[0];if(editIdx!==null)calcCancelEdit();
+    save();render();lastDel={it:it,i:i};
+    toast(bnL()?'এন্ট্রি মুছে ফেলা হয়েছে':'Entry removed',bnL()?'আনডু':'Undo',function(){if(lastDel){items.splice(Math.min(lastDel.i,items.length),0,lastDel.it);lastDel=null;save();render()}});
+  };
+  window.calcClear=function(){if(!items.length)return;if(confirm(bnL()?'সব এন্ট্রি মুছে ফেলবেন?':'Clear all entries?')){var bk=items.slice();items=[];editIdx=null;save();render();
+    toast(bnL()?'সব মুছে ফেলা হয়েছে':'All cleared',bnL()?'আনডু':'Undo',function(){items=bk;save();render()})}};
+  window.calcUseBalance=function(){
+    var b=0;try{b=calcBalance()}catch(e){}
+    items.push({n:bnL()?'বর্তমান ব্যালেন্স':'Current balance',a:Math.abs(b),s:b<0?-1:1});save();render();
+  };
+  function tween(to,el){
+    cancelAnimationFrame(tw);var from=shown,t0=null,d=400;
+    if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches){shown=to;el.textContent=money(to);return}
+    (function step(ts){if(t0===null)t0=ts;var p=Math.min(1,(ts-t0)/d),e=1-Math.pow(1-p,3);
+      var v=from+(to-from)*e;el.textContent=money(Math.round(v*100)/100);
+      if(p<1)tw=requestAnimationFrame(step);else{shown=to;el.textContent=money(to)}})(performance.now());
+  }
+  function render(instant){
+    var L=$('calcList');if(!L)return;
+    var inc=0,exp=0;items.forEach(function(it){if(it.s>0)inc+=it.a;else exp+=it.a});
+    inc=Math.round(inc*100)/100;exp=Math.round(exp*100)/100;var left=Math.round((inc-exp)*100)/100;
+    var vis=[];items.forEach(function(it,i){if(!flt||it.s===flt)vis.push(i)});
+    L.innerHTML=items.length?items.map(function(it,i){return '<div class="rcL'+(editIdx===i?' ed':'')+'" onclick="calcEdit('+i+')"><span class="sg '+(it.s>0?'p':'m')+'">'+(it.s>0?'+':'−')+'</span> '+esc2(it.n)+': <b class="'+(it.s>0?'p':'m')+'">'+money(it.a)+'</b></div>'}).join(''):'<div class="rcEmpty">'+(bnL()?'এখনো কিছু যোগ করা হয়নি':'Nothing added yet')+'</div>';
+    $('calcResult').innerHTML=items.length?'<div class="rcSep">────────────</div><div class="rcT">'+(bnL()?'মোট আয়: ':'Total in: ')+'<b>'+money(inc)+'</b></div><div class="rcT">'+(bnL()?'মোট খরচ: ':'Total out: ')+'<b>'+money(exp)+'</b></div><div class="rcF '+(left<0?'m':'p')+'">'+(left<0?(bnL()?'ঘাটতি (due): ':'Short (due): '):(bnL()?'বাকি থাকবে: ':'Left: '))+'<b>'+money(Math.abs(left))+'</b></div>':'';
+    
+    var hero=$('cHero'),due=left<0;hero.classList.toggle('due',due);
+    $('chLbl').textContent=due?(bnL()?'ঘাটতি — ধারে (due) যাবে':'Short — goes to due'):(bnL()?'ব্যালেন্স বাকি থাকবে':'Balance left');
+    var target=due?-left:left;
+    if(instant===true){shown=target;$('chVal').textContent=money(target)}else tween(target,$('chVal'));
+    $('chIn').textContent=money(inc);$('chEx').textContent=money(exp);
+    var tot=inc+exp;$('chBarIn').style.width=tot?(inc/tot*100)+'%':'0';$('chBarEx').style.width=tot?(exp/tot*100)+'%':'0';
+    var tp=$('cTape');if(tp)tp.scrollTop=tp.scrollHeight;var o=$('calcOut');if(o)o.style.display=items.length?'':'none';
+  }
+  function totals(){var i=0,e=0;items.forEach(function(it){if(it.s>0)i+=it.a;else e+=it.a});i=Math.round(i*100)/100;e=Math.round(e*100)/100;return{i:i,e:e,l:Math.round((i-e)*100)/100}}
+  function buildText(){
+    var t=totals(),lines=items.map(function(it){return (it.s>0?'+ ':'− ')+it.n+': '+money(it.a)});
+    lines.push('────────────');
+    lines.push((bnL()?'মোট আয়: ':'Total in: ')+money(t.i));
+    lines.push((bnL()?'মোট খরচ: ':'Total out: ')+money(t.e));
+    lines.push(t.l>=0?((bnL()?'বাকি থাকবে: ':'Left: ')+money(t.l)):((bnL()?'ঘাটতি (due): ':'Short (due): ')+money(-t.l)));
+    return lines.join('\n');
+  }
+  function toast(msg,btn,fn){
+    var T=$('calcToast');T.innerHTML='<span></span>'+(btn?'<button type="button"></button>':'');
+    T.firstChild.textContent=msg;if(btn){T.lastChild.textContent=btn;T.lastChild.onclick=function(){T.classList.remove('on');fn()}}
+    T.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(function(){T.classList.remove('on')},4500);
+  }
+  window.calcSaveNote=function(){
+    if(!items.length)return;
+    if(typeof NS==='undefined'||!NS.addNote){toast(bnL()?'নোট সেভ করা গেল না':'Could not save to Notes');return}
+    var d=new Date(),ds=d.toLocaleDateString('en',{day:'numeric',month:'short',year:'numeric'});
+    NS.addNote((bnL()?'হিসাব — ':'Calculation — ')+ds,buildText(),bnL()?'হিসাব':'Calc');
+    toast(bnL()?'নোটে সেভ হয়েছে ✓':'Saved to Notes ✓',bnL()?'নোট খুলুন':'Open Notes',function(){calcClose(false,true);try{NS.openPage();NS.mode('n')}catch(e){}});
+  };
+  window.calcShare=function(){
+    if(!items.length)return;var txt=buildText();
+    if(navigator.share){navigator.share({text:txt}).catch(function(){});return}
+    var done=function(){toast(bnL()?'কপি হয়েছে ✓':'Copied ✓')};
+    try{navigator.clipboard.writeText(txt).then(done,function(){fallback()})}catch(e){fallback()}
+    function fallback(){var ta=document.createElement('textarea');ta.value=txt;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){}ta.remove()}
+  };
+  function scrLbl(){var v=$('calcLbl').value.trim();$('cScrLbl').textContent=v||(bnL()?'নাম লিখুন, টাকা বসান, তারপর + / −':'Name it, enter amount, then + / −')}
+  function fa(raw){raw=String(raw).replace(/,/g,'');var p=raw.split('.');p[0]=p[0].replace(/^0+(?=\d)/,'').replace(/\B(?=(\d{3})+(?!\d))/g,',');return p.length>1?p[0]+'.'+p[1]:p[0]}
+  function press(k){var a=$('calcAmt'),r=a.value.replace(/,/g,'');
+    if(k==='back')r=r.slice(0,-1);
+    else if(k==='ac'){r='';$('calcLbl').value='';if(editIdx!==null)calcCancelEdit()}
+    else if(k==='plus'){calcAdd(1);return}
+    else if(k==='minus'){calcAdd(-1);return}
+    else if(k==='.'){if(r.indexOf('.')<0)r=(r||'0')+'.'}
+    else{if(r.replace('.','').length>=12)return;if(r.indexOf('.')>=0&&r.split('.')[1].length>=2)return;if(k==='00'&&!r)return;r+=k}
+    a.value=fa(r);scrLbl();try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}}
+  $('cPad').addEventListener('click',function(e){var b=e.target.closest('button');if(b)press(b.getAttribute('data-k'))});
+  $('calcLbl').addEventListener('input',scrLbl);
+  page.addEventListener('keydown',function(e){if(e.target.id==='calcLbl'||e.ctrlKey||e.metaKey)return;
+    if(/^[0-9]$/.test(e.key))press(e.key);else if(e.key==='.')press('.');else if(e.key==='Backspace')press('back');
+    else if(e.key==='+'||e.key==='Enter')press('plus');else if(e.key==='-')press('minus');else if(e.key==='Delete'||e.key==='Escape')press('ac');else return;e.preventDefault()});
+  items=load();chips();scrLbl();render(true);
+  var _o=window.calcOpen;window.calcOpen=function(){chips();_o()};
+  page.addEventListener('keydown',function(e){if(e.key!=='Enter')return;
+    if(e.target.id==='calcLbl'){e.preventDefault();e.target.blur()}});
+})();
+</script>
 
 <!-- LOAN -->
 <div class="section" id="sec-loan">
@@ -7931,7 +8261,7 @@ const cfg=()=>{let c={};try{c=JSON.parse(ls(CK,'{}'))||{}}catch(e){}return Objec
 try{if(typeof BACKUP_KEYS!=='undefined')BACKUP_KEYS.push(CK)}catch(e){}
 
 /* ---- feature switches (Settings) ---- */
-const FEAT=[['zakat','যাকাত','Zakat'],['hist','হিস্ট্রি ও রিপোর্ট','History & Report'],['loan','লোন','Loan']];
+const FEAT=[['zakat','যাকাত','Zakat'],['hist','হিস্ট্রি ও রিপোর্ট','History & Report']];
 const fdef=k=>k==='zakat'?'0':'1';
 const fk=k=>'feat_'+k+'_v1';
 const css=document.createElement('style');css.textContent=FEAT.map(f=>'html.ftOff-tab-'+f[0]+' .tab[data-tab="'+f[0]+'"]{display:none!important}').join('\n');css.textContent+='\n.tab[data-tab="report"]{display:none!important}.zkSeg{display:flex;gap:4px;padding:4px;border-radius:16px;background:color-mix(in srgb,var(--muted) 14%,var(--card));margin-bottom:12px}.zkSeg button{flex:1;border:0;border-radius:12px;padding:9px 6px;font:inherit;font-size:13px;font-weight:700;background:transparent;color:var(--muted);cursor:pointer}.zkSeg button.on{background:var(--card);color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,.15)}';
@@ -14339,6 +14669,7 @@ return{render,open,openPage,closePage,tick,
  tog(id){const t=D.tasks.find(x=>x.id===id);t.d=t.d?0:1;save();render()},
  rmT(id){D.tasks=D.tasks.filter(x=>x.id!==id);save();render()},
  add(){if(view==='t'){const i=$('nsTI');i.focus()}else open(null)},
+ addNote(t,b,col){fresh();col=col||'';if(col&&!D.cols[col])D.cols[col]=COL[1];D.notes.push({id:'n'+Date.now(),t:t||'',b:b||'',col:col,pin:false,u:Date.now()});save();try{render()}catch(e){}},
  get view(){return view}};
 })();
 (function(){
