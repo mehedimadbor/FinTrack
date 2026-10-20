@@ -2728,11 +2728,10 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   </div>
   <div class="box">
     <h3 data-i18n="settings_budget">মাসিক বাজেট</h3>
-    <p style="font-size:12.5px; color:var(--muted); margin:0 0 8px;" data-i18n="budget_note">প্রতিটা খাতের জন্য মাসিক খরচের সীমা ঠিক করুন — সীমা ছাড়িয়ে গেলে ড্যাশবোর্ডে দেখাবে। খালি রাখলে সেই খাতে কোনো সীমা থাকবে না।</p>
+    <p style="font-size:12.5px; color:var(--muted); margin:0 0 8px;" data-i18n="budget_note">দৈনিক সীমা ঠিক করুন, তারপর নিচে খাত বেছে সেই খাতের মাসিক সীমা যোগ করুন — সীমা ছাড়িয়ে গেলে ড্যাশবোর্ডে দেখাবে।</p>
     <label data-i18n="lbl_daily_limit">দৈনিক খরচের সীমা (টাকা)</label>
-    <input type="number" id="dailyLimitInput" placeholder="0">
+    <div style="display:flex;gap:8px;align-items:stretch;"><input type="number" id="dailyLimitInput" placeholder="0" style="flex:1;min-width:0;margin:0;"><button class="typebtn" style="flex:none;padding:0 18px;" onclick="saveBudgets()" data-i18n="btn_save">সংরক্ষণ করুন</button></div>
     <div id="budgetInputs"></div>
-    <button class="typebtn" style="width:100%; margin-top:8px;" onclick="saveBudgets()" data-i18n="btn_save">সংরক্ষণ করুন</button>
   </div>
   <div class="box">
     <h3 data-i18n="settings_goal">সঞ্চয় লক্ষ্য</h3>
@@ -3011,7 +3010,7 @@ const I18N = {
     backup_restore_done:'সফলভাবে ফিরিয়ে আনা হয়েছে, রিলোড হচ্ছে...',
     backup_restore_fail:'ফাইলটি ঠিক নয় বা পড়া যায়নি। আবার চেষ্টা করুন।',
     btn_export_csv:'CSV এক্সপোর্ট করুন (Excel-এ খোলা যাবে)',
-    settings_budget:'মাসিক বাজেট', budget_note:'প্রতিটা খাতের জন্য মাসিক খরচের সীমা ঠিক করুন — সীমা ছাড়িয়ে গেলে ড্যাশবোর্ডে দেখাবে। খালি রাখলে সেই খাতে কোনো সীমা থাকবে না।',
+    settings_budget:'মাসিক বাজেট', budget_note:'দৈনিক সীমা ঠিক করুন, তারপর নিচে খাত বেছে সেই খাতের মাসিক সীমা যোগ করুন — সীমা ছাড়িয়ে গেলে ড্যাশবোর্ডে দেখাবে।',
     settings_goal:'সঞ্চয় লক্ষ্য', goal_note:'একটা সঞ্চয়ের লক্ষ্য ঠিক করুন — আপনার একাউন্টে জমানো মোট টাকার সাথে তুলনা করে ড্যাশবোর্ডে অগ্রগতি দেখাবে।',
     lbl_goal_name:'লক্ষ্যের নাম', ph_goal_name:'যেমন: নতুন ফোন কেনা', lbl_goal_target:'লক্ষ্যের পরিমাণ (টাকা)',
     dash_budget_heading:'মাসিক বাজেট', empty_no_budget:'কোনো বাজেট সেট করা নেই — সেটিংসে গিয়ে সেট করুন',
@@ -3137,7 +3136,7 @@ const I18N = {
     backup_restore_done:'Restored successfully, reloading...',
     backup_restore_fail:'That file is invalid or unreadable. Please try again.',
     btn_export_csv:'Export CSV (opens in Excel)',
-    settings_budget:'Monthly Budget', budget_note:"Set a monthly spending limit per category — the dashboard will flag it once you go over. Leave blank for no limit.",
+    settings_budget:'Monthly Budget', budget_note:"Set a daily limit, then pick a category below and add its monthly limit — the dashboard will flag it once you go over.",
     settings_goal:'Savings Goal', goal_note:"Set a savings goal — the dashboard will show your progress compared to your total saved account balance.",
     lbl_goal_name:'Goal Name', ph_goal_name:'e.g. Buy a new phone', lbl_goal_target:'Target Amount (Taka)',
     dash_budget_heading:'Monthly Budget', empty_no_budget:'No budgets set yet — set them in Settings',
@@ -3256,6 +3255,7 @@ function loadData(){
   if(!data.accounts || !data.accounts.length) data.accounts = [...DEFAULT_ACCS];
   if(!data.budgets) data.budgets = {};
   if(!data.recurring) data.recurring = [];
+  if(!data.fixedCats || typeof data.fixedCats!=='object' || Array.isArray(data.fixedCats)) data.fixedCats = {};
   if(!data.dailyLimit) data.dailyLimit = 0;
   if(!data.incomeSources || !data.incomeSources.length) data.incomeSources = [...DEFAULT_SOURCES];
   if(!data.savingsGoal) data.savingsGoal = {name:'', target:0};
@@ -3725,6 +3725,165 @@ function calcByCategoryForMonth(monthStr){
   });
   return map;
 }
+/* ===== নির্ধারিত মাসিক খরচ (বাসা ভাড়া, বিল, কিস্তি…) বনাম দৈনন্দিন খরচ =====
+   মাসিক বিল স্বভাবতই দৈনিক খরচের চেয়ে বড় — তাই "সবচেয়ে বেশি খরচ", দৈনিক গড়, পূর্বাভাস ও দৈনিক সীমা
+   হিসাবের সময় এগুলোকে আলাদা করে ধরা হয়, যাতে ছবিটা বিকৃত না হয়। */
+var FT_FIXED_RE = /বাসা ?ভাড়া|বাসাভাড়া|বাড়ি ?ভাড়া|বাড়ী ?ভাড়া|ঘর ?ভাড়া|ফ্ল্যাট ?ভাড়া|house ?rent|\brent\b|বিল(?!া)|\bbills?\b|বিদ্যুৎ|কারেন্ট|electric|গ্যাস|\bgas\b|ইন্টারনেট|internet|wi-?fi|ওয়াই-?ফাই|কিস্তি|ইএমআই|\bemi\b|বীমা|insurance|টিউশন|tuition|সাবস্ক্রিপশন|subscription|ট্যাক্স|\btax\b/i;
+function isFixedCategory(c){
+  if(!c) return false;
+  var m = (typeof data!=='undefined' && data && data.fixedCats) || {};
+  if(Object.prototype.hasOwnProperty.call(m, c)) return !!m[c];
+  return FT_FIXED_RE.test(String(c));
+}
+function isFixedTx(tx){
+  if(!isExpenseLike(tx)) return false;
+  var m = (data && data.fixedCats) || {};
+  if(tx.category && Object.prototype.hasOwnProperty.call(m, tx.category)) return !!m[tx.category];
+  if(String(tx.id||'').indexOf('rc-')===0 || String(tx.note||'').indexOf('\u{1F501}')===0) return true;
+  return isFixedCategory(tx.category);
+}
+function isDailyExpense(tx){ return isExpenseLike(tx) && !isFixedTx(tx); }
+/* খাত অনুযায়ী ভাগ: monthStr দিলে সেই মাস, না দিলে সব সময় */
+function calcSplitForMonth(monthStr){
+  var daily={}, fixed={}, dT=0, fT=0;
+  data.transactions.forEach(function(tx){
+    if(!isExpenseLike(tx)) return;
+    if(monthStr && String(tx.date||'').slice(0,7)!==monthStr) return;
+    var a=+tx.amount||0;
+    if(isFixedTx(tx)){ fixed[tx.category]=(fixed[tx.category]||0)+a; fT+=a; }
+    else { daily[tx.category]=(daily[tx.category]||0)+a; dT+=a; }
+  });
+  return {daily:daily, fixed:fixed, dailyTotal:dT, fixedTotal:fT};
+}
+function calcVarByCategoryForMonth(m){ return calcSplitForMonth(m).daily; }
+/* এই মাসে যে মাসিক বিল এখনো দেওয়া হয়নি কিন্তু গত ৩ মাসের অন্তত ২ মাসে দেওয়া হয়েছে — প্রত্যাশিত পরিমাণ (গড়) */
+function ftPendingFixed(key){
+  var res={total:0,items:[]};
+  try{
+    key = key || todayStr().slice(0,7);
+    var mk=function(o){ var y=+key.slice(0,4), m=+key.slice(5,7)+o; while(m<1){m+=12;y--;} return y+'-'+String(m).padStart(2,'0'); };
+    var prevKeys=[mk(-1),mk(-2),mk(-3)], paidNow={}, per={};
+    data.transactions.forEach(function(tx){
+      if(!tx.category || !isFixedTx(tx)) return;
+      var mo=String(tx.date||'').slice(0,7);
+      if(mo===key) paidNow[tx.category]=1;
+      else if(prevKeys.indexOf(mo)>=0){ per[tx.category]=per[tx.category]||{}; per[tx.category][mo]=(per[tx.category][mo]||0)+(+tx.amount||0); }
+    });
+    var rc=(data.recurring||[]).filter(function(r){ return r.type==='expense' && r.lastMonth!==key; }).map(function(r){ return r.category; });
+    Object.keys(per).forEach(function(c){
+      if(paidNow[c] || rc.indexOf(c)>=0) return;
+      var vals=Object.keys(per[c]).map(function(k){ return per[c][k]; });
+      if(vals.length<2) return;
+      var est=Math.round(vals.reduce(function(a,b){return a+b;},0)/vals.length);
+      if(est>0){ res.items.push([c,est]); res.total+=est; }
+    });
+  }catch(e){}
+  return res;
+}
+/* গড় নির্ধারিত মাসিক খরচ ÷ ৩০ (গত ৩টি পূর্ণ মাস; না থাকলে এ মাসের) — রানওয়ে/বার্ন-রেটের জন্য */
+function ftFixedPerDay(){
+  try{
+    var key=todayStr().slice(0,7), tot={}, n=0;
+    data.transactions.forEach(function(tx){ if(isFixedTx(tx)){ var mo=String(tx.date||'').slice(0,7); tot[mo]=(tot[mo]||0)+(+tx.amount||0); } });
+    var y=+key.slice(0,4), m=+key.slice(5,7), vals=[];
+    for(var i=1;i<=3;i++){ m--; if(m<1){m=12;y--;} var k=y+'-'+String(m).padStart(2,'0'); if(tot[k]>0) vals.push(tot[k]); }
+    if(!vals.length && tot[key]>0) vals.push(tot[key]);
+    return vals.length ? (vals.reduce(function(a,b){return a+b;},0)/vals.length)/30 : 0;
+  }catch(e){ return 0; }
+}
+function ftBn(){ return (typeof currentLang==='undefined'||currentLang==='bn'); }
+function ftFxBadgeStyle(on){ return 'display:'+(on?'inline-block':'none')+';margin-left:8px;padding:2px 9px;border-radius:99px;font-size:10.5px;font-weight:800;vertical-align:middle;background:color-mix(in srgb,var(--primary) 14%,var(--card));color:var(--primary);border:1px solid color-mix(in srgb,var(--primary) 35%,var(--border));'; }
+function ftFxBadge(i,on){ return '<span id="fxBadge_'+i+'" style="'+ftFxBadgeStyle(on)+'">'+(ftBn()?'মাসিক বিল':'Monthly bill')+'</span>'; }
+function ftDotsBtn(i){
+  return '<button type="button" id="catDots_'+i+'" onclick="ftCatMenu('+i+',this)" aria-haspopup="true" aria-label="'+(ftBn()?'আরও অপশন':'More options')+'" style="flex:none;width:38px;height:38px;padding:0;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;">'
+   +'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg></button>';
+}
+function ftCloseMenu(){ var m=document.getElementById('ftMenu'); if(m) m.remove(); document.removeEventListener('click',ftMenuOutside,true); window.removeEventListener('scroll',ftCloseMenu,true); }
+function ftMenuOutside(e){ var m=document.getElementById('ftMenu'); if(m && !m.contains(e.target)) ftCloseMenu(); }
+function ftCatMenu(i,btn){
+  var existing=document.getElementById('ftMenu'); var same=existing && existing.getAttribute('data-i')===String(i);
+  ftCloseMenu(); if(same) return;
+  var c=data.categories[i]; if(c==null) return;
+  var B=ftBn(), on=isFixedCategory(c);
+  var m=document.createElement('div'); m.id='ftMenu'; m.setAttribute('data-i',i); m.setAttribute('role','menu');
+  m.style.cssText='position:fixed;z-index:9998;min-width:230px;max-width:calc(100vw - 24px);background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:16px;padding:6px;box-shadow:0 14px 40px rgba(0,0,0,.28);font-family:inherit;';
+  var item=function(ico,title,sub,color,fn){
+    var b=document.createElement('button'); b.type='button'; b.setAttribute('role','menuitem');
+    b.style.cssText='display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:10px 11px;border:none;border-radius:11px;background:transparent;color:'+color+';cursor:pointer;font-family:inherit;';
+    b.innerHTML='<span style="flex:none;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,'+color+' 13%,transparent);">'+ico+'</span>'
+      +'<span style="min-width:0;display:flex;flex-direction:column;gap:1px;"><b style="font-size:13.5px;font-weight:700;">'+title+'</b>'+(sub?'<small style="font-size:11px;color:var(--muted);font-weight:500;line-height:1.35;">'+sub+'</small>':'')+'</span>';
+    b.addEventListener('click',function(){ ftCloseMenu(); fn(); });
+    return b;
+  };
+  var svg=function(d){ return '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+d+'</svg>'; };
+  m.appendChild(item(svg('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>'),
+    B?'সীমা সম্পাদনা':'Edit limit', B?'মাসিক বাজেটের অঙ্ক বদলান':'Change the monthly amount','var(--text)',function(){ bgEdit(i); }));
+  m.appendChild(item(svg('<rect x="3" y="4" width="18" height="17" rx="3"/><path d="M8 2v4M16 2v4M3 10h18"/>'),
+    on?(B?'মাসিক বিল খাত থেকে সরান':'Remove from monthly bills'):(B?'মাসিক বিল খাত করুন':'Set as monthly bill'),
+    on?(B?'দৈনন্দিন খরচের মধ্যে ধরা হবে':'Will count as daily spending'):(B?'ভাড়া, বিদ্যুৎ বিলের মতো খাত':'For rent, utilities and similar'),
+    'var(--primary)',function(){ ftFixedDialog(i,!on); }));
+  var sep=document.createElement('div'); sep.style.cssText='height:1px;background:var(--border);margin:4px 8px;'; m.appendChild(sep);
+  m.appendChild(item(svg('<path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>'),
+    B?'বাজেট মুছুন':'Remove budget', B?'শুধু সীমা মুছবে, খাত থাকবে':'Only the limit; the category stays','var(--red)',function(){ bgRemove(i); }));
+  document.body.appendChild(m);
+  var r=btn.getBoundingClientRect(), h=m.offsetHeight, w=m.offsetWidth;
+  var top=r.bottom+6; if(top+h>window.innerHeight-12) top=Math.max(12,r.top-h-6);
+  var left=Math.min(Math.max(12,r.right-w),window.innerWidth-w-12);
+  m.style.top=top+'px'; m.style.left=left+'px';
+  setTimeout(function(){ document.addEventListener('click',ftMenuOutside,true); window.addEventListener('scroll',ftCloseMenu,true); },0);
+}
+/* চালু/বন্ধ করার আগে কী বদলাবে তা দেখিয়ে নিশ্চিত করার পপআপ */
+function ftFixedDialog(i,enable){
+  var c=data.categories[i]; if(c==null) return;
+  var B=ftBn(), old=document.getElementById('ftFxDlg'); if(old) old.remove();
+  var ov=document.createElement('div'); ov.id='ftFxDlg';
+  ov.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px;';
+  var pts = enable ? (B?[
+      'এই খাতের খরচ "সবচেয়ে বেশি খরচ", দৈনিক গড় ও সাপ্তাহিক তুলনা থেকে আলাদা হবে — তাই ভাড়া/বিল শীর্ষ খরচ হয়ে হিসাব বিকৃত করবে না।',
+      'রিপোর্ট ও ড্যাশবোর্ডে "নির্ধারিত মাসিক খরচ" নামে আলাদা অংশে দেখাবে।',
+      'এ মাসে এখনো না দিলে, আগের মাসগুলোর গড় অঙ্ক আগে থেকেই আলাদা রাখা হবে — "আজ কত খরচ করতে পারবেন" সঠিক দেখাবে।',
+      'সঞ্চয় পরিকল্পনায় নিজে থেকেই বাদ যাবে।'
+    ]:[
+      'Spending in this category is kept out of "top expense", daily average and weekly comparison, so rent/bills no longer distort them.',
+      'It shows in a separate "Fixed monthly costs" section on the dashboard and reports.',
+      'If not paid yet this month, the average of past months is set aside up front so "safe to spend today" stays accurate.',
+      'It is excluded automatically in the savings planner.'
+    ]) : (B?[
+      'এই খাতের খরচ আবার দৈনন্দিন খরচের সাথে গণ্য হবে।',
+      'দৈনিক গড়, "সবচেয়ে বেশি খরচ" ও সাপ্তাহিক তুলনায় ধরা হবে — বড় অঙ্কের কারণে এগুলো বেশি দেখাতে পারে।',
+      'আগে থেকে অঙ্ক আলাদা রাখা এবং সঞ্চয় পরিকল্পনায় নিজে থেকে বাদ দেওয়া বন্ধ হবে।'
+    ]:[
+      'Spending in this category counts as daily spending again.',
+      'It is included in daily average, "top expense" and weekly comparison — large amounts may inflate them.',
+      'Setting amounts aside up front and auto-excluding from the savings planner stop.'
+    ]);
+  var bx=document.createElement('div');
+  bx.style.cssText='background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:22px;padding:20px 18px 16px;max-width:360px;width:100%;max-height:88vh;overflow:auto;box-shadow:0 20px 50px rgba(0,0,0,.35);font-family:inherit;';
+  var esc0=(typeof esc==='function')?esc:function(x){return String(x);};
+  bx.innerHTML='<div style="width:48px;height:48px;margin:0 auto 10px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--primary) 14%,var(--card));color:var(--primary);"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>'
+   +'<div style="text-align:center;font-size:16px;font-weight:800;line-height:1.4;margin-bottom:4px;">'+(enable?(B?'মাসিক বিল খাত চালু করবেন?':'Set as monthly bill category?'):(B?'মাসিক বিল খাত বন্ধ করবেন?':'Remove monthly bill setting?'))+'</div>'
+   +'<div style="text-align:center;margin-bottom:12px;"><span style="display:inline-block;max-width:100%;padding:5px 14px;border-radius:20px;font-size:14px;font-weight:700;background:var(--bg);border:1px solid var(--border);word-break:break-word;">'+esc0(c)+'</span></div>'
+   +'<div style="font-size:12px;font-weight:800;color:var(--muted);margin-bottom:6px;">'+(B?'এতে যা বদলাবে':'What will change')+'</div>'
+   +'<ul style="margin:0 0 8px;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px;">'+pts.map(function(t0){ return '<li style="display:flex;gap:8px;font-size:13px;line-height:1.5;color:var(--text);"><span style="flex:none;width:6px;height:6px;border-radius:50%;background:var(--primary);margin-top:7px;"></span><span>'+t0+'</span></li>'; }).join('')+'</ul>'
+   +'<div style="font-size:11.5px;color:var(--muted);line-height:1.5;padding:8px 10px;border-radius:10px;background:var(--bg);border:1px solid var(--border);">'+(B?'আপনার কোনো লেনদেন বা মোট ব্যালেন্স বদলাবে না — শুধু হিসাবের ধরন বদলাবে। যেকোনো সময় আবার বদলানো যাবে।':'None of your transactions or your balance change — only how they are analysed. You can switch it back any time.')+'</div>'
+   +'<div style="display:flex;gap:8px;margin-top:14px;"></div>';
+  var row=bx.lastChild;
+  var mk=function(label,bg,color,fn){ var b=document.createElement('button'); b.type='button'; b.textContent=label; b.style.cssText='flex:1;padding:12px;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;background:'+bg+';color:'+color+';'; b.addEventListener('click',function(){ ov.remove(); if(fn) fn(); }); return b; };
+  row.appendChild(mk(B?'বাতিল':'Cancel','var(--bg)','var(--text)'));
+  row.appendChild(mk(B?'নিশ্চিত করুন':'Confirm','var(--primary)','#fff',function(){ ftApplyFixed(i,enable); }));
+  ov.appendChild(bx); ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });
+  document.body.appendChild(ov);
+}
+function ftApplyFixed(i,on){
+  var c=data.categories[i]; if(c==null) return;
+  if(!data.fixedCats) data.fixedCats={};
+  data.fixedCats[c]=!!on;
+  var bd=document.getElementById('fxBadge_'+i); if(bd) bd.style.cssText=ftFxBadgeStyle(!!on);
+  saveData();
+  try{ refreshBudgetInputs(); }catch(e){}
+  ['renderDash','renderHistory','renderReport'].forEach(function(f){ try{ if(typeof window[f]==='function') window[f](); }catch(e){} });
+}
+function toggleFixedCat(i){ ftFixedDialog(i,!isFixedCategory(data.categories[i])); }
 /* spend-from-savings: selected fund (data.spendFund) pays for outgoing transactions */
 function ftFundFor(type){ const f=data&&data.spendFund; if(!f||!data.accounts||!data.accounts.includes(f)) return null; const m=TYPE_META[type]; return (m&&m.sign<0&&type!=='save_to_account')?f:null; }
 function calcAccountBalances(){
@@ -3781,10 +3940,16 @@ function renderDash(){
   if(!entries.length){
     catBreak.innerHTML = `<div class="empty">${t('empty_no_expense')}</div>`;
   }else{
-    catBreak.innerHTML = entries.map(([cat,amt])=>{
-      const pct = total ? Math.round(amt/total*100) : 0;
+    const sp0 = calcSplitForMonth(null), B0 = (currentLang==='bn');
+    const rowsHtml = (map,tot)=> Object.entries(map).sort((a,b)=>b[1]-a[1]).map(([cat,amt])=>{
+      const pct = tot ? Math.round(amt/tot*100) : 0;
       return `<div class="catrow"><div>${esc(cat)}<div class="barbg"><div class="barfg" style="width:${pct}%"></div></div></div><div>${fmt(amt)} (${pct}%)</div></div>`;
     }).join('');
+    const hd0 = (txt,amt)=>`<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:12px 0 2px;font-size:12.5px;font-weight:800;color:var(--muted);"><span>${txt}</span><span>${fmt(amt)}</span></div>`;
+    let h0 = '';
+    if(sp0.dailyTotal>0) h0 += hd0(B0?'দৈনন্দিন খরচ':'Daily spending', sp0.dailyTotal) + rowsHtml(sp0.daily, sp0.dailyTotal);
+    if(sp0.fixedTotal>0) h0 += hd0(B0?'নির্ধারিত মাসিক খরচ (ভাড়া/বিল)':'Fixed monthly costs (rent/bills)', sp0.fixedTotal) + rowsHtml(sp0.fixed, sp0.fixedTotal);
+    catBreak.innerHTML = h0;
   }
 
   const recentList = document.getElementById('recentList');
@@ -3802,21 +3967,77 @@ function renderDash(){
 }
 
 // ---- Budgets ----
+function bgNum(n){ return ftBn() ? Number(n).toLocaleString('bn-BD') : String(n); }
 function refreshBudgetInputs(){
-  const wrap = document.getElementById('budgetInputs');
-  wrap.innerHTML = data.categories.map((c,i)=>{
-    const val = data.budgets[c] || '';
-    return `<div style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 4px;"><label style="margin:0;">${esc(c)}</label><button type="button" class="rmBtn sm" onclick="removeCategoryByName(${i})" aria-label="${t('btn_remove_short')}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>${t('btn_remove_short').replace(/^\s+/,'')}</button></div><input type="number" id="budgetIn_${i}" data-cat="${esc(c)}" placeholder="0" value="${val}">`;
-  }).join('');
+  const wrap = document.getElementById('budgetInputs'); if(!wrap) return;
+  const B = ftBn();
+  const prevSel = (document.getElementById('bgCat')||{}).value, prevAmt = (document.getElementById('bgAmt')||{}).value;
+  if(!data.budgets) data.budgets = {};
+  const cats = data.categories.slice();
+  let sel = (prevSel && cats.includes(prevSel)) ? prevSel : (cats.find(c=>!(data.budgets[c]>0)) || cats[0]);
+  const hasB = c => +data.budgets[c] > 0;
+  const keys = Object.keys(data.budgets).filter(c=> hasB(c) && cats.includes(c));
+  const used = calcByCategoryForMonth(todayStr().slice(0,7));
+  const selIdx = cats.indexOf(sel), fx = isFixedCategory(sel);
+  const amtVal = (prevAmt!==undefined && prevAmt!=='' && prevSel===sel) ? prevAmt : (hasB(sel) ? data.budgets[sel] : '');
+  let h = '<div style="margin-top:14px;padding:14px;border-radius:18px;background:var(--bg);border:1px solid var(--border);">'
+   + '<div style="font-size:13px;font-weight:800;margin-bottom:10px;">'+(B?'খাতভিত্তিক মাসিক বাজেট':'Monthly budget by category')+'</div>'
+   + '<select id="bgCat" onchange="bgSel()" style="width:100%;margin:0 0 8px;">'+cats.map(c=>'<option value="'+esc(c)+'"'+(c===sel?' selected':'')+'>'+esc(c)+'</option>').join('')+'</select>'
+   + '<div style="display:flex;gap:8px;align-items:stretch;"><input type="number" inputmode="decimal" id="bgAmt" placeholder="'+(B?'মাসিক সীমা (টাকা)':'Monthly limit (Taka)')+'" value="'+esc(String(amtVal))+'" style="flex:1;min-width:0;margin:0;" onkeydown="if(event.key===\'Enter\'){event.preventDefault();bgAdd();}">'
+   + '<button type="button" id="bgAddBtn" onclick="bgAdd()" style="flex:none;padding:0 18px;border:none;border-radius:12px;background:var(--primary);color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;">'+(hasB(sel)?(B?'আপডেট':'Update'):(B?'যোগ করুন':'Add'))+'</button></div>'
+   + '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;font-size:12px;color:var(--muted);">'
+   +   '<span>'+(B?'খাতের ধরন: ':'Type: ')+'<b style="color:'+(fx?'var(--primary)':'var(--text)')+';">'+(fx?(B?'মাসিক বিল খাত':'Monthly bill'):(B?'দৈনন্দিন খরচ':'Daily spending'))+'</b></span>'
+   +   '<button type="button" onclick="ftFixedDialog('+selIdx+','+(!fx)+')" style="border:none;background:transparent;color:var(--primary);font-weight:700;font-size:12px;cursor:pointer;padding:4px 0;font-family:inherit;">'+(fx?(B?'বদলান':'Change'):(B?'মাসিক বিল করুন':'Set as monthly bill'))+'</button>'
+   + '</div></div>';
+  h += '<div style="display:flex;align-items:center;justify-content:space-between;margin:16px 2px 6px;"><span style="font-size:13px;font-weight:800;">'+(B?'আপনার বাজেট':'Your budgets')+'</span><span style="font-size:11.5px;font-weight:800;padding:2px 10px;border-radius:99px;background:color-mix(in srgb,var(--primary) 12%,var(--card));color:var(--primary);">'+bgNum(keys.length)+'</span></div>';
+  if(!keys.length){
+    h += '<div style="padding:18px 12px;text-align:center;font-size:12.5px;color:var(--muted);border:1px dashed var(--border);border-radius:16px;">'+(B?'এখনো কোনো খাতের বাজেট নেই। ওপর থেকে খাত বেছে সীমা যোগ করুন।':'No category budgets yet. Pick a category above and add a limit.')+'</div>';
+  }else{
+    h += '<div style="border:1px solid var(--border);border-radius:16px;background:var(--card);overflow:hidden;">'
+      + keys.map((c,n)=>{
+          const i = cats.indexOf(c), lim = +data.budgets[c], u = used[c]||0, pct = Math.round(u/lim*100);
+          const col = pct>100 ? 'var(--red)' : pct>=80 ? 'var(--amber)' : 'var(--primary)';
+          return '<div style="display:flex;align-items:center;gap:11px;padding:12px;'+(n?'border-top:1px solid var(--border);':'')+'">'
+            + '<span style="flex:none;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;background:color-mix(in srgb,var(--primary) 12%,var(--card));color:var(--primary);">'+bgNum(n+1)+'</span>'
+            + '<div style="flex:1;min-width:0;"><div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px;font-size:14px;font-weight:700;line-height:1.3;word-break:break-word;">'+esc(c)+ftFxBadge(i,isFixedCategory(c))+'</div>'
+            + '<div style="height:5px;border-radius:5px;background:color-mix(in srgb,'+col+' 16%,transparent);overflow:hidden;margin:7px 0 4px;"><i style="display:block;height:100%;width:'+Math.min(100,pct)+'%;background:'+col+';border-radius:5px;"></i></div>'
+            + '<div style="font-size:11.5px;color:var(--muted);">'+(B?'এ মাসে ':'This month ')+fmt(u)+' · '+bgNum(pct)+'%</div></div>'
+            + '<b style="flex:none;font-size:14.5px;">'+fmt(lim)+'</b>'
+            + ftDotsBtn(i)
+            + '</div>';
+        }).join('')
+      + '</div>';
+  }
+  wrap.innerHTML = h;
+}
+function bgSel(){
+  const s=document.getElementById('bgCat'), a=document.getElementById('bgAmt'), btn=document.getElementById('bgAddBtn'); if(!s) return;
+  const has=+data.budgets[s.value]>0; if(a) a.value = has ? data.budgets[s.value] : '';
+  refreshBudgetInputs();
+}
+function bgAdd(){
+  const s=document.getElementById('bgCat'), a=document.getElementById('bgAmt'); if(!s||!a) return;
+  const c=s.value, v=parseFloat(a.value);
+  if(!c) return;
+  if(!(v>0)){ appDialog(ftBn()?'সঠিক একটি অঙ্ক লিখুন।':'Enter a valid amount.', {}); return; }
+  data.budgets[c]=v; saveData();
+  const keep=c; refreshBudgetInputs();
+  try{ renderDash(); }catch(e){}
+}
+function bgEdit(i){
+  const c=data.categories[i]; if(c==null) return;
+  const s=document.getElementById('bgCat'), a=document.getElementById('bgAmt'); if(!s||!a) return;
+  s.value=c; a.value=data.budgets[c]||''; refreshBudgetInputs();
+  const a2=document.getElementById('bgAmt'); if(a2){ a2.scrollIntoView({block:'center',behavior:'smooth'}); a2.focus(); }
+}
+function bgRemove(i){
+  const c=data.categories[i]; if(c==null) return;
+  appDialog((ftBn()?'এই খাতের মাসিক বাজেট মুছবেন?':'Remove this category\'s monthly budget?')+'\n\n'+c, {confirm:true}, ()=>{
+    delete data.budgets[c]; saveData(); refreshBudgetInputs(); try{ renderDash(); }catch(e){}
+  });
 }
 function saveBudgets(){
   data.dailyLimit = parseFloat(document.getElementById('dailyLimitInput').value) || 0;
-  data.categories.forEach((c,i)=>{
-    const el = document.getElementById('budgetIn_' + i);
-    const val = el ? parseFloat(el.value) : NaN;
-    if(val && val>0) data.budgets[c] = val;
-    else delete data.budgets[c];
-  });
   saveData();
   alert(t('alert_saved'));
   renderDash();
@@ -3978,8 +4199,8 @@ function clearFilter(){
 function setHistRange(kind){
   const f = document.getElementById('histFrom'), to = document.getElementById('histTo'), today = todayStr();
   if(kind === 'today'){ f.value = today; }
-  else if(kind === 'week'){ const d = new Date(); d.setDate(d.getDate()-6); f.value = fmtDate(d); }
-  else if(kind === '30'){ const d = new Date(); d.setDate(d.getDate()-29); f.value = fmtDate(d); }
+  else if(kind === 'week'){ const d = new Date(todayStr()+'T00:00:00'); d.setDate(d.getDate()-6); f.value = fmtDate(d); }
+  else if(kind === '30'){ const d = new Date(todayStr()+'T00:00:00'); d.setDate(d.getDate()-29); f.value = fmtDate(d); }
   else{ f.value = today.slice(0,7)+'-01'; }
   to.value = today;
   document.getElementById('filterMonth').value = '';
@@ -4592,25 +4813,34 @@ function renderReport(){
 
   const deps = list.filter(x=>x.type==='deposit');
   html += `<div class="box"><h3>${t('rep_income_src')}</h3>${deps.length ? barRows(sumBy(deps, srcLabel), income) : `<div class="empty">${t('empty_no_income')}</div>`}</div>`;
-  html += `<div class="box"><h3>${t('rep_exp_cat')}</h3>${expList.length ? barRows(sumBy(expList, x=>x.category), expense) : `<div class="empty">${t('empty_no_expense')}</div>`}</div>`;
+  {
+    const _fx = expList.filter(isFixedTx), _dl = expList.filter(x=>!isFixedTx(x)), _fxS = sum(_fx), _dlS = sum(_dl);
+    if(!expList.length) html += `<div class="box"><h3>${t('rep_exp_cat')}</h3><div class="empty">${t('empty_no_expense')}</div></div>`;
+    else{
+      html += `<div class="box"><h3>${t('rep_exp_cat')}${_fxS>0?(B?' — দৈনন্দিন':' — daily'):''}</h3>${_dl.length ? barRows(sumBy(_dl, x=>x.category), _dlS) : `<div class="empty">${t('empty_no_expense')}</div>`}</div>`;
+      if(_fxS>0) html += `<div class="box"><h3>${B?'নির্ধারিত মাসিক খরচ (ভাড়া/বিল)':'Fixed monthly costs (rent/bills)'}</h3>${barRows(sumBy(_fx, x=>x.category), _fxS)}</div>`;
+    }
+  }
 
   // insights
   const dates = list.map(x=>x.date).sort();
   let days;
   if(month){
     const [y,m] = month.split('-').map(Number);
-    days = (month === todayStr().slice(0,7)) ? new Date().getDate() : new Date(y, m, 0).getDate();
+    days = (month === todayStr().slice(0,7)) ? +todayStr().slice(8,10) : new Date(y, m, 0).getDate();
   }else{
     const today0 = todayStr();
     const st = from || dates[0];
     let en = to || dates[dates.length-1]; if(en > today0) en = today0;
     days = en < st ? 1 : Math.max(1, Math.round((new Date(en) - new Date(st))/86400000) + 1);
   }
-  let ins = kv(t('rep_avg_daily'), fmt(Math.round(expense/days)));
+  const _fixedL = expList.filter(isFixedTx), _dailyL = expList.filter(x=>!isFixedTx(x)), _fixedS = sum(_fixedL), _dailyS = sum(_dailyL);
+  let ins = kv(t('rep_avg_daily'), fmt(Math.round(_dailyS/days)) + (_fixedS>0 ? (B?' (ভাড়া/বিল বাদে)':' (excl. rent/bills)') : ''));
+  if(_fixedS>0) ins += kv(B?'নির্ধারিত মাসিক খরচ (ভাড়া/বিল)':'Fixed monthly costs (rent/bills)', fmt(_fixedS));
   const cc = list.reduce((a,x)=> x.fund ? a : a + (TYPE_META[x.type] ? TYPE_META[x.type].sign : 0) * x.amount, 0);
   ins += kv(B ? 'ব্যালেন্স পরিবর্তন (নগদ প্রবাহ)' : 'Net cash change', (cc>=0?'+':'−') + fmt(Math.abs(cc)));
-  if(expList.length){
-    const byDay = sumBy(expList, x=>x.date);
+  if(_dailyL.length){
+    const byDay = sumBy(_dailyL, x=>x.date);
     const top = Object.entries(byDay).sort((a,b)=>b[1]-a[1])[0];
     ins += kv(t('rep_top_day'), `${top[0]} — ${fmt(top[1])}`);
   }
@@ -4677,7 +4907,7 @@ function renderToday(){
   const tl = data.transactions.filter(x=>x.date===today);
   const inc = tl.filter(x=>x.type==='deposit').reduce((a,x)=>a+x.amount,0);
   const exp = tl.filter(isExpenseLike).reduce((a,x)=>a+x.amount,0);
-  const wk = new Date(); wk.setDate(wk.getDate()-6);
+  const wk = new Date(today+'T00:00:00'); wk.setDate(wk.getDate()-6);
   const wkStr = fmtDate(wk);
   const wexp = data.transactions.filter(x=>isExpenseLike(x) && x.date>=wkStr && x.date<=today).reduce((a,x)=>a+x.amount,0);
   let h = kv(t('today_income'), fmt(inc)) + kv(t('today_expense'), fmt(exp));
@@ -4695,11 +4925,12 @@ function calcLoanReminders(){
   const {getMap, oweMap} = calcLoans();
   const out = [];
   const today = new Date(todayStr()+'T00:00:00');
+  const _pk = v=>String(v==null?'':v).trim().toLowerCase() || 'অজানা';
   const add = (map, type, dir)=>{
     Object.keys(map).forEach(p=>{
       const amt = Math.round(map[p]);
       if(amt <= 0) return;
-      const dues = data.transactions.filter(x=>x.type===type && x.person===p && x.due).map(x=>x.due).sort();
+      const dues = data.transactions.filter(x=>x.type===type && _pk(x.person)===_pk(p) && x.due).map(x=>x.due).sort();
       if(!dues.length) return;
       const due = dues[dues.length-1];
       const days = Math.round((new Date(due+'T00:00:00') - today)/86400000);
@@ -4747,8 +4978,8 @@ function recTypeChange(){
 function recTimeLbl(tm){ const p=String(tm||'').split(':'), h=+p[0], m=+p[1]; if(!isFinite(h)||!isFinite(m)) return ''; return ((h%12)||12)+':'+String(m).padStart(2,'0')+' '+(h<12?'AM':'PM'); }
 function nowHM(){ return nowTime(); }
 function effDay(day){
-  const now = new Date();
-  const dim = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+  const tp = todayStr().split('-').map(Number);
+  const dim = new Date(tp[0], tp[1], 0).getDate();
   return Math.min(day, dim);
 }
 function refreshRecurringUI(){
@@ -4824,7 +5055,7 @@ function setReportRange(kind){
   const from = document.getElementById('reportFrom'), to = document.getElementById('reportTo'), m = document.getElementById('reportMonth');
   const today = todayStr();
   if(kind === 'today'){ from.value = today; to.value = today; }
-  else if(kind === 'week'){ const d = new Date(); d.setDate(d.getDate()-6); from.value = fmtDate(d); to.value = today; }
+  else if(kind === 'week'){ const d = new Date(today+'T00:00:00'); d.setDate(d.getDate()-6); from.value = fmtDate(d); to.value = today; }
   else{ from.value = ''; to.value = ''; m.value = today.slice(0,7); }
   renderReport();
 }
@@ -5348,16 +5579,17 @@ function chatAnalysis(q){
     if(avg>0) r+='\n'+(B?'গত ৩০ দিনের দৈনিক গড়: ':'Daily average (last 30 days): ')+fmt(avg)+' — '+(s>avg?(B?'আজ গড়ের চেয়ে '+fmt(s-avg)+' বেশি':'above average by '+fmt(s-avg)):(B?'গড়ের মধ্যেই আছে':'within average'));
     return r;
   }
-  const inc=sum(T.filter(x=>x.type==='deposit'&&x.date.slice(0,7)===key)), me=E.filter(x=>x.date.slice(0,7)===key), exp=sum(me);
+  const inc=sum(T.filter(x=>x.type==='deposit'&&x.date.slice(0,7)===key)), me=E.filter(x=>x.date.slice(0,7)===key), exp=sum(me), fxm=sum(me.filter(isFixedTx)), vm=exp-fxm;
   const L=[(B?'এই মাসের বিশ্লেষণ':'This month\'s analysis'), (B?'আয়: ':'Income: ')+fmt(inc)+' · '+(B?'খরচ: ':'Expense: ')+fmt(exp)+' · '+(B?'বাকি: ':'Left: ')+fmt(inc-exp)];
   if(inc>0) L.push((B?'সঞ্চয়ের হার: ':'Savings rate: ')+Math.round((inc-exp)/inc*100)+'%');
-  if(day>=3&&exp>0) L.push((B?'মাস শেষে আনুমানিক খরচ: ':'Projected month-end spend: ')+fmt(exp/day*dim));
+  if(day>=3&&exp>0) L.push((B?'মাস শেষে আনুমানিক খরচ: ':'Projected month-end spend: ')+fmt(fxm+vm/day*dim)+(fxm>0?(B?' (ভাড়া/বিল আলাদা ধরে)':' (rent/bills counted separately)'):''));
   const pk=(()=>{const d=new Date(+key.slice(0,4),+key.slice(5,7)-2,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');})();
   const pdd=Math.min(day,new Date(+pk.slice(0,4),+pk.slice(5,7),0).getDate());
-  const pm=sum(E.filter(x=>x.date.slice(0,7)===pk&&+x.date.slice(8,10)<=pdd));
-  if(pm>0&&exp>0){ const ch=Math.round((exp-pm)/pm*100); L.push((B?'গত মাসের একই সময়ের তুলনায় খরচ ':'Spending vs same days last month: ')+(ch>=0?'+':'−')+Math.abs(ch)+'%'); }
-  const cat=Object.entries(calcByCategoryForMonth(key)).sort((a,b)=>b[1]-a[1])[0];
-  if(cat&&exp>0) L.push((B?'সবচেয়ে বেশি খরচের খাত: ':'Top category: ')+cat[0]+' ('+fmt(cat[1])+', '+Math.round(cat[1]/exp*100)+'%)');
+  const pm=sum(E.filter(x=>!isFixedTx(x)&&x.date.slice(0,7)===pk&&+x.date.slice(8,10)<=pdd));
+  if(pm>0&&vm>0){ const ch=Math.round((vm-pm)/pm*100); L.push((B?'গত মাসের একই সময়ের তুলনায় দৈনন্দিন খরচ (ভাড়া/বিল বাদে) ':'Daily spending vs same days last month (excl. rent/bills): ')+(ch>=0?'+':'−')+Math.abs(ch)+'%'); }
+  const cat=Object.entries(calcSplitForMonth(key).daily).sort((a,b)=>b[1]-a[1])[0];
+  if(cat&&vm>0) L.push((B?'দৈনন্দিন খরচের শীর্ষ খাত: ':'Top daily category: ')+cat[0]+' ('+fmt(cat[1])+', '+Math.round(cat[1]/vm*100)+'%)');
+  if(fxm>0) L.push((B?'নির্ধারিত মাসিক খরচ (ভাড়া/বিল): ':'Fixed monthly costs (rent/bills): ')+fmt(fxm));
   L.push((B?'বর্তমান ব্যালেন্স: ':'Current balance: ')+fmt(calcBalance()));
   return L.join('\n');
 }
@@ -5411,10 +5643,11 @@ function getAIResponse(msg){
     return t('chat_balance') + fmt(calcBalance());
   }
   if(q.includes('খরচ') || ql.includes('expense') || ql.includes('spend')){
-    const catMap = calcByCategory();
-    const entries = Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
+    const sp = calcSplitForMonth(null), Bc = (currentLang==='bn');
+    const entries = Object.entries(sp.daily).sort((a,b)=>b[1]-a[1]);
     let resp = t('chat_expense') + fmt(calcTotalExpense());
-    if(entries.length) resp += '। ' + t('chat_top_cat') + entries[0][0] + ' (' + fmt(entries[0][1]) + ')';
+    if(entries.length) resp += '। ' + t('chat_top_cat') + entries[0][0] + ' (' + fmt(entries[0][1]) + ')' + (Bc?' — দৈনন্দিন খরচের মধ্যে':' — among daily spending');
+    if(sp.fixedTotal>0) resp += '। ' + (Bc?'নির্ধারিত মাসিক খরচ (ভাড়া/বিল): ':'Fixed monthly costs (rent/bills): ') + fmt(sp.fixedTotal);
     return resp;
   }
   if(q.includes('লোন') || ql.includes('loan') || q.includes('পাওনা') || ql.includes('owe')){
@@ -5427,10 +5660,12 @@ function getAIResponse(msg){
     return t('chat_owe') + fmt(totalOwe) + '। ' + t('chat_get') + fmt(totalGet);
   }
   if(q.includes('খাত') || ql.includes('categor')){
-    const catMap = calcByCategory();
-    const entries = Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
-    if(!entries.length) return t('chat_no_data');
-    return t('chat_top_cat') + entries[0][0] + ' (' + fmt(entries[0][1]) + ')';
+    const sp = calcSplitForMonth(null), Bc = (currentLang==='bn');
+    const entries = Object.entries(sp.daily).sort((a,b)=>b[1]-a[1]);
+    if(!entries.length && !(sp.fixedTotal>0)) return t('chat_no_data');
+    let r2 = entries.length ? t('chat_top_cat') + entries[0][0] + ' (' + fmt(entries[0][1]) + ')' + (Bc?' — দৈনন্দিন খরচের মধ্যে':' — among daily spending') : '';
+    if(sp.fixedTotal>0) r2 += (r2?'। ':'') + (Bc?'নির্ধারিত মাসিক খরচ (ভাড়া/বিল): ':'Fixed monthly costs (rent/bills): ') + fmt(sp.fixedTotal);
+    return r2;
   }
   if(q.includes('একাউন্ট') || ql.includes('account')){
     const map = calcAccountBalances();
@@ -5928,7 +6163,7 @@ if(devUnlocked){
     /* ---- data prep ---- */
     const firstD=T.reduce((m,x)=>x.date<m?x.date:m,today), yest=addD(today,-1);
     const startD=firstD>addD(today,-60)?firstD:addD(today,-60);
-    const byDay={}; T.filter(x=>isExpenseLike(x)&&!isRec(x)&&x.date>=startD&&x.date<=today).forEach(x=>{ byDay[x.date]=(byDay[x.date]||0)+(+x.amount||0); });
+    const byDay={}; T.filter(x=>isDailyExpense(x)&&x.date>=startD&&x.date<=today).forEach(x=>{ byDay[x.date]=(byDay[x.date]||0)+(+x.amount||0); });
     const hist=[], hd=[]; for(let d=startD,g=0; d<=yest&&g<80; d=addD(d,1),g++){ hist.push(byDay[d]||0); hd.push(d); }
     const m=hist.length, td=byDay[today]||0;
     const mkeys=[]; { let y=+firstD.slice(0,4), mo=+firstD.slice(5,7); const cy=+key.slice(0,4), cm=+key.slice(5,7), gd=0;
@@ -5937,22 +6172,24 @@ if(devUnlocked){
     const lastK=mkeys.slice(-6);
     const monE=lastK.map(k=>sum(T.filter(x=>isExpenseLike(x)&&x.date.slice(0,7)===k))), monI=lastK.map(k=>sum(T.filter(x=>x.type==='deposit'&&x.date.slice(0,7)===k)));
     const spent=sum(T.filter(x=>isExpenseLike(x)&&x.date.slice(0,7)===key)), earned=sum(T.filter(x=>x.type==='deposit'&&x.date.slice(0,7)===key));
+    const fixedM=sum(T.filter(x=>isFixedTx(x)&&x.date.slice(0,7)===key)), spentV=spent-fixedM;
     const nzI=monI.filter(v=>v>0), nzE=monE.filter(v=>v>0), avgInc=nzI.length?mean(nzI):earned, avgMonE=nzE.length?mean(nzE):0;
     const bal=calcBalance(), accT=Object.values(calcAccountBalances()).reduce((a,b)=>a+b,0), LN=calcLoans();
     const owe=Object.values(LN.oweMap).filter(v=>v>0).reduce((a,b)=>a+b,0);
     let upIn=0, upOut=0, upExp=0; (data.recurring||[]).forEach(r=>{ if(r.lastMonth===key) return; const a=+r.amount||0; if(r.type==='deposit') upIn+=a; else if(r.type==='expense'){ upOut+=a; upExp+=a; } else if(r.type==='save_to_account') upOut+=a; });
+    { const _pf=ftPendingFixed(key).total; upOut+=_pf; upExp+=_pf; }
     const conf=(m>=45&&T.length>=40)?2:(m>=14&&T.length>=12)?1:0;
     const WD=Lg(['রবিবার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার','শুক্রবার','শনিবার'],['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']);
     const G1=Lg('পূর্বাভাস ও ঝুঁকি','Forecast & risk'), G2=Lg('ব্যয়ের ধরন','Spending behaviour'), G3=Lg('সম্পদ ও লক্ষ্য','Wealth & goals');
 
     /* 1) month-end spend forecast: ensemble of 3 models */
     { const ms=[];
-      if(day>=3&&spent>0) ms.push([Lg('রান-রেট','run-rate'), spent/day*dim]);
+      if(day>=3&&spent>0) ms.push([Lg('রান-রেট','run-rate'), fixedM+upExp+spentV/day*dim]);
       let ewv=null; if(m>=7){ const al=2/(7+1); let ew=hist[0]; for(let i=1;i<m;i++) ew=al*hist[i]+(1-al)*ew; ewv=ew; ms.push(['EWMA', spent+Math.max(0,ew-td)+ew*left+upExp]); }
-      const fr=[]; lastK.forEach(k=>{ const tot=sum(T.filter(x=>isExpenseLike(x)&&x.date.slice(0,7)===k)); if(tot>0){ const part=sum(T.filter(x=>isExpenseLike(x)&&x.date.slice(0,7)===k&&+x.date.slice(8,10)<=day)); fr.push(part/tot); } });
-      if(fr.length&&mean(fr)>=0.1&&spent>0) ms.push([Lg('মাসিক কার্ভ','monthly curve'), spent/mean(fr)]);
+      const fr=[]; lastK.forEach(k=>{ const tot=sum(T.filter(x=>isDailyExpense(x)&&x.date.slice(0,7)===k)); if(tot>0){ const part=sum(T.filter(x=>isDailyExpense(x)&&x.date.slice(0,7)===k&&+x.date.slice(8,10)<=day)); fr.push(part/tot); } });
+      if(fr.length&&mean(fr)>=0.1&&spent>0) ms.push([Lg('মাসিক কার্ভ','monthly curve'), fixedM+upExp+spentV/mean(fr)]);
       if(ms.length){ const vs=ms.map(a=>a[1]), F=mean(vs), lo=Math.min.apply(null,vs), hi=Math.max.apply(null,vs);
-        const ref=earned>0?earned:avgInc; const tone=ref>0?(F>ref?'bad':F>0.9*ref?'warn':'good'):'';
+        const ref=Math.max(earned,avgInc); const tone=ref>0?(F>ref?'bad':F>0.9*ref?'warn':'good'):'';
         P(G1,'trend',tone, Lg('মাস শেষে মোট খরচ হতে পারে প্রায় '+fmt(F)+(ms.length>1&&hi-lo>1?' (সম্ভাব্য পরিসর '+fmt(lo)+'–'+fmt(hi)+')':'')+(avgMonE>0?' — গত মাসগুলোর গড়ের চেয়ে '+Math.abs(Math.round((F/avgMonE-1)*100))+'% '+(F>=avgMonE?'বেশি':'কম'):'')+(ref>0?' · আয়ের '+Math.round(F/ref*100)+'%':''),
                                   'Month-end spend likely about '+fmt(F)+(ms.length>1&&hi-lo>1?' (range '+fmt(lo)+'–'+fmt(hi)+')':'')+(avgMonE>0?' — '+Math.abs(Math.round((F/avgMonE-1)*100))+'% '+(F>=avgMonE?'above':'below')+' your past-month average':'')+(ref>0?' · '+Math.round(F/ref*100)+'% of income':'')),
           Lg(ms.length+'টি মডেলের গড়: ','Average of '+ms.length+' models: ')+ms.map(a=>a[0]).join(' · ')+(ewv!=null?' (α=0.25)':'')); }
@@ -5993,7 +6230,7 @@ if(devUnlocked){
                                   'Over the last '+n+' days daily spend is '+(bsl>0?'rising':'falling')+' by about '+fmt(Math.abs(bsl))+' per day (≈ '+fmt(Math.abs(bsl)*30)+'/month), R²='+r1(r2*100)/100),
           Lg('সরল রৈখিক রিগ্রেশন (OLS) · ঢাল t='+r1(tb),'Linear regression (OLS) · slope t='+r1(tb))); } }
     /* 7) Pareto 80/20 + Herfindahl concentration (last 90 days) */
-    { const f90=addD(today,-90), cat={}; T.filter(x=>isExpenseLike(x)&&x.date>=f90).forEach(x=>{ const k=x.category||Lg('অন্যান্য','Other'); cat[k]=(cat[k]||0)+(+x.amount||0); });
+    { const f90=addD(today,-90), cat={}; T.filter(x=>isDailyExpense(x)&&x.date>=f90).forEach(x=>{ const k=x.category||Lg('অন্যান্য','Other'); cat[k]=(cat[k]||0)+(+x.amount||0); });
       const es=Object.entries(cat).sort((a,b)=>b[1]-a[1]), tot=sumv(es.map(e=>e[1]));
       if(es.length>=2&&tot>0){ let cum=0, k=0; for(const e of es){ cum+=e[1]; k++; if(cum/tot>=0.8) break; }
         const hh=Math.round(sumv(es.map(e=>Math.pow(e[1]/tot*100,2)))), eff=r1(10000/hh), lab=hh<1500?Lg('বৈচিত্র্যপূর্ণ','diversified'):hh<2500?Lg('মাঝারি কেন্দ্রীভূত','moderately concentrated'):Lg('অত্যন্ত কেন্দ্রীভূত','highly concentrated');
@@ -6036,7 +6273,7 @@ if(devUnlocked){
           Lg('বার্ষিক কিস্তির ভবিষ্যৎ মূল্য FV = P·((১+r)ⁿ−১)÷r, r=০.৫%/মাস, n=১২ — ৬% শুধু উদাহরণ','Future value of an annuity FV = P·((1+r)ⁿ−1)÷r, r=0.5%/month, n=12 — 6% is only an example')); } }
     /* ================= ADVANCED MATH LAB (G4) ================= */
     const G4=Lg('অ্যাডভান্সড গণিত ল্যাব','Advanced math lab');
-    const base30=hist.slice(-30), mu30=mean(base30), sg30=sd(base30), refInc=earned>0?earned:avgInc;
+    const base30=hist.slice(-30), mu30=mean(base30), sg30=sd(base30), refInc=Math.max(earned,avgInc);
     const f2=x=>(Math.round(x*100)/100).toFixed(2), dm0=n=>n>365?Lg('১ বছরের বেশি','over 1 year'):Math.round(n)+Lg(' দিন',' days');
 
     /* A) Holt double-exponential smoothing: 7-day forecast with 80% band */
@@ -6063,13 +6300,13 @@ if(devUnlocked){
         Lg('কেন্দ্রীয় সীমা উপপাদ্য (CLT): বাকি খরচ ~ N(μ·n, σ²·n) · P = Φ((আয় − অনুমিত মোট) ÷ (σ·√n)) · নিরাপদ সীমা = (আয় − খরচ − 1.28·σ√n) ÷ n','Central Limit Theorem: remaining spend ~ N(μ·n, σ²·n) · P = Φ((income − projected total) ÷ (σ·√n)) · safe limit = (income − spent − 1.28·σ√n) ÷ n')); }
 
     /* D) cash runway (burn-rate) with conservative bound */
-    if(bal>0&&mu30>0&&m>=7){ const ub=mu30+1.645*sg30/Math.sqrt(base30.length), d1=bal/mu30, d2=bal/ub;
-      P(G4,'hourglass',d2<15?'bad':d1<45?'warn':'good', Lg('বর্তমান ব্যালেন্সে গড় খরচ ('+fmt(mu30)+'/দিন) ধরলে ≈ '+dm0(d1)+' চলবে'+(d1<=365?' (প্রায় '+addD(today,Math.floor(d1))+' পর্যন্ত)':'')+'; সতর্ক হিসাবে ≈ '+dm0(d2),
-                              'At your average burn ('+fmt(mu30)+'/day) the current balance lasts ≈ '+dm0(d1)+(d1<=365?' (until about '+addD(today,Math.floor(d1))+')':'')+'; conservative estimate ≈ '+dm0(d2)),
+    if(bal>0&&mu30>0&&m>=7){ const fxd=ftFixedPerDay(), ub=mu30+fxd+1.645*sg30/Math.sqrt(base30.length), d1=bal/(mu30+fxd), d2=bal/ub;
+      P(G4,'hourglass',d2<15?'bad':d1<45?'warn':'good', Lg('বর্তমান ব্যালেন্সে গড় খরচ ('+fmt(mu30+fxd)+'/দিন, ভাড়া/বিলসহ) ধরলে ≈ '+dm0(d1)+' চলবে'+(d1<=365?' (প্রায় '+addD(today,Math.floor(d1))+' পর্যন্ত)':'')+'; সতর্ক হিসাবে ≈ '+dm0(d2),
+                              'At your average burn ('+fmt(mu30+fxd)+'/day, incl. rent/bills) the current balance lasts ≈ '+dm0(d1)+(d1<=365?' (until about '+addD(today,Math.floor(d1))+')':'')+'; conservative estimate ≈ '+dm0(d2)),
         Lg('রানওয়ে = ব্যালেন্স ÷ দৈনিক বার্ন-রেট · সতর্ক = ব্যালেন্স ÷ (μ + 1.645·σ÷√n) · গত '+base30.length+' দিন','Runway = balance ÷ daily burn rate · conservative = balance ÷ (μ + 1.645·σ÷√n) · last '+base30.length+' days')); }
 
     /* E) outlier transactions: Tukey IQR fence + modified z-score (MAD) */
-    { const f90=addD(today,-90), ex=T.filter(x=>isExpenseLike(x)&&!isRec(x)&&x.date>=f90&&+x.amount>0);
+    { const f90=addD(today,-90), ex=T.filter(x=>isDailyExpense(x)&&x.date>=f90&&+x.amount>0);
       if(ex.length>=10){ const am=ex.map(x=>+x.amount), q1=pctl(am,0.25), q3=pctl(am,0.75), iqr=q3-q1, fence=q3+1.5*iqr, med=pctl(am,0.5), mad=pctl(am.map(v=>Math.abs(v-med)),0.5), outs=ex.filter(x=>+x.amount>fence).sort((a,b)=>b.amount-a.amount);
         if(outs.length&&iqr>0){ const t0=outs[0], mz=mad>0?0.6745*(t0.amount-med)/mad:0, nm=esc(t0.category||t0.note||Lg('অজানা','unknown'));
           P(G4,'alert',outs.length>=3?'warn':'', Lg('গত ৯০ দিনে '+outs.length+'টি অস্বাভাবিক বড় খরচ ('+fmt(fence)+'-এর বেশি); সবচেয়ে বড়: '+fmt(t0.amount)+' ('+nm+', '+t0.date+') — স্বাভাবিক মধ্যমার '+r1(t0.amount/Math.max(1,med))+' গুণ',
@@ -6142,17 +6379,21 @@ if(devUnlocked){
     const sum=l=>l.reduce((a,x)=>a+(+x.amount||0),0);
     const iso=d=>d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
     const base=new Date(+today.slice(0,4),+today.slice(5,7)-1,+today.slice(8,10)), ago=n=>iso(new Date(base.getFullYear(),base.getMonth(),base.getDate()-n));
-    const mT=T.filter(x=>x.date.slice(0,7)===key), ex=T.filter(isExpenseLike);
-    const spent=sum(mT.filter(isExpenseLike)), earned=sum(mT.filter(x=>x.type==='deposit')), td=sum(mT.filter(x=>x.date===today&&isExpenseLike(x)));
+    const mT=T.filter(x=>x.date.slice(0,7)===key), ex=T.filter(isDailyExpense);
+    const spent=sum(mT.filter(isExpenseLike)), earned=sum(mT.filter(x=>x.type==='deposit')), td=sum(mT.filter(x=>x.date===today&&isDailyExpense(x)));
     const w1=sum(ex.filter(x=>x.date>=ago(6)&&x.date<=today)), w0=sum(ex.filter(x=>x.date>=ago(13)&&x.date<=ago(7)));
     const bal=calcBalance(), accT=Object.values(calcAccountBalances()).reduce((a,b)=>a+b,0), LN=calcLoans();
     const owe=Object.values(LN.oweMap).filter(v=>v>0).reduce((a,b)=>a+b,0);
-    const avg=spent/Math.max(day,1), proj=avg*dim, need=avg*left, spare=bal-need, safe=Math.max(0,bal)/(left+1);
-    const cat={}; mT.filter(isExpenseLike).forEach(x=>{ const k=x.category||Lg('অন্যান্য','Other'); cat[k]=(cat[k]||0)+(+x.amount||0); });
-    const es=Object.entries(cat).sort((a,b)=>b[1]-a[1]), top=es[0], topP=top&&spent>0?Math.round(top[1]/spent*100):0;
+    const _pm=k=>{ let y=+key.slice(0,4), m=+key.slice(5,7)-k; while(m<1){m+=12;y--;} return y+'-'+String(m).padStart(2,'0'); };
+    const _pi=[1,2,3,4,5,6].map(k=>sum(T.filter(x=>x.type==='deposit'&&x.date.slice(0,7)===_pm(k)))).filter(v=>v>0), refI=Math.max(earned,_pi.length?_pi.reduce((a,b)=>a+b,0)/_pi.length:0);
+    const resvI=(data.recurring||[]).filter(r=>(r.type==='expense'||r.type==='save_to_account')&&r.lastMonth!==key).reduce((a,r)=>a+(+r.amount||0),0)+ftPendingFixed(key).total;
+    const fxM=sum(mT.filter(isFixedTx)), pendFx=ftPendingFixed(key).total, upE=(data.recurring||[]).filter(r=>r.type==='expense'&&r.lastMonth!==key).reduce((a,r)=>a+(+r.amount||0),0);
+    const avg=(spent-fxM)/Math.max(day,1), proj=fxM+pendFx+upE+avg*dim, need=avg*left, spare=bal-need-resvI, safe=Math.max(0,bal-resvI)/(left+1);
+    const cat={}; mT.filter(isDailyExpense).forEach(x=>{ const k=x.category||Lg('অন্যান্য','Other'); cat[k]=(cat[k]||0)+(+x.amount||0); });
+    const es=Object.entries(cat).sort((a,b)=>b[1]-a[1]), top=es[0], topP=top&&(spent-fxM)>0?Math.round(top[1]/(spent-fxM)*100):0;
     /* verdict + 0-100 score */
-    let tone; if(bal<0||bal<need) tone='bad'; else if(earned>0&&proj>earned*0.9) tone='warn'; else if(earned<=0&&bal<need*1.3) tone='warn'; else tone='good';
-    const use=earned>0?proj/earned:(bal>0?proj/(bal+spent):1.5);
+    let tone; if(bal<0||bal<need) tone='bad'; else if(refI>0&&proj>refI*0.9) tone='warn'; else if(refI<=0&&bal<need*1.3) tone='warn'; else tone='good';
+    const use=refI>0?proj/refI:(bal>0?proj/(bal+spent):1.5);
     let score=use<=0.5?100:Math.round(100-(use-0.5)*100); if(bal<0) score=Math.min(score,25); else if(bal<need) score=Math.min(score,45);
     score=Math.max(5,Math.min(100,score));
     const badge={good:Lg('ভালো চলছে','Doing well'),warn:Lg('একটু সাবধান','Be careful'),bad:Lg('ঝুঁকিতে আছেন','At risk')}[tone];
@@ -6162,8 +6403,8 @@ if(devUnlocked){
     const card=(t,ic,k,v,s)=>'<div class="insC t-'+t+'"><div class="ic">'+mi(ic)+'</div><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="s">'+s+'</div></div>';
     const cards=[];
     cards.push(card(td>safe&&safe>0?'warn':'good','wallet',Lg('আজ নিরাপদ খরচ','Safe to spend today'),fmt(safe),Lg('আজ খরচ '+fmt(td),'Spent today '+fmt(td))));
-    cards.push(card(earned>0&&proj>earned?'bad':(earned>0&&proj>earned*0.9?'warn':'n'),'calendar',Lg('মাস শেষে খরচ','Month-end spend'),fmt(proj),Lg('দিনে গড় '+fmt(avg),'Avg '+fmt(avg)+'/day')));
-    cards.push(card(topP>=50?'warn':'n','split',Lg('সবচেয়ে বেশি খরচ','Top expense'),top?esc(top[0]):'—',top?topP+'% · '+fmt(top[1]):Lg('এখনো খরচ নেই','No spending yet')));
+    cards.push(card(refI>0&&proj>refI?'bad':(refI>0&&proj>refI*0.9?'warn':'n'),'calendar',Lg('মাস শেষে খরচ','Month-end spend'),fmt(proj),Lg('দিনে গড় '+fmt(avg)+' (ভাড়া/বিল বাদে)'+(fxM>0?' · ভাড়া/বিল '+fmt(fxM):''),'Avg '+fmt(avg)+'/day (excl. rent/bills)'+(fxM>0?' · rent/bills '+fmt(fxM):''))));
+    cards.push(card(topP>=50?'warn':'n','split',Lg('দৈনন্দিন শীর্ষ খরচ','Top daily expense'),top?esc(top[0]):'—',top?topP+'% · '+fmt(top[1]):Lg('এখনো খরচ নেই','No spending yet')));
     if(w0>0){ const ch=Math.round((w1-w0)/w0*100), up=ch>0; cards.push(card(ch===0?'n':up?'bad':'good','trend',Lg('গত ৭ দিনের খরচ','Last 7 days'),(ch===0?'':up?'▲ ':'▼ ')+Math.abs(ch)+'%',Lg('আগের ৭ দিনের চেয়ে '+(up?'বেশি':'কম'),(up?'More':'Less')+' than the 7 days before'))); }
     else cards.push(card('n','trend',Lg('গত ৭ দিনের খরচ','Last 7 days'),fmt(w1),Lg('মোট খরচ','Total spent')));
     cards.push(owe>0?card('warn','loan-out',Lg('মোট দেনা','Total owed'),fmt(owe),Lg('শোধ বাকি','Left to repay')):card('good','coin',Lg('জমানো সঞ্চয়','Saved so far'),fmt(accT),Lg('সব অ্যাকাউন্ট মিলিয়ে','All accounts')));
@@ -6868,9 +7109,10 @@ function week(){
     if(ls('weekCard_v1','1')!=='1'){ wk.style.display='none'; return; }
     wk.style.display='';
     const td=todayStr(), s1=addDays(td,-6), s0=addDays(td,-13), e0=addDays(td,-7), mo=td.slice(0,7);
-    let cur=0, prev=0, mt=0; const cats={};
+    let cur=0, prev=0, mt=0, fxm2=0; const cats={};
     data.transactions.forEach(x=>{
       if(!isExpenseLike(x)) return;
+      if(isFixedTx(x)){ if(x.date.slice(0,7)===mo) fxm2+=x.amount; return; }
       if(x.date>=s1&&x.date<=td) cur+=x.amount; else if(x.date>=s0&&x.date<=e0) prev+=x.amount;
       if(x.date.slice(0,7)===mo){ mt+=x.amount; const c=x.category||(bn()?'অন্যান্য':'Other'); cats[c]=(cats[c]||0)+x.amount; }
     });
@@ -6879,9 +7121,10 @@ function week(){
     if(prev>0){ const p=Math.round((cur-prev)/prev*100); d='<span class="mDelta '+(p>0?'up':'down')+'">'+(p>0?'▲ ':'▼ ')+Math.abs(p)+'%</span>'; }
     let h='<h3>'+bl('সাপ্তাহিক তুলনা','Weekly comparison')+'</h3><div class="wkGrid"><div class="wkC"><small>'+bl('গত ৭ দিনের খরচ','Last 7 days spent')+'</small><b>'+fmt(cur)+' '+d+'</b></div><div class="wkC"><small>'+bl('তার আগের ৭ দিন','Previous 7 days')+'</small><b>'+fmt(prev)+'</b></div></div>';
     if(mt>0){
-      h+='<div class="wkNote">'+bl('এই মাসে দিনে গড় খরচ ','Average per day this month ')+'<b>'+fmt(avg)+'</b></div>';
+      h+='<div class="wkNote">'+bl('এই মাসে দিনে গড় খরচ (ভাড়া/বিল বাদে) ','Average per day this month (excl. rent/bills) ')+'<b>'+fmt(avg)+'</b></div>';
       if(top) h+='<div class="wkNote">'+bl('সবচেয়ে বেশি খরচ: ','Top spending: ')+'<b>'+esc2(top[0])+'</b> · '+fmt(top[1])+' ('+Math.round(top[1]/mt*100)+'%)</div>';
-    }else h+='<div class="wkNote" style="color:var(--muted)">'+bl('এই মাসে এখনো কোনো খরচ নেই','No spending yet this month')+'</div>';
+    }else h+='<div class="wkNote" style="color:var(--muted)">'+bl('এই মাসে এখনো কোনো দৈনন্দিন খরচ নেই','No daily spending yet this month')+'</div>';
+    if(fxm2>0) h+='<div class="wkNote">'+bl('নির্ধারিত মাসিক খরচ (ভাড়া/বিল): ','Fixed monthly costs (rent/bills): ')+'<b>'+fmt(fxm2)+'</b></div>';
     wk.innerHTML=h;
   }catch(e){}
 }
@@ -7024,8 +7267,14 @@ function spCalc(p){
   const map=calcByCategoryForMonth(ym);
   let reserved=0; const exRows=[];
   ex.forEach(c=>{ const v=Math.max(map[c]||0, +(data.budgets||{})[c]||0); reserved+=v; exRows.push([c,v]); });
-  let spentOther=0; Object.keys(map).forEach(c=>{ if(!ex.includes(c)) spentOther+=map[c]; });
-  const todaySpent=data.transactions.filter(x=>isExpenseLike(x)&&x.date===today&&!ex.includes(x.category)).reduce((s,x)=>s+x.amount,0);
+  /* ভাড়া/বিলের মতো নির্ধারিত মাসিক খরচ নিজে থেকেই আলাদা রাখা হয় (দেওয়া হয়ে থাকলে সেটা, নইলে বাজেট বা প্রত্যাশিত পরিমাণ) */
+  const exAll=ex.slice(), pfMap={}; ftPendingFixed(ym).items.forEach(it=>{ pfMap[it[0]]=it[1]; });
+  data.categories.forEach(c=>{ if(ex.includes(c)||!isFixedCategory(c)) return; exAll.push(c);
+    const v=Math.max(map[c]||0, +(data.budgets||{})[c]||0, pfMap[c]||0); if(v>0){ reserved+=v; exRows.push([c,v]); } });
+  { let extra=0; data.transactions.forEach(x=>{ if(isFixedTx(x)&&x.date.slice(0,7)===ym&&!exAll.includes(x.category)) extra+=x.amount; });
+    if(extra>0){ reserved+=extra; exRows.push([L('নিয়মিত এন্ট্রি','Recurring entries'),extra]); } }
+  let spentOther=0; data.transactions.forEach(x=>{ if(isExpenseLike(x)&&x.date.slice(0,7)===ym&&!exAll.includes(x.category)&&!isFixedTx(x)) spentOther+=x.amount; });
+  const todaySpent=data.transactions.filter(x=>isExpenseLike(x)&&x.date===today&&!exAll.includes(x.category)&&!isFixedTx(x)).reduce((s,x)=>s+x.amount,0);
   const target=+p.target;
   const avail=inc-target-reserved;               // মাসের মোট খরচযোগ্য (মাসিক বাজেট)
   const remain=avail-spentOther;                 // মাসে এখনো বাকি
@@ -7048,7 +7297,7 @@ function spHtml(p){
   const lim=Math.max(0,r.todayLimit);
   const pct=lim>0?Math.min(100,Math.round(r.todaySpent/lim*100)):(r.todaySpent>0?100:0);
   const bc=r.over?'over':(pct>=80?'warn':'');
-  const mpct=Math.min(100,Math.round(r.spentOther/r.avail*100));
+  const mpct=r.avail>0?Math.min(100,Math.round(r.spentOther/r.avail*100)):(r.spentOther>0?100:0);
   const mbc=r.monthOver?'over':(mpct>=80?'warn':'');
   let h='';
   if(r.monthOver) h+=warnBox(L(`এ মাসের খরচযোগ্য বাজেট ${fmt(r.spentOther-r.avail)} ছাড়িয়ে গেছে — সঞ্চয় লক্ষ্য পূরণ হবে না।`,`You are ${fmt(r.spentOther-r.avail)} over this month's budget — the savings target will be missed.`));
@@ -7222,7 +7471,7 @@ function renderWidget(){
       const lim=Math.max(0,r.todayLimit);
       const pct=lim>0?Math.min(100,Math.round(r.todaySpent/lim*100)):(r.todaySpent>0?100:0);
       const bc=r.over?'over':(pct>=80?'warn':'');
-      const mpct=Math.min(100,Math.round(r.spentOther/r.avail*100));
+      const mpct=r.avail>0?Math.min(100,Math.round(r.spentOther/r.avail*100)):(r.spentOther>0?100:0);
       const mbc=r.monthOver?'over':(mpct>=80?'warn':'');
       if(r.monthOver) h+=`<div class="wgWarn"><i class="mi" style="--m:var(--ic-alert)"></i> ${L(`এ মাসের বাজেট ${fmt(r.spentOther-r.avail)} ছাড়িয়ে গেছে — সঞ্চয় লক্ষ্য পূরণ হবে না।`,`Over this month's budget by ${fmt(r.spentOther-r.avail)} — savings target at risk.`)}</div>`;
       else if(r.over) h+=`<div class="wgWarn"><i class="mi" style="--m:var(--ic-alert)"></i> ${L(`আজ সীমার চেয়ে ${fmt(r.todaySpent-lim)} বেশি খরচ হয়েছে।`,`Over today's limit by ${fmt(r.todaySpent-lim)}.`)}</div>`;
@@ -9970,7 +10219,7 @@ show(); arm(); pull(); diag();
 (function(){
 const $=id=>document.getElementById(id), bn=()=>currentLang==='bn', Lg=(b,e)=>bn()?b:e, ic=n=>'<i class="mi" style="--m:var(--ic-'+n+')"></i>';
 const sum=l=>l.reduce((a,x)=>a+(+x.amount||0),0), pos=o=>Object.values(o).filter(v=>v>0).reduce((a,b)=>a+b,0);
-const mk=o=>{const d=new Date();d.setDate(1);d.setMonth(d.getMonth()+o);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')};
+const mk=o=>{const t0=todayStr();let y=+t0.slice(0,4),m=+t0.slice(5,7)+o;while(m<1){m+=12;y--;}while(m>12){m-=12;y++;}return y+'-'+String(m).padStart(2,'0')};
 function adv(){
   const anchor=document.querySelector('#sec-dash .monthBox'); if(!anchor) return;
   let box=$('advBox'); if(!box){ box=document.createElement('div'); box.className='box'; box.id='advBox'; anchor.insertAdjacentElement('afterend',box); }
@@ -9984,21 +10233,21 @@ function adv(){
   const d30=new Date(today+'T00:00:00'); d30.setDate(d30.getDate()-29); let f30=fmtDate(d30);
   const firstD=T.reduce((m,x)=>x.date&&x.date<m?x.date:m,today); if(firstD>f30) f30=firstD;
   const span30=Math.max(1,Math.round((new Date(today+'T00:00:00')-new Date(f30+'T00:00:00'))/86400000)+1);
-  const burn=sum(T.filter(x=>isExpenseLike(x)&&x.date>=f30&&x.date<=today))/span30, runway=burn>0&&span30>=3?Math.max(0,Math.floor(bal/burn)):null;
-  const proj=day>0?spent/day*dim:0, nzI=I.slice(0,5).filter(v=>v>0), avgI=Math.max(earned,nzI.length?sum(nzI.map(v=>({amount:v})))/nzI.length:0);
-  const nzE=E.slice(0,5).filter(v=>v>0), avgE=nzE.length?sum(nzE.map(v=>({amount:v})))/nzE.length:(day>=7?proj:(spent||0));
+  const burn=sum(T.filter(x=>isDailyExpense(x)&&x.date>=f30&&x.date<=today))/span30+ftFixedPerDay(), runway=burn>0&&span30>=3?Math.max(0,Math.floor(bal/burn)):null;
+  const fxA=sum(T.filter(x=>isFixedTx(x)&&x.date.slice(0,7)===key)), pendA=ftPendingFixed(key).total, proj=day>=3?fxA+pendA+(spent-fxA)/day*dim:null, nzI=I.slice(0,5).filter(v=>v>0), avgI=Math.max(earned,nzI.length?sum(nzI.map(v=>({amount:v})))/nzI.length:0);
+  const nzE=E.slice(0,5).filter(v=>v>0), avgE=nzE.length?sum(nzE.map(v=>({amount:v})))/nzE.length:(day>=7&&proj!=null?proj:null);
   const safe=left>0&&avgI>0?Math.max(0,(avgI-spent)/left):0, em=avgE>0?(bal+acc)/avgE:null, nw=bal+acc+get-owe, dr=(bal+acc+get)>0?owe/(bal+acc+get):(owe>0?1:0);
   const hist=E.slice(0,5), fi=hist.findIndex(v=>v>0), hs=fi<0?[]:hist.slice(fi), nn=hs.length, mxm=(nn-1)/2, mym=nn?hs.reduce((a,v)=>a+v,0)/nn:0, den=hs.reduce((a,_,i)=>a+(i-mxm)*(i-mxm),0), slope=nn>=3&&den>0?hs.reduce((a,v,i)=>a+(i-mxm)*(v-mym),0)/den:0;
   let score=Math.round((sre==null?0:Math.min(Math.max(sre,0),30)/30)*35+(runway==null?(bal>0?25:0):Math.min(runway,90)/90*25)+(1-Math.min(dr,1))*20+(em==null?0:Math.min(Math.max(em,0),6)/6*20));
   const sc=score>=70?'var(--green)':score>=40?'var(--amber)':'var(--red)', lb=score>=70?Lg('ভালো','Good'):score>=40?Lg('মোটামুটি','Fair'):Lg('সতর্ক','Needs care');
   const tile=(l,v,s2)=>'<div class="advT"><small>'+l+'</small><b>'+v+'</b><small>'+s2+'</small></div>';
-  const dl=left+1, spT=sum(T.filter(x=>isExpenseLike(x)&&x.date===today)), resv=(data.recurring||[]).filter(r=>(r.type==='expense'||r.type==='save_to_account')&&r.lastMonth!==key).reduce((a,r)=>a+(+r.amount||0),0), startBal=Math.max(0,bal+spT-resv), perLeft=startBal/dl, remT=perLeft-spT, usedPct=perLeft>0?Math.min(100,spT/perLeft*100):(spT>0?100:0);
+  const dl=left+1, spT=sum(T.filter(x=>isDailyExpense(x)&&x.date===today)), resv=(data.recurring||[]).filter(r=>(r.type==='expense'||r.type==='save_to_account')&&r.lastMonth!==key).reduce((a,r)=>a+(+r.amount||0),0)+ftPendingFixed(key).total, startBal=Math.max(0,bal+spT-resv), perLeft=startBal/dl, remT=perLeft-spT, usedPct=perLeft>0?Math.min(100,spT/perLeft*100):(spT>0?100:0);
   const dcol=remT<0?'var(--red)':usedPct>=80?'var(--amber)':'var(--green)';
   /* এখনকার সীমা = বর্তমান ব্যালেন্স ÷ আজসহ বাকি দিন (প্রতি লেনদেনের পর বদলায়); perLeft = দিনের শুরুর সীমা */
   const liveLim=Math.max(0,bal-resv)/dl;
   /* গতকালের সীমা: গতকাল শেষে ব্যালেন্স ÷ গতকাল থেকে সেই মাসের বাকি দিন (বাস্তব ক্যালেন্ডার অনুযায়ী ২৮/২৯/৩০/৩১) */
   const _yd=new Date(today+'T00:00:00'); _yd.setDate(_yd.getDate()-1); const yStr=fmtDate(_yd), yDim=new Date(_yd.getFullYear(),_yd.getMonth()+1,0).getDate(), yDl=yDim-_yd.getDate()+1;
-  const netT=data.transactions.reduce((a,tx)=>a+((tx.fund||tx.date!==today)?0:TYPE_META[tx.type].sign*tx.amount),0), spY=sum(T.filter(x=>isExpenseLike(x)&&x.date===yStr));
+  const netT=data.transactions.reduce((a,tx)=>a+((tx.fund||tx.date!==today)?0:TYPE_META[tx.type].sign*tx.amount),0), spY=sum(T.filter(x=>isDailyExpense(x)&&x.date===yStr));
   const hasY=T.some(x=>x.date&&x.date<=yStr), yLimit=hasY?Math.max(0,bal-netT+spY-resv)/yDl:null, dY=yLimit==null?null:liveLim-yLimit;
   const tomLimit=dl>1?Math.max(0,startBal-spT)/(dl-1):null, dT=tomLimit==null?null:tomLimit-liveLim;
   const cmpRow=(lbl,v,d,cmpLbl)=>'<div class="advDRow"><span>'+lbl+'</span><b>'+fmt(v)+Lg(' /দিন',' /day')+'</b></div><div class="advDRow" style="margin-top:-4px"><span></span><b style="font-size:12px;color:'+(Math.abs(d)<0.005?'var(--muted)':d>0?'var(--green)':'var(--red)')+'">'+(Math.abs(d)<0.005?'● '+Lg('একই','same'):(d>0?'▲ ':'▼ ')+fmt(Math.abs(d))+' '+(d>0?Lg('বেশি','more'):Lg('কম','less')))+' '+cmpLbl+'</b></div>';
@@ -10011,7 +10260,7 @@ function adv(){
     +'<div class="advTopR"><div class="lbl">'+Lg('আজকের সীমা','Today\'s limit')+'</div><div class="big" style="color:'+dcol+'">'+fmt(liveLim)+'</div>'
     +'<div class="sp">'+Lg('দিনের শুরুতে সীমা ছিল','Limit at start of day')+' <b>'+fmt(perLeft)+'</b></div>'
     +'<div class="sp">'+Lg('আজ খরচ','Spent')+' <b>'+fmt(spT)+'</b> · '+Math.round(perLeft>0?spT/perLeft*100:(spT>0?100:0))+'%</div>'
-    +(resv>0?'<div class="sp">'+Lg('নিয়মিত খরচের জন্য রাখা','Reserved for recurring')+' <b>'+fmt(resv)+'</b></div>':'')+'</div></div>'
+    +(resv>0?'<div class="sp">'+Lg('বাকি মাসিক বিল/নিয়মিত খরচের জন্য রাখা','Reserved for upcoming bills/recurring')+' <b>'+fmt(resv)+'</b></div>':'')+'</div></div>'
     +'<div class="advTri"><div><small>'+Lg('গতকাল','Yesterday')+'</small><b>'+(yLimit==null?'—':fmt(yLimit))+'</b><em style="color:var(--muted)">'+Lg('সীমা ছিল','limit')+'</em></div>'
     +'<div class="now"><small>'+Lg('আজ','Today')+'</small><b style="color:'+dcol+'">'+fmt(liveLim)+'</b>'+dlt(dY)+'</div>'
     +'<div><small>'+Lg('আগামীকাল','Tomorrow')+'</small><b>'+(tomLimit==null?'—':fmt(tomLimit))+'</b>'+dlt(dT)+'</div></div>'
@@ -10019,32 +10268,67 @@ function adv(){
   let h=head+daily+'<div class="advG"><div class="advT w"><small>'+ic('gauge')+' '+Lg('আর্থিক স্বাস্থ্য স্কোর','Financial health score')+'</small><b style="color:'+sc+'">'+score+'/100 · '+lb+'</b><div class="advBar"><i style="width:'+score+'%;background:'+sc+'"></i></div></div>'
    +tile(Lg('সঞ্চয়ের হার','Savings rate'),sr==null?'—':sr+'%',Lg('এই মাসের আয় থেকে','of this month\'s income'))
    +tile(Lg('ব্যালেন্সে চলবে','Runway'),runway==null?'—':runway+Lg(' দিন',' days'),Lg('দৈনিক গড় ','avg ')+fmt(burn))
-   +tile(Lg('মাস শেষে খরচ','Month-end spend'),fmt(proj),Lg('বর্তমান গতিতে','at current pace'))
+   +tile(Lg('মাস শেষে খরচ','Month-end spend'),proj==null?'—':fmt(proj),Lg('বর্তমান গতিতে','at current pace'))
    +tile(Lg('দৈনিক নিরাপদ সীমা','Safe daily limit'),left>0&&avgI>0?fmt(safe):'—',Lg('বাকি '+left+' দিন','for '+left+' days left'))
    +tile(Lg('নিট সম্পদ','Net worth'),fmt(nw),Lg('ব্যালেন্স+সঞ্চয়+পাওনা−দেনা','balance+savings+owed−debt'))
    +tile(Lg('জরুরি তহবিল','Emergency fund'),em==null?'—':em.toFixed(1)+Lg(' মাস',' mo'),Lg('গড় মাসিক খরচের ভিত্তিতে','at avg monthly spend'))+'</div>';
-  const mx=Math.max(1,...I,...E);
-  h+='<svg viewBox="0 0 300 84" width="100%" style="margin-bottom:8px">'+ms.map((m,i)=>{const x=i*50+8,hi=I[i]/mx*58,he=E[i]/mx*58,lbm=new Date(+m.slice(0,4),+m.slice(5,7)-1,1).toLocaleDateString(bn()?'bn-BD':'en-GB',{month:'short'});
-    return '<rect x="'+x+'" y="'+(64-hi)+'" width="15" height="'+hi+'" rx="3" style="fill:var(--green)"/><rect x="'+(x+17)+'" y="'+(64-he)+'" width="15" height="'+he+'" rx="3" style="fill:var(--red)"/><text x="'+(x+16)+'" y="79" text-anchor="middle" font-size="9" style="fill:var(--muted)">'+lbm+'</text>';}).join('')+'</svg>';
-  const rows=[];
-  if(nn>=3&&Math.abs(slope)>1) rows.push(['trend',Lg('মাসিক খরচ গড়ে '+fmt(Math.abs(slope))+(slope>0?' করে বাড়ছে':' করে কমছে'),'Monthly spend is '+(slope>0?'rising':'falling')+' by about '+fmt(Math.abs(slope))+'/month')]);
-  if(avgI>0&&proj>avgI) rows.push(['alert',Lg('এই গতিতে মাস শেষে খরচ আয়ের চেয়ে '+fmt(proj-avgI)+' বেশি হবে','At this pace you will overspend income by '+fmt(proj-avgI))]);
+  if(!document.getElementById('advInsCss')){ const st=document.createElement('style'); st.id='advInsCss'; st.textContent=
+   '#advBox .t-bad{--tc:var(--red)}#advBox .t-warn{--tc:var(--amber)}#advBox .t-good{--tc:var(--green)}#advBox .t-n{--tc:var(--primary)}'
+  +'.advCard{border:1px solid var(--border);border-radius:16px;padding:12px 12px 8px;margin:2px 0 12px;background:var(--bg)}'
+  +'.advSec{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:800;margin:0 0 10px}.advSec>span{display:inline-flex;align-items:center;gap:7px}.advSec .mi{color:var(--primary);width:17px;height:17px}'
+  +'.advSec em{font-style:normal;font-size:11px;font-weight:800;padding:3px 9px;border-radius:99px;background:color-mix(in srgb,var(--tc,var(--primary)) 14%,transparent);color:var(--tc,var(--primary))}'
+  +'.advChS{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:11.5px;color:var(--muted);font-weight:600;margin:-2px 0 6px}.advChS b{color:var(--text);font-weight:800}.advChS .d{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}.advChS .d.g{background:var(--green)}.advChS .d.r{background:var(--red)}'
+  +'.advCh{display:block;overflow:visible}.advCh .g{stroke:var(--border);stroke-width:.6;stroke-dasharray:2 3}.advCh .bi{fill:var(--green)}.advCh .be{fill:var(--red)}.advCh text{font-size:9px;fill:var(--muted);font-weight:600}.advCh g:not(.cur) rect{opacity:.5}.advCh .cur text{fill:var(--text);font-weight:800}'
+  +'.advList{display:flex;flex-direction:column;gap:8px}'
+  +'.advI{display:flex;gap:11px;align-items:flex-start;padding:11px 12px;border-radius:14px;border:1px solid color-mix(in srgb,var(--tc) 26%,var(--border));background:linear-gradient(135deg,color-mix(in srgb,var(--tc) 9%,var(--card)),var(--card));position:relative;overflow:hidden}'
+  +'.advI::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--tc)}'
+  +'.advIc{flex:none;width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--tc) 16%,transparent);color:var(--tc)}.advIc .mi{width:18px;height:18px}'
+  +'.advIb{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px}.advIb small{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.2px}.advIb b{font-size:16px;font-weight:800;line-height:1.25;overflow-wrap:anywhere}.advIb>span{font-size:12px;color:var(--muted);line-height:1.45}'
+  +'.advIbar{height:5px;border-radius:5px;background:color-mix(in srgb,var(--tc) 16%,transparent);overflow:hidden;margin-top:5px}.advIbar i{display:block;height:100%;background:var(--tc);border-radius:5px}'
+  +'.advLoan{border:1px solid color-mix(in srgb,var(--tc) 26%,var(--border));border-radius:14px;padding:11px 12px;margin-top:8px;background:var(--bg)}.advLoan .advSec{margin-bottom:8px}'
+  +'.advL3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.advL3>div{border-radius:11px;padding:8px 6px;text-align:center;background:var(--card);border:1px solid var(--border);min-width:0}.advL3 small{display:block;font-size:10.5px;color:var(--muted);font-weight:700}.advL3 b{font-size:13.5px;font-weight:800;overflow-wrap:anywhere}.advL3 .pos{color:var(--green)}.advL3 .neg{color:var(--red)}';
+  document.head.appendChild(st); }
+  const mx=Math.max(1,...I,...E), mlab=m=>new Date(+m.slice(0,4),+m.slice(5,7)-1,1).toLocaleDateString(bn()?'bn-BD':'en-GB',{month:'short'});
+  const gl=[0.25,0.5,0.75,1].map(f=>'<line class="g" x1="4" x2="296" y1="'+(70-f*56).toFixed(1)+'" y2="'+(70-f*56).toFixed(1)+'"/>').join('');
+  const bars=ms.map((m,i)=>{ const x=i*49+10, hi=I[i]/mx*56, he=E[i]/mx*56;
+    return '<g'+(i===5?' class="cur"':'')+'><rect class="bi" x="'+x+'" y="'+(70-hi).toFixed(1)+'" width="14" height="'+Math.max(hi,I[i]>0?2:0).toFixed(1)+'" rx="3.5"/><rect class="be" x="'+(x+16)+'" y="'+(70-he).toFixed(1)+'" width="14" height="'+Math.max(he,E[i]>0?2:0).toFixed(1)+'" rx="3.5"/><text x="'+(x+15)+'" y="86" text-anchor="middle">'+mlab(m)+'</text></g>'; }).join('');
+  h+='<div class="advCard"><div class="advSec"><span>'+ic('bars')+Lg('৬ মাসের আয় ও খরচ','6-month income & expense')+'</span></div>'
+    +'<div class="advChS"><span><i class="d g"></i>'+Lg('আয়','Income')+' <b>'+fmt(earned)+'</b></span><span><i class="d r"></i>'+Lg('খরচ','Expense')+' <b>'+fmt(spent)+'</b></span><span>'+Lg('নিট','Net')+' <b style="color:'+(earned-spent>=0?'var(--green)':'var(--red)')+'">'+fmt(earned-spent)+'</b></span></div>'
+    +'<svg class="advCh" viewBox="0 0 300 92" width="100%">'+gl+bars+'</svg></div>';
+  /* ---- insights as structured cards: {t:tone, ic, k:title, v:headline, s:detail, bar:%} ---- */
+  const cards=[], WDN=Lg(['রবিবার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার','শুক্রবার','শনিবার'],['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']);
+  if(proj!=null&&avgI>0&&proj>avgI) cards.push({t:'bad',ic:'alert',k:Lg('মাস শেষের পূর্বাভাস','Month-end forecast'),v:'+'+fmt(proj-avgI)+' '+Lg('ঘাটতি','over'),s:Lg('এই গতিতে মাস শেষে খরচ আয়ের চেয়ে বেশি হবে','At this pace spending will exceed income')});
+  if(nn>=3&&Math.abs(slope)>1) cards.push({t:slope>0?'warn':'good',ic:'trend',k:Lg('মাসিক খরচের ধারা','Monthly spend trend'),v:(slope>0?'▲ ':'▼ ')+fmt(Math.abs(slope))+Lg(' /মাস',' /month'),s:slope>0?Lg('প্রতি মাসে গড়ে খরচ বাড়ছে','Spending is rising on average'):Lg('প্রতি মাসে গড়ে খরচ কমছে','Spending is falling on average')});
   const d90=new Date(today+'T00:00:00'); d90.setDate(d90.getDate()-90); const f90=fmtDate(d90), W=[0,0,0,0,0,0,0];
-  T.filter(x=>isExpenseLike(x)&&x.date>=f90).forEach(x=>{W[new Date(x.date+'T00:00:00').getDay()]+=+x.amount||0;});
-  const wi=W.indexOf(Math.max(...W)); if(W[wi]>0) rows.push(['calendar',Lg('সবচেয়ে বেশি খরচ হয় '+['রবি','সোম','মঙ্গল','বুধ','বৃহস্পতি','শুক্র','শনি'][wi]+'বার','You spend most on '+['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][wi]+'s')+' ('+fmt(W[wi])+', '+Lg('গত ৩ মাস','last 3 months')+')']);
-  const cm=calcByCategoryForMonth(key), prev=[mk(-1),mk(-2),mk(-3)].map(calcByCategoryForMonth);
+  T.filter(x=>isDailyExpense(x)&&x.date>=f90&&x.date<=today).forEach(x=>{W[new Date(x.date+'T00:00:00').getDay()]+=+x.amount||0;});
+  const wi=W.indexOf(Math.max(...W));
+  /* অস্বাভাবিক খরচ শুধু তখনই দেখাবে যখন লিমিট ছাড়িয়েছে বা দ্রুত শেষ হয়ে যাচ্ছে */
+  const _dl=+data.dailyLimit||0, _drop=(yLimit!=null&&yLimit>0&&dY!=null)?-dY/yLimit:0;
+  const pressure=remT<0||usedPct>=80||_drop>=0.1||(_dl>0&&spT>=_dl*0.8);
+  const pWhy=remT<0?Lg('আজ লিমিট ছাড়িয়েছে ('+fmt(-remT)+' বেশি)','Over today\'s limit by '+fmt(-remT))
+    :_drop>=0.1?Lg('আজকের লিমিট গতকালের চেয়ে '+Math.round(_drop*100)+'% কমে গেছে','Today\'s limit is '+Math.round(_drop*100)+'% lower than yesterday')
+    :usedPct>=80?Lg('আজকের লিমিটের '+Math.round(usedPct)+'% শেষ','Already used '+Math.round(usedPct)+'% of today\'s limit')
+    :Lg('নিজের দৈনিক লিমিটের কাছাকাছি ('+fmt(spT)+' / '+fmt(_dl)+')','Close to your daily limit ('+fmt(spT)+' / '+fmt(_dl)+')');
+  const cm=calcVarByCategoryForMonth(key), prev=[mk(-1),mk(-2),mk(-3)].map(calcVarByCategoryForMonth);
   Object.entries(cm).map(([c,v])=>{const a=prev.reduce((s2,p)=>s2+(p[c]||0),0)/Math.max(1,prev.filter(p=>Object.keys(p).length).length);return [c,v,a];}).filter(r=>r[2]>0&&r[1]>r[2]*1.5&&r[1]-r[2]>100).sort((a,b)=>(b[1]-b[2])-(a[1]-a[2])).slice(0,2)
-    .forEach(r=>rows.push(['alert',esc(r[0])+': '+Lg('গত ৩ মাসের গড়ের চেয়ে '+Math.round((r[1]/r[2]-1)*100)+'% বেশি ('+fmt(r[1])+')',Math.round((r[1]/r[2]-1)*100)+'% above the 3-month average ('+fmt(r[1])+')')]));
-  if(get||owe) rows.push(['scale',Lg('পাওনা '+fmt(get)+' · দেনা '+fmt(owe)+' · নিট '+fmt(get-owe)+(dr>0.5?' — দেনার চাপ বেশি':''),'Owed '+fmt(get)+' · Debt '+fmt(owe)+' · Net '+fmt(get-owe)+(dr>0.5?' — high debt load':''))]);
+    .forEach(r=>{ if(!pressure) return; const pc=Math.round((r[1]/r[2]-1)*100); cards.push({t:(remT<0||pc>=300)?'bad':'warn',ic:'alert',k:esc(r[0])+' · '+Lg('অস্বাভাবিক খরচ','Unusual spending'),v:'+'+pc+'%',s:pWhy+'<br>'+Lg('এখন '+fmt(r[1])+' — গত ৩ মাসের গড় '+fmt(r[2]),'Now '+fmt(r[1])+' — 3-month average '+fmt(r[2]))}); });
   { const pk=mk(-1), pdim=new Date(+pk.slice(0,4),+pk.slice(5,7),0).getDate(), pdd=Math.min(day,pdim);
     const prevMTD=sum(T.filter(x=>isExpenseLike(x)&&x.date.slice(0,7)===pk&&+x.date.slice(8,10)<=pdd));
-    if(prevMTD>0&&spent>0){ const ch=Math.round((spent-prevMTD)/prevMTD*100), sg=ch>=0?'+':'−';
-      rows.push(['trend',Lg('গত মাসের প্রথম '+pdd+' দিনে খরচ ছিল '+fmt(prevMTD)+' — এবার '+fmt(spent)+' ('+sg+Math.abs(ch)+'%)','First '+pdd+' days last month: '+fmt(prevMTD)+' — now '+fmt(spent)+' ('+sg+Math.abs(ch)+'%)')]); }
-    const mExp=T.filter(x=>isExpenseLike(x)&&x.date.slice(0,7)===key);
-    if(mExp.length&&spent>0){ const big=mExp.reduce((a,b)=>b.amount>a.amount?b:a), ce=Object.entries(cm).sort((a,b)=>b[1]-a[1])[0];
-      if(ce) rows.push(['scale',Lg('এই মাসে সবচেয়ে বেশি খরচ: '+esc(ce[0])+' ('+Math.round(ce[1]/spent*100)+'%) · সবচেয়ে বড় একক খরচ '+fmt(big.amount),'Top category this month: '+esc(ce[0])+' ('+Math.round(ce[1]/spent*100)+'%) · largest single expense '+fmt(big.amount))]); }
-  }
-  h+=rows.map(r=>'<div class="ins"><span class="e">'+ic(r[0])+'</span><span>'+r[1]+'</span></div>').join('');
+    if(prevMTD>0&&spent>0){ const ch=Math.round((spent-prevMTD)/prevMTD*100);
+      cards.push({t:ch>0?'warn':'good',ic:'trend',k:Lg('গত মাসের একই সময়ের তুলনায়','Vs same days last month'),v:(ch>=0?'▲ +':'▼ −')+Math.abs(ch)+'%',s:Lg('প্রথম '+pdd+' দিনে: গত মাস '+fmt(prevMTD)+' → এখন '+fmt(spent),'First '+pdd+' days: last month '+fmt(prevMTD)+' → now '+fmt(spent))}); }
+    const mExp=T.filter(x=>isDailyExpense(x)&&x.date.slice(0,7)===key), spentD=sum(mExp);
+    if(mExp.length&&spentD>0){ const big=mExp.reduce((a,b)=>b.amount>a.amount?b:a), ce=Object.entries(cm).sort((a,b)=>b[1]-a[1])[0];
+      if(ce){ const sh=Math.round(ce[1]/spentD*100); cards.push({t:sh>=50?'warn':'n',ic:'scale',k:Lg('দৈনন্দিন শীর্ষ খরচের খাত (ভাড়া/বিল বাদে)','Top daily category (excl. rent/bills)'),v:esc(ce[0])+' · '+sh+'%',s:Lg('সবচেয়ে বড় একক খরচ '+fmt(big.amount),'Largest single expense '+fmt(big.amount)),bar:sh}); } } }
+  if(W[wi]>0) cards.push({t:'n',ic:'calendar',k:Lg('সবচেয়ে বেশি খরচের বার','Highest-spend weekday'),v:WDN[wi],s:fmt(W[wi])+' · '+Lg('গত ৩ মাসে','last 3 months')});
+  { const fxP=sum(T.filter(x=>isFixedTx(x)&&x.date.slice(0,7)===key)), pfx=ftPendingFixed(key);
+    if(fxP>0||pfx.total>0){ const ref=Math.max(earned,0), pc2=ref>0?Math.round((fxP+pfx.total)/ref*100):null;
+      cards.push({t:pc2!=null&&pc2>=60?'warn':'n',ic:'calendar',k:Lg('নির্ধারিত মাসিক খরচ (ভাড়া/বিল)','Fixed monthly costs (rent/bills)'),v:fmt(fxP),
+        s:(pfx.total>0?Lg('এখনো বাকি (আনুমানিক) '+fmt(pfx.total)+' — ','Still expected (est.) '+fmt(pfx.total)+' — '):'')+(pc2!=null?Lg('আয়ের '+pc2+'% নির্ধারিত খরচে যাচ্ছে','takes '+pc2+'% of income'):Lg('দৈনন্দিন খরচ থেকে আলাদা ধরা হয়েছে','Counted separately from daily spending'))}); } }
+  const rk={bad:0,warn:1,n:2,good:3}; cards.sort((a,b)=>rk[a.t]-rk[b.t]);
+  const cardH=o=>'<div class="advI t-'+o.t+'"><span class="advIc">'+ic(o.ic)+'</span><div class="advIb"><small>'+o.k+'</small><b>'+o.v+'</b><span>'+o.s+'</span>'+(o.bar!=null?'<div class="advIbar"><i style="width:'+Math.min(100,o.bar)+'%"></i></div>':'')+'</div></div>';
+  if(cards.length) h+='<div class="advSec" style="margin-top:4px"><span>'+ic('bulb')+Lg('মূল ইনসাইট','Key insights')+'</span><em>'+cards.length+'</em></div><div class="advList">'+cards.map(cardH).join('')+'</div>';
+  if(get||owe) h+='<div class="advLoan t-'+(dr>0.5?'bad':'n')+'"><div class="advSec"><span>'+ic('scale')+Lg('দেনা-পাওনা','Loans')+'</span>'+(dr>0.5?'<em>'+Lg('দেনার চাপ বেশি','High debt load')+'</em>':'')+'</div>'
+    +'<div class="advL3"><div><small>'+Lg('পাওনা','To receive')+'</small><b class="pos">'+fmt(get)+'</b></div><div><small>'+Lg('দেনা','To repay')+'</small><b class="neg">'+fmt(owe)+'</b></div><div><small>'+Lg('নিট','Net')+'</small><b class="'+(get-owe>=0?'pos':'neg')+'">'+fmt(get-owe)+'</b></div></div></div>';
   box.innerHTML=h;
 }
 const _u=window.updateHome; window.updateHome=function(){ if(_u) _u.apply(this,arguments); try{adv();}catch(e){console.error(e);} };
@@ -14065,6 +14349,85 @@ return{render,open,openPage,closePage,tick,
  document.querySelectorAll('.bnbtn').forEach(b=>{ if(b.dataset.bn==='add'){
    b.addEventListener('click',e=>{ if(document.getElementById('sec-notes').classList.contains('active')){ e.stopImmediatePropagation(); e.preventDefault(); NS.add(); } },true);
  }});
+})();
+</script>
+
+<style id="txMenuCss">
+/* ===== Transactions: minimal rows + three-dot menu ===== */
+.txitem{padding:11px 2px;gap:12px;border-bottom:1px solid color-mix(in srgb,var(--border) 55%,transparent);}
+.txitem .txic{width:38px;height:38px;border-radius:12px;font-size:17px;background:color-mix(in srgb,var(--c) 11%,transparent);background-image:none;box-shadow:none;}
+.txitem .txleft .t1{font-size:14px;font-weight:600;color:var(--text);}
+.txitem .txleft .t2{font-size:11.5px;margin-top:2px;color:var(--muted);}
+.txitem .txd{display:none;}
+.txitem .txamt,.txitem .txamt.pos,.txitem .txamt.neg{background:none;padding:0;border-radius:0;font-size:14.5px;font-weight:700;font-variant-numeric:tabular-nums;}
+.txitem>div:last-child{gap:2px !important;}
+.txMore{flex:none;width:32px;height:32px;margin-right:-6px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s,color .15s;}
+.txMore svg{width:18px;height:18px;display:block;}
+.txMore:hover,.txMore[aria-expanded="true"]{background:color-mix(in srgb,var(--text) 8%,transparent);color:var(--text);}
+.txMore:focus-visible{outline:2px solid var(--primary);outline-offset:1px;}
+#txMenu{position:fixed;z-index:9500;min-width:172px;padding:6px;border-radius:14px;background:var(--card);border:1px solid var(--border);box-shadow:0 14px 34px rgba(15,23,42,.2),0 2px 6px rgba(15,23,42,.08);display:none;transform-origin:top right;}
+#txMenu.up{transform-origin:bottom right;}
+#txMenu.on{display:block;animation:txPop .14s ease-out;}
+#txMenu button{display:flex;align-items:center;gap:12px;width:100%;padding:11px 12px;border:0;border-radius:9px;background:transparent;color:var(--text);font:inherit;font-size:14px;font-weight:600;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+#txMenu button .mi{width:18px;height:18px;color:var(--muted);}
+#txMenu button:hover,#txMenu button:focus-visible{background:color-mix(in srgb,var(--text) 7%,transparent);outline:none;}
+#txMenu .sep{height:1px;margin:4px 6px;background:var(--border);}
+#txMenu button[data-act="del"],#txMenu button[data-act="del"] .mi{color:var(--red);}
+@keyframes txPop{from{opacity:0;transform:scale(.96);}to{opacity:1;transform:none;}}
+@media (prefers-reduced-motion:reduce){#txMenu.on{animation:none;}}
+</style>
+<script>
+/* ===== Transactions: three-dot menu (Copy / Edit / Delete) ===== */
+(function(){
+  if(window.__txMenuV1) return; window.__txMenuV1=true;
+  var bn=function(){ try{ return currentLang==='bn'; }catch(e){ return false; } };
+  var DOTS='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>';
+  var attr=function(v){ return String(v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); };
+  var prev=txHtml;
+  txHtml=function(tx){
+    var h=prev(tx);
+    h=h.replace(/<button class="editbtn"[\s\S]*?<\/button>\s*<button class="del"[^>]*>[\s\S]*?<\/button>/,
+      '<button type="button" class="txMore" data-id="'+attr(tx.id)+'" aria-haspopup="menu" aria-expanded="false" aria-label="'+(bn()?'আরও অপশন':'More options')+'">'+DOTS+'</button>');
+    h=h.replace(/<div class="t2">(\d{4}-\d{2}-\d{2}) /,'<div class="t2"><span class="txd">$1 </span>');
+    return h;
+  };
+  var menu=document.createElement('div'); menu.id='txMenu'; menu.setAttribute('role','menu'); document.body.appendChild(menu);
+  var curId=null, curBtn=null;
+  var ic=function(n){ return '<i class="mi" style="--m:var(--ic-'+n+')"></i>'; };
+  function close(){
+    if(!curBtn) return;
+    menu.classList.remove('on','up'); curBtn.setAttribute('aria-expanded','false'); curBtn=null; curId=null;
+  }
+  function open(btn,byKey){
+    close(); curBtn=btn; curId=btn.getAttribute('data-id');
+    menu.innerHTML=
+      '<button type="button" role="menuitem" data-act="copy">'+ic('copy')+'<span>'+(bn()?'কপি করুন':'Copy')+'</span></button>'+
+      '<button type="button" role="menuitem" data-act="edit">'+ic('edit')+'<span>'+(bn()?'এডিট করুন':'Edit')+'</span></button>'+
+      '<div class="sep"></div>'+
+      '<button type="button" role="menuitem" data-act="del">'+ic('trash')+'<span>'+(bn()?'মুছে ফেলুন':'Delete')+'</span></button>';
+    menu.classList.add('on'); btn.setAttribute('aria-expanded','true');
+    var r=btn.getBoundingClientRect(), mw=menu.offsetWidth, mh=menu.offsetHeight, vw=window.innerWidth, vh=window.innerHeight;
+    var left=Math.max(8,Math.min(r.right-mw+6,vw-mw-8)), top=r.bottom+4, navSafe=104;
+    if(top+mh>vh-navSafe && r.top-mh-4>8){ top=r.top-mh-4; menu.classList.add('up'); }
+    menu.style.left=left+'px'; menu.style.top=top+'px';
+    if(byKey){ var f=menu.querySelector('button'); if(f) f.focus(); }
+  }
+  document.addEventListener('click',function(e){
+    var b=e.target.closest&&e.target.closest('.txMore');
+    if(b){ e.preventDefault(); e.stopPropagation(); if(curBtn===b) close(); else open(b,e.detail===0); return; }
+    var it=e.target.closest&&e.target.closest('#txMenu [data-act]');
+    if(it){
+      e.preventDefault(); e.stopPropagation();
+      var id=curId, act=it.getAttribute('data-act'); close();
+      if(act==='copy') window.repeatTx(id); else if(act==='edit') window.editTx(id); else if(act==='del') window.deleteTx(id);
+      return;
+    }
+    close();
+  },true);
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ var b=curBtn; close(); if(b) b.focus(); } });
+  window.addEventListener('scroll',close,true);
+  window.addEventListener('resize',close);
+  try{ if(typeof refreshAll==='function') refreshAll(); }catch(e){}
 })();
 </script>
 </body>
