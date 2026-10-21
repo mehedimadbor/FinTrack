@@ -9726,7 +9726,12 @@ async function sendStatement(){
   var ok=await postMsg(p.join(' · ')); toast(ok?tx('স্টেটমেন্ট পাঠানো হয়েছে','Statement sent'):tx('পাঠানো যায়নি','Could not send'));
 }
 function dl(id,arr){ return '<datalist id="'+id+'">'+arr.map(function(n){ return '<option value="'+E(n)+'">'; }).join('')+'</datalist>'; }
-function linkify(t){ return E(t).replace(/(https?:\/\/[^\s<]+)/g,function(u){ return '<a href="'+u+'" target="_blank" rel="noopener noreferrer">'+u+'</a>'; }); }
+function linkify(t){
+  var h=E(t).replace(/(https?:\/\/[^\s<]+)/g,function(u){ return '<a href="'+u+'" target="_blank" rel="noopener noreferrer">'+u+'</a>'; });
+  var m=/https?:\/\/\S*?[?&]theme=([A-Za-z0-9-]{0,40})(?:&accent=([0-9a-fA-F]{6}))?/.exec(String(t));
+  if(m) h+='<button type="button" class="fcThApply" data-th="'+E(m[1])+'" data-ac="'+E(m[2]||'')+'"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.2 0 2-.8 2-1.8 0-.5-.2-.9-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1 .8-1.8 1.8-1.8H17a4 4 0 0 0 4-4C21 6.6 17 3 12 3z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10.5" cy="7" r="1"/><circle cx="15" cy="7.5" r="1"/></svg> '+tx('থিম প্রয়োগ করুন','Apply theme')+'</button>';
+  return h;
+}
 function qrList(){
   var its=items(cur), last=its[its.length-1], b=balFor(cur), F=Q().F, od=overdue(cur), out=[];
   if(pendingFrom(cur)) return [{t:tx('দেখছি','Looking'),i:'eye'},{t:tx('একটু পরে করছি','Will do soon'),i:'hourglass'},{t:tx('ধন্যবাদ','Thanks'),i:'heart'}];
@@ -10281,6 +10286,22 @@ setTimeout(function(){ beat(true); },3500);
 window.addEventListener('ftPicChanged',function(){ if(logged()) register().catch(function(){}); });
 window.ftChatApi={
   ok:function(u){ try{ setOk(u); }catch(e){} },
+  sendTo:async function(uid,text){
+    var s=R().ses(); if(!s||!uid||uid===s.uid||blocked(uid)) return false;
+    try{ await register(); }catch(e){}
+    try{ setOk(uid); ensureTh(uid); }catch(e){}
+    var ts=Date.now(), lid='p'+ts+Math.random().toString(36).slice(2,6), tt=String(text).slice(0,1000);
+    var st=load(); if(!st.th[uid]) return false; st.th[uid].msgs.push({id:lid,me:1,t:tt,ts:ts,st:'s'}); st.th[uid].last=ts; save(st);
+    try{
+      var rs=await db('chat/'+uid,{method:'POST',headers:J,body:JSON.stringify({fromUid:s.uid,fromName:myName()||myUn()||'User',fromUn:myUn(),text:tt,ts:ts})});
+      var s2=load(), t2=s2.th[uid], m=t2&&t2.msgs.filter(function(x){ return x.id===lid; })[0]; if(m){ m.id='o'+rs.name; delete m.st; save(s2); }
+      try{ if(pane==='fr'&&!cur) renderFr(); setBadge(); }catch(e){}
+      return true;
+    }catch(e){
+      var s3=load(), t3=s3.th[uid]; if(t3){ t3.msgs=t3.msgs.filter(function(x){ return x.id!==lid; }); save(s3); }
+      return false;
+    }
+  },
   welcome:async function(uid,name,text){
     var s=R().ses(); if(!s||!uid||uid===s.uid||blocked(uid)) return 'skip';
     var t0=load().th[uid]; if(t0&&t0.msgs&&t0.msgs.length) return 'exists';
@@ -12116,7 +12137,7 @@ build(); [600,1500,3200,6500].forEach(ms=>setTimeout(()=>build(),ms));
 const TABS=[
  ['everyday','প্রতিদিন','Everyday',[['dash','হোম','Home','home','#6366f1'],['add','যোগ করুন','Add entry','plus','#10b981'],['tx','লেনদেন','Transactions','clipboard','#0ea5e9'],['hist','হিস্ট্রি','History','clock','#f59e0b'],['acc','একাউন্ট','Accounts','wallet','#14b8a6']]],
  ['money','অর্থ ও লক্ষ্য','Money & goals',[['loan','লোন','Loans','bank','#ef4444'],['challenge','চ্যালেঞ্জ','Challenges','svg:cg-trophy','#f59e0b'],['zakat','যাকাত','Zakat','coin','#22c55e']]],
- ['more','ইনসাইট ও আরও','Insights & more',[['report','রিপোর্ট','Reports','bars','#6366f1'],['chat','চ্যাট','Chat','bot','#8b5cf6'],['notes','নোট ও টাস্ক','Notes & tasks','clipboard','#a78bfa'],['profile','প্রোফাইল','Profile','user','#ec4899'],['@search','ইউজার খুঁজুন','Find users','search','#0ea5e9'],['@blood','ইমারজেন্সি হেল্প','Emergency help','drop','#e11d48']]]
+ ['more','ইনসাইট ও আরও','Insights & more',[['report','রিপোর্ট','Reports','bars','#6366f1'],['chat','AI চ্যাট','AI Chat','bot','#8b5cf6'],['friends','বন্ধু','Friends','user','#0ea5e9'],['@inbox','মেসেজ','Messages','message','#10b981'],['notes','নোট ও টাস্ক','Notes & tasks','clipboard','#a78bfa'],['profile','প্রোফাইল','Profile','user','#ec4899'],['@search','ইউজার খুঁজুন','Find users','search','#0ea5e9'],['@blood','ইমারজেন্সি হেল্প','Emergency help','drop','#e11d48']]]
 ];
 const icon=n=>n.indexOf('svg:')===0?'<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#'+n.slice(4)+'"/></svg>':'<i class="mi" style="--m:var(--ic-'+n+')"></i>';
 const cur=()=>{ const s=document.querySelector('.section.active'); return s?s.id.replace('sec-',''):''; };
@@ -12130,11 +12151,11 @@ function fillMenu(){
   const mv=dets().filter(isMoved).map(d=>{ const ch=chipOf(d), k=kOf(d); return tile('mset',k,ch.c,ch.i,titleHtml(d),det&&det===k); });
   const mvHtml=mv.length?'<div class="mnSec">'+L('অর্থ ও বাজেট','Money & budget')+'</div><div class="mnGrid">'+mv.join('')+'</div>':'';
   TABS.forEach(g=>{
-    const items=g[3].filter(x=>x[0]==='@search'?!!window.ppGoSearch:x[0]==='@blood'?!!window.ftBlood:(!!$('sec-'+x[0])||x[0]==='tx')).map(x=>tile(x[0]==='@search'?'search':x[0]==='@blood'?'blood':'tab',x[0],x[4],icon(x[3]),L(x[1],x[2]),x[0]===c&&c!=='settings'));
+    const items=g[3].filter(x=>x[0]==='@search'?!!window.ppGoSearch:x[0]==='@blood'?!!window.ftBlood:x[0]==='@inbox'?!!window.ftOpenInbox:(!!$('sec-'+x[0])||x[0]==='tx')).map(x=>tile(x[0]==='@search'?'search':x[0]==='@blood'?'blood':x[0]==='@inbox'?'inbox':'tab',x[0],x[4],icon(x[3]),L(x[1],x[2]),x[0]===c&&c!=='settings'));
     if(items.length) h+='<div class="mnSec">'+L(g[1],g[2])+'</div><div class="mnGrid">'+items.join('')+'</div>';
     if(g[0]==='money') h+=mvHtml;
   });
-  const FT=tile('tab','settings','#64748b',icon('settings'),L('সেটিংস','Settings'),c==='settings'&&!det)+tile('about','about','#8b5cf6','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.2M12 7.8h.01"/></svg>',L('অ্যাপ সম্পর্কে','About'),false)+((window.ftInstall&&!window.ftInstall.installed())?tile('install','install','#16a34a',icon('download'),L('অ্যাপ ইনস্টল','Install app'),false):'')+tile('logout','logout','#ef4444',icon('power'),L('লগআউট','Logout'),false);
+  const FT=tile('tab','settings','#64748b',icon('settings'),L('সেটিংস','Settings'),c==='settings'&&!det)+tile('about','about','#8b5cf6','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.2M12 7.8h.01"/></svg>',L('অ্যাপ সম্পর্কে','About'),false)+(window.ftInstall?tile('install','install','#16a34a',icon('download'),(window.ftInstall.installed()?L('অ্যাপ ইনস্টল ✓','App installed ✓'):L('অ্যাপ ইনস্টল','Install app')),false):'')+tile('logout','logout','#ef4444',icon('power'),L('লগআউট','Logout'),false);
   $('mnBody').innerHTML=h+'<div class="mnSec">'+L('আরও','More')+'</div><div class="mnGrid">'+FT+'</div>';
   $('mnFt').innerHTML=''; try{ if(window.ftCloud) ftCloud.refresh(); }catch(e){}
 }
@@ -12153,6 +12174,7 @@ function onMenu(e){
     else if(a==='set') window.ftSetOpen(k);
     else if(a==='search'&&window.ppGoSearch) window.ppGoSearch();
     else if(a==='blood'&&window.ftBlood) window.ftBlood.open('');
+    else if(a==='inbox'&&window.ftOpenInbox) window.ftOpenInbox();
  else if(a==='about'&&window.ftAbout) window.ftAbout();
     else if(a==='install'&&window.ftInstall) window.ftInstall.open();
     else if(a==='logout'&&window.ftCloud&&ftCloud.accountLogout) ftCloud.accountLogout();
@@ -15307,11 +15329,64 @@ function copyText(t){
   });
 }
 function copyTheme(){ copyText(link()).then(function(){ say(L('থিম লিংক কপি হয়েছে','Theme link copied')); },function(){ try{ prompt(L('লিংকটি কপি করুন','Copy this link'),link()); }catch(e){} }); }
-function shareTheme(){
+function nativeShare(){
   var u=link(), nm=titleOf(cur()), txt=L('আমার FinTrack থিমটি ব্যবহার করে দেখুন: ','Try my FinTrack theme: ')+nm;
   if(navigator.share){ navigator.share({title:'FinTrack — '+nm,text:txt,url:u}).catch(function(e){ if(e&&e.name==='AbortError') return; copyTheme(); }); }
   else copyText(txt+'\n'+u).then(function(){ say(L('থিম লিংক কপি হয়েছে, এখন পাঠিয়ে দিন','Theme link copied — now send it')); },function(){ copyTheme(); });
 }
+
+function shareTheme(){
+  var fr=window.ftFrInfo||{};
+  if(window.ftChatApi&&window.ftChatApi.sendTo&&Object.keys(fr).length){ openSend(fr); return; }
+  nativeShare();
+}
+function picOk(p){ return typeof p==='string'&&p.length<60000&&/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/.test(p)?p:''; }
+function closeSend(){ var o=$('gtSendOv'); if(o) o.remove(); }
+function openSend(fr){
+  closeSend();
+  var ids=Object.keys(fr).sort(function(a,b){ return String(fr[a].n||fr[a].u||'').toLowerCase().localeCompare(String(fr[b].n||fr[b].u||'').toLowerCase()); });
+  var cs=getComputedStyle(de), dots=['--bg','--card','--primary'].map(function(k){ return '<i style="background:'+cs.getPropertyValue(k).trim()+'"></i>'; }).join('');
+  var rows=ids.map(function(u){ var f=fr[u]||{}, nm=f.n||f.u||'?', pc=picOk(f.pic);
+    return '<label class="gsRow" data-n="'+E((nm+' '+(f.u||'')).toLowerCase())+'"><input type="checkbox" value="'+E(u)+'"><span class="gsAv">'+(pc?'<img alt="" src="'+pc+'">':E((String(nm).trim()[0]||'?').toUpperCase()))+'</span><span class="gsTx"><b>'+E(nm)+'</b><small>'+(f.u?'@'+E(f.u):'')+'</small></span><span class="gsCk">'+CHK+'</span></label>'; }).join('');
+  var ov=document.createElement('div'); ov.id='gtSendOv';
+  ov.innerHTML='<div class="gsSheet" role="dialog" aria-modal="true"><div class="gsGrab"></div>'
+    +'<div class="gsHd"><div><b>'+bl('থিম পাঠান','Send theme')+'</b><span class="gsTh"><span class="gsDots">'+dots+'</span>'+E(titleOf(cur()))+'</span></div><button type="button" class="gsX" data-gs="x" aria-label="Close"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m6.5 6.5 11 11M17.5 6.5l-11 11"/></svg></button></div>'
+    +(ids.length>6?'<input type="search" class="gsQ" placeholder="'+bl('বন্ধু খুঁজুন','Search friends')+'" autocomplete="off">':'')
+    +'<div class="gsList">'+rows+'</div>'
+    +'<div class="gsFt"><button type="button" class="gsMore" data-gs="more">'+SHARE+bl('অন্য অ্যাপে','Other apps')+'</button><button type="button" class="gsGo" data-gs="send" disabled>'+bl('পাঠান','Send')+'</button></div></div>';
+  document.body.appendChild(ov);
+  var go=ov.querySelector('.gsGo');
+  function upd(){ var n=ov.querySelectorAll('.gsList input:checked').length; go.disabled=!n; go.textContent=n?(L('পাঠান ('+n+')','Send ('+n+')')):L('পাঠান','Send'); }
+  ov.addEventListener('change',upd);
+  var q=ov.querySelector('.gsQ'); if(q) q.addEventListener('input',function(){ var v=q.value.trim().toLowerCase(); [].forEach.call(ov.querySelectorAll('.gsRow'),function(r){ r.style.display=!v||r.getAttribute('data-n').indexOf(v)>=0?'':'none'; }); });
+  ov.addEventListener('click',function(e){
+    if(e.target===ov){ closeSend(); return; }
+    var b=e.target.closest&&e.target.closest('[data-gs]'); if(!b) return; var a=b.getAttribute('data-gs');
+    if(a==='x') closeSend();
+    else if(a==='more'){ closeSend(); nativeShare(); }
+    else if(a==='send'){
+      var sel=[].map.call(ov.querySelectorAll('.gsList input:checked'),function(i){ return i.value; }); if(!sel.length) return;
+      go.disabled=true; go.textContent=L('পাঠানো হচ্ছে…','Sending…');
+      var text=L('আমার FinTrack থিমটি ব্যবহার করে দেখুন: ','Try my FinTrack theme: ')+titleOf(cur())+'\n'+link(), okN=0;
+      (async function(){ for(var i=0;i<sel.length;i++){ try{ if(await window.ftChatApi.sendTo(sel[i],text)) okN++; }catch(e){} }
+        closeSend();
+        say(okN?L('থিম '+okN+' জনকে পাঠানো হয়েছে','Theme sent to '+okN+' friend'+(okN>1?'s':'')):L('পাঠানো যায়নি, আবার চেষ্টা করুন','Could not send, try again')); })();
+    }
+  });
+}
+/* ---- apply a theme received in chat ---- */
+window.ftThemeApply=function(t,a){
+  var name=String(t||'').toLowerCase(); name=name==='classic'?'':name; a=String(a||'').replace(/^#/,'');
+  if(!/^[a-z0-9-]{0,40}$/.test(name)||(name&&!swFor(name))){ say(L('এই থিমটি পাওয়া যায়নি','Theme not found')); return; }
+  pick(name);
+  try{
+    if(/^[0-9a-f]{6}$/i.test(a)){ localStorage.setItem(AK,'#'+a); de.style.setProperty('--primary','#'+a); de.style.setProperty('--primary-d',mix('#'+a,22)); }
+    else{ localStorage.removeItem(AK); de.style.removeProperty('--primary'); de.style.removeProperty('--primary-d'); }
+    var pk=$('swPick'); if(pk) pk.value=/^[0-9a-f]{6}$/i.test(a)?'#'+a:'#2563eb';
+  }catch(e){}
+  setTimeout(function(){ say(L('থিম প্রয়োগ হয়েছে: ','Theme applied: ')+titleOf(name)); },300);
+};
+document.addEventListener('click',function(e){ var b=e.target&&e.target.closest&&e.target.closest('.fcThApply'); if(!b) return; e.preventDefault(); e.stopPropagation(); window.ftThemeApply(b.getAttribute('data-th'),b.getAttribute('data-ac')); },true);
 
 /* ---- opening a shared theme link: apply it automatically ---- */
 function mix(hex,pct){ var n=parseInt(hex.slice(1),16), r=(n>>16)&255, g=(n>>8)&255, b=n&255, k=1-pct/100, h=function(v){ return Math.round(v*k).toString(16).padStart(2,'0'); }; return '#'+h(r)+h(g)+h(b); }
@@ -15337,6 +15412,36 @@ setTimeout(incoming,50);
 })();
 </script>
 
+<style id="gtSendCss">
+#gtSendOv{position:fixed;inset:0;z-index:99990;background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;animation:gsFade .18s ease}
+#gtSendOv .gsSheet{width:min(100%,480px);max-height:82vh;display:flex;flex-direction:column;background:var(--bg);color:var(--text);border:1px solid var(--border);border-bottom:0;border-radius:26px 26px 0 0;padding:8px 14px calc(14px + env(safe-area-inset-bottom,0px));box-shadow:0 -20px 50px rgba(0,0,0,.35);animation:gsUp .26s cubic-bezier(.22,1,.36,1)}
+#gtSendOv .gsGrab{width:42px;height:4px;border-radius:4px;background:var(--border);margin:2px auto 10px}
+#gtSendOv .gsHd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+#gtSendOv .gsHd b{display:block;font-size:19px;font-weight:800}
+#gtSendOv .gsTh{display:inline-flex;align-items:center;gap:7px;margin-top:3px;font-size:12.5px;color:var(--muted);font-weight:700}
+#gtSendOv .gsDots{display:inline-flex}#gtSendOv .gsDots i{width:14px;height:14px;border-radius:50%;border:2px solid var(--bg);margin-left:-4px;box-shadow:0 0 0 1px var(--border)}#gtSendOv .gsDots i:first-child{margin-left:0}
+#gtSendOv .gsX{flex:none;width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+#gtSendOv .gsQ{width:100%;box-sizing:border-box;margin:0 0 8px;padding:11px 14px;border-radius:14px;border:1px solid var(--border);background:var(--card);color:var(--text);font:inherit;font-size:14px}
+#gtSendOv .gsList{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:6px;padding:2px 0 6px}
+#gtSendOv .gsRow{display:flex;align-items:center;gap:12px;padding:9px 11px;border-radius:16px;border:1px solid var(--border);background:var(--card);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s,border-color .15s}
+#gtSendOv .gsRow input{position:absolute;opacity:0;pointer-events:none}
+#gtSendOv .gsAv{flex:none;width:44px;height:44px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;background:var(--grad,var(--primary))}
+#gtSendOv .gsAv img{width:100%;height:100%;object-fit:cover;display:block}
+#gtSendOv .gsTx{flex:1;min-width:0}#gtSendOv .gsTx b{display:block;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#gtSendOv .gsTx small{display:block;font-size:12px;color:var(--muted);margin-top:1px}
+#gtSendOv .gsCk{flex:none;width:24px;height:24px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;color:transparent;transition:all .15s}
+#gtSendOv .gsCk svg{width:14px;height:14px}
+#gtSendOv .gsRow:has(input:checked){background:color-mix(in srgb,var(--primary) 12%,var(--card));border-color:color-mix(in srgb,var(--primary) 55%,var(--border))}
+#gtSendOv .gsRow:has(input:checked) .gsCk{background:var(--primary);border-color:var(--primary);color:#fff}
+#gtSendOv .gsFt{display:flex;gap:10px;padding-top:8px}
+#gtSendOv .gsMore{flex:none;display:inline-flex;align-items:center;gap:6px;height:48px;padding:0 14px;border-radius:16px;border:1px solid var(--border);background:var(--card);color:var(--text);font:inherit;font-weight:700;font-size:13px;cursor:pointer}
+#gtSendOv .gsMore svg{width:16px;height:16px}
+#gtSendOv .gsGo{flex:1;height:48px;border:0;border-radius:16px;background:var(--grad,var(--primary));color:#fff;font:inherit;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 10px 20px -12px var(--primary)}
+#gtSendOv .gsGo:disabled{opacity:.45;box-shadow:none;cursor:default}
+@keyframes gsFade{from{opacity:0}to{opacity:1}}@keyframes gsUp{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}
+.fcMsg .fcThApply{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;margin-top:8px;padding:9px 12px;border-radius:12px;border:1px solid color-mix(in srgb,currentColor 35%,transparent);background:color-mix(in srgb,currentColor 12%,transparent);color:inherit;font:inherit;font-weight:800;font-size:13px;cursor:pointer}
+.fcMsg .fcThApply:active{transform:scale(.97)}
+@media (prefers-reduced-motion:reduce){#gtSendOv,#gtSendOv .gsSheet{animation:none}}
+</style>
 <style id="ftFullCss">
 /* ===== Full-screen Friends + SMS-style inbox/conversation ===== */
 @keyframes ftFullIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
@@ -15355,7 +15460,8 @@ body.ftFrFull #sec-friends{position:fixed;inset:0;z-index:9300;margin:0;box-sizi
 body.ftFrFull #sec-friends .frHead{justify-content:flex-end}
 body.ftFrFull #sec-friends .frHead h3{display:none}
 /* chat (inbox + conversation) */
-body.ftChatFull #sec-chat.active{position:fixed;inset:0;z-index:9300;margin:0;padding:0;box-sizing:border-box;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;animation:ftFullIn .25s ease both!important}
+#ftFrPane .fcCard:has(#fcTo){display:none!important}
+body.ftChatFull #sec-chat.active{position:fixed;inset:auto;top:var(--ftVT,0px);left:0;right:0;height:var(--ftVH,100dvh);z-index:9300;margin:0;padding:0;box-sizing:border-box;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;animation:ftFullIn .25s ease both!important}
 body.ftChatFull #ftChatTop,body.ftChatFull #ftAiPane{display:none!important}
 body.ftChatFull #ftFrPane{flex:1 1 auto;min-height:0;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:calc(70px + env(safe-area-inset-top,0px)) 14px calc(26px + env(safe-area-inset-bottom,0px))}
 body.ftChatFull #ftFrPane[data-cur]:not([style*="display: none"]){display:flex!important;flex-direction:column;overflow:hidden;padding:env(safe-area-inset-top,0px) 0 0}
@@ -15363,6 +15469,8 @@ body.ftChatFull #ftFrPane[data-cur]>.fcCard{flex:1 1 auto;min-height:0;display:f
 body.ftChatFull #ftFrPane[data-cur]>.fcCard>*{flex:none}
 body.ftChatFull #ftFrPane[data-cur] .fcLogW{flex:1 1 auto!important;min-height:0;display:flex;flex-direction:column}
 body.ftChatFull #ftFrPane[data-cur] .fcLog{flex:1 1 auto;height:auto!important;max-height:none!important;min-height:0}
+body.ftKb #ftFrPane[data-cur]>.fcCard{padding-bottom:10px!important}
+body.ftKb #ftFrPane[data-cur] .fcBal,body.ftKb #ftFrPane[data-cur] .fcSeg{display:none}
 @media (prefers-reduced-motion:reduce){body.ftFrFull #sec-friends,body.ftChatFull #sec-chat.active{animation:none!important}}
 </style>
 <script id="ftFullJs">
@@ -15379,10 +15487,12 @@ var bar=document.createElement('div'); bar.id='ftFullBar';
 bar.innerHTML='<button type="button" id="ftFbBack" aria-label="Back">'+SV_BACK+'</button><b id="ftFbT"></b><button type="button" id="ftFbInb" aria-label="Messages">'+SV_MSG+'<em id="ftFbN" style="display:none"></em></button><span class="ftFbSp" id="ftFbSp" style="display:none"></span>';
 document.body.appendChild(bar);
 
+var inOpen=false;
 function openInbox(){
   var o=window.ftFrBack; window.ftFrBack=null;           /* so setPane('fr') is allowed without an open chat */
+  inOpen=true;
   try{ if(window.ftChatOpen) window.ftChatOpen([]); }catch(e){}
-  window.ftFrBack=o;
+  inOpen=false; window.ftFrBack=o;
 }
 /* conversation "back" -> inbox if we came from the inbox, else Friends */
 var origBack=window.ftFrBack;
@@ -15396,6 +15506,7 @@ document.addEventListener('click',function(e){
   if(r&&fp&&!fp.hasAttribute('data-cur')) fromInbox=true;
 },true);
 
+window.ftOpenInbox=openInbox;
 $('ftFbBack').onclick=function(){
   var act=document.querySelector('.section.active'), id=act?act.id:'';
   if(id==='sec-friends') activateTab('dash');
@@ -15417,14 +15528,45 @@ function sync(){
     var src=$('fcTopN'), n=$('ftFbN'), v=(src&&src.style.display!=='none')?(src.textContent||'').trim():'';
     if(v){ if(n.textContent!==v) n.textContent=v; n.style.display=''; } else n.style.display='none';
   }
+  try{ vvFit(); }catch(e){}
+  try{ histSync(); }catch(e){}
 }
+var hPushed=false;
+function fullOn(){ var c=document.body.classList; return c.contains('ftFrFull')||c.contains('ftChatFull'); }
+function histSync(){
+  var on=fullOn();
+  if(on&&!hPushed){ try{ history.pushState({ftFull:1},''); hPushed=true; }catch(e){} }
+  else if(!on&&hPushed){ hPushed=false; try{ history.back(); }catch(e){} }
+}
+function goBack(){
+  var cv=document.querySelector('#ftFrPane[data-cur] [data-a="back"]');
+  if(document.body.classList.contains('ftChatFull')&&cv) cv.click(); else $('ftFbBack').onclick();
+}
+window.addEventListener('popstate',function(){ if(!hPushed) return; hPushed=false; if(fullOn()) goBack(); });
 var _at=window.activateTab;
-window.activateTab=function(){ var r=_at.apply(this,arguments); try{ sync(); }catch(e){} return r; };
+window.activateTab=function(){ if(!inOpen) fromInbox=false; var r=_at.apply(this,arguments); try{ sync(); }catch(e){} return r; };
 var raf=0; function sched(){ if(raf) return; raf=requestAnimationFrame(function(){ raf=0; try{ sync(); }catch(e){} }); }
 function watch(){
   ['sec-friends','sec-chat'].forEach(function(id){ var e=$(id); if(e&&!e._ftW){ e._ftW=1; new MutationObserver(sched).observe(e,{attributes:true,attributeFilter:['class','style','data-cur'],subtree:true}); } });
 }
 watch(); setInterval(function(){ watch(); sync(); },700); sync();
+
+/* ---- keyboard: keep header fixed, composer rides above the keyboard ---- */
+var vv=window.visualViewport, kbWas=false;
+function vvFit(){
+  var r=document.documentElement.style, on=document.body.classList.contains('ftChatFull');
+  if(!on||!vv){ if(r.getPropertyValue('--ftVH')){ r.removeProperty('--ftVH'); r.removeProperty('--ftVT'); } setC('ftKb',false); kbWas=false; return; }
+  var h=Math.round(vv.height), t=Math.round(vv.offsetTop), kb=(window.innerHeight-vv.height)>120;
+  if(r.getPropertyValue('--ftVH')!==h+'px') r.setProperty('--ftVH',h+'px');
+  if(r.getPropertyValue('--ftVT')!==t+'px') r.setProperty('--ftVT',t+'px');
+  setC('ftKb',kb);
+  if(window.scrollY||window.scrollX) window.scrollTo(0,0);
+  if(kb&&!kbWas){ var lg=$('fcLog'); if(lg) setTimeout(function(){ lg.scrollTop=lg.scrollHeight; },60); }
+  kbWas=kb;
+}
+if(vv){ vv.addEventListener('resize',vvFit); vv.addEventListener('scroll',vvFit); }
+window.addEventListener('scroll',function(){ if(document.body.classList.contains('ftChatFull')&&(window.scrollY||window.scrollX)) window.scrollTo(0,0); },{passive:true});
+document.addEventListener('focusin',function(e){ if(e.target&&e.target.id==='fcInput'){ setTimeout(vvFit,120); setTimeout(vvFit,380); } });
 
 /* ---- stories: show my own profile photo instead of the letter ---- */
 function myPic(){
