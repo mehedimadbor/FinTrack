@@ -15533,10 +15533,16 @@ function sync(){
 }
 var hPushed=false;
 function fullOn(){ var c=document.body.classList; return c.contains('ftFrFull')||c.contains('ftChatFull'); }
+var hT=0;
 function histSync(){
   var on=fullOn();
-  if(on&&!hPushed){ try{ history.pushState({ftFull:1},''); hPushed=true; }catch(e){} }
-  else if(!on&&hPushed){ hPushed=false; try{ history.back(); }catch(e){} }
+  if(on){
+    if(hT){ clearTimeout(hT); hT=0; }
+    if(!hPushed){ try{ history.pushState({ftFull:1},''); hPushed=true; }catch(e){} }
+  } else if(hPushed&&!hT){
+    /* wait: switching Friends -> Chat passes through a moment where neither screen is "on" */
+    hT=setTimeout(function(){ hT=0; if(!fullOn()&&hPushed){ hPushed=false; try{ history.back(); }catch(e){} } },300);
+  }
 }
 function goBack(){
   var cv=document.querySelector('#ftFrPane[data-cur] [data-a="back"]');
