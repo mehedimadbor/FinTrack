@@ -1405,10 +1405,17 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     var list=[]; try{ list=JSON.parse(localStorage.getItem('userCountedIds_v1')||'[]'); if(!Array.isArray(list)) list=[]; }catch(x){ list=[]; }
     try{ if(localStorage.getItem('userCounted_v1')==='1' && list.indexOf('dev')<0) list.push('dev'); }catch(x){}
     var ok = key!=='dev' || localStorage.getItem('loginDone_v1')==='true';
-    if(ok && list.indexOf(key)<0){
+    var pend=[]; try{ pend=JSON.parse(localStorage.getItem('userCountPending_v1')||'[]'); if(!Array.isArray(pend)) pend=[]; }catch(x){ pend=[]; }
+    var todo=[]; if(ok&&list.indexOf(key)<0) todo.push(key);
+    pend.forEach(function(k){ if(typeof k==='string'&&list.indexOf(k)<0&&todo.indexOf(k)<0) todo.push(k); }); /* retry counts that failed earlier (offline / rules) */
+    var left=[];
+    for(var i=0;i<todo.length;i++){
+      var kk=todo[i], done=false;
       try{ var r=await fetch(base()+'/stats/users.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({'.sv':{increment:1}}),signal:tmo(8000)});
-        if(r.ok){ list.push(key); try{ localStorage.setItem('userCountedIds_v1',JSON.stringify(list.slice(-200))); if(key==='dev') localStorage.setItem('userCounted_v1','1'); }catch(x){} } }catch(x){}
+        if(r.ok){ done=true; list.push(kk); try{ localStorage.setItem('userCountedIds_v1',JSON.stringify(list.slice(-200))); if(kk==='dev') localStorage.setItem('userCounted_v1','1'); }catch(x){} } }catch(x){}
+      if(!done&&kk!=='dev') left.push(kk);
     }
+    try{ if(left.length) localStorage.setItem('userCountPending_v1',JSON.stringify(left.slice(-20))); else localStorage.removeItem('userCountPending_v1'); }catch(x){}
     fetchCount();
   };
   var cached=0; try{ cached=+localStorage.getItem(KEY)||0; }catch(x){}
@@ -15064,10 +15071,23 @@ async function fetchPool(){
   var m=me(); if(!m) return false;
   var ch='abcdefghijklmnopqrstuvwxyz0123456789', c=ch.charAt(Math.floor(Math.random()*ch.length)), o={}, enc=encodeURIComponent, K=enc('"$key"');
   try{ o=(await db('usernames','orderBy='+K+'&startAt='+enc('"'+c+'"')+'&limitToFirst=40'))||{}; }catch(e){ if(String(e.message)==='LOGIN') return false; o=null; }
-  if(!o||Object.keys(o).length<20){ try{ var o2=(await db('usernames','orderBy='+K+'&limitToFirst=40'))||{}; o=o||{}; Object.keys(o2).forEach(function(k){ o[k]=o2[k]; }); }catch(e){ if(!o) return false; } }
+  if(!o||Object.keys(o).length<20){ try{ var o2=(await db('usernames','orderBy='+K+'&limitToFirst=40'))||{}; o=o||{}; Object.keys(o2).forEach(function(k){ o[k]=o2[k]; }); }catch(e){ if(String(e.message)==='LOGIN') return false; } }
+  var uok=!!o; o=o||{};
   var add=[];
   Object.keys(o).forEach(function(k){ var r=o[k]; if(!r||typeof r!=='object'||!uidOk(r.uid)||r.uid===m||has(r.uid)) return;
     add.push({uid:r.uid,name:String(r.name||'').slice(0,60),username:String(r.username||k).slice(0,40),pic:okp(r.pic)?r.pic:''}); });
+  /* fallback: "usernames" can't be listed (rules) or is nearly empty -> also use the public blood-donor list as a source of people */
+  var dok=false;
+  if(add.length<12){
+    try{
+      var dd=(await db('bloodDonors','orderBy='+K+'&limitToFirst=300'))||{}; dok=true;
+      Object.keys(dd).forEach(function(uid){ var r=dd[uid]; if(!r||typeof r!=='object'||!uidOk(uid)||uid===m||has(uid)) return;
+        for(var q=0;q<add.length;q++) if(add[q].uid===uid) return;
+        var nm=typeof r.n==='string'?r.n.slice(0,60):'', un=typeof r.u==='string'?r.u.slice(0,40):''; if(!nm&&!un) return;
+        add.push({uid:uid,name:nm,username:un,pic:okp(r.pic)?r.pic:''}); });
+    }catch(e){ if(String(e.message)==='LOGIN') return false; }
+  }
+  if(!uok&&!dok) return false;
   var seen={}; add=add.filter(function(c){ if(seen[c.uid]) return false; seen[c.uid]=1; return true; });
   pool=pool.concat(shuffle(add));
   return true;
@@ -15083,7 +15103,7 @@ function fill(){
   while(shown.length<N){ var c=nextCand(); if(!c) break; shown.push(c); }
 }
 function more(){
-  if(loading||pool.length>=8||!me()) return; loading=true; lastTry=Date.now();
+  if(loading||pool.length>=8||!me()) return; if(lastTry&&Date.now()-lastTry<15000) return; loading=true; lastTry=Date.now();
   fetchPool().then(function(ok){ failed=!ok; loaded=loaded||ok; loading=false; fill(); render(); }).catch(function(){ failed=true; loading=false; render(); });
 }
 function rowH(c){
