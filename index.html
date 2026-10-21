@@ -2356,7 +2356,8 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     <div class="tab" data-tab="acc" data-i18n="tab_acc">একাউন্ট</div>
     <div class="tab" data-tab="hist" data-i18n="tab_hist">হিস্ট্রি</div>
     <div class="tab" data-tab="report" data-i18n="tab_report">রিপোর্ট</div>
-    <div class="tab" data-tab="settings" data-i18n="tab_settings">সেটিংস</div>
+    <div class="tab" data-tab="loan" data-i18n="tab_loan">লোন</div>
+    <div class="tab" data-tab="settings" data-i18n="tab_settings" hidden style="display:none!important">সেটিংস</div>
   </div>
 
 <!-- DASHBOARD -->
@@ -2503,6 +2504,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
   <div class="cpBody">
     <div class="cHeroWrap">
       <div class="cHero" id="cHero">
+        <button type="button" class="cCopy" id="cCopy" onclick="calcCopy()" aria-label="Copy calculation" title="Copy"><svg class="ic-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V6.5A2.5 2.5 0 0 1 7.5 4H15"/></svg><svg class="ic-ok" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
         <div class="chTop"><div class="chLbl" id="chLbl"></div><div class="chVal" id="chVal">৳0</div></div>
         <div class="chBar"><i id="chBarIn"></i><i id="chBarEx"></i></div>
         <div class="chStats"><b id="chIn"></b><b id="chEx"></b></div>
@@ -2531,7 +2533,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
 </div>
 <style>
 html.locked #calcPage{display:none!important}
-#calcToast{position:absolute;left:14px;right:14px;bottom:calc(18px + env(safe-area-inset-bottom,0px));background:#111;color:#fff;border-radius:14px;padding:12px 14px;display:none;align-items:center;justify-content:space-between;gap:10px;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.35);z-index:5}
+#calcToast{position:absolute;left:14px;right:14px;top:calc(112px + env(safe-area-inset-top,0px));bottom:auto;background:#111;color:#fff;border-radius:14px;padding:12px 14px;display:none;align-items:center;justify-content:space-between;gap:10px;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.35);z-index:5}
 #calcToast.on{display:flex;animation:cUp .2s ease-out}
 #calcToast button{border:0;background:#3b82f6;color:#fff;font:inherit;font-weight:700;border-radius:10px;padding:7px 12px;cursor:pointer}
 #calcPage{position:fixed;inset:0;z-index:100000;display:none;flex-direction:column;background:var(--bg);color:var(--text);padding-top:env(safe-area-inset-top,0px)}
@@ -2683,6 +2685,15 @@ html.locked #calcPage{display:none!important}
 .cHeroWrap .cScr{flex:none}
 .cEditTag .edb{display:flex;align-items:center;gap:2px}
 .cEditTag .edb button:first-child{font-size:12.5px;font-weight:800;color:var(--red)}
+/* copy button (theme colour) */
+.cCopy{position:absolute;top:10px;right:10px;z-index:3;width:38px;height:38px;border-radius:12px;border:1px solid color-mix(in srgb,var(--primary) 45%,transparent);background:color-mix(in srgb,var(--primary) 22%,transparent);color:color-mix(in srgb,var(--primary) 55%,#fff);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;transition:transform .1s,background .2s,color .2s,border-color .2s,opacity .2s}
+.cCopy svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.cCopy .ic-ok{display:none}
+.cCopy:active{transform:scale(.9)}
+.cCopy.empty{opacity:.45}
+.cCopy.done{background:color-mix(in srgb,var(--green) 26%,transparent);border-color:color-mix(in srgb,var(--green) 55%,transparent);color:#4ade80}
+.cCopy.done .ic-copy{display:none}.cCopy.done .ic-ok{display:block}
+.cHeroWrap .cpTape{padding-right:0}
 @keyframes cShake{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
 @keyframes cUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.calcItem,#calcToast.on{animation:none}.chBar i{transition:none}}
@@ -2690,7 +2701,7 @@ html.locked #calcPage{display:none!important}
 <script>
 (function(){
   var KEY='calcDraft_v1', items=[], flt=0, editIdx=null, lastDel=null, shown=0, tw=null;
-  function load(){try{var v=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(v)?v:[]}catch(e){return[]}}
+  function load(){try{var v=JSON.parse(localStorage.getItem(KEY)||'[]');if(!Array.isArray(v))return[];return v.filter(function(x){return x&&typeof x==='object'&&isFinite(x.a)&&x.a>0}).map(function(x){return{n:String(x.n==null?'':x.n),a:+x.a,s:x.s>0?1:-1}})}catch(e){return[]}}
   function save(){try{localStorage.setItem(KEY,JSON.stringify(items))}catch(e){}}
   function money(n){return (typeof fmt==='function')?fmt(n):'৳'+Math.round(n*100)/100}
   function bnL(){return typeof currentLang!=='undefined'&&currentLang==='bn'}
@@ -2706,7 +2717,7 @@ html.locked #calcPage{display:none!important}
   window.calcOpen=function(){page.classList.add('open');page.setAttribute('aria-hidden','false');document.documentElement.style.overflow='hidden';render(true);
     if(!pushed){try{history.pushState({calcPage:1},'');pushed=true}catch(e){}}};
   window.calcClose=function(fromPop,noBack){page.classList.remove('open');page.setAttribute('aria-hidden','true');document.documentElement.style.overflow='';
-    $('calcToast').classList.remove('on');calcCancelEdit();
+    $('calcToast').classList.remove('on');calcCancelEdit();var _cb=$('cCopy');if(_cb)_cb.classList.remove('done');
     if(pushed){pushed=false;if(fromPop!==true&&noBack!==true){try{history.back()}catch(e){}}}};
   window.addEventListener('popstate',function(){if(page.classList.contains('open'))calcClose(true)});
   new MutationObserver(function(){if(document.documentElement.classList.contains('locked')&&page.classList.contains('open'))calcClose(false,true)}).observe(document.documentElement,{attributes:true,attributeFilter:['class']});
@@ -2745,8 +2756,14 @@ html.locked #calcPage{display:none!important}
     save();render();lastDel={it:it,i:i};
     toast(bnL()?'এন্ট্রি মুছে ফেলা হয়েছে':'Entry removed',bnL()?'আনডু':'Undo',function(){if(lastDel){items.splice(Math.min(lastDel.i,items.length),0,lastDel.it);lastDel=null;save();render()}});
   };
-  window.calcClear=function(){if(!items.length)return;if(confirm(bnL()?'সব এন্ট্রি মুছে ফেলবেন?':'Clear all entries?')){var bk=items.slice();items=[];editIdx=null;save();render();
-    toast(bnL()?'সব মুছে ফেলা হয়েছে':'All cleared',bnL()?'আনডু':'Undo',function(){items=bk;save();render()})}};
+  window.calcClear=function(){
+    var l=$('calcLbl'),a=$('calcAmt');
+    if(!items.length&&!(a.value||l.value)){toast(bnL()?'মুছে ফেলার মতো কিছু নেই':'Nothing to clear');return}
+    var bk=items.slice(),bl=l.value,ba=a.value;
+    items=[];editIdx=null;lastDel=null;$('cEditTag').classList.remove('on');l.value='';a.value='';
+    save();render();scrLbl();
+    toast(bnL()?'সব মুছে ফেলা হয়েছে':'All cleared',bnL()?'আনডু':'Undo',function(){items=bk;l.value=bl;a.value=ba;save();render();scrLbl()});
+  };
   window.calcUseBalance=function(){
     var b=0;try{b=calcBalance()}catch(e){}
     items.push({n:bnL()?'বর্তমান ব্যালেন্স':'Current balance',a:Math.abs(b),s:b<0?-1:1});save();render();
@@ -2772,7 +2789,7 @@ html.locked #calcPage{display:none!important}
     if(instant===true){shown=target;$('chVal').textContent=money(target)}else tween(target,$('chVal'));
     $('chIn').textContent=money(inc);$('chEx').textContent=money(exp);
     var tot=inc+exp;$('chBarIn').style.width=tot?(inc/tot*100)+'%':'0';$('chBarEx').style.width=tot?(exp/tot*100)+'%':'0';
-    var tp=$('cTape');if(tp)tp.scrollTop=tp.scrollHeight;var o=$('calcOut');if(o)o.style.display=items.length?'':'none';
+    var tp=$('cTape');if(tp)tp.scrollTop=tp.scrollHeight;var o=$('calcOut');if(o)o.style.display=items.length?'':'none';var cb=$('cCopy');if(cb)cb.classList.toggle('empty',!items.length);
   }
   function totals(){var i=0,e=0;items.forEach(function(it){if(it.s>0)i+=it.a;else e+=it.a});i=Math.round(i*100)/100;e=Math.round(e*100)/100;return{i:i,e:e,l:Math.round((i-e)*100)/100}}
   function buildText(){
@@ -2794,6 +2811,19 @@ html.locked #calcPage{display:none!important}
     var d=new Date(),ds=d.toLocaleDateString('en',{day:'numeric',month:'short',year:'numeric'});
     NS.addNote((bnL()?'হিসাব — ':'Calculation — ')+ds,buildText(),bnL()?'হিসাব':'Calc');
     toast(bnL()?'নোটে সেভ হয়েছে ✓':'Saved to Notes ✓',bnL()?'নোট খুলুন':'Open Notes',function(){calcClose(false,true);try{NS.openPage();NS.mode('n')}catch(e){}});
+  };
+  function copyText(txt,ok,fail){
+    function fb(){try{var ta=document.createElement('textarea');ta.value=txt;ta.setAttribute('readonly','');ta.style.cssText='position:fixed;top:0;left:0;opacity:0;font-size:16px';document.body.appendChild(ta);ta.focus();ta.select();ta.setSelectionRange(0,txt.length);var r=document.execCommand('copy');ta.remove();r?ok():fail()}catch(e){fail()}}
+    try{if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(txt).then(ok,fb)}else fb()}catch(e){fb()}
+  }
+  window.calcCopy=function(){
+    var b=$('cCopy');
+    if(!items.length){toast(bnL()?'কপি করার মতো কিছু নেই':'Nothing to copy');return}
+    copyText(buildText(),function(){
+      b.classList.add('done');clearTimeout(calcCopy._t);calcCopy._t=setTimeout(function(){b.classList.remove('done')},1600);
+      try{navigator.vibrate&&navigator.vibrate(12)}catch(e){}
+      toast(bnL()?'হিসাব কপি হয়েছে ✓':'Calculation copied ✓');
+    },function(){toast(bnL()?'কপি করা গেল না':'Could not copy')});
   };
   window.calcShare=function(){
     if(!items.length)return;var txt=buildText();
@@ -2818,7 +2848,7 @@ html.locked #calcPage{display:none!important}
     if(/^[0-9]$/.test(e.key))press(e.key);else if(e.key==='.')press('.');else if(e.key==='Backspace')press('back');
     else if(e.key==='+'||e.key==='Enter')press('plus');else if(e.key==='-')press('minus');else if(e.key==='Delete'||e.key==='Escape')press('ac');else return;e.preventDefault()});
   items=load();chips();scrLbl();render(true);
-  var _o=window.calcOpen;window.calcOpen=function(){chips();_o()};
+  var _o=window.calcOpen;window.calcOpen=function(){chips();scrLbl();_o()};
   page.addEventListener('keydown',function(e){if(e.key!=='Enter')return;
     if(e.target.id==='calcLbl'){e.preventDefault();e.target.blur()}});
 })();
@@ -8271,7 +8301,7 @@ document.head.appendChild(css);
   d.onclick=e=>{const b=e.target.closest('button');if(b&&!b.classList.contains('on'))activateTab(b.dataset.g)};sc.insertBefore(d,sc.firstChild)});
 const _r=window.activateTab;window.activateTab=function(n){const r=_r.apply(this,arguments);if(n==='report'){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab==='hist'))}return r};
 function applyFeat(){FEAT.forEach(f=>document.documentElement.classList.toggle('ftOff-tab-'+f[0],ls(fk(f[0]),fdef(f[0]))==='0'));
-  const a=document.querySelector('.tab.active');if(a&&getComputedStyle(a).display==='none')activateTab('dash');}
+  const a=document.querySelector('.tab.active');if(a&&a.dataset.tab!=='settings'&&getComputedStyle(a).display==='none')activateTab('dash');}
 const pref=document.querySelector('#prefPlusBox .setBody'),fb=document.createElement('div');fb.id='featBox';
 fb.innerHTML='<div style="font-size:12px;font-weight:800;color:var(--muted);margin:14px 0 2px;padding-top:12px;border-top:1px solid var(--border)">'+bl('ফিচার চালু / বন্ধ','Features on / off')+'</div><p class="zkHd" style="margin:0 0 4px">'+bl('বন্ধ করলে ট্যাবটি উপরের বার থেকে সরে যাবে, ডেটা মুছবে না।','Turning off hides the tab; your data is kept.')+'</p>';
 FEAT.forEach(f=>{const l=document.createElement('label');l.className='ftRow';l.innerHTML='<span>'+bl(f[1],f[2])+'</span><input type="checkbox">';const c=l.querySelector('input');c.checked=ls(fk(f[0]),fdef(f[0]))==='1';c.onchange=()=>{st(fk(f[0]),c.checked?'1':'0');applyFeat()};fb.appendChild(l)});
@@ -8486,6 +8516,7 @@ run(); setTimeout(run,700); setTimeout(run,2200);
 .loanPayBtn.loanReqBtn{background:transparent;color:var(--primary);border:1.5px solid var(--primary);box-shadow:none}
 .person>div:last-child{flex-wrap:wrap;justify-content:flex-end;row-gap:6px}
 .tab{position:relative;}
+.tab[data-tab="settings"]{display:none!important}
 .tab.rqHas::after{content:"";position:absolute;top:5px;right:6px;width:9px;height:9px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 2px var(--card),0 0 0 0 rgba(239,68,68,.7);pointer-events:none}
 @keyframes rqBlink{0%,100%{opacity:1;transform:scale(1);box-shadow:0 0 0 2px var(--card),0 0 0 0 rgba(239,68,68,.65)}50%{opacity:.25;transform:scale(.8);box-shadow:0 0 0 2px var(--card),0 0 0 6px rgba(239,68,68,0)}}
 @media (prefers-reduced-motion:reduce){.tab.rqHas::after{animation:none}}
