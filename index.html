@@ -15043,7 +15043,7 @@ var E=function(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ r
 var R=function(){ try{ return window.ftCloud&&ftCloud._raw?ftCloud._raw():null; }catch(e){ return null; } };
 var okp=function(s){ return typeof s==='string'&&s.length<60000&&/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/.test(s); };
 var uidOk=function(u){ return typeof u==='string'&&/^[A-Za-z0-9_-]{6,64}$/.test(u); };
-var shown=[], pool=[], recent=[], fresh={}, pending={}, loaded=false, loading=false, lastTry=0, failed=false, touchAt=0, tick=0;
+var shown=[], pool=[], recent=[], fresh={}, pending={}, loaded=false, loading=false, lastTry=0, failed=false, touchAt=0, tick=0, t0=0;
 var SV={plus:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9.5" cy="8.5" r="3.6"/><path d="M3 19.5c.5-3.4 3.1-5.3 6.5-5.3 1.4 0 2.6.3 3.6.9M18 8.5v6M15 11.5h6"/></svg>',
  ok:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
  users:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.4"/><path d="M2.8 19.5c.5-3.2 3-5 6.2-5s5.7 1.8 6.2 5"/><path d="M16 5.4a3.3 3.3 0 0 1 0 6.2M18.2 14.8c1.8.6 2.9 2.2 3.2 4.7"/></svg>',
@@ -15084,7 +15084,7 @@ function fill(){
 }
 function more(){
   if(loading||pool.length>=8||!me()) return; loading=true; lastTry=Date.now();
-  fetchPool().then(function(ok){ failed=!ok; loaded=loaded||ok; loading=false; fill(); render(); }).catch(function(){ failed=true; loading=false; });
+  fetchPool().then(function(ok){ failed=!ok; loaded=loaded||ok; loading=false; fill(); render(); }).catch(function(){ failed=true; loading=false; render(); });
 }
 function rowH(c){
   var s=st(c.uid), nm=c.name||c.username, ini=(String(nm||'?').trim().charAt(0)||'?').toUpperCase();
@@ -15098,7 +15098,8 @@ function render(){
   if(!me()||typing||(loaded&&!shown.length)){ box.style.display='none'; return; }
   box.style.display='';
   var body;
-  if(!shown.length){ body='<div class="rcList">'+[0,1,2].map(function(){ return '<div class="rcSk"><i style="width:46px;height:46px"></i><div style="flex:1"><i style="height:12px;width:55%;margin-bottom:7px"></i><i style="height:10px;width:35%"></i></div><i style="width:96px;height:36px"></i></div>'; }).join('')+'</div>'; }
+  if(!shown.length&&failed&&!loading){ body='<div class="rcList" style="padding:18px 6px;text-align:center"><small style="display:block;margin-bottom:10px;color:var(--muted)">'+L('লোড করা যায়নি। ইন্টারনেট চেক করে আবার চেষ্টা করুন।','Could not load. Check your connection and try again.')+'</small><button type="button" class="rcBtn" data-rc="retry">'+L('আবার চেষ্টা করুন','Try again')+'</button></div>'; }
+  else if(!shown.length){ body='<div class="rcList">'+[0,1,2].map(function(){ return '<div class="rcSk"><i style="width:46px;height:46px"></i><div style="flex:1"><i style="height:12px;width:55%;margin-bottom:7px"></i><i style="height:10px;width:35%"></i></div><i style="width:96px;height:36px"></i></div>'; }).join('')+'</div>'; }
   else body='<div class="rcList">'+shown.map(rowH).join('')+'</div>';
   var h='<div class="rcHead"><div><b>'+SV.users+' '+L('প্রস্তাবিত বন্ধু','Recommended friends')+'</b><small>'+L('যাদের আপনি চিনতে পারেন','People you may know')+'</small></div><button type="button" class="rcMore" data-rc="more" aria-label="refresh">'+SV.re+'</button></div>'+body;
   if(box._h===h) return; box._h=h; box.innerHTML=h;
@@ -15129,7 +15130,8 @@ function onClick(ev){
     Promise.resolve(ftFr.add(u)).then(function(){ delete pending[u]; render(); },function(){ delete pending[u]; render(); });
   }
   else if(a==='can'){ if(window.ppCancelReq) ppCancelReq(u); }
-  else if(a==='more'){ touchAt=0; rotate(true); }
+  else if(a==='more'){ touchAt=0; if(failed||!shown.length){ failed=false; loaded=false; lastTry=0; render(); more(); } else rotate(true); }
+  else if(a==='retry'){ failed=false; loaded=false; lastTry=0; render(); more(); }
 }
 function inject(){
   var q=$('ppQ'); if(!q||$('ftRecBox')) return;
@@ -15144,7 +15146,9 @@ function inject(){
 function step(){
   if(!$('ftRecBox')||!me()) return;
   var cnt=window.ftFrCount?ftFrCount():null;
-  if(cnt===null) return; /* friend list not loaded yet: wait so we never suggest existing friends */
+  if(!t0) t0=Date.now();
+  /* wait briefly for the friend list so existing friends are not suggested, but never block forever */
+  if(cnt===null&&Date.now()-t0<3500) return;
   if(!loading&&!loaded&&(!lastTry||Date.now()-lastTry>(failed?20000:0))) more();
   else if(loaded&&shown.length<N) { fill(); render(); if(pool.length<4) more(); }
 }
