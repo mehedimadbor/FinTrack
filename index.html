@@ -2510,7 +2510,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
         <div class="chStats"><b id="chIn"></b><b id="chEx"></b></div>
         <div class="cpTape" id="cTape"><div class="rcInner"><div id="calcList"></div><div id="calcResult"></div></div></div>
         <div class="cScr" id="cScr">
-          <div class="cScrLbl" id="cScrLbl"></div>
+          <div class="cScrLbl" id="cScrLbl"></div><div class="cScrRes" id="cScrRes"></div>
           <div class="cScrRow"><span class="cur">৳</span><input id="calcAmt" type="text" readonly inputmode="none" placeholder="0" autocomplete="off" aria-label="Amount"></div>
         </div>
       </div>
@@ -2520,7 +2520,9 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
         <div class="cEditTag" id="cEditTag"><span id="cEditTxt"></span><span class="edb"><button type="button" onclick="calcDelEdit()"><span class="bn">মুছুন</span><span class="en">Delete</span></button><button type="button" onclick="calcCancelEdit()">✕</button></span></div>
         <div class="calcRow"><input id="calcLbl" type="text" placeholder="Salary / Food / Loan..." autocomplete="off" enterkeyhint="done"></div>
         <div class="cChips" id="cChips"></div>
+        <div class="cFr" id="cFr"><button type="button" data-f="2" title="১/২ ভাগ">½</button><button type="button" data-f="3" title="১/৩ ভাগ">⅓</button><button type="button" data-f="4" title="১/৪ ভাগ">¼</button><button type="button" data-f="5" title="১/৫ ভাগ">⅕</button><button type="button" data-f="left">বাকি</button><button type="button" data-f="undo">↶</button></div>
         <div class="cPad" id="cPad">
+          <button type="button" class="fx" data-k="÷" aria-label="Divide">÷</button><button type="button" class="fx" data-k="×" aria-label="Multiply">×</button><button type="button" class="fx" data-k="%">%</button><button type="button" class="fx" data-k="=">=</button>
           <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button><button type="button" class="fn" data-k="back" aria-label="Backspace"><svg viewBox="0 0 24 24"><path d="M21 5H9l-6 7 6 7h12a1 1 0 001-1V6a1 1 0 00-1-1zM17 9.5l-5 5M12 9.5l5 5"/></svg></button>
           <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button><button type="button" class="fn" data-k="ac">C</button>
           <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button><button type="button" class="op p" data-k="plus" aria-label="Add">+</button>
@@ -2697,11 +2699,39 @@ html.locked #calcPage{display:none!important}
 @keyframes cShake{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
 @keyframes cUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.calcItem,#calcToast.on{animation:none}.chBar i{transition:none}}
+/* ===== calculator v2: theme-aware look, new keys, no sparkle ===== */
+.cCopy::before,.cCopy::after,#cHero::before{display:none!important;content:none!important}
+#cHero>*:not(.cCopy):not(.chTop):not(.chBar):not(.chStats):not(.cpTape):not(.cScr){display:none!important}
+.cHero{color:var(--text);background:linear-gradient(165deg,color-mix(in srgb,var(--primary) 14%,var(--card)),var(--card));box-shadow:0 12px 30px color-mix(in srgb,var(--primary) 16%,transparent),inset 0 0 0 1px var(--border)}
+.cHero.due{background:linear-gradient(165deg,color-mix(in srgb,var(--red) 16%,var(--card)),var(--card));box-shadow:0 12px 30px color-mix(in srgb,var(--red) 18%,transparent),inset 0 0 0 1px var(--border)}
+.chLbl,.cScrLbl,.rcEmpty,.rcT{color:var(--muted)}
+.rcT b,.rcL,#calcAmt{color:var(--text)}
+.rcL .p,.rcL b.p,.rcF.p{color:var(--green)}.rcL .m,.rcL b.m,.rcF.m{color:var(--red)}
+.rcSep,.cScrRow .cur{color:var(--muted)}
+.rcX{font-size:12px;font-weight:600;color:var(--muted)}
+.cScr{border-top:1px dashed var(--border)}
+#calcAmt::placeholder{color:color-mix(in srgb,var(--muted) 55%,transparent)}
+.cScr.bad input{color:var(--red)}
+.cScrRes{text-align:right;font-size:15px;font-weight:800;color:var(--primary);min-height:0;font-variant-numeric:tabular-nums}
+.cScrRes:empty{display:none}
+.cCopy{border-color:color-mix(in srgb,var(--primary) 40%,transparent);background:color-mix(in srgb,var(--primary) 16%,transparent);color:var(--primary)}
+.cCopy.done{color:var(--green)}
+.cPad{gap:7px}.cPad button{height:46px;font-size:21px;border-radius:15px}
+.cPad button.fx{background:color-mix(in srgb,var(--primary) 15%,var(--bg));color:var(--primary);font-size:24px}
+.cPad button.op.p{background:linear-gradient(180deg,var(--green),color-mix(in srgb,var(--green) 78%,#000))}
+.cPad button.op.m{background:linear-gradient(180deg,var(--red),color-mix(in srgb,var(--red) 78%,#000))}
+html[data-theme*="yellow"] .cPad button.op{color:#000}
+.cFr{display:flex;gap:6px;margin-top:8px;overflow-x:auto;scrollbar-width:none}.cFr::-webkit-scrollbar{display:none}
+.cFr button{flex:none;border:1px solid var(--border);background:transparent;color:var(--text);border-radius:999px;padding:6px 14px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.cFr button:active{background:color-mix(in srgb,var(--primary) 18%,transparent)}
+.cFr button[data-f=left]{color:var(--primary);border-color:color-mix(in srgb,var(--primary) 45%,var(--border))}
+@media (max-height:700px){.cPad button{height:38px;font-size:18px}.cPad{gap:6px}}
+
 </style>
 <script>
 (function(){
   var KEY='calcDraft_v1', items=[], flt=0, editIdx=null, lastDel=null, shown=0, tw=null;
-  function load(){try{var v=JSON.parse(localStorage.getItem(KEY)||'[]');if(!Array.isArray(v))return[];return v.filter(function(x){return x&&typeof x==='object'&&isFinite(x.a)&&x.a>0}).map(function(x){return{n:String(x.n==null?'':x.n),a:+x.a,s:x.s>0?1:-1}})}catch(e){return[]}}
+  function load(){try{var v=JSON.parse(localStorage.getItem(KEY)||'[]');if(!Array.isArray(v))return[];return v.filter(function(x){return x&&typeof x==='object'&&isFinite(x.a)&&x.a>0}).map(function(x){return{n:String(x.n==null?'':x.n),a:+x.a,s:x.s>0?1:-1,x:x.x?String(x.x):''}})}catch(e){return[]}}
   function save(){try{localStorage.setItem(KEY,JSON.stringify(items))}catch(e){}}
   function money(n){return (typeof fmt==='function')?fmt(n):'৳'+Math.round(n*100)/100}
   function bnL(){return typeof currentLang!=='undefined'&&currentLang==='bn'}
@@ -2724,14 +2754,14 @@ html.locked #calcPage{display:none!important}
 
   function chips(){
     var a=bnL()?['বেতন','খাবার','ভাড়া','বিল','যাতায়াত','লোন','বাজার']:['Salary','Food','Rent','Bills','Transport','Loan','Groceries'];
-    $('cChips').innerHTML=a.map(function(x){return '<button type="button">'+x+'</button>'}).join('');
+    (function(){var l=document.querySelector('#cFr [data-f=left]');if(l)l.textContent=bnL()?'বাকি টাকা':'Left'})();$('cChips').innerHTML=a.map(function(x){return '<button type="button">'+x+'</button>'}).join('');
   }
   $('cChips').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;$('calcLbl').value=b.textContent;scrLbl()});
   
 
   window.calcAdd=function(sign){
     var l=$('calcLbl'), a=$('calcAmt');
-    var label=l.value.trim(), amt=num(a.value);
+    var label=l.value.trim(), raw=calcRaw(), amt=calcEval(raw), xp=/[×÷%]/.test(raw)?a.value.replace(/\s/g,''):'';
     if(isNaN(amt)){
       var m=label.match(/^(.*?)[\s:=-]*([০-৯\d][০-৯\d,]*(?:\.\d+)?)\s*$/);
       if(m){amt=num(m[2]);label=m[1].trim()}
@@ -2739,7 +2769,7 @@ html.locked #calcPage{display:none!important}
     }
     if(isNaN(amt)||amt<=0){
       var sc=$('cScr');sc.classList.remove('bad');void sc.offsetWidth;sc.classList.add('bad');setTimeout(function(){sc.classList.remove('bad')},600);return}
-    var it={n:label||(sign>0?(bnL()?'আয়':'Income'):(bnL()?'খরচ':'Expense')),a:amt,s:sign};
+    var it={n:label||(sign>0?(bnL()?'আয়':'Income'):(bnL()?'খরচ':'Expense')),a:amt,s:sign,x:xp};
     if(editIdx!==null&&items[editIdx]){items[editIdx]=it}else items.push(it);
     editIdx=null;$('cEditTag').classList.remove('on');
     save();l.value='';a.value='';render();scrLbl();
@@ -2780,7 +2810,7 @@ html.locked #calcPage{display:none!important}
     var inc=0,exp=0;items.forEach(function(it){if(it.s>0)inc+=it.a;else exp+=it.a});
     inc=Math.round(inc*100)/100;exp=Math.round(exp*100)/100;var left=Math.round((inc-exp)*100)/100;
     var vis=[];items.forEach(function(it,i){if(!flt||it.s===flt)vis.push(i)});
-    L.innerHTML=items.length?items.map(function(it,i){return '<div class="rcL'+(editIdx===i?' ed':'')+'" onclick="calcEdit('+i+')"><span class="sg '+(it.s>0?'p':'m')+'">'+(it.s>0?'+':'−')+'</span> '+esc2(it.n)+': <b class="'+(it.s>0?'p':'m')+'">'+money(it.a)+'</b></div>'}).join(''):'<div class="rcEmpty">'+(bnL()?'এখনো কিছু যোগ করা হয়নি':'Nothing added yet')+'</div>';
+    L.innerHTML=items.length?items.map(function(it,i){return '<div class="rcL'+(editIdx===i?' ed':'')+'" onclick="calcEdit('+i+')"><span class="sg '+(it.s>0?'p':'m')+'">'+(it.s>0?'+':'−')+'</span> '+esc2(it.n)+(it.x?' <small class="rcX">('+esc2(it.x)+')</small>':'')+': <b class="'+(it.s>0?'p':'m')+'">'+money(it.a)+'</b></div>'}).join(''):'<div class="rcEmpty">'+(bnL()?'এখনো কিছু যোগ করা হয়নি':'Nothing added yet')+'</div>';
     $('calcResult').innerHTML=items.length?'<div class="rcSep">────────────</div><div class="rcT">'+(bnL()?'মোট আয়: ':'Total in: ')+'<b>'+money(inc)+'</b></div><div class="rcT">'+(bnL()?'মোট খরচ: ':'Total out: ')+'<b>'+money(exp)+'</b></div><div class="rcF '+(left<0?'m':'p')+'">'+(left<0?(bnL()?'ঘাটতি (due): ':'Short (due): '):(bnL()?'বাকি থাকবে: ':'Left: '))+'<b>'+money(Math.abs(left))+'</b></div>':'';
     
     var hero=$('cHero'),due=left<0;hero.classList.toggle('due',due);
@@ -2793,7 +2823,7 @@ html.locked #calcPage{display:none!important}
   }
   function totals(){var i=0,e=0;items.forEach(function(it){if(it.s>0)i+=it.a;else e+=it.a});i=Math.round(i*100)/100;e=Math.round(e*100)/100;return{i:i,e:e,l:Math.round((i-e)*100)/100}}
   function buildText(){
-    var t=totals(),lines=items.map(function(it){return (it.s>0?'+ ':'− ')+it.n+': '+money(it.a)});
+    var t=totals(),lines=items.map(function(it){return (it.s>0?'+ ':'− ')+it.n+(it.x?' ('+it.x+')':'')+': '+money(it.a)});
     lines.push('────────────');
     lines.push((bnL()?'মোট আয়: ':'Total in: ')+money(t.i));
     lines.push((bnL()?'মোট খরচ: ':'Total out: ')+money(t.e));
@@ -2832,16 +2862,44 @@ html.locked #calcPage{display:none!important}
     try{navigator.clipboard.writeText(txt).then(done,function(){fallback()})}catch(e){fallback()}
     function fallback(){var ta=document.createElement('textarea');ta.value=txt;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){}ta.remove()}
   };
-  function scrLbl(){var v=$('calcLbl').value.trim();$('cScrLbl').textContent=v||(bnL()?'নাম লিখুন, টাকা বসান, তারপর + / −':'Name it, enter amount, then + / −')}
+  function scrLbl(){try{updRes();fit()}catch(e){}var v=$('calcLbl').value.trim();$('cScrLbl').textContent=v||(bnL()?'নাম লিখুন, টাকা বসান, তারপর + / −':'Name it, enter amount, then + / −')}
   function fa(raw){raw=String(raw).replace(/,/g,'');var p=raw.split('.');p[0]=p[0].replace(/^0+(?=\d)/,'').replace(/\B(?=(\d{3})+(?!\d))/g,',');return p.length>1?p[0]+'.'+p[1]:p[0]}
-  function press(k){var a=$('calcAmt'),r=a.value.replace(/,/g,'');
+  function calcRaw(){return $('calcAmt').value.replace(/[,\s]/g,'')}
+  window.calcRaw=calcRaw;
+  window.calcEval=function(r){
+    r=String(r||'').replace(/[×÷]+$/,'');if(!r)return NaN;
+    var p=r.match(/[\d.]+%?|[×÷]/g);if(!p)return NaN;var val=null,op=null;
+    for(var i=0;i<p.length;i++){var t=p[i];
+      if(t==='×'||t==='÷'){op=t;continue}
+      var n=parseFloat(t);if(isNaN(n))return NaN;if(t.slice(-1)==='%')n=n/100;
+      if(val===null)val=n;else if(op==='×')val*=n;else{if(n===0)return NaN;val/=n}}
+    return val===null?NaN:Math.round(val*100)/100;
+  };
+  function fmtExpr(r){return r.replace(/[\d.]+/g,fa).replace(/([×÷])/g,' $1 ')}
+  function lastTok(r){return r.match(/[\d.]*$/)[0]}
+  function bad(){var sc=$('cScr');sc.classList.remove('bad');void sc.offsetWidth;sc.classList.add('bad');setTimeout(function(){sc.classList.remove('bad')},600)}
+  function updRes(){var r=calcRaw(),el=$('cScrRes');if(!el)return;var v=calcEval(r);
+    el.textContent=(/[×÷%]/.test(r)&&!isNaN(v))?('= '+money(v)):''}
+  function fit(){var a=$('calcAmt'),n=a.value.length;a.style.fontSize=n>20?'20px':n>16?'24px':n>12?'30px':''}
+  function setExpr(r){$('calcAmt').value=fmtExpr(r);scrLbl()}
+  function press(k){var a=$('calcAmt'),r=calcRaw(),last=r.slice(-1),isOp=/[×÷]/.test(last);
     if(k==='back')r=r.slice(0,-1);
     else if(k==='ac'){r='';$('calcLbl').value='';if(editIdx!==null)calcCancelEdit()}
     else if(k==='plus'){calcAdd(1);return}
     else if(k==='minus'){calcAdd(-1);return}
-    else if(k==='.'){if(r.indexOf('.')<0)r=(r||'0')+'.'}
-    else{if(r.replace('.','').length>=12)return;if(r.indexOf('.')>=0&&r.split('.')[1].length>=2)return;if(k==='00'&&!r)return;r+=k}
-    a.value=fa(r);scrLbl();try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}}
+    else if(k==='×'||k==='÷'){if(!r)return;r=isOp?r.slice(0,-1)+k:r+k}
+    else if(k==='%'){if(!r||isOp||last==='%')return;r+='%'}
+    else if(k==='='){var v=calcEval(r);if(isNaN(v)){bad();return}r=String(v)}
+    else if(k==='.'){if(last==='%')return;var t=lastTok(r);if(t.indexOf('.')>=0)return;r+=t?'.':'0.'}
+    else{if(last==='%')return;var t2=lastTok(r);if(t2.replace('.','').length>=12)return;if(t2.indexOf('.')>=0&&t2.split('.')[1].length>=2)return;if(k==='00'&&!t2)return;r+=k}
+    a.value=fmtExpr(r);scrLbl();try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}}
+  $('cFr').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;var f=b.getAttribute('data-f'),r=calcRaw();
+    if(f==='undo'){if(!items.length){toast(bnL()?'মুছে ফেলার মতো কিছু নেই':'Nothing to undo');return}calcDel(items.length-1);return}
+    if(f==='left'){var l=totals().l;if(l<=0){toast(bnL()?'বাকি টাকা নেই':'Nothing left');return}
+      r=/[×÷]$/.test(r)?r+l:String(l);setExpr(r);return}
+    if(!r){bad();return}
+    r=r.replace(/[×÷]+$/,'')+'÷'+f;setExpr(r);try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}});
+  (function(){var c=$('cCopy');if(c)Array.prototype.slice.call(c.children).forEach(function(n){if(!/ic-(copy|ok)/.test(n.getAttribute('class')||''))n.remove()})})();
   $('cPad').addEventListener('click',function(e){var b=e.target.closest('button');if(b)press(b.getAttribute('data-k'))});
   $('calcLbl').addEventListener('input',scrLbl);
   page.addEventListener('keydown',function(e){if(e.target.id==='calcLbl'||e.ctrlKey||e.metaKey)return;
@@ -14792,5 +14850,143 @@ return{render,open,openPage,closePage,tick,
   try{ if(typeof refreshAll==='function') refreshAll(); }catch(e){}
 })();
 </script>
+<!-- ===== Install App Popup: shown only AFTER login / guest login, repeats every session until the app is installed ===== -->
+<style id="ftIpCss">
+#ftIpWrap{position:fixed;inset:0;z-index:2147483000;display:none;align-items:center;justify-content:center;background:rgba(10,14,25,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));box-sizing:border-box}
+#ftIpWrap.on{display:flex;animation:ftIpFade .2s ease}
+#ftIpCard{width:100%;max-width:calc(340px + 4vw);max-height:100%;display:flex;flex-direction:column;background:var(--card,#fff);color:var(--text,#101828);border-radius:22px;box-shadow:0 24px 60px -18px rgba(0,0,0,.6);overflow:hidden;animation:ftIpPop .28s cubic-bezier(.2,.9,.3,1);font-family:inherit;margin:auto}
+@media(min-width:768px){#ftIpCard{max-width:420px}}
+.ftIpTop{flex:none;position:relative;display:flex;align-items:center;gap:12px;padding:13px 16px;color:#fff;background:var(--grad,linear-gradient(135deg,#2563eb,#1d4ed8));overflow:hidden}
+.ftIpTop::after{content:"";position:absolute;right:-26px;top:-34px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.14)}
+.ftIpApp{flex:none;width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;position:relative;z-index:1}
+.ftIpApp svg{width:21px;height:21px}
+.ftIpTt{position:relative;z-index:1;min-width:0}
+#ftIpT{margin:0;font-size:clamp(15px,4.2vw,17px);font-weight:800;line-height:1.25}
+#ftIpS{margin:1px 0 0;font-size:11.5px;line-height:1.3;opacity:.88}
+#ftIpTabs{flex:none;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:8px 10px 0}
+#ftIpTabs button{border:0;background:transparent;color:var(--muted,#667085);font-family:inherit;font-size:10.5px;font-weight:700;cursor:pointer;padding:7px 2px 6px;border-radius:11px;display:flex;flex-direction:column;align-items:center;gap:3px;position:relative;line-height:1.1}
+#ftIpTabs button svg{width:19px;height:19px}
+#ftIpTabs button.on{color:var(--c);background:color-mix(in srgb,var(--c) 12%,transparent)}
+#ftIpTabs button.on::after{content:"";position:absolute;left:28%;right:28%;bottom:0;height:2.5px;border-radius:2px;background:var(--c)}
+#ftIpBody{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px 6px;display:grid}
+.ftIpPan{grid-area:1/1;visibility:hidden;opacity:0;transition:opacity .18s}
+.ftIpPan.on{visibility:visible;opacity:1}
+.ftIpPan h3{margin:0;font-size:clamp(14px,3.9vw,15.5px);font-weight:800;line-height:1.3}
+.ftIpPan .tg{margin:2px 0 7px;font-size:12px;font-weight:800;color:var(--c)}
+.ftIpPan p{margin:0 0 7px;font-size:clamp(11.5px,3.2vw,12.5px);line-height:1.55;color:var(--muted,#667085)}
+#ftIpDots{flex:none;display:flex;justify-content:center;gap:5px;padding:2px 0 8px}
+#ftIpDots i{width:5px;height:5px;border-radius:50%;background:var(--border,#d5d9e2);transition:all .2s}
+#ftIpDots i.on{width:15px;background:var(--primary,#2563eb)}
+#ftIpFoot{flex:none;display:flex;gap:8px;padding:10px 16px 14px;border-top:1px solid var(--border,#e8ebf1);background:var(--card,#fff)}
+#ftIpFoot button{height:44px;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px;border:0;white-space:nowrap}
+#ftIpLater{flex:0 0 auto;padding:0 16px;background:var(--bg,#f1f3f8);color:var(--muted,#667085)}
+#ftIpGo{flex:1;color:#fff;background:var(--grad,linear-gradient(135deg,#2563eb,#1d4ed8));box-shadow:0 10px 20px -10px var(--primary,#2563eb)}
+#ftIpGo svg{width:17px;height:17px}
+#ftIpFoot button:active{transform:scale(.97)}
+@media(max-width:340px){#ftIpFoot{flex-direction:column-reverse}#ftIpLater{padding:0}}
+@keyframes ftIpFade{from{opacity:0}to{opacity:1}}
+@keyframes ftIpPop{from{transform:scale(.94) translateY(10px);opacity:0}to{transform:none;opacity:1}}
+</style>
+<script id="ftIpJs">
+(function(){
+  'use strict';
+  var shown=false, readySince=0, timer=null;
+  var $=function(id){ return document.getElementById(id); };
+  function installed(){
+    try{ if(window.ftInstall&&window.ftInstall.installed) return window.ftInstall.installed(); }catch(e){}
+    try{ return matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true; }catch(e){ return false; }
+  }
+  var S='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
+  var IC={
+    dl:S+'<path d="M12 3v12"/><path d="m7 11 5 5 5-5"/><path d="M5 21h14"/></svg>',
+    pwa:S+'<rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M12 16.5V8.5"/><path d="m9 11.5 3-3 3 3"/></svg>',
+    lock:S+'<path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.3 7.5 9.5 4.4-1.2 7.5-4.9 7.5-9.5V6L12 3z"/><rect x="9" y="10.5" width="6" height="5" rx="1.2"/><path d="M10.2 10.5V9a1.8 1.8 0 0 1 3.6 0v1.5"/></svg>',
+    cloud:S+'<path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 17.9 8.6 4.7 4.7 0 0 1 17.5 18H7z"/><path d="M12 15.5v-4"/><path d="m10 13.2 2-2 2 2"/></svg>',
+    disk:S+'<path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7.5" y="13" width="9" height="8" rx="1"/></svg>',
+    app:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M7 6V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1"/><path d="M15.5 13H21"/></svg>'
+  };
+  var SEC=[
+    {ic:'pwa',  tab:'Install',    c:'#16a34a', t:'Install PWA (Not an APK)', tg:'No APK Required!',
+     p:['This app is a Progressive Web App (PWA), not a traditional Android APK. You don\u2019t need to download or install any APK file. Simply add the app to your home screen and access it anytime with just one tap, just like a regular app.']},
+    {ic:'lock', tab:'Privacy',    c:'#e11d48', t:'Your Data & Privacy', tg:'Your Data, Your Privacy.',
+     p:['We do not collect your personal information for advertising or sell it to third parties. The financial records you enter are used to provide the app\u2019s features and manage your calculations.',
+        'If you provide your email address or phone number, these details may be securely stored on our server for account-related services and backup purposes. We do not share or sell your personal information to others.']},
+    {ic:'cloud',tab:'Cloud Sync', c:'#2563eb', t:'Auto Sync (Cloud Backup)', tg:'Your Data, Safely Backed Up.',
+     p:['When you enable Cloud Backup, your app information is backed up to our cloud server. This helps you access your data across multiple devices and recover it if your device is lost or replaced.',
+        'Your backed-up information is kept private and is not sold or shared with third parties. Cloud Backup helps protect your records, but it does not guarantee that data can always be recovered in every situation.']},
+    {ic:'disk', tab:'Backup',     c:'#d97706', t:'Manual Backup (Local Storage)', tg:'Your Data, Under Your Control.',
+     p:['If you prefer not to use Cloud Sync, you can manually back up your information to your device\u2019s local storage. For better protection, we recommend creating a backup at least once every 7 days.',
+        'Please keep your backup files in a safe location. If your device is lost, damaged, or reset\u2014or if your backup file is deleted\u2014you may lose your data. Manual backups are your responsibility, so remember to create them regularly.']}
+  ];
+  var cur=0;
+  function go(i){
+    cur=(i+SEC.length)%SEC.length;
+    var w=$('ftIpWrap'); if(!w) return;
+    [].forEach.call(w.querySelectorAll('#ftIpTabs button'),function(b,k){ b.classList.toggle('on',k===cur); b.setAttribute('aria-selected',k===cur); });
+    [].forEach.call(w.querySelectorAll('.ftIpPan'),function(p,k){ p.classList.toggle('on',k===cur); });
+    [].forEach.call(w.querySelectorAll('#ftIpDots i'),function(d,k){ d.classList.toggle('on',k===cur); });
+    var cc=w.querySelector('#ftIpTabs button.on'); if(cc){ w.querySelector('#ftIpCard').style.setProperty('--c',SEC[cur].c); }
+    var bd=$('ftIpBody'); if(bd) bd.scrollTop=0;
+  }
+  function build(){
+    var old=$('ftIpWrap'); if(old) old.remove();
+    var w=document.createElement('div'); w.id='ftIpWrap';
+    var tabs='',pans='',dots='';
+    SEC.forEach(function(s,k){
+      tabs+='<button type="button" role="tab" data-i="'+k+'" style="--c:'+s.c+'">'+IC[s.ic]+'<span>'+s.tab+'</span></button>';
+      pans+='<div class="ftIpPan" role="tabpanel" style="--c:'+s.c+'"><h3>'+(k+1)+'. '+s.t.replace(/&/g,'&amp;')+'</h3><div class="tg">'+s.tg+'</div>'+s.p.map(function(x){return '<p>'+x+'</p>';}).join('')+'</div>';
+      dots+='<i></i>';
+    });
+    w.innerHTML='<div id="ftIpCard" role="dialog" aria-modal="true" aria-labelledby="ftIpT">'
+      +'<div class="ftIpTop"><div class="ftIpApp">'+IC.app+'</div><div class="ftIpTt"><h2 id="ftIpT">Install the app</h2><p id="ftIpS">Straight from your browser, in one tap</p></div></div>'
+      +'<div id="ftIpTabs" role="tablist">'+tabs+'</div>'
+      +'<div id="ftIpBody">'+pans+'</div>'
+      +'<div id="ftIpDots">'+dots+'</div>'
+      +'<div id="ftIpFoot"><button id="ftIpLater" type="button">Remind me later</button><button id="ftIpGo" type="button">'+IC.dl+'<span>Install</span></button></div>'
+      +'</div>';
+    document.body.appendChild(w);
+    w.querySelector('#ftIpTabs').addEventListener('click',function(e){ var b=e.target.closest('button[data-i]'); if(b) go(+b.dataset.i); });
+    /* swipe left / right between sections */
+    var x0=null,y0=0, bd=w.querySelector('#ftIpBody');
+    bd.addEventListener('touchstart',function(e){ x0=e.touches[0].clientX; y0=e.touches[0].clientY; },{passive:true});
+    bd.addEventListener('touchend',function(e){ if(x0===null) return; var dx=e.changedTouches[0].clientX-x0, dy=e.changedTouches[0].clientY-y0; x0=null; if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5) go(cur+(dx<0?1:-1)); },{passive:true});
+    $('ftIpLater').addEventListener('click',hide);
+    $('ftIpGo').addEventListener('click',function(){
+      hide();
+      try{
+        var f=window.ftInstall; if(!f) return;
+        if(f.ready&&f.ready()) f.run(); else f.open();
+      }catch(e){}
+    });
+    go(0);
+    return w;
+  }
+  function hide(){ var w=$('ftIpWrap'); if(w) w.classList.remove('on'); }
+  function flexShown(id){ var e=$(id); return !!(e&&e.style.display==='flex'); }
+  function loggedIn(){
+    try{ if(localStorage.getItem('loginDone_v1')!=='true') return false; }catch(e){ return false; }
+    var ls=$('loginScreen'); if(ls&&getComputedStyle(ls).display!=='none') return false;
+    return true;
+  }
+  function clear(){
+    var c=document.documentElement.classList;
+    if(c.contains('booting')||c.contains('locked')) return false;
+    return !(flexShown('lockOverlay')||flexShown('notifPopupOverlay'));
+  }
+  function tick(){
+    if(installed()){ stop(); var w=$('ftIpWrap'); if(w) w.remove(); return; }
+    if(!loggedIn()){ shown=false; readySince=0; var o=$('ftIpWrap'); if(o) o.remove(); return; }
+    if(shown) return;
+    if(!clear()){ readySince=0; return; }
+    if(!readySince){ readySince=Date.now(); return; }
+    if(Date.now()-readySince>=1500){ shown=true; build().classList.add('on'); }
+  }
+  function stop(){ if(timer){ clearInterval(timer); timer=null; } }
+  window.addEventListener('appinstalled',function(){ stop(); var w=$('ftIpWrap'); if(w) w.remove(); });
+  function start(){ timer=setInterval(tick,500); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',start); else start();
+})();
+</script>
+
 </body>
 </html>
