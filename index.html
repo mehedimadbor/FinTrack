@@ -1122,7 +1122,7 @@ html body #sec-friends .frAv{border-radius:16px;background:linear-gradient(135de
 .nsCard{border:2px solid var(--border);border-radius:22px;padding:16px 14px;min-height:118px;display:flex;flex-direction:column;gap:6px;background:transparent;color:var(--text);cursor:pointer;overflow:hidden;position:relative}
 .nsCard b{font-size:15px}.nsCard p{margin:0;font-size:13px;line-height:1.35;opacity:.85;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap;word-break:break-word}
 .nsCard small{margin-top:auto;font-weight:700;opacity:.55;font-size:12px}
-.nsCard.pin::after{content:"📌";position:absolute;top:8px;right:10px;font-size:12px}
+.nsCard.pin::after{content:"";position:absolute;top:8px;right:10px;width:13px;height:13px;background:currentColor;-webkit-mask:var(--ic-pin) center/contain no-repeat;mask:var(--ic-pin) center/contain no-repeat}
 .nsTask{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1.5px solid var(--border);border-radius:18px;margin-bottom:10px}
 .nsTask input{width:22px;height:22px;accent-color:var(--primary);flex:none}
 .nsTask span{flex:1;font-size:15px;word-break:break-word}.nsTask.done span{text-decoration:line-through;opacity:.5}
@@ -2524,7 +2524,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     </div>
     <div class="cpDock">
       <div class="cEntry" id="cEntry">
-        <div class="cEditTag" id="cEditTag"><span id="cEditTxt"></span><span class="edb"><button type="button" onclick="calcDelEdit()"><span class="bn">মুছুন</span><span class="en">Delete</span></button><button type="button" onclick="calcCancelEdit()">✕</button></span></div>
+        <div class="cEditTag" id="cEditTag"><span id="cEditTxt"></span><span class="edb"><button type="button" onclick="calcDelEdit()"><span class="bn">মুছুন</span><span class="en">Delete</span></button><button type="button" onclick="calcCancelEdit()"><i class="mi" style="--m:var(--ic-x)"></i></button></span></div>
         <div class="calcRow"><input id="calcLbl" type="text" placeholder="Salary / Food / Loan..." autocomplete="off" enterkeyhint="done"></div>
         <div class="cChips" id="cChips"></div>
         <div class="cFr" id="cFr"><button type="button" data-f="2" title="১/২ ভাগ">½</button><button type="button" data-f="3" title="১/৩ ভাগ">⅓</button><button type="button" data-f="4" title="১/৪ ভাগ">¼</button><button type="button" data-f="5" title="১/৫ ভাগ">⅕</button><button type="button" data-f="left">বাকি</button><button type="button" data-f="undo">↶</button></div>
@@ -2847,7 +2847,7 @@ html[data-theme*="yellow"] .cPad button.op{color:#000}
     if(typeof NS==='undefined'||!NS.addNote){toast(bnL()?'নোট সেভ করা গেল না':'Could not save to Notes');return}
     var d=new Date(),ds=d.toLocaleDateString('en',{day:'numeric',month:'short',year:'numeric'});
     NS.addNote((bnL()?'হিসাব — ':'Calculation — ')+ds,buildText(),bnL()?'হিসাব':'Calc');
-    toast(bnL()?'নোটে সেভ হয়েছে ✓':'Saved to Notes ✓',bnL()?'নোট খুলুন':'Open Notes',function(){calcClose(false,true);try{NS.openPage();NS.mode('n')}catch(e){}});
+    toast(bnL()?'নোটে সেভ হয়েছে':'Saved to Notes',bnL()?'নোট খুলুন':'Open Notes',function(){calcClose(false,true);try{NS.openPage();NS.mode('n')}catch(e){}});
   };
   function copyText(txt,ok,fail){
     function fb(){try{var ta=document.createElement('textarea');ta.value=txt;ta.setAttribute('readonly','');ta.style.cssText='position:fixed;top:0;left:0;opacity:0;font-size:16px';document.body.appendChild(ta);ta.focus();ta.select();ta.setSelectionRange(0,txt.length);var r=document.execCommand('copy');ta.remove();r?ok():fail()}catch(e){fail()}}
@@ -2859,13 +2859,13 @@ html[data-theme*="yellow"] .cPad button.op{color:#000}
     copyText(buildText(),function(){
       b.classList.add('done');clearTimeout(calcCopy._t);calcCopy._t=setTimeout(function(){b.classList.remove('done')},1600);
       try{navigator.vibrate&&navigator.vibrate(12)}catch(e){}
-      toast(bnL()?'হিসাব কপি হয়েছে ✓':'Calculation copied ✓');
+      toast(bnL()?'হিসাব কপি হয়েছে':'Calculation copied');
     },function(){toast(bnL()?'কপি করা গেল না':'Could not copy')});
   };
   window.calcShare=function(){
     if(!items.length)return;var txt=buildText();
     if(navigator.share){navigator.share({text:txt}).catch(function(){});return}
-    var done=function(){toast(bnL()?'কপি হয়েছে ✓':'Copied ✓')};
+    var done=function(){toast(bnL()?'কপি হয়েছে':'Copied')};
     try{navigator.clipboard.writeText(txt).then(done,function(){fallback()})}catch(e){fallback()}
     function fallback(){var ta=document.createElement('textarea');ta.value=txt;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){}ta.remove()}
   };
@@ -3356,7 +3356,7 @@ html[data-theme*="yellow"] .cPad button.op{color:#000}
   <textarea id="nsB" placeholder="Write your note... / নোট লিখুন"></textarea>
   <div class="row"><input id="nsC" list="nsCL" placeholder="Collection (যেমন: hisab)" style="flex:1"><datalist id="nsCL"></datalist></div>
   <div class="row" id="nsColors"></div>
-  <div class="row"><button class="btn nsGhost" onclick="NS.pin()" id="nsPinB">📌 Pin</button><button class="btn nsDel" id="nsDelB" onclick="NS.del()">Delete</button><button class="btn nsPrim" onclick="NS.save()">Save</button></div>
+  <div class="row"><button class="btn nsGhost" onclick="NS.pin()" id="nsPinB"><i class="mi" style="--m:var(--ic-pin)"></i> Pin</button><button class="btn nsDel" id="nsDelB" onclick="NS.del()">Delete</button><button class="btn nsPrim" onclick="NS.save()">Save</button></div>
 </div></div>
 </div>
 
@@ -5813,7 +5813,7 @@ function loginPicPick(input){
   r.readAsDataURL(f);
 }
 function loginPicRemove(){ try{ resetProfilePic(); }catch(e){ try{ localStorage.removeItem('myProfilePic_v1'); }catch(_){} } loginPicRefresh(); }
-(function(){ const _lc=loginContinue; loginContinue=function(){ _lc.apply(this,arguments); try{ window.ftCountUser&&window.ftCountUser(); }catch(e){} }; })();
+(function(){ const _lc=loginContinue; loginContinue=function(){ _lc.apply(this,arguments); try{ window.ftCountUser&&window.ftCountUser(); }catch(e){} try{ if(localStorage.getItem('loginDone_v1')==='true') document.documentElement.classList.add('hasUser'); }catch(e){} }; })();
 
 // ---- AI Chat assistant (fully local, rule-based, can log transactions) ----
 let chatMessages = [];
@@ -6918,7 +6918,7 @@ function add(d){
 function del(){buf=buf.slice(0,-1);draw()}
 ['1','2','3','4','5','6','7','8','9','ok','0','del'].forEach(k=>{
   const b=document.createElement('button');b.type='button';b.className='pk'+(k==='ok'?' ok':'');
-  b.textContent=k==='ok'?'✓':k==='del'?'⌫':k;
+  b.innerHTML=k==='ok'?'<i class="mi" style="--m:var(--ic-check)"></i>':k==='del'?'<i class="mi" style="--m:var(--ic-backspace)"></i>':k;
   b.onclick=()=>k==='ok'?submit():k==='del'?del():add(k);pad.appendChild(b);
 });
 document.addEventListener('keydown',e=>{
@@ -7375,7 +7375,7 @@ const via=document.createElement('label'); via.className='ftRow';
 via.innerHTML='<span>'+bl('ডিফল্ট পাঠানোর মাধ্যম','Default way to send')+'</span><select><option value="sms">SMS</option><option value="wa">WhatsApp</option><option value="share">'+L('অন্য অ্যাপ','Other app')+'</option><option value="copy">'+L('কপি','Copy')+'</option></select>';
 const vs=via.querySelector('select'); vs.value=ls('sendVia_v1','sms'); vs.onchange=()=>st('sendVia_v1',vs.value); bd.appendChild(via);
 bd.appendChild(tg('মেসেজে পেমেন্ট ডিটেইলস যোগ করো','Include payment details in message','sendPay_v1','1'));
-const note=document.createElement('div'); note.className='payHint'; note.innerHTML=bl('যাদের কাছে টাকা পাবেন, তাদের লোন লিস্টের ➤ বাটনে চাপলে এই তথ্যসহ মেসেজ পাঠানো যাবে। ☆ চেপে একটিকে প্রধান করলে মেসেজে সেটাই আগে থেকে বাছা থাকবে।','Tap the ➤ button on a person in your loan list to send a message with these details. Tap ☆ to make one method primary — it will be pre-selected in messages.'); bd.appendChild(note);
+const note=document.createElement('div'); note.className='payHint'; note.innerHTML=bl('যাদের কাছে টাকা পাবেন, তাদের লোন লিস্টের <i class="mi" style="--m:var(--ic-send)"></i> বাটনে চাপলে এই তথ্যসহ মেসেজ পাঠানো যাবে। <i class="mi" style="--m:var(--ic-star)"></i> চেপে একটিকে প্রধান করলে মেসেজে সেটাই আগে থেকে বাছা থাকবে।','Tap the <i class="mi" style="--m:var(--ic-send)"></i> button on a person in your loan list to send a message with these details. Tap <i class="mi" style="--m:var(--ic-star)"></i> to make one method primary — it will be pre-selected in messages.'); bd.appendChild(note);
 const add=document.createElement('button'); add.type='button'; add.className='main'; add.style.marginTop='12px'; add.innerHTML=mi('plus')+' '+bl('পেমেন্ট মাধ্যম যোগ করুন','Add payment method'); add.onclick=()=>openPay(); bd.appendChild(add);
 const lst=document.createElement('div'); lst.style.marginTop='12px'; bd.appendChild(lst);
 const anchor=$('rmBox')||$('prefPlusBox'); if(anchor) anchor.after(box); else $('sec-settings').appendChild(box);
@@ -7383,8 +7383,8 @@ const anchor=$('rmBox')||$('prefPlusBox'); if(anchor) anchor.after(box); else $(
 function paint(){
   lst.innerHTML=PM().length?PM().map(m=>{
     const T=TYPES[m.type]||TYPES.other;
-    return '<div class="rmRow'+(m.on===false?' done':'')+'" data-id="'+m.id+'"><span class="rmChip" style="--c:'+T[2]+'">'+mi(T[3]==='bank'?'bank':'wallet')+'</span><div class="rmTx" data-a="edit" style="cursor:pointer"><b>'+esc(tl(m))+'</b><small>'+(DEF()===m.id?'★ '+L('প্রধান','Primary')+' · ':'')+esc(subOf(m))+'</small></div>'
-     +'<div class="rmAct"><button type="button" class="rmMini" data-a="star" aria-label="primary" style="color:'+(DEF()===m.id?'var(--amber)':'var(--muted)')+'">'+(DEF()===m.id?'★':'☆')+'</button><label class="ftRow" style="padding:0;border:0;margin:0"><input type="checkbox" data-a="on"'+(m.on===false?'':' checked')+'></label><button type="button" class="rmMini del" data-a="del" aria-label="delete">'+mi('trash')+'</button></div></div>';
+    return '<div class="rmRow'+(m.on===false?' done':'')+'" data-id="'+m.id+'"><span class="rmChip" style="--c:'+T[2]+'">'+mi(T[3]==='bank'?'bank':'wallet')+'</span><div class="rmTx" data-a="edit" style="cursor:pointer"><b>'+esc(tl(m))+'</b><small>'+(DEF()===m.id?'<i class="mi" style="--m:var(--ic-star-fill)"></i> '+L('প্রধান','Primary')+' · ':'')+esc(subOf(m))+'</small></div>'
+     +'<div class="rmAct"><button type="button" class="rmMini" data-a="star" aria-label="primary" style="color:'+(DEF()===m.id?'var(--amber)':'var(--muted)')+'">'+'<i class="mi" style="--m:var(--ic-'+(DEF()===m.id?'star-fill':'star')+')"></i>'+'</button><label class="ftRow" style="padding:0;border:0;margin:0"><input type="checkbox" data-a="on"'+(m.on===false?'':' checked')+'></label><button type="button" class="rmMini del" data-a="del" aria-label="delete">'+mi('trash')+'</button></div></div>';
   }).join(''):'<div class="rmEmpty">'+L('এখনো কোনো পেমেন্ট মাধ্যম যোগ করা হয়নি','No payment methods yet')+'</div>';
 }
 lst.addEventListener('click',e=>{
@@ -7430,8 +7430,8 @@ window.openLoanSend=function(name,amt){
   const CH=[['sms','SMS'],['wa','WhatsApp'],['share',L('অন্য অ্যাপ','Other app')],['copy',L('কপি','Copy')]];
   function paintC(){ $('ssC').innerHTML=CH.map(c=>'<button type="button" data-c="'+c[0]+'" class="'+(ch===c[0]?'on':'')+'">'+c[1]+'</button>').join(''); }
   function paintM(){
-    const chips=methods.map(m=>'<button type="button" data-m="'+m.id+'" class="'+(editMode?'ed':(pick.has(m.id)?'on':''))+'">'+(DEF()===m.id?'★ ':'')+esc(tl(m))+'</button>').join('');
-    $('ssM').innerHTML=chips+(methods.length?'<button type="button" data-a="editm" class="'+(editMode?'ed':'')+'">✎ '+L('পরিবর্তন','Change')+'</button>':'')+'<button type="button" data-a="addpay">+ '+L('নতুন','New')+'</button>'+(editMode?'<div class="payHint" style="flex-basis:100%">'+L('যেটা বদলাতে চান তাতে ট্যাপ করুন','Tap a method to edit it')+'</div>':'');
+    const chips=methods.map(m=>'<button type="button" data-m="'+m.id+'" class="'+(editMode?'ed':(pick.has(m.id)?'on':''))+'">'+(DEF()===m.id?'<i class="mi" style="--m:var(--ic-star-fill)"></i> ':'')+esc(tl(m))+'</button>').join('');
+    $('ssM').innerHTML=chips+(methods.length?'<button type="button" data-a="editm" class="'+(editMode?'ed':'')+'"><i class="mi" style="--m:var(--ic-edit)"></i> '+L('পরিবর্তন','Change')+'</button>':'')+'<button type="button" data-a="addpay">+ '+L('নতুন','New')+'</button>'+(editMode?'<div class="payHint" style="flex-basis:100%">'+L('যেটা বদলাতে চান তাতে ট্যাপ করুন','Tap a method to edit it')+'</div>':'');
   }
   paintC(); paintM();
   const onChg=()=>{
@@ -7504,7 +7504,7 @@ function fillFrom(x){
 function qaRender(){
   try{
     if(ls('qaOn_v1','1')!=='1'){ qa.innerHTML=''; return; }
-    let h='<div class="qaRow">'+[10,50,100,500,1000].map(n=>'<button type="button" class="qaBtn pr" data-add="'+n+'">+'+n+'</button>').join('')+'<button type="button" class="qaBtn" data-add="0">✕</button></div>';
+    let h='<div class="qaRow">'+[10,50,100,500,1000].map(n=>'<button type="button" class="qaBtn pr" data-add="'+n+'">+'+n+'</button>').join('')+'<button type="button" class="qaBtn" data-add="0"><i class="mi" style="--m:var(--ic-x)"></i></button></div>';
     const seen=new Set(), list=[];
     data.transactions.filter(x=>x.type===currentType).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time)).forEach(x=>{
       const k=[x.note,x.amount,x.category,x.source,x.person,x.account].join('|'); if(seen.has(k)||list.length>=5) return; seen.add(k); list.push(x);
@@ -7884,7 +7884,7 @@ function renderWidget(){
   const r=window.spCalc?window.spCalc(data.savePlan):null;
   const ok=r&&r.inc>0&&r.avail>=0;
   const wantPlan=cfg.limit||cfg.spent||cfg.tomorrow||cfg.month;
-  let h=`<div class="wgIn"><div class="wgTop"><div><div class="wgBrand">FinTrack</div><div class="wgDate">${esc(dt)}</div></div><div class="wgBtns"><button type="button" onclick="wgCustomise()" aria-label="customise"><i class="mi" style="--m:var(--ic-settings)"></i></button><button type="button" onclick="closeWidget()" aria-label="close">✕</button></div></div>`;
+  let h=`<div class="wgIn"><div class="wgTop"><div><div class="wgBrand">FinTrack</div><div class="wgDate">${esc(dt)}</div></div><div class="wgBtns"><button type="button" onclick="wgCustomise()" aria-label="customise"><i class="mi" style="--m:var(--ic-settings)"></i></button><button type="button" onclick="closeWidget()" aria-label="close"><i class="mi" style="--m:var(--ic-x)"></i></button></div></div>`;
   if(wantPlan){
     if(!ok){
       let msg;
@@ -9472,7 +9472,7 @@ function avPic(uid){ var c=lsj('ftAvCache_v1')[uid]; return c&&c.p&&PICRE.test(c
 function av(uid,nm,id){ var p=avPic(uid), on=isOn(uid)?' on':''; return p?'<div class="fcAv pic'+on+'"'+(id?' id="'+id+'"':'')+' data-pv="'+E(uid)+'" style="background-image:url(\''+p+'\')" role="button" aria-label="photo"></div>':'<div class="fcAv'+on+'"'+(id?' id="'+id+'"':'')+' style="background:'+avBg(uid)+'">'+E(String(nm||'?').charAt(0).toUpperCase())+'</div>'; }
 function showPv(uid){
   var p=avPic(uid); if(!p) return; var i=info(uid), nm=i.name||i.un||i.email||'';
-  var o=document.createElement('div'); o.className='fcPvOv'; o.innerHTML='<button type="button" class="x" aria-label="close">✕</button><div class="im" style="background-image:url(\''+p+'\')"></div><div class="nm">'+E(nm)+(i.un?'<small>@'+E(i.un)+'</small>':'')+'</div>';
+  var o=document.createElement('div'); o.className='fcPvOv'; o.innerHTML='<button type="button" class="x" aria-label="close"><i class="mi" style="--m:var(--ic-x)"></i></button><div class="im" style="background-image:url(\''+p+'\')"></div><div class="nm">'+E(nm)+(i.un?'<small>@'+E(i.un)+'</small>':'')+'</div>';
   o.onclick=function(){ o.remove(); }; document.body.appendChild(o);
 }
 async function fetchPics(){
@@ -9660,7 +9660,7 @@ function reqCard(x,pin,isNew){
     if(!me&&st==='pending') h+='<span class="sm">'+tx('<i class="mi" style="--m:var(--ic-up)"></i> উপরের বাক্স থেকে গ্রহণ বা বাতিল করুন','<i class="mi" style="--m:var(--ic-up)"></i> Accept or decline in the box above')+'</span>';
     if(me&&st==='pending'){
       var nd=nudged(r.rid);
-      h+='<button type="button" class="rn" data-rn="'+E(r.rid)+'"'+(nd?' disabled':'')+'>'+(nd?tx('✓ মনে করানো হয়েছে','✓ Reminder sent'):tx('<i class="mi" style="--m:var(--ic-bell)"></i> মনে করিয়ে দিন','<i class="mi" style="--m:var(--ic-bell)"></i> Remind them'))+'</button>'
+      h+='<button type="button" class="rn" data-rn="'+E(r.rid)+'"'+(nd?' disabled':'')+'>'+(nd?tx('<i class="mi" style="--m:var(--ic-check)"></i> মনে করানো হয়েছে','<i class="mi" style="--m:var(--ic-check)"></i> Reminder sent'):tx('<i class="mi" style="--m:var(--ic-bell)"></i> মনে করিয়ে দিন','<i class="mi" style="--m:var(--ic-bell)"></i> Remind them'))+'</button>'
         +'<button type="button" class="rc" data-rc="'+E(r.rid)+'">'+tx('অনুরোধ বাতিল করুন','Cancel request')+'</button>';
     }
     if(st==='accepted') h+='<span class="sm">'+(mny?tx('<i class="mi" style="--m:var(--ic-check-circle)"></i> মূল ব্যালেন্সে যোগ হয়েছে','<i class="mi" style="--m:var(--ic-check-circle)"></i> Added to the main balance'):tx('<i class="mi" style="--m:var(--ic-check-circle)"></i> লোন তালিকায় এন্ট্রি যোগ হয়েছে','<i class="mi" style="--m:var(--ic-check-circle)"></i> Added to the loan list'))+'</span><button type="button" class="cp" data-cp="'+E(id)+'"><i class="mi" style="--m:var(--ic-clipboard)"></i> '+tx('রসিদ কপি করুন','Copy receipt')+'</button>';
@@ -9792,7 +9792,7 @@ function renderConv(force){
       +'<div class="fcLogW"><div class="fcLog" id="fcLog"></div><button type="button" class="fcJump" id="fcJump" style="display:none"></button></div><div class="fcErr" id="fcErr"></div>'
       +'<div id="fcReqForm" style="display:none"></div>'
       +'<div class="fcQR" id="fcQR"></div>'
-      +'<div id="fcReqBar" style="display:none"></div><div class="fcCompW"><div class="fcMenu" id="fcMenu" style="display:none"></div><div class="fcRp" id="fcRp" style="display:none"></div><div class="fcComp"><button type="button" class="fcPlus" id="fcPlus" data-a="menu" aria-label="'+tx('টাকার অপশন','Money options')+'"><i class="mi" style="--m:var(--ic-coin)"></i></button><textarea id="fcInput" rows="1" maxlength="1000" placeholder="'+tx('মেসেজ লিখুন…','Type a message…')+'"></textarea><button type="button" id="fcSend" aria-label="'+tx('পাঠান','Send')+'">➤</button></div></div></div>'
+      +'<div id="fcReqBar" style="display:none"></div><div class="fcCompW"><div class="fcMenu" id="fcMenu" style="display:none"></div><div class="fcRp" id="fcRp" style="display:none"></div><div class="fcComp"><button type="button" class="fcPlus" id="fcPlus" data-a="menu" aria-label="'+tx('টাকার অপশন','Money options')+'"><i class="mi" style="--m:var(--ic-coin)"></i></button><textarea id="fcInput" rows="1" maxlength="1000" placeholder="'+tx('মেসেজ লিখুন…','Type a message…')+'"></textarea><button type="button" id="fcSend" aria-label="'+tx('পাঠান','Send')+'"><i class="mi" style="--m:var(--ic-send)"></i></button></div></div></div>'
       +'<span id="fcDls"></span>';
     formKind=null; splitOn=false;
     var lg=$('fcLog'); lg.addEventListener('scroll',function(){ if(lg.scrollHeight-lg.scrollTop-lg.clientHeight<60){ jumpN=0; var j=$('fcJump'); if(j) j.style.display='none'; } });
@@ -9816,7 +9816,7 @@ function renderConv(force){
       var g=sameDay&&pv&&pv.k==='m'&&pv.me===it.me&&(it.ts-pv.ts)<18e4;
       var lastOf=!(nx&&nx.k==='m'&&nx.me===it.me&&(nx.ts-it.ts)<18e4&&new Date(nx.ts).toDateString()===d);
       var stt=m.st; if(stt==='s'&&Date.now()-m.ts>45000) stt='f';
-      var tick=it.me?(stt==='s'?' <i class="mi" style="--m:var(--ic-hourglass)"></i>':stt==='f'?'':' ✓'):'';
+      var tick=it.me?(stt==='s'?' <i class="mi" style="--m:var(--ic-hourglass)"></i>':stt==='f'?'':' <i class="mi" style="--m:var(--ic-check)"></i>'):'';
       var qt=m.re?'<span class="fcQt" data-goto="'+E(m.re.id)+'"><b>'+(m.re.w==='me'?tx('আপনি','You'):E(nm))+'</b><span>'+E(m.re.t)+'</span></span>':'';
       var rxh=m.rx&&(m.rx.me||m.rx.them)?'<span class="fcRx">'+[m.rx.me,m.rx.them].filter(Boolean).map(function(k){ return ic(RXI[k]||'heart'); }).join('')+'</span>':'';
       h+='<div class="fcMsg '+(it.me?'me':'them')+(g?' g':'')+(stt==='s'?' sd':'')+(stt==='f'?' fl':'')+(isNew?' pop':'')+'" data-mid="'+E(m.id)+'" data-m2="'+E(mid(m))+'">'+qt+linkify(m.t)+rxh+(stt==='f'?'<button type="button" class="fcRetry" data-retry="'+E(m.id)+'"><i class="mi" style="--m:var(--ic-alert)"></i> '+tx('পাঠানো যায়নি — আবার চেষ্টা করুন','Not sent — tap to retry')+'</button>':(lastOf?'<small>'+new Date(it.ts).toLocaleTimeString(bnL()?'bn-BD':'en-GB',{hour:'numeric',minute:'2-digit'})+tick+'</small>':''))+'</div>';
@@ -9857,7 +9857,7 @@ function openForm(k){
   if(k==='repay'&&b.owe>0) chips='<button type="button" data-fq="ALL">'+tx('সব বাকি ','All ')+F(b.owe)+'</button><button type="button" data-fq="HALF">'+tx('অর্ধেক ','Half ')+F(Math.round(b.owe/2))+'</button>'+chips;
   var notes=[['','বাজার','Groceries'],['','খাবার','Food'],['','যাতায়াত','Transport'],['','ভাড়া','Rent'],['','রিচার্জ','Recharge'],['','উপহার','Gift']].map(function(n){ return '<button type="button" data-nt="'+tx(n[1],n[2])+'">'+n[0]+' '+tx(n[1],n[2])+'</button>'; }).join('');
   host.style.display='';
-  host.innerHTML='<div class="fcQ">'+tabsHtml(k,split,b)+'<div class="qt"><span>'+title+'</span><button type="button" data-fq2="x" style="border:0;background:transparent;font-size:18px;cursor:pointer;color:var(--muted)">✕</button></div>'
+  host.innerHTML='<div class="fcQ">'+tabsHtml(k,split,b)+'<div class="qt"><span>'+title+'</span><button type="button" data-fq2="x" style="border:0;background:transparent;font-size:18px;cursor:pointer;color:var(--muted)"><i class="mi" style="--m:var(--ic-x)"></i></button></div>'
     +(split?'<div class="split"><label>'+tx('মোট বিল (৳)','Total bill (৳)')+'</label><input class="fcIn" id="fcQTot" type="number" inputmode="decimal" placeholder="৳ 0"><label>'+tx('কত জনে ভাগ (আপনিসহ)','Split between (including you)')+'</label><div class="fcChips sm2" style="margin-bottom:6px">'+[2,3,4,5,6].map(function(n){ return '<button type="button" data-sp="'+n+'"'+(n===2?' class="on"':'')+'>'+n+'</button>'; }).join('')+'</div><input type="hidden" id="fcQPpl" value="2"><div class="fcHint" id="fcQPer" style="margin:0"></div></div><label>'+tx('বন্ধুর ভাগ (৳)','Friend’s share (৳)')+'</label>':'')
     +'<input class="fcIn big" id="fcQAmt" type="number" inputmode="decimal" placeholder="৳ 0">'
     +'<div class="cap" id="fcQCap"></div><div class="fcFx" id="fcFx"></div>'
@@ -9865,7 +9865,7 @@ function openForm(k){
     +'<input class="fcIn" id="fcQNote" type="text" maxlength="120" placeholder="'+tx('নোট (ঐচ্ছিক)','Note (optional)')+'">'
     +'<div class="fcChips sm2" style="margin-bottom:8px">'+notes+'</div>'
     +(k==='other'?'<label>'+tx('আপনার খরচের খাত','Your expense category')+'</label><select class="fcIn" id="fcQCat">'+q.cats().map(function(cv){ return '<option value="'+E(cv)+'"'+(cv==='অন্যান্য'?' selected':'')+'>'+E(cv)+'</option>'; }).join('')+'</select>':'')
-    +(mny?'<input type="hidden" id="fcQNm" value="'+E(nm)+'"><span id="fcQNmT" style="display:none"></span>':'<div class="fcNm"><span>'+tx('লোন তালিকায় নাম: ','Name in loan list: ')+'<b id="fcQNmT">'+E(nm)+'</b></span><button type="button" data-fq2="nm">✎ '+tx('বদলান','Change')+'</button></div>'
+    +(mny?'<input type="hidden" id="fcQNm" value="'+E(nm)+'"><span id="fcQNmT" style="display:none"></span>':'<div class="fcNm"><span>'+tx('লোন তালিকায় নাম: ','Name in loan list: ')+'<b id="fcQNmT">'+E(nm)+'</b></span><button type="button" data-fq2="nm"><i class="mi" style="--m:var(--ic-edit)"></i> '+tx('বদলান','Change')+'</button></div>'
     +'<div id="fcQNmW" style="display:none"><input class="fcIn" id="fcQNm" type="text" autocomplete="off" list="'+(k==='repay'?'fcPplG':k==='recv'?'fcPplA2':'fcPplA')+'" value="'+E(nm)+'"></div>')
     +'<div class="fcHint" id="fcQRem" style="margin:-2px 0 8px"></div>'
     +'<button type="button" class="fcMore" data-fq2="more"><i class="mi" style="--m:var(--ic-settings)"></i> '+((k==='loan'||k==='ask')?tx('আরও অপশন (মাধ্যম, তারিখ)','More options (method, due date)'):tx('আরও অপশন (মাধ্যম)','More options (method)'))+' ▾</button>'
@@ -9942,14 +9942,14 @@ function remHint(nameChanged){
   if(formKind==='recv'){
     var rg=nmv?q.remainGet(nmv):null;
     if(!nmv) e.textContent=tx('কে শোধ করেছে তার নাম আপনার “পাবো” তালিকা থেকে বেছে নিন','Pick who repaid you from your “To receive” list');
-    else if(!rg) e.textContent=tx('এই নামে কোনো পাওনা নেই। ✎ বদলান চেপে সঠিক নাম দিন','Nobody owes you under this name. Tap ✎ Change and pick the right name');
+    else if(!rg) e.textContent=tx('এই নামে কোনো পাওনা নেই। বদলান চেপে সঠিক নাম দিন','Nobody owes you under this name. Tap Change and pick the right name');
     else{ e.textContent=tx('পাওনা আছে ','Owed to you ')+q.F(Math.max(rg.rem,0)); if(nameChanged&&rg.rem>0&&!($('fcQAmt').value)){ $('fcQAmt').value=rg.rem; capUpd(); } }
     return;
   }
   if(formKind!=='repay') return;
   var r=nmv?q.remainOwe(nmv):null;
   if(!nmv) e.textContent=tx('যাকে শোধ করছেন তার নাম আপনার “দিতে হবে” তালিকা থেকে বেছে নিন','Pick who you are repaying from your “To pay” list');
-  else if(!r) e.textContent=tx('এই নামে কোনো বাকি নেই। ✎ বদলান চেপে সঠিক নাম দিন','No balance under this name. Tap ✎ Change and pick the right name');
+  else if(!r) e.textContent=tx('এই নামে কোনো বাকি নেই। বদলান চেপে সঠিক নাম দিন','No balance under this name. Tap Change and pick the right name');
   else{ e.textContent=tx('বাকি আছে ','Remaining ')+q.F(Math.max(r.rem,0)); if(nameChanged&&r.rem>0&&!($('fcQAmt').value)){ $('fcQAmt').value=r.rem; capUpd(); } }
 }
 /* ---------- texting ---------- */
@@ -10049,7 +10049,7 @@ function smartAmt(txt){
 function updReply(){
   var e=$('fcRp'); if(!e) return; if(!replyTo){ e.style.display='none'; e.innerHTML=''; return; }
   var th=load().th[cur]||{};
-  e.style.display=''; e.innerHTML=ic('reply')+'<div><b>'+(replyTo.w==='me'?tx('আপনি','You'):E(th.name||th.un||th.email||'?'))+'</b><span>'+E(replyTo.t)+'</span></div><button type="button" data-a="rpx" aria-label="x">✕</button>';
+  e.style.display=''; e.innerHTML=ic('reply')+'<div><b>'+(replyTo.w==='me'?tx('আপনি','You'):E(th.name||th.un||th.email||'?'))+'</b><span>'+E(replyTo.t)+'</span></div><button type="button" data-a="rpx" aria-label="x"><i class="mi" style="--m:var(--ic-x)"></i></button>';
 }
 function startReply(id){
   var m=findM(load().th[cur],id)||((load().th[cur]||{}).msgs||[]).filter(function(x){ return x.id===id; })[0]; if(!m) return;
@@ -11387,12 +11387,12 @@ function rankView(){
   if(!rows.length) return h+`<div class="cgEmpty">${L('এখনো কেউ চ্যালেঞ্জ শুরু করেনি।','Nobody has started a challenge yet.')}</div>`;
   /* podium */
   if(rows.length>=3){
-    const pod=[1,0,2].map(k=>{ const r=rows[k], l=lv(r.xp); return `<div class="lbPod p${k+1}${r.uid===me?' me':''}"><div class="lbCrown">${k===0?'👑':''}</div><div class="lbAv big">${esc(initOf(r))}</div><b>${esc(nmOf(r))}</b><small>${r.u?'@'+esc(r.u):esc(l.name)}</small><div class="lbPodPt">${nb(r.xp)}</div><div class="lbPodBase">${nb(k+1)}</div></div>`; }).join('');
+    const pod=[1,0,2].map(k=>{ const r=rows[k], l=lv(r.xp); return `<div class="lbPod p${k+1}${r.uid===me?' me':''}"><div class="lbCrown">${k===0?'<i class="mi" style="--m:var(--ic-crown)"></i>':''}</div><div class="lbAv big">${esc(initOf(r))}</div><b>${esc(nmOf(r))}</b><small>${r.u?'@'+esc(r.u):esc(l.name)}</small><div class="lbPodPt">${nb(r.xp)}</div><div class="lbPodBase">${nb(k+1)}</div></div>`; }).join('');
     h+=`<div class="lbPodium">${pod}</div>`;
   }
   const start=rows.length>=3?3:0;
   h+=rows.slice(start).map((r,k)=>{ const i=k+start, l=lv(r.xp);
-    return `<div class="lbRow${r.uid===me?' me':''}"><span class="lbNo n${i<3?i+1:0}">${nb(i+1)}</span><div class="lbAv">${esc(initOf(r))}</div><div class="lbWho"><b>${esc(nmOf(r))}${mvH(r)}</b><small>${r.u?'@'+esc(r.u)+' · ':''}${esc(l.name)}${r.s>1?' · 🔥'+nb(r.s):''}</small></div><div class="lbPt"><b>${nb(r.xp)}</b><small>${r.w?nb(r.w)+' '+L('সম্পন্ন','done'):L('পয়েন্ট','pts')}</small></div></div>`; }).join('');
+    return `<div class="lbRow${r.uid===me?' me':''}"><span class="lbNo n${i<3?i+1:0}">${nb(i+1)}</span><div class="lbAv">${esc(initOf(r))}</div><div class="lbWho"><b>${esc(nmOf(r))}${mvH(r)}</b><small>${r.u?'@'+esc(r.u)+' · ':''}${esc(l.name)}${r.s>1?' · <i class="mi" style="--m:var(--ic-flame)"></i> '+nb(r.s):''}</small></div><div class="lbPt"><b>${nb(r.xp)}</b><small>${r.w?nb(r.w)+' '+L('সম্পন্ন','done'):L('পয়েন্ট','pts')}</small></div></div>`; }).join('');
   return h;
 }
 
@@ -11434,7 +11434,7 @@ function pump(){
   if(q.t==='done'){
     const w=WISH[Math.floor(Math.random()*WISH.length)];
     $('cgWishIcon').innerHTML=sv('trophy',54); { const nm=(localStorage.getItem('myName_v1')||'').trim(); $('cgWishTitle').textContent=(nm?nm+', ':'')+L(w[0],w[1]); }
-    $('cgWishMsg').textContent=L(`আপনি #${q.c.id||'★'} "${T(q.c)}" চ্যালেঞ্জ জিতেছেন!\n+${nb(q.earned)} পয়েন্ট${q.bonus?` (স্ট্রিক বোনাস +${nb(q.bonus)})`:''}`,`You won #${q.c.id||'★'} "${T(q.c)}"!\n+${q.earned} points${q.bonus?` (streak bonus +${q.bonus})`:''}`)+(q.up?'\n'+L(` লেভেল আপ! এখন আপনি ${q.up.name}`,` Level up! You are now ${q.up.name}`):'');
+    $('cgWishMsg').textContent=L(`আপনি #${q.c.id||''} "${T(q.c)}" চ্যালেঞ্জ জিতেছেন!\n+${nb(q.earned)} পয়েন্ট${q.bonus?` (স্ট্রিক বোনাস +${nb(q.bonus)})`:''}`,`You won #${q.c.id||''} "${T(q.c)}"!\n+${q.earned} points${q.bonus?` (streak bonus +${q.bonus})`:''}`)+(q.up?'\n'+L(` লেভেল আপ! এখন আপনি ${q.up.name}`,` Level up! You are now ${q.up.name}`):'');
     confetti(); if(navigator.vibrate){ try{ navigator.vibrate([120,60,120,60,200]); }catch(e){} }
     try{ if(window.ftNotify) window.ftNotify({id:'cg-'+q.c.uid,title:L('চ্যালেঞ্জ জিতেছেন! ','Challenge won! '),body:T(q.c)+' +'+q.earned,type:'info'}); }catch(e){}
   }else if(q.t==='rem'){
@@ -11443,7 +11443,7 @@ function pump(){
     $('cgConf').innerHTML='';
   }else{
     $('cgWishIcon').innerHTML=sv('flag',54); $('cgWishTitle').textContent=L('এবার হয়নি — আবার চেষ্টা করুন!','Not this time — try again!');
-    $('cgWishMsg').textContent=L(`#${q.c.id||'★'} "${T(q.c)}" পূর্ণ হয়নি। ব্যর্থতায় কোনো পয়েন্ট কাটা যায়নি।`,`#${q.c.id||'★'} "${T(q.c)}" was not completed. No points were deducted.`);
+    $('cgWishMsg').textContent=L(`#${q.c.id||''} "${T(q.c)}" পূর্ণ হয়নি। ব্যর্থতায় কোনো পয়েন্ট কাটা যায়নি।`,`#${q.c.id||''} "${T(q.c)}" was not completed. No points were deducted.`);
     $('cgConf').innerHTML='';
   }
   $('cgWishOk').textContent=L('ঠিক আছে','OK'); $('cgWishOverlay').style.display='flex';
@@ -12137,7 +12137,7 @@ build(); [600,1500,3200,6500].forEach(ms=>setTimeout(()=>build(),ms));
 const TABS=[
  ['everyday','প্রতিদিন','Everyday',[['dash','হোম','Home','home','#6366f1'],['add','যোগ করুন','Add entry','plus','#10b981'],['tx','লেনদেন','Transactions','clipboard','#0ea5e9'],['hist','হিস্ট্রি','History','clock','#f59e0b'],['acc','একাউন্ট','Accounts','wallet','#14b8a6']]],
  ['money','অর্থ ও লক্ষ্য','Money & goals',[['loan','লোন','Loans','bank','#ef4444'],['challenge','চ্যালেঞ্জ','Challenges','svg:cg-trophy','#f59e0b'],['zakat','যাকাত','Zakat','coin','#22c55e']]],
- ['more','ইনসাইট ও আরও','Insights & more',[['report','রিপোর্ট','Reports','bars','#6366f1'],['chat','AI চ্যাট','AI Chat','bot','#8b5cf6'],['friends','বন্ধু','Friends','user','#0ea5e9'],['@inbox','মেসেজ','Messages','message','#10b981'],['notes','নোট ও টাস্ক','Notes & tasks','clipboard','#a78bfa'],['profile','প্রোফাইল','Profile','user','#ec4899'],['@search','ইউজার খুঁজুন','Find users','search','#0ea5e9'],['@blood','ইমারজেন্সি হেল্প','Emergency help','drop','#e11d48']]]
+ ['more','ইনসাইট ও আরও','Insights & more',[['report','রিপোর্ট','Reports','bars','#6366f1'],['chat','AI চ্যাট','AI Chat','bot','#8b5cf6'],['friends','বন্ধু','Friends','user','#0ea5e9'],['@inbox','মেসেজ','Messages','message','#10b981'],['@tour','ট্যুর বাজেট','Tour budget','bus','#f59e0b'],['notes','নোট ও টাস্ক','Notes & tasks','clipboard','#a78bfa'],['profile','প্রোফাইল','Profile','user','#ec4899'],['@search','ইউজার খুঁজুন','Find users','search','#0ea5e9'],['@blood','ইমারজেন্সি হেল্প','Emergency help','drop','#e11d48']]]
 ];
 const icon=n=>n.indexOf('svg:')===0?'<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#'+n.slice(4)+'"/></svg>':'<i class="mi" style="--m:var(--ic-'+n+')"></i>';
 const cur=()=>{ const s=document.querySelector('.section.active'); return s?s.id.replace('sec-',''):''; };
@@ -12146,16 +12146,18 @@ function fillMenu(){
   const w=who(), c=cur(), det=sec.classList.contains('ftDetail')?kOf(dets().find(d=>d.classList.contains('ftShow'))||sec):'';
   const lg=$('headerLogoEl'), logo=$('mnLogo'); if(lg&&logo) logo.innerHTML=lg.innerHTML;
   const nm=document.querySelector('[data-i18n="app_title"]'); if(nm&&$('mnName')) $('mnName').textContent=nm.textContent;
-  let h='<div class="mnPro" data-a="tab" data-k="profile"><div class="av">'+avatar()+'</div><div class="tx"><b>'+(w.name?esc(w.name):L('আমার প্রোফাইল','My profile'))+'</b><span>'+(w.on?'<i></i>':'')+esc(w.un?'@'+w.un:(w.email||L('প্রোফাইল দেখুন','View profile')))+'</span></div>'+CHEV+'</div>';
+  let h=w.on
+    ? '<div class="mnPro" data-a="tab" data-k="profile"><div class="av">'+avatar()+'</div><div class="tx"><b>'+(w.name?esc(w.name):L('আমার প্রোফাইল','My profile'))+'</b><span>'+(w.on?'<i></i>':'')+esc(w.un?'@'+w.un:(w.email||L('প্রোফাইল দেখুন','View profile')))+'</span></div>'+CHEV+'</div>'
+    : '<div class="mnPro mnLogin" data-a="login" role="button" tabindex="0"><div class="av">'+icon('user')+'</div><div class="tx"><b>'+L('লগইন করুন','Log in')+'</b><span>'+L('ক্লাউড ব্যাকআপ ও বন্ধুদের সাথে যুক্ত হন','Back up to the cloud and connect with friends')+'</span></div><span class="mnLgBtn">'+L('লগইন','Log in')+'</span></div>';
   h+=bkCard();
   const mv=dets().filter(isMoved).map(d=>{ const ch=chipOf(d), k=kOf(d); return tile('mset',k,ch.c,ch.i,titleHtml(d),det&&det===k); });
   const mvHtml=mv.length?'<div class="mnSec">'+L('অর্থ ও বাজেট','Money & budget')+'</div><div class="mnGrid">'+mv.join('')+'</div>':'';
   TABS.forEach(g=>{
-    const items=g[3].filter(x=>x[0]==='@search'?!!window.ppGoSearch:x[0]==='@blood'?!!window.ftBlood:x[0]==='@inbox'?!!window.ftOpenInbox:(!!$('sec-'+x[0])||x[0]==='tx')).map(x=>tile(x[0]==='@search'?'search':x[0]==='@blood'?'blood':x[0]==='@inbox'?'inbox':'tab',x[0],x[4],icon(x[3]),L(x[1],x[2]),x[0]===c&&c!=='settings'));
+    const items=g[3].filter(x=>x[0]==='@search'?!!window.ppGoSearch:x[0]==='@blood'?!!window.ftBlood:x[0]==='@inbox'?!!window.ftOpenInbox:x[0]==='@tour'?!!window.ftTour:(!!$('sec-'+x[0])||x[0]==='tx')).map(x=>tile(x[0]==='@search'?'search':x[0]==='@blood'?'blood':x[0]==='@inbox'?'inbox':x[0]==='@tour'?'tour':'tab',x[0],x[4],icon(x[3]),L(x[1],x[2]),x[0]===c&&c!=='settings'));
     if(items.length) h+='<div class="mnSec">'+L(g[1],g[2])+'</div><div class="mnGrid">'+items.join('')+'</div>';
     if(g[0]==='money') h+=mvHtml;
   });
-  const FT=tile('tab','settings','#64748b',icon('settings'),L('সেটিংস','Settings'),c==='settings'&&!det)+tile('about','about','#8b5cf6','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.2M12 7.8h.01"/></svg>',L('অ্যাপ সম্পর্কে','About'),false)+(window.ftInstall?tile('install','install','#16a34a',icon('download'),(window.ftInstall.installed()?L('অ্যাপ ইনস্টল ✓','App installed ✓'):L('অ্যাপ ইনস্টল','Install app')),false):'')+tile('logout','logout','#ef4444',icon('power'),L('লগআউট','Logout'),false);
+  const FT=tile('tab','settings','#64748b',icon('settings'),L('সেটিংস','Settings'),c==='settings'&&!det)+tile('about','about','#8b5cf6','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.2M12 7.8h.01"/></svg>',L('অ্যাপ সম্পর্কে','About'),false)+(window.ftInstall?tile('install','install','#16a34a',icon('download'),(window.ftInstall.installed()?L('অ্যাপ ইনস্টল হয়েছে','App installed'):L('অ্যাপ ইনস্টল','Install app')),false):'')+tile('logout','logout','#ef4444',icon('power'),L('লগআউট','Logout'),false);
   $('mnBody').innerHTML=h+'<div class="mnSec">'+L('আরও','More')+'</div><div class="mnGrid">'+FT+'</div>';
   $('mnFt').innerHTML=''; try{ if(window.ftCloud) ftCloud.refresh(); }catch(e){}
 }
@@ -12175,8 +12177,10 @@ function onMenu(e){
     else if(a==='search'&&window.ppGoSearch) window.ppGoSearch();
     else if(a==='blood'&&window.ftBlood) window.ftBlood.open('');
     else if(a==='inbox'&&window.ftOpenInbox) window.ftOpenInbox();
+    else if(a==='tour'&&window.ftTour) window.ftTour.open();
  else if(a==='about'&&window.ftAbout) window.ftAbout();
     else if(a==='install'&&window.ftInstall) window.ftInstall.open();
+    else if(a==='login'){ const ls=$('loginScreen'); if(ls){ try{ if(window.ftCloud&&ftCloud.loginMode) ftCloud.loginMode('in'); }catch(x){} try{ if(window.loginPicRefresh) loginPicRefresh(); }catch(x){} document.documentElement.classList.remove('hasUser'); ls.style.zIndex='9500'; ls.style.display='flex'; ls.scrollTop=0; } }
     else if(a==='logout'&&window.ftCloud&&ftCloud.accountLogout) ftCloud.accountLogout();
     window.scrollTo(0,0);
   },60);
@@ -12296,7 +12300,7 @@ function render(){
   { let sb={sig:'',html:''}; try{ if(window.ftStoryBlock) sb=window.ftStoryBlock(); }catch(e){} h+='<div class="frStories" id="frStories" data-sig="'+sb.sig+'">'+sb.html+'</div>'; }
   if(I.length) h+='<div class="frCard frIn"><h4>'+SV.user+' '+L('বন্ধুর অনুরোধ','Friend requests')+' <span class="frN">'+I.length+'</span></h4><p class="frSub">'+L('কার্ডে ট্যাপ করে প্রোফাইল দেখুন। প্রোফাইল প্রাইভেট হলেও কে অনুরোধ পাঠিয়েছে এখানে দেখা যাবে।','Tap a card to view the profile. You can always see who sent the request, even if their profile is private.')+'</p>'+I.sort((a,b)=>(S.inc[b].t||0)-(S.inc[a].t||0)).map(u=>{ const o=S.inc[u]; return '<div class="frReq">'+((Date.now()-(o.t||0))<864e5?'<span class="frNew">'+L('নতুন','NEW')+'</span>':'')+'<div class="frMain" data-fa="pf" data-u="'+E(u)+'"><div class="frAv big">'+av(o)+'</div><div class="frTx"><b>'+E(nm(o))+'</b><span>'+(o.u?'@'+E(o.u):'')+'</span><em class="frWhen">'+ago(o.t)+'</em></div><span class="frGo">'+L('প্রোফাইল','Profile')+SV.chev+'</span></div><div class="frReqB"><button type="button" class="frB y" data-fa="acc" data-u="'+E(u)+'">'+SV.check+' '+L('গ্রহণ করুন','Accept')+'</button><button type="button" class="frB" data-fa="dec" data-u="'+E(u)+'">'+SV.x+' '+L('বাতিল','Decline')+'</button></div></div>'; }).join('')+'</div>';
   if(O.length) h+='<div class="frCard"><h4>'+SV.send+' '+L('পাঠানো অনুরোধ','Sent requests')+'</h4>'+O.map(u=>row(u,S.out[u],bt('can',u,L('বাতিল','Cancel')))).join('')+'</div>';
-  h+='<div class="frCard"><h4>'+L('আমার বন্ধু','My friends')+' ('+F.length+')</h4>'+(F.length?F.map(u=>row(u,S.fr[u],bt('msg',u,L('মেসেজ','Message'),1)+bt('pf',u,L('প্রোফাইল','Profile'))+bt('rm',u,'✕'))).join(''):'<div class="frEm">'+L('এখনো কোনো বন্ধু নেই। “ইউজার খুঁজুন” চেপে ইউজারনেম দিয়ে খুঁজুন, প্রোফাইল খুলে “বন্ধু যোগ করুন” চাপুন। অনুরোধ গ্রহণ হলে এখানে যোগ হবে।','No friends yet. Tap “Find users”, open a profile and tap “Add friend”. They appear here once accepted.')+'</div>')+'</div>';
+  h+='<div class="frCard"><h4>'+L('আমার বন্ধু','My friends')+' ('+F.length+')</h4>'+(F.length?F.map(u=>row(u,S.fr[u],bt('msg',u,L('মেসেজ','Message'),1)+bt('pf',u,L('প্রোফাইল','Profile'))+bt('rm',u,'<i class="mi" style="--m:var(--ic-x)"></i>'))).join(''):'<div class="frEm">'+L('এখনো কোনো বন্ধু নেই। “ইউজার খুঁজুন” চেপে ইউজারনেম দিয়ে খুঁজুন, প্রোফাইল খুলে “বন্ধু যোগ করুন” চাপুন। অনুরোধ গ্রহণ হলে এখানে যোগ হবে।','No friends yet. Tap “Find users”, open a profile and tap “Add friend”. They appear here once accepted.')+'</div>')+'</div>';
   e.innerHTML=h;
 }
 const NAMES={};
@@ -12733,7 +12737,7 @@ var EDI={fi:'<path d="M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1
 function edIc(p,w){ w=w||24; return '<svg viewBox="0 0 24 24" width="'+w+'" height="'+w+'" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>'; }
 function renderEd(){
   if(!S) return; var ov=S.ov, s=S.slides[S.cur]; if(!s){ edClose(true); return; }
-  var th=S.slides.map(function(x,i){ var inner=x.k==='t'?'<span style="background:linear-gradient(135deg,'+BG[x.bg||0]+')">'+(x.au?'🎵':'Aa')+'</span>':x.k==='i'?'<img alt="" src="'+x.d+'">':'<span class="v">▶</span>';
+  var th=S.slides.map(function(x,i){ var inner=x.k==='t'?'<span style="background:linear-gradient(135deg,'+BG[x.bg||0]+')">'+(x.au?'<i class="mi" style="--m:var(--ic-music)"></i>':'Aa')+'</span>':x.k==='i'?'<img alt="" src="'+x.d+'">':'<span class="v">▶</span>';
     return '<button type="button" data-a="th" data-i="'+i+'" class="'+(i===S.cur?'on':'')+'">'+inner+'</button>'; }).join('');
   var tools='', G={};
   if(!s.lk){
@@ -12741,9 +12745,9 @@ function renderEd(){
     if(s.k==='t') G.bg='<div class="stRow"><label>'+L('ব্যাকগ্রাউন্ড','Background')+'</label><div class="stCh">'+BG.map(function(g,i){ return '<button type="button" data-a="bg" data-i="'+i+'" class="sw '+(i===s.bg?'on':'')+'" style="background:linear-gradient(135deg,'+g+')"></button>'; }).join('')+'</div></div>'
       +chips(L('ফন্ট','Font'),FT,s.ft||0,'ft',function(x){return L(x[0],x[1]);});
     if(s.k!=='v'&&!(s.k==='t'&&s.au&&!s.tx)) G.du=chips(L('সময়','Time'),DUR,DUR.indexOf(s.du)>-1?DUR.indexOf(s.du):-1,'du',function(x){return x+L(' সে.','s');});
-    G.mo='<div class="stRow"><label>'+L('অনুভূতি','Feeling')+'</label><div class="stCh">'+MOODS.map(function(e){ return '<button type="button" data-a="mo" data-e="'+e+'" class="sw2 '+(s.mo===e?'on':'')+'">'+e+'</button>'; }).join('')+'</div></div>';
-    if(s.k!=='v'){ if(s.au){ if(!s.abu) s.abu=blobUrl(s.au); G.mus='<div class="stRow"><label>🎵 '+esc(s.an||'')+'</label><div class="stCh"><audio controls preload="metadata" src="'+s.abu+'"></audio><button type="button" data-a="musx">'+L('সরান','Remove')+'</button></div></div>'; }
-      else G.mus='<div class="stRow"><label>'+L('মিউজিক','Music')+'</label><div class="stCh"><button type="button" data-a="mus">🎵 '+L('মিউজিক যোগ করুন','Add music')+'</button></div></div>'; }
+    G.mo='<div class="stRow"><label>'+L('অনুভূতি','Feeling')+'</label><div class="stCh">'+MOODS.map(function(e){ return '<button type="button" data-a="mo" data-e="'+e+'" class="sw2 '+(s.mo===e?'on':'')+'">'+(window.ftEmo?window.ftEmo(e):e)+'</button>'; }).join('')+'</div></div>';
+    if(s.k!=='v'){ if(s.au){ if(!s.abu) s.abu=blobUrl(s.au); G.mus='<div class="stRow"><label><i class="mi" style="--m:var(--ic-music)"></i> '+esc(s.an||'')+'</label><div class="stCh"><audio controls preload="metadata" src="'+s.abu+'"></audio><button type="button" data-a="musx">'+L('সরান','Remove')+'</button></div></div>'; }
+      else G.mus='<div class="stRow"><label>'+L('মিউজিক','Music')+'</label><div class="stCh"><button type="button" data-a="mus"><i class="mi" style="--m:var(--ic-music)"></i> '+L('মিউজিক যোগ করুন','Add music')+'</button></div></div>'; }
   } else G.note='<div class="stNote">'+L('এটা আগেই পোস্ট করা স্লাইড — চাইলে মুছে ফেলতে পারেন।','This slide is already posted — you can delete it.')+'</div>';
   G.life=chips(L('মেয়াদ','Expires'),LIFE,LIFE.indexOf(S.life),'life',function(x){return x+L(' ঘণ্টা','h');});
   var capV=s.lk?'':(s.k==='t'?(s.au?'<input type="text" id="stCap" maxlength="60" placeholder="'+L('গানের নাম / শিরোনাম','Song / title')+'" value="'+esc(s.an||'')+'">':''):'<input type="text" id="stCap" maxlength="120" placeholder="'+L('ক্যাপশন লিখুন (ঐচ্ছিক)','Add a caption (optional)')+'" value="'+esc(s.c||'')+'">');
@@ -12766,12 +12770,12 @@ function renderEd(){
   if(s.k==='i'){ var im=document.createElement('img'); im.alt=''; im.src=s.d; pv.appendChild(im); }
   else if(s.k==='v'){ if(!s.bu) s.bu=blobUrl(s.d); var v=document.createElement('video'); v.src=s.bu; v.controls=true; v.loop=true; v.playsInline=true; pv.appendChild(v); var p=v.play&&v.play(); if(p&&p.catch) p.catch(function(){}); }
   else { var c=document.createElement('div'); c.className='stTxC'; c.style.background='linear-gradient(160deg,'+BG[s.bg||0]+')';
-    if(s.au){ var eq='<div class="stEq">'; for(var q=0;q<22;q++) eq+='<i style="animation-delay:-'+(Math.random()*1.2).toFixed(2)+'s"></i>'; c.innerHTML=eq+'</div><div class="stMus">🎵 '+esc(s.an||'')+'</div>'; }
+    if(s.au){ var eq='<div class="stEq">'; for(var q=0;q<22;q++) eq+='<i style="animation-delay:-'+(Math.random()*1.2).toFixed(2)+'s"></i>'; c.innerHTML=eq+'</div><div class="stMus"><i class="mi" style="--m:var(--ic-music)"></i> '+esc(s.an||'')+'</div>'; }
     if(s.lk){ var d2=document.createElement('div'); d2.className='stTxt'; d2.style.cssText='font-family:'+FT[s.ft||0][2]+';font-weight:'+FT[s.ft||0][3]+';font-size:'+fsz(s.tx)+'px'; d2.textContent=s.tx; c.appendChild(d2); }
     else { var ta=document.createElement('textarea'); ta.className='stTa'; ta.maxLength=300; ta.placeholder=L('এখানে লিখুন…','Type something…'); ta.value=s.tx||''; ta.style.fontFamily=FT[s.ft||0][2]; ta.style.fontWeight=FT[s.ft||0][3]; ta.style.fontSize=fsz(s.tx)+'px';
       ta.oninput=function(){ s.tx=ta.value; ta.style.fontSize=fsz(ta.value)+'px'; }; c.appendChild(ta); }
     pv.appendChild(c); }
-  if(s.mo&&s.k!=='t'){ var mb=document.createElement('div'); mb.className='stMood'; mb.textContent=s.mo; pv.appendChild(mb); }
+  if(s.mo&&s.k!=='t'){ var mb=document.createElement('div'); mb.className='stMood'; mb.innerHTML=window.ftEmo?window.ftEmo(s.mo):s.mo; pv.appendChild(mb); }
 }
 function wireEd(){
   var ov=S.ov;
@@ -12818,17 +12822,17 @@ async function view(u){
   var fi=(window.ftFrInfo||{})[u]||{}, nm=own?L('আপনার স্ট্যাটাস','Your status'):(fi.n||fi.u||''), left=Math.max(0,Math.ceil((m.exp-Date.now())/H1)), avp=pcOk(own?lsGet('myProfilePic_v1'):fi.pic);
   var ov=document.createElement('div'); ov.className='stOv stView';
   ov.innerHTML='<div class="stSegs">'+sl.map(function(){return '<b><i></i></b>';}).join('')+'</div>'
-    +'<div class="stHd"><div class="stAvL">'+(avp?'<img alt="" src="'+avp+'">':esc((String(nm).trim()[0]||'?').toUpperCase()))+'</div><div class="stHt"><b>'+esc(nm)+'</b><span>'+(own?left+L(' ঘণ্টা বাকি','h left'):agoS(m.t)+L(' আগে',' ago')+(fi.u?' · @'+esc(fi.u):''))+'</span></div><button type="button" class="stSnd" style="display:none">🔊</button><button type="button" class="stNo">✕</button></div>'
+    +'<div class="stHd"><div class="stAvL">'+(avp?'<img alt="" src="'+avp+'">':esc((String(nm).trim()[0]||'?').toUpperCase()))+'</div><div class="stHt"><b>'+esc(nm)+'</b><span>'+(own?left+L(' ঘণ্টা বাকি','h left'):agoS(m.t)+L(' আগে',' ago')+(fi.u?' · @'+esc(fi.u):''))+'</span></div><button type="button" class="stSnd" style="display:none"><i class="mi" style="--m:var(--ic-vol)"></i></button><button type="button" class="stNo"><i class="mi" style="--m:var(--ic-x)"></i></button></div>'
     +'<div class="stPv"></div><div class="stChips"></div><div class="stCap" style="display:none"></div>'
-    +(!own?'<div class="stRx">'+RX.map(function(x){return '<button type="button" data-r="'+x+'">'+x+'</button>';}).join('')+'</div>':'<div class="stBar"><button type="button" class="stViews">👁 <span>0</span></button><button type="button" class="stNew">＋ '+L('স্লাইড','Slide')+'</button><button type="button" class="stDel">'+L('মুছুন','Delete')+'</button></div>');
+    +(!own?'<div class="stRx">'+RX.map(function(x){return '<button type="button" data-r="'+x+'">'+(window.ftEmo?window.ftEmo(x):x)+'</button>';}).join('')+'</div>':'<div class="stBar"><button type="button" class="stViews"><i class="mi" style="--m:var(--ic-eye)"></i> <span>0</span></button><button type="button" class="stNew">＋ '+L('স্লাইড','Slide')+'</button><button type="button" class="stDel">'+L('মুছুন','Delete')+'</button></div>');
   document.body.appendChild(ov); vcur=ov;
   var pv=ov.querySelector('.stPv'), segs=[].slice.call(ov.querySelectorAll('.stSegs i')), snd=ov.querySelector('.stSnd'), cap=ov.querySelector('.stCap'), chp=ov.querySelector('.stChips');
   var idx=0, vd=null, ad=null, urls=[], raf=0, last=0, el_=0, dur=6000, paused=false, sheetOpen=false, closed=false, pr=0;
-  function syncSnd(){ snd.textContent=sndMuted?'🔇':'🔊'; }
+  function syncSnd(){ snd.innerHTML='<i class="mi" style="--m:var(--ic-'+(sndMuted?'mute':'vol')+')"></i>'; }
   function media(){ return [vd,ad].filter(Boolean); }
   function freeMedia(){ media().forEach(function(el){ try{ el.pause(); el.removeAttribute('src'); el.load(); }catch(e){} }); urls.forEach(function(x){ try{URL.revokeObjectURL(x);}catch(e){} }); urls=[]; vd=null; ad=null; }
   function playAll(first){ media().forEach(function(el){ el.muted=sndMuted; var p=el.play();
-    if(p&&p.catch) p.catch(function(){ if(first&&!sndMuted){ sndMuted=true; el.muted=true; syncSnd(); snd.classList.add('hint'); toastM(L('সাউন্ড চালু করতে 🔇 বাটনে ট্যাপ করুন','Tap 🔇 to turn the sound on')); } var q=el.play(); if(q&&q.catch) q.catch(function(){}); }); }); }
+    if(p&&p.catch) p.catch(function(){ if(first&&!sndMuted){ sndMuted=true; el.muted=true; syncSnd(); snd.classList.add('hint'); toastM(L('সাউন্ড চালু করতে স্পিকার বাটনে ট্যাপ করুন','Tap the speaker button to turn the sound on')); } var q=el.play(); if(q&&q.catch) q.catch(function(){}); }); }); }
   function pause(){ paused=true; media().forEach(function(el){ try{el.pause();}catch(e){} }); }
   function resume(){ if(sheetOpen||closed) return; paused=false; last=0; media().forEach(function(el){ var p=el.play(); if(p&&p.catch) p.catch(function(){}); }); }
   function close(){ if(closed) return; closed=true; cancelAnimationFrame(raf); clearInterval(ov._iv); document.removeEventListener('visibilitychange',ov._vc); freeMedia(); ov.remove(); if(vcur===ov) vcur=null; sched(); }
@@ -12844,7 +12848,7 @@ async function view(u){
       pv.appendChild(c); }
     if(s.au){ var au=blobUrl(s.au); urls.push(au); ad=new Audio(); ad.src=au; ad.loop=true; ad.preload='auto'; ad.muted=sndMuted; }
     dur=(s.k==='v'?0:(s.du||6)*1000);
-    var ch=''; if(s.au) ch+='<span>🎵 '+esc(s.an||L('মিউজিক','Music'))+'</span>'; if(s.mo) ch+='<span>'+s.mo+'</span>'; chp.innerHTML=ch; chp.style.display=ch?'flex':'none';
+    var ch=''; if(s.au) ch+='<span><i class="mi" style="--m:var(--ic-music)"></i> '+esc(s.an||L('মিউজিক','Music'))+'</span>'; if(s.mo) ch+='<span>'+(window.ftEmo?window.ftEmo(s.mo):s.mo)+'</span>'; chp.innerHTML=ch; chp.style.display=ch?'flex':'none';
     var ctext=s.k==='t'?'':s.c; cap.style.display=ctext?'block':'none'; cap.textContent=ctext||'';
     snd.style.display=(s.k==='v'||s.au)?'':'none'; syncSnd();
     if(own&&ov.querySelector('.stViews')) ov.querySelector('.stViews').title=(i+1)+'/'+sl.length;
@@ -12873,8 +12877,8 @@ async function view(u){
     function ago2(t){ var mi=Math.max(1,Math.floor((Date.now()-t)/6e4)); return mi<60?mi+L(' মিনিট আগে','m ago'):Math.floor(mi/60)+L(' ঘণ্টা আগে','h ago'); }
     function shut(){ if(sheet){ sheet.remove(); sheet=null; } sheetOpen=false; resume(); }
     function paint(){ vs.textContent=lst.length; if(!sheet) return; var cnt={}; lst.forEach(function(x){ if(x.r) cnt[x.r]=(cnt[x.r]||0)+1; });
-      var sm=Object.keys(cnt).map(function(k){return '<span>'+k+' '+cnt[k]+'</span>';}).join('');
-      sheet.innerHTML='<div class="stSh"><div class="stShH"><b>👁 '+lst.length+L(' জন দেখেছেন',' views')+'</b><button type="button" class="stShX">✕</button></div>'+(sm?'<div class="stRxS">'+sm+'</div>':'')+'<div class="stShL">'+(lst.length?lst.map(function(x){ return '<div class="stV"><div class="stVa">'+esc((String(x.n||x.u||'?').trim()[0]||'?').toUpperCase())+'</div><div class="stVt"><b>'+esc(x.n||x.u||'?')+'</b><small>'+(x.u?'@'+esc(x.u)+' · ':'')+ago2(x.t)+'</small></div>'+(x.r?'<span class="stVr">'+esc(x.r)+'</span>':'')+'</div>'; }).join(''):'<div class="stEmpty">'+L('এখনো কেউ দেখেনি','No views yet')+'</div>')+'</div></div>'; sheet.querySelector('.stShX').onclick=shut; }
+      var sm=Object.keys(cnt).map(function(k){return '<span>'+(window.ftEmo?window.ftEmo(k):k)+' '+cnt[k]+'</span>';}).join('');
+      sheet.innerHTML='<div class="stSh"><div class="stShH"><b><i class="mi" style="--m:var(--ic-eye)"></i> '+lst.length+L(' জন দেখেছেন',' views')+'</b><button type="button" class="stShX"><i class="mi" style="--m:var(--ic-x)"></i></button></div>'+(sm?'<div class="stRxS">'+sm+'</div>':'')+'<div class="stShL">'+(lst.length?lst.map(function(x){ return '<div class="stV"><div class="stVa">'+esc((String(x.n||x.u||'?').trim()[0]||'?').toUpperCase())+'</div><div class="stVt"><b>'+esc(x.n||x.u||'?')+'</b><small>'+(x.u?'@'+esc(x.u)+' · ':'')+ago2(x.t)+'</small></div>'+(x.r?'<span class="stVr">'+(window.ftEmo?window.ftEmo(x.r):esc(x.r))+'</span>':'')+'</div>'; }).join(''):'<div class="stEmpty">'+L('এখনো কেউ দেখেনি','No views yet')+'</div>')+'</div></div>'; sheet.querySelector('.stShX').onclick=shut; }
     async function loadV(){ try{ var v=await db('statusViews/'+me()); lst=Object.keys(v||{}).map(function(k){return v[k];}).filter(function(x){return x&&x.s>=t0;}).sort(function(a,b){return b.t-a.t;}); }catch(e){} paint(); }
     loadV(); ov._iv=setInterval(loadV,12000);
     vb.onclick=function(){ pause(); sheetOpen=true; if(!sheet){ sheet=document.createElement('div'); sheet.className='stSheet'; ov.appendChild(sheet); sheet.onclick=function(e){ if(e.target===sheet) shut(); }; } paint(); };
@@ -13020,7 +13024,7 @@ function openSheet(){
   var rows='<button type="button" class="fdItem'+(idx===0?' on':'')+'" data-i="0"><span class="fdIc" style="background:linear-gradient(135deg,#16a34a,#15803d)">৳</span><span class="fdT"><b>'+L('মোট ব্যালেন্স (নগদ)','Total balance (cash)')+'</b><small>'+L('ডিফল্ট — আগের মতোই কাটবে','Default — spends as usual')+'</small></span><span class="fdA">'+fmt(calcBalance())+'</span><i class="fdCk"></i></button>';
   a.forEach(function(n,k){ var v=bal[n]||0, g=pal(n).split(','); rows+='<button type="button" class="fdItem'+(idx===k+1?' on':'')+(v<=0?' low':'')+'" data-i="'+(k+1)+'"><span class="fdIc" style="background:linear-gradient(135deg,'+g[0]+','+g[1]+')">'+esc2((String(n).trim()[0]||'?').toUpperCase())+'</span><span class="fdT"><b>'+esc2(n)+'</b><small>'+(v>0?L('সঞ্চয় থেকে খরচ করুন','Spend from this savings'):L('ব্যালেন্স নেই','No balance'))+'</small></span><span class="fdA">'+fmt(v)+'</span><i class="fdCk"></i></button>'; });
   var ov=document.createElement('div'); ov.id='fdOv'; ov.className='fdOv';
-  ov.innerHTML='<div class="fdSh"><div class="fdGrab"></div><div class="fdH"><b>'+L('কোন একাউন্ট থেকে খরচ হবে?','Spend from which account?')+'</b><button type="button" class="fdClose" aria-label="close">✕</button></div><p class="fdP">'+L('একটা বেছে নিলে সেই কার্ড মোট ব্যালেন্সের জায়গায় এসে বসবে, আর নতুন খরচ সরাসরি ওই একাউন্টের টাকা থেকে কাটবে।','Pick one — its card slides into the Total Balance spot and new expenses are paid straight from it.')+'</p><div class="fdList">'+rows+'</div></div>';
+  ov.innerHTML='<div class="fdSh"><div class="fdGrab"></div><div class="fdH"><b>'+L('কোন একাউন্ট থেকে খরচ হবে?','Spend from which account?')+'</b><button type="button" class="fdClose" aria-label="close"><i class="mi" style="--m:var(--ic-x)"></i></button></div><p class="fdP">'+L('একটা বেছে নিলে সেই কার্ড মোট ব্যালেন্সের জায়গায় এসে বসবে, আর নতুন খরচ সরাসরি ওই একাউন্টের টাকা থেকে কাটবে।','Pick one — its card slides into the Total Balance spot and new expenses are paid straight from it.')+'</p><div class="fdList">'+rows+'</div></div>';
   document.body.appendChild(ov); requestAnimationFrame(function(){ov.classList.add('on');});
   function close(cb){ ov.classList.remove('on'); setTimeout(function(){ov.remove(); if(cb) cb();},230); }
   ov.addEventListener('click',function(ev){ if(ev.target===ov||ev.target.closest('.fdClose')){ close(); return; }
@@ -13172,9 +13176,9 @@ html:not(.locked) .lockOverlay .lkOrb,html:not(.locked) .lockOverlay .lockBg{dis
       +li(I.sync,L('নিজে নিজেই আপডেট হয়, সবসময় নতুন ভার্সন','Updates itself; always the newest version'))
       +li(I.pc,L('যেকোনো ফোন বা কম্পিউটারে একই অ্যাপ','The same app on any phone or computer'))
       +li(I.wifi,L('ইন্টারনেট ছাড়াও খোলে','Opens even offline'));
-    if(ok) h+='<button type="button" class="ipBtn d" data-a="done">'+I.ph+'<span>'+L('ইতিমধ্যে ইনস্টল করা আছে ✓','Already installed ✓')+'</span></button>';
+    if(ok) h+='<button type="button" class="ipBtn d" data-a="done">'+I.ph+'<span>'+L('ইতিমধ্যে ইনস্টল করা আছে','Already installed')+'</span></button>';
     else h+='<button type="button" class="ipBtn p" data-a="install">'+I.ph+'<span>'+L('ওয়েব অ্যাপ ইনস্টল করুন','Install web app')+'</span></button>';
-    h+='<div class="ipSt" id="ipSt">'+(ok?'':(ready?L('⚡ প্রস্তুত — বাটনে ট্যাপ করলেই ইনস্টল হবে।','⚡ Ready. Tap the button to install.'):L('বাটনে ট্যাপ করুন — ইনস্টল না হলে নিচে ধাপ দেখাবে।','Tap the button. If it does not install, steps will show below.')))+'</div>';
+    h+='<div class="ipSt" id="ipSt">'+(ok?'':(ready?L('প্রস্তুত — বাটনে ট্যাপ করলেই ইনস্টল হবে।','Ready. Tap the button to install.'):L('বাটনে ট্যাপ করুন — ইনস্টল না হলে নিচে ধাপ দেখাবে।','Tap the button. If it does not install, steps will show below.')))+'</div>';
     h+='<div class="ipHelp" id="ipHelp"></div></div></div></div>';
     pg.innerHTML=h;
   }
@@ -13190,7 +13194,7 @@ html:not(.locked) .lockOverlay .lkOrb,html:not(.locked) .lockOverlay .lockBg{dis
   function diag(){
     var d=document.getElementById('ipDiag'); if(!d) return;
     var rows=[[web&&(location.protocol==='https:'||location.hostname==='localhost'),L('HTTPS লিংক','HTTPS link')]];
-    var done=function(){ d.innerHTML=rows.map(function(r){return (r[0]?'✅ ':'❌ ')+r[1];}).join('<br>')+(rows.some(function(r){return !r[0];})?'<br><b>'+L('❌ থাকলে অ্যাপ সরাসরি ইনস্টল হবে না — ফাইলগুলো (manifest, sw.js, icon) index.html-এর সাথে একই ফোল্ডারে আপলোড করুন।','If any ❌ shows, direct install will not work. Upload manifest, sw.js and icons next to index.html.')+'</b>':''); };
+    var done=function(){ d.innerHTML=rows.map(function(r){return '<i class="mi" style="--m:var(--ic-'+(r[0]?'check-circle':'x-circle')+');color:'+(r[0]?'#16a34a':'#ef4444')+'"></i> '+r[1];}).join('<br>')+(rows.some(function(r){return !r[0];})?'<br><b>'+L('লাল চিহ্ন থাকলে অ্যাপ সরাসরি ইনস্টল হবে না — ফাইলগুলো (manifest, sw.js, icon) index.html-এর সাথে একই ফোল্ডারে আপলোড করুন।','If any red mark shows, direct install will not work. Upload manifest, sw.js and icons next to index.html.')+'</b>':''); };
     var mp=web?fetch('manifest.webmanifest',{cache:'no-store'}).then(function(r){ rows.push([r.ok,'manifest.webmanifest']); }).catch(function(){ rows.push([false,'manifest.webmanifest']); }):Promise.resolve(rows.push([false,'manifest.webmanifest']));
     var sp=(web&&navigator.serviceWorker)?navigator.serviceWorker.getRegistration().then(function(r){ rows.push([!!r,L('সার্ভিস ওয়ার্কার (sw.js)','Service worker (sw.js)')]); }).catch(function(){ rows.push([false,'sw.js']); }):Promise.resolve(rows.push([false,'sw.js']));
     Promise.all([mp,sp]).then(done);
@@ -13233,13 +13237,13 @@ html:not(.locked) .lockOverlay .lkOrb,html:not(.locked) .lockOverlay .lockBg{dis
     pg.classList.remove('on');
   }
   window.addEventListener('popstate',function(){ var pg=document.getElementById('ftInPg'); if(pg&&pg.classList.contains('on')){ pushed=false; pg.classList.remove('on'); } });
-  window.addEventListener('ftInstallReady',function(){ var pg=document.getElementById('ftInPg'); if(pg&&pg.classList.contains('on')&&!installed()){ var st=document.getElementById('ipSt'); if(st) st.textContent=L('⚡ প্রস্তুত — বাটনে ট্যাপ করলেই ইনস্টল হবে।','⚡ Ready. Tap the button to install.'); } paintBox(); });
-  window.addEventListener('appinstalled',function(){ window.__ftIP=null; toast(L('অ্যাপ ইনস্টল হয়েছে ✅','App installed ✅')); var pg=document.getElementById('ftInPg'); if(pg&&pg.classList.contains('on')) render(); paintBox(); });
+  window.addEventListener('ftInstallReady',function(){ var pg=document.getElementById('ftInPg'); if(pg&&pg.classList.contains('on')&&!installed()){ var st=document.getElementById('ipSt'); if(st) st.textContent=L('প্রস্তুত — বাটনে ট্যাপ করলেই ইনস্টল হবে।','Ready. Tap the button to install.'); } paintBox(); });
+  window.addEventListener('appinstalled',function(){ window.__ftIP=null; toast(L('অ্যাপ ইনস্টল হয়েছে','App installed')); var pg=document.getElementById('ftInPg'); if(pg&&pg.classList.contains('on')) render(); paintBox(); });
 
   /* small status line inside the Settings box */
   function paintBox(){
     var st=document.getElementById('ftInSt'), bt=document.getElementById('ftInBtn');
-    if(st) st.textContent=installed()?L('✅ অ্যাপটি ইতিমধ্যে ইনস্টল করা আছে।','✅ The app is already installed.'):(window.__ftIP?L('⚡ ইনস্টলের জন্য প্রস্তুত।','⚡ Ready to install.'):L('বাটনে ট্যাপ করলে ইনস্টল পেজ খুলবে।','Tap the button to open the install page.'));
+    if(st) st.textContent=installed()?L('অ্যাপটি ইতিমধ্যে ইনস্টল করা আছে।','The app is already installed.'):(window.__ftIP?L('ইনস্টলের জন্য প্রস্তুত।','Ready to install.'):L('বাটনে ট্যাপ করলে ইনস্টল পেজ খুলবে।','Tap the button to open the install page.'));
     if(bt) bt.style.display=installed()?'none':'flex';
   }
   setInterval(paintBox,2500); paintBox();
@@ -14430,7 +14434,7 @@ function metaHtml(r){
 function actHtml(r){
   var h='<button type="button" class="bdBtn msg" data-bd="msg" data-uid="'+esc(r.uid)+'">'+ic('send')+tx('মেসেজ','Message')+'</button>';
   if(r.ph) h+='<a class="bdBtn tel" href="tel:'+esc(r.ph.replace(/[^\d+]/g,''))+'">'+esc(r.ph)+'</a>';
-  h+='<button type="button" class="bdBtn pro" data-bd="prof" data-uid="'+esc(r.uid)+'">'+ic('user')+tx('প্রোফাইল','Profile')+'</button>';
+  h+='<button type="button" class="bdBtn pro ico" data-bd="prof" data-uid="'+esc(r.uid)+'" aria-label="'+tx('প্রোফাইল','Profile')+'" title="'+tx('প্রোফাইল','Profile')+'">'+ic('user')+'</button>';
   return h;
 }
 function innerHtml(r){
@@ -14667,7 +14671,7 @@ function renderSettings(force){
   bindForm('bdSt');
   $('bdStOpen').onclick=function(){ openEmg(''); };
   $('bdStSave').onclick=function(){
-    if(!commit('bdSt',guest)) return; var m=$('bdStMsg'); if(m){ m.className='bdMsg ok'; m.textContent=tx('সংরক্ষিত হয়েছে ✓','Saved ✓'); }
+    if(!commit('bdSt',guest)) return; var m=$('bdStMsg'); if(m){ m.className='bdMsg ok'; m.textContent=tx('সংরক্ষিত হয়েছে','Saved'); }
     setTimeout(function(){ renderSettings(true); },900);
   };
 }
@@ -14777,7 +14781,7 @@ function tick(){if(isLocked())return;if(!$('sec-notes').classList.contains('on')
 function render(){
  const q=($('nsQ').value||'').toLowerCase();
  const cn={};D.notes.forEach(n=>{if(n.col)cn[n.col]=(cn[n.col]||0)+1});
- $('nsCols').innerHTML=(colF?'<div class="nsCol all" data-c="">✕ '+esc(colF)+'</div>':'')+Object.keys(cn).map(c=>'<div class="nsCol" style="background:'+okc(D.cols[c])+'" data-c="'+esc(c)+'"><i>'+cn[c]+'</i><b>'+esc(c)+'</b></div>').join('')||'<div class="nsEmpty" style="padding:8px">কোনো কালেকশন নেই</div>';
+ $('nsCols').innerHTML=(colF?'<div class="nsCol all" data-c=""><i class="mi" style="--m:var(--ic-x)"></i> '+esc(colF)+'</div>':'')+Object.keys(cn).map(c=>'<div class="nsCol" style="background:'+okc(D.cols[c])+'" data-c="'+esc(c)+'"><i>'+cn[c]+'</i><b>'+esc(c)+'</b></div>').join('')||'<div class="nsEmpty" style="padding:8px">কোনো কালেকশন নেই</div>';
  $('nsCL').innerHTML=Object.keys(cn).map(c=>'<option value="'+esc(c)+'">').join('');
  let L=D.notes.filter(n=>(!colF||n.col===colF)&&(!q||(n.t+' '+n.b).toLowerCase().includes(q)));
  L.sort((a,b)=>(b.pin?1:0)-(a.pin?1:0)||(D.desc?a.u-b.u:b.u-a.u));
@@ -14789,7 +14793,7 @@ function open(id){cur=id?D.notes.find(n=>n.id===id):null;
  $('nsT').value=cur?cur.t:'';$('nsB').value=cur?cur.b:'';$('nsC').value=cur?cur.col||'':colF||'';
  pinned=cur?!!cur.pin:false;color=okc(cur&&cur.col&&D.cols[cur.col]);
  $('nsDelB').style.display=cur?'':'none';paint();$('nsSheet').classList.add('show');}
-function paint(){$('nsPinB').textContent=pinned?'📌 Pinned':'📌 Pin';
+function paint(){$('nsPinB').innerHTML='<i class="mi" style="--m:var(--ic-pin)"></i> '+(pinned?'Pinned':'Pin');
  $('nsColors').innerHTML='<span style="font-size:13px;opacity:.7">Colour:</span>'+COL.map(c=>'<span class="nsDot'+(c===color?' on':'')+'" style="background:'+c+'" onclick="NS.setC(\''+c+'\')"></span>').join('');}
 document.addEventListener('click',function(e){const el=e.target.closest&&e.target.closest('#nsCols .nsCol');if(el){const c=el.getAttribute('data-c');colF=c||null;render();}});
 document.addEventListener('keydown',function(e){if(e.key!=='Escape')return;if($('nsSheet').classList.contains('show'))NS.close();else if($('sec-notes').classList.contains('on'))NS.closePage();});
@@ -15428,6 +15432,58 @@ setTimeout(incoming,50);
 })();
 </script>
 
+<style id="ftIconsCss">
+:root{--ic-star:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z%22/%3E%3C/svg%3E");--ic-star-fill:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23000%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z%22/%3E%3C/svg%3E");--ic-music:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M9 18V5l11-2v13%22/%3E%3Ccircle cx=%226%22 cy=%2218%22 r=%223%22/%3E%3Ccircle cx=%2217%22 cy=%2216%22 r=%223%22/%3E%3C/svg%3E");--ic-crown:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M3 18h18M4 8l4 4 4-7 4 7 4-4-2 10H6z%22/%3E%3C/svg%3E");--ic-flame:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M12 3s5 4 5 9.5A5 5 0 0 1 7 12.5C7 10 8.5 8.5 9 7c1 1 2 1.5 2.5 1.5C11.5 6 12 3 12 3z%22/%3E%3C/svg%3E");--ic-vol:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M4 9v6h4l5 4V5L8 9z%22/%3E%3Cpath d=%22M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12%22/%3E%3C/svg%3E");--ic-mute:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M4 9v6h4l5 4V5L8 9z%22/%3E%3Cpath d=%22M17 9.5l5 5M22 9.5l-5 5%22/%3E%3C/svg%3E");--ic-backspace:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M21 5H9l-6 7 6 7h12z%22/%3E%3Cpath d=%22M13 9.5l5 5M18 9.5l-5 5%22/%3E%3C/svg%3E");--ic-bed:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M3 19V6M3 15h18v4M21 15v-2a3 3 0 0 0-3-3h-7v5%22/%3E%3Ccircle cx=%227%22 cy=%2211.5%22 r=%221.6%22/%3E%3C/svg%3E");--ic-ticket:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M3 9a2 2 0 0 0 0 6v3h18v-3a2 2 0 0 1 0-6V6H3z%22/%3E%3Cpath d=%22M14 6v12%22 stroke-dasharray=%222 2%22/%3E%3C/svg%3E");--ic-package:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M12 3l8 4v10l-8 4-8-4V7z%22/%3E%3Cpath d=%22M4 7l8 4 8-4M12 11v10%22/%3E%3C/svg%3E");--ic-suitcase:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%223%22 y=%227%22 width=%2218%22 height=%2213%22 rx=%222.5%22/%3E%3Cpath d=%22M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18%22/%3E%3C/svg%3E");--ic-plane:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M21 15l-8-5V4.5a1.5 1.5 0 0 0-3 0V10l-8 5v2l8-2.2V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-4.2l8 2.2z%22/%3E%3C/svg%3E");--ic-x-circle:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%229%22/%3E%3Cpath d=%22M9 9l6 6M15 9l-6 6%22/%3E%3C/svg%3E");--ic-face-smile:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%229%22/%3E%3Cpath d=%22M8.5 14c1 1.5 2.2 2.2 3.5 2.2s2.5-.7 3.5-2.2M9 9.5h.01M15 9.5h.01%22/%3E%3C/svg%3E");--ic-face-love:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%229%22/%3E%3Cpath d=%22M6.9 9.4a1.1 1.1 0 0 1 2.1-.5 1.1 1.1 0 0 1 2.1.5c0 1.1-2.1 2.1-2.1 2.1s-2.1-1-2.1-2.1zM12.9 9.4a1.1 1.1 0 0 1 2.1-.5 1.1 1.1 0 0 1 2.1.5c0 1.1-2.1 2.1-2.1 2.1s-2.1-1-2.1-2.1zM8.5 14.6c1 1.4 2.2 2 3.5 2s2.5-.6 3.5-2%22/%3E%3C/svg%3E");--ic-face-cool:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%229%22/%3E%3Cpath d=%22M6.5 9.5h4v2.2a1.6 1.6 0 0 1-1.6 1.6h-.8a1.6 1.6 0 0 1-1.6-1.6zM13.5 9.5h4v2.2a1.6 1.6 0 0 1-1.6 1.6h-.8a1.6 1.6 0 0 1-1.6-1.6zM10.5 10h3M9 16.2c1 .8 2 1.1 3 1.1s2-.3 3-1.1%22/%3E%3C/svg%3E");--ic-face-laugh:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%229%22/%3E%3Cpath d=%22M7.5 10.5c.5-1 1.5-1 2 0M14.5 10.5c.5-1 1.5-1 2 0M7.5 13.5h9a4.5 4.5 0 0 1-9 0z%22/%3E%3C/svg%3E");--ic-face-sad:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%229%22/%3E%3Cpath d=%22M8.5 16.5c1-1.4 2.2-2 3.5-2s2.5.6 3.5 2M9 9.5h.01M15 9.5h.01M17.2 12.5c.9 1.2 1 1.9 0 2.4-.9-.5-.9-1.2 0-2.4z%22/%3E%3C/svg%3E");--ic-face-angry:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%229%22/%3E%3Cpath d=%22M7.5 8l3 1.6M16.5 8l-3 1.6M8.5 16.5c1-1.4 2.2-2 3.5-2s2.5.6 3.5 2M9.5 11.5h.01M14.5 11.5h.01%22/%3E%3C/svg%3E");--ic-face-wow:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%229%22/%3E%3Cpath d=%22M9 9.5h.01M15 9.5h.01%22/%3E%3Ccircle cx=%2212%22 cy=%2215.5%22 r=%221.9%22/%3E%3C/svg%3E");--ic-pray:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M12 3c-1 3-4 5-4 9l4 9 4-9c0-4-3-6-4-9z%22/%3E%3Cpath d=%22M12 8v8%22/%3E%3C/svg%3E");}
+.stOv .stMood,.stOv .stRx button,.stOv .stVr{color:#fff}
+.stOv .stRx button .mi{width:24px;height:24px}
+.stOv .stVr .mi{width:24px;height:24px}
+.stOv .stMood .mi{width:34px;height:34px}
+</style>
+<script id="ftIconsJs">
+(function(){
+var EMO={"😊":"face-smile","😍":"face-love","😎":"face-cool","🥳":"sparkle","😢":"face-sad","😡":"face-angry","🙏":"pray","🔥":"flame","❤":"heart","😂":"face-laugh","😮":"face-wow","👍":"thumb"};
+function esc(x){ return String(x==null?'':x).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+window.ftIc=function(n,x){ return '<i class="mi" style="--m:var(--ic-'+n+')'+(x||'')+'"></i>'; };
+window.ftEmo=function(ch){ var k=String(ch==null?'':ch).replace(/\uFE0F/g,''); return EMO[k]?window.ftIc(EMO[k]):esc(ch); };
+})();
+</script>
+<style id="mnLoginCss">
+.mnPro.mnLogin .av{background:color-mix(in srgb,var(--primary) 14%,var(--card));color:var(--primary)}
+.mnPro.mnLogin .av .mi{width:24px;height:24px}
+.mnPro.mnLogin .tx span{white-space:normal;line-height:1.35;font-size:12px}
+.mnPro .mnLgBtn{flex:none;display:inline-flex;align-items:center;justify-content:center;height:40px;padding:0 16px;border-radius:13px;background:var(--grad,var(--primary));color:#fff;font-weight:800;font-size:14px;box-shadow:0 8px 18px -10px var(--primary)}
+</style>
+<style id="bdCardV2">
+/* compact donor cards */
+html .bdCard{align-items:center;gap:11px;padding:9px 11px 9px 14px;border-radius:17px;margin-bottom:8px;background:linear-gradient(180deg,color-mix(in srgb,var(--bdR) 4%,var(--card)),var(--card));box-shadow:0 6px 16px -14px rgba(0,0,0,.45)}
+html .bdCard::before{top:13px;bottom:13px;width:3px}
+html .bdCard .bdAvW{width:46px;height:46px}
+html .bdCard .bdAv{border-radius:50%;font-size:17px;border-width:2px}
+html .bdCard .bdDot{width:12px;height:12px;right:-1px;bottom:-1px;border-width:2px}
+html .bdCard .bdTop{gap:8px}
+html .bdCard .bdWho b{font-size:14px;line-height:1.25}
+html .bdCard .bdWho small{font-size:11.5px;line-height:1.3;margin-top:1px}
+html .bdCard .bdBg{min-width:38px;height:32px;padding:0 9px;border-radius:11px;font-size:13.5px;letter-spacing:.2px;box-shadow:0 6px 12px -8px var(--bdR)}
+html .bdCard .bdMeta{gap:5px;margin-top:6px}
+html .bdCard .bdTag{padding:2px 8px;font-size:10.5px;line-height:1.5}
+html .bdCard .bdTag .mi{font-size:11px}
+html .bdCard .bdAct{gap:6px;margin-top:8px;flex-wrap:wrap}
+html .bdCard .bdBtn{height:30px;padding:0 11px;border-radius:10px;font-size:12px;gap:5px;box-sizing:border-box;justify-content:center;white-space:nowrap}
+html .bdCard .bdBtn .mi{font-size:13px}
+html .bdCard .bdBtn.msg{background:linear-gradient(135deg,var(--bdR),var(--bdR2,var(--bdR)));box-shadow:0 6px 12px -8px var(--bdR)}
+html .bdCard .bdBtn.tel{font-weight:800;letter-spacing:.2px}
+html .bdCard .bdBtn.ico{width:30px;padding:0}
+html .bdCard.bdSlide{padding:11px 13px 11px 16px;border-radius:19px}
+html .bdCard.bdSlide .bdAvW{width:52px;height:52px}
+html .bdCard.bdSlide .bdWho b{font-size:15px}
+html .bdCard.bdSlide .bdBg{min-width:44px;height:36px;font-size:15.5px;border-radius:12px}
+html .bdCard.bdSlide .bdAct{margin-top:9px}
+html .bdTrack{gap:10px}
+html .bdDots{margin:8px 0 0}
+html .bdDots i{width:6px;height:6px}
+html .bdDots i.on{width:18px}
+html .bdSecT{margin:12px 2px 7px;font-size:13.5px}
+</style>
 <style id="stEdCss">
 .stOv.stEd{background:#000;overflow:hidden}
 .stOv.stEd .stEdPv{position:absolute;inset:0;margin:0;border-radius:0;background:#000;z-index:0}
@@ -15661,5 +15717,527 @@ watchSt(); setInterval(function(){ watchSt(); fixStories(); },1500);
 })();
 </script>
 
+<style id="ftTourCss">
+#ftTourOv{position:fixed;inset:0;z-index:9320;display:none;flex-direction:column;background:var(--bg);color:var(--text);overscroll-behavior:contain}
+#ftTourOv.on{display:flex;animation:tIn .25s ease both}
+@keyframes tIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+body.ftTourOpen{overflow:hidden}
+body.ftTourOpen #bottomNav{display:none!important}
+#ftTourOv .tbar{flex:none;display:flex;align-items:center;gap:10px;height:calc(58px + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) 12px 0;box-sizing:border-box;border-bottom:1px solid var(--border);background:color-mix(in srgb,var(--bg) 94%,transparent)}
+#ftTourOv .tbar b{flex:1;min-width:0;font-size:19px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ftTourOv .tb{flex:none;width:42px;height:42px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--text);display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#ftTourOv .tb:active{transform:scale(.92)}
+#ftTourOv .tbody{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:14px 14px calc(100px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px}
+#ftTourOv button{font:inherit;color:inherit}
+#ftTourOv .tNote{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:16px;border:1px solid var(--border);background:var(--card);font-size:13px;line-height:1.45;color:var(--muted)}
+#ftTourOv .tNote svg{flex:none;margin-top:1px;color:var(--primary)}
+#ftTourOv .tNote.bad{border-color:#ef444466;background:color-mix(in srgb,#ef4444 8%,var(--card))}
+#ftTourOv .tNote.bad b{display:block;color:var(--text);font-size:14px;margin-bottom:3px}
+#ftTourOv .tNote.bad span{display:block}
+#ftTourOv .tNote pre{margin:10px 0;padding:10px;border-radius:12px;background:var(--bg);border:1px solid var(--border);font:11.5px/1.5 ui-monospace,Menlo,monospace;color:var(--text);overflow-x:auto;white-space:pre}
+#ftTourOv .tEmpty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:46px 20px;color:var(--muted)}
+#ftTourOv .tEmpty svg{color:var(--primary);opacity:.9;margin-bottom:6px}
+#ftTourOv .tEmpty b{font-size:18px;color:var(--text)}
+#ftTourOv .tEmpty p{margin:0 0 12px;font-size:13.5px;line-height:1.5;max-width:300px}
+#ftTourOv .tEmpty.small{padding:30px 16px}
+#ftTourOv .tBtn{border:0;border-radius:16px;height:50px;padding:0 20px;background:var(--grad,var(--primary));color:#fff;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 10px 22px -12px var(--primary);display:inline-flex;align-items:center;justify-content:center;gap:8px}
+#ftTourOv .tBtn.sm{height:44px;font-size:14px;padding:0 16px;border-radius:14px}
+#ftTourOv .tGhost{height:44px;padding:0 16px;border-radius:14px;border:1px solid var(--border);background:var(--card);font-weight:700;font-size:13.5px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+#ftTourOv .tDanger{height:50px;padding:0 18px;border-radius:16px;border:1px solid #ef444466;background:color-mix(in srgb,#ef4444 10%,var(--card));color:#ef4444;font-weight:800;cursor:pointer}
+#ftTourOv .tBtns{display:flex;gap:10px;margin-top:12px}
+#ftTourOv .tBtns>*{flex:1}
+#ftTourOv .tBtns.two{margin-top:0}
+/* list cards */
+#ftTourOv .tCard{display:block;width:100%;text-align:left;border:1px solid var(--border);background:var(--card);border-radius:22px;padding:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s}
+#ftTourOv .tCard:active{transform:scale(.985)}
+#ftTourOv .tcTop{display:flex;align-items:center;gap:12px}
+#ftTourOv .tcIc{flex:none;width:46px;height:46px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:23px;background:color-mix(in srgb,var(--primary) 14%,var(--bg))}
+#ftTourOv .tcTx{flex:1;min-width:0}#ftTourOv .tcTx b{display:block;font-size:16.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#ftTourOv .tcTx small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ftTourOv .tcCl{flex:none;width:8px;height:8px;border-radius:50%;background:#22c55e}
+#ftTourOv .tcBar,#ftTourOv .thBar,#ftTourOv .tBar2{height:8px;border-radius:8px;background:color-mix(in srgb,var(--text) 10%,transparent);overflow:hidden;margin:13px 0 10px}
+#ftTourOv .tcBar i,#ftTourOv .thBar i,#ftTourOv .tBar2 i{display:block;height:100%;border-radius:8px;background:var(--grad,var(--primary));transition:width .35s}
+#ftTourOv .tcBar.warn i{background:#f59e0b}#ftTourOv .tcBar.over i,#ftTourOv .tBar2.over i{background:#ef4444!important}
+#ftTourOv .tcFt{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted)}
+#ftTourOv .tcFt b{color:var(--text)}
+#ftTourOv .tcMem{display:inline-flex;align-items:center}#ftTourOv .tcMem .tAv{margin-left:-7px;border:2px solid var(--card);box-sizing:content-box}#ftTourOv .tcMem .tAv:first-child{margin-left:0}#ftTourOv .tcMem em{font-style:normal;font-size:11.5px;margin-left:5px;font-weight:700}
+#ftTourOv .tAv{flex:none;border-radius:50%;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:800}
+#ftTourOv .tAv img{width:100%;height:100%;object-fit:cover;display:block}
+#ftTourOv .tFab{position:fixed;right:16px;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:5;height:54px;padding:0 20px 0 16px;border:0;border-radius:27px;background:var(--grad,var(--primary));color:#fff;font-weight:800;font-size:15px;display:inline-flex;align-items:center;gap:8px;cursor:pointer;box-shadow:0 14px 28px -12px var(--primary)}
+#ftTourOv .tFab:active{transform:scale(.95)}
+/* detail */
+#ftTourOv .tTabs{display:flex;gap:4px;padding:4px;border-radius:16px;background:var(--card);border:1px solid var(--border);position:sticky;top:-14px;z-index:4}
+#ftTourOv .tTabs button{flex:1;height:38px;border:0;border-radius:12px;background:transparent;font-weight:700;font-size:13.5px;color:var(--muted);cursor:pointer}
+#ftTourOv .tTabs button.on{background:var(--grad,var(--primary));color:#fff}
+#ftTourOv .tHero{padding:16px;border-radius:24px;background:var(--grad,linear-gradient(135deg,var(--primary),#7c3aed));color:#fff;box-shadow:0 16px 30px -18px var(--primary)}
+#ftTourOv .tHero.warn{background:linear-gradient(135deg,#f59e0b,#ea580c)}#ftTourOv .tHero.over{background:linear-gradient(135deg,#ef4444,#be123c)}
+#ftTourOv .thTop{display:flex;align-items:baseline;justify-content:space-between;font-size:13px;opacity:.95}#ftTourOv .thTop b{font-size:28px;font-weight:800;letter-spacing:-.5px}
+#ftTourOv .tHero .thBar{background:rgba(255,255,255,.28);margin:10px 0 14px}#ftTourOv .tHero .thBar i{background:#fff}
+#ftTourOv .thRow{display:flex;gap:8px}#ftTourOv .thRow>div{flex:1;min-width:0}#ftTourOv .thRow small{display:block;font-size:11.5px;opacity:.85}#ftTourOv .thRow b{display:block;font-size:16.5px;margin-top:2px}
+#ftTourOv .thMeta{margin-top:13px;font-size:12.5px;opacity:.92;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+#ftTourOv .tPills{display:flex;gap:8px;flex-wrap:wrap}#ftTourOv .tPills span{padding:8px 13px;border-radius:14px;border:1px solid var(--border);background:var(--card);font-size:12.5px;color:var(--muted)}#ftTourOv .tPills b{color:var(--text)}
+#ftTourOv .tCard2{border:1px solid var(--border);background:var(--card);border-radius:22px;padding:14px}
+#ftTourOv .tCard2.flush{padding:6px 8px}
+#ftTourOv .tCard2 h4{margin:0 0 12px;font-size:14px;font-weight:800}
+#ftTourOv .tDon{display:flex;align-items:center;gap:16px}
+#ftTourOv .tDonR{flex:none;width:118px;height:118px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative}
+#ftTourOv .tDonR::after{content:"";position:absolute;inset:16px;border-radius:50%;background:var(--card)}
+#ftTourOv .tDonR span{position:relative;z-index:1;font-weight:800;font-size:13.5px}
+#ftTourOv .tLeg{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}#ftTourOv .tLeg div{display:flex;align-items:center;gap:8px;font-size:12.5px}#ftTourOv .tLeg i{flex:none;width:10px;height:10px;border-radius:50%}#ftTourOv .tLeg span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+#ftTourOv .tPer{display:flex;align-items:center;gap:11px;padding:8px 0}
+#ftTourOv .tPer+.tPer{border-top:1px solid var(--border)}
+#ftTourOv .tpTx{flex:1;min-width:0}#ftTourOv .tpTx b{display:block;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#ftTourOv .tpTx small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+#ftTourOv .tNet{flex:none;font-weight:800;font-size:13.5px;color:var(--muted)}#ftTourOv .tNet.pos{color:#16a34a}#ftTourOv .tNet.neg{color:#ef4444}
+#ftTourOv .tRow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 6px;border:0;background:transparent;cursor:pointer;border-radius:14px}
+#ftTourOv .tRow+.tRow{border-top:1px solid var(--border);border-radius:0}
+#ftTourOv .tRow:active{background:color-mix(in srgb,var(--text) 6%,transparent)}
+#ftTourOv .trIc{flex:none;width:40px;height:40px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:800}
+#ftTourOv .trTx{flex:1;min-width:0}#ftTourOv .trTx b{display:block;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#ftTourOv .trTx small{display:block;font-size:12px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ftTourOv .trAm{flex:none;font-weight:800;font-size:14.5px}#ftTourOv .trAm.ok{color:#16a34a}
+#ftTourOv .tLink{display:block;width:100%;margin-top:6px;padding:10px;border:0;background:transparent;color:var(--primary);font-weight:700;font-size:13.5px;cursor:pointer}
+#ftTourOv .tDay{padding:12px 8px 4px;font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+/* plan */
+#ftTourOv .tPl3{display:flex;gap:8px}#ftTourOv .tPl3>div{flex:1;min-width:0}#ftTourOv .tPl3 small{display:block;font-size:11.5px;color:var(--muted)}#ftTourOv .tPl3 b{display:block;font-size:17px;margin-top:2px}#ftTourOv .bad{color:#ef4444!important}
+#ftTourOv .tPlRow{border:1px solid var(--border);background:var(--card);border-radius:20px;padding:12px 14px}
+#ftTourOv .tPlHd{display:flex;align-items:center;gap:11px}#ftTourOv .tPlHd>b{flex:1;font-size:14.5px}
+#ftTourOv .tPlI{display:flex;align-items:center;gap:4px;width:118px;height:42px;padding:0 12px;border-radius:13px;border:1px solid var(--border);background:var(--bg)}#ftTourOv .tPlI em{font-style:normal;color:var(--muted);font-weight:700}
+#ftTourOv .tPlIn{flex:1;min-width:0;width:100%;border:0;outline:0;background:transparent;color:var(--text);font:inherit;font-weight:800;font-size:15px;text-align:right}
+#ftTourOv .tBar2{margin:11px 0 7px}#ftTourOv .tPlFt{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+/* settle */
+#ftTourOv .tBal{display:block;height:7px;border-radius:7px;background:color-mix(in srgb,var(--text) 9%,transparent);margin-top:7px;overflow:hidden}#ftTourOv .tBal i{display:block;height:100%;border-radius:7px}#ftTourOv .tBal i.pos{background:#22c55e}#ftTourOv .tBal i.neg{background:#ef4444}
+#ftTourOv .tPay{display:flex;align-items:center;gap:8px;padding:10px 0}#ftTourOv .tPay+.tPay{border-top:1px solid var(--border)}
+#ftTourOv .tpArr{color:var(--muted);font-weight:800;margin:0 -2px}
+#ftTourOv .tMini{flex:none;height:36px;padding:0 12px;border-radius:12px;border:1px solid color-mix(in srgb,var(--primary) 45%,var(--border));background:color-mix(in srgb,var(--primary) 10%,var(--card));color:var(--primary);font-weight:800;font-size:12.5px;cursor:pointer}
+#ftTourOv .tDone{display:flex;align-items:center;gap:8px;padding:12px;border-radius:14px;background:color-mix(in srgb,#22c55e 12%,var(--card));color:#16a34a;font-weight:800;font-size:14px}
+#ftTourOv .tMut{margin:0;font-size:13px;color:var(--muted)}
+/* sheets */
+#ftTourOv .tSheetW{position:absolute;inset:0;z-index:20;pointer-events:none}
+#ftTourOv .tSheetW.on{pointer-events:auto}
+#ftTourOv .tSh{position:absolute;inset:0;background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);animation:tFade .2s ease}
+#ftTourOv .tSp{position:absolute;left:0;right:0;bottom:0;max-height:90%;overflow-y:auto;overscroll-behavior:contain;background:var(--bg);border:1px solid var(--border);border-bottom:0;border-radius:26px 26px 0 0;padding:8px 16px calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 -20px 50px rgba(0,0,0,.35);animation:tUp .26s cubic-bezier(.22,1,.36,1)}
+@keyframes tFade{from{opacity:0}to{opacity:1}}@keyframes tUp{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}
+#ftTourOv .tGrab{width:42px;height:4px;border-radius:4px;background:var(--border);margin:2px auto 12px}
+#ftTourOv .tSp h3{margin:0 0 6px;font-size:19px;font-weight:800}
+#ftTourOv .tLb{display:flex;align-items:center;justify-content:space-between;margin:14px 2px 6px;font-size:12.5px;font-weight:700;color:var(--muted)}
+#ftTourOv .tIn{width:100%;box-sizing:border-box;height:48px;padding:0 14px;border-radius:14px;border:1px solid var(--border);background:var(--card);color:var(--text);font:inherit;font-size:15px;outline:0}
+#ftTourOv .tIn:focus{border-color:var(--primary)}
+#ftTourOv .tIn.big{height:58px;font-size:26px;font-weight:800}
+#ftTourOv .tTwo{display:flex;gap:10px}#ftTourOv .tTwo>div{flex:1;min-width:0}
+#ftTourOv .tChips{display:flex;flex-wrap:wrap;gap:8px}
+#ftTourOv .tChip{display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:0 13px;border-radius:19px;border:1px solid var(--border);background:var(--card);font-weight:700;font-size:13.5px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#ftTourOv .tChip.on{background:color-mix(in srgb,var(--primary) 16%,var(--card));border-color:var(--primary);color:var(--text)}
+#ftTourOv .tChip .tAv{margin-left:-6px}
+#ftTourOv .tChip button{border:0;background:color-mix(in srgb,var(--text) 14%,transparent);color:inherit;width:20px;height:20px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer}
+#ftTourOv .tAddM{display:flex;gap:8px}#ftTourOv .tAddM .tIn{flex:1}
+#ftTourOv .tSp>.tBtn{width:100%;margin-top:18px}
+#ftTourOv .tLinkS{border:0;background:transparent;color:var(--primary);font-weight:800;font-size:12.5px;cursor:pointer;padding:0}
+#ftTourOv .tMenu{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+#ftTourOv .tMenu button{height:50px;border-radius:16px;border:1px solid var(--border);background:var(--card);font-weight:700;font-size:14.5px;text-align:left;padding:0 16px;cursor:pointer}
+#ftTourOv .tMenu button.dg{color:#ef4444;border-color:#ef444455}
+@media (prefers-reduced-motion:reduce){#ftTourOv.on,#ftTourOv .tSh,#ftTourOv .tSp{animation:none}}
+</style>
+<script id="ftTourJs">
+(function(){
+if(window.ftTour) return;
+var LSK='ftTour_v1', J={'Content-Type':'application/json'};
+var CATS=[['transport','bus','যাতায়াত','Transport','#3b82f6',25],['stay','bed','থাকা','Stay','#8b5cf6',30],['food','utensils','খাবার','Food','#f59e0b',25],['fun','ticket','ঘোরাঘুরি','Activities','#10b981',10],['shop','bag','শপিং','Shopping','#ec4899',5],['other','package','অন্যান্য','Other','#64748b',5]];
+var PAL=['#06b6d4','#8b5cf6','#f59e0b','#10b981','#ec4899','#3b82f6','#ef4444','#14b8a6'];
+var RULES=['"tours": {','  "$tid": {','    ".read": "auth != null && data.child(\'members\').child(auth.uid).exists()",','    ".write": "auth != null && ((!data.exists() && newData.child(\'members\').child(auth.uid).exists()) || data.child(\'members\').child(auth.uid).exists())"','  }','},','"tourIdx": {','  "$uid": {','    ".read": "auth != null && auth.uid === $uid",','    "$tid": { ".write": "auth != null" }','  }','}'].join('\n');
+function bn(){ try{ return currentLang==='bn'; }catch(e){ return document.documentElement.lang!=='en'; } }
+function L(b,e){ return bn()?b:e; }
+function $(i){ return document.getElementById(i); }
+function esc(x){ return String(x==null?'':x).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function R(){ try{ return window.ftCloud&&ftCloud._raw?ftCloud._raw():null; }catch(e){ return null; } }
+function me(){ try{ var r=R(); return r&&r.ses&&r.ses()?r.ses().uid:''; }catch(e){ return ''; } }
+function logged(){ try{ var r=R(); return !!(r&&r.ok&&r.ok()&&r.ses&&r.ses()); }catch(e){ return false; } }
+function ls(k){ try{ return localStorage.getItem(k)||''; }catch(e){ return ''; } }
+function myN(){ return ls('myName_v1'); }
+function myU(){ return ls('myUsername_v1').replace(/^@/,''); }
+function say(m){ try{ window.toast&&window.toast(m); }catch(e){} }
+function picOk(p){ return typeof p==='string'&&p.length<200000&&/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/.test(p)?p:''; }
+function meKey(){ return me()||'self'; }
+function rid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function today(){ var d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); }
+function hue(k){ var h=0,s=String(k); for(var i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return PAL[h%PAL.length]; }
+function tic(n,x){ return '<i class="mi" style="--m:var(--ic-'+n+')'+(x||'')+'"></i>'; }
+function catOf(k){ for(var i=0;i<CATS.length;i++) if(CATS[i][0]===k) return CATS[i]; return CATS[5]; }
+function cn(c){ return bn()?c[2]:c[3]; }
+function fdate(s){ if(!s) return ''; var d=new Date(s+'T00:00:00'); if(!isFinite(d)) return s; try{ return d.toLocaleDateString(bn()?'bn-BD':'en-GB',{day:'numeric',month:'short'}); }catch(e){ return s; } }
+function rng(t){ return t.from&&t.to?fdate(t.from)+' – '+fdate(t.to):(t.from?fdate(t.from):''); }
+var IC={
+  back:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  more:'<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>',
+  pin:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>',
+  info:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>',
+  plane:'<svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3 3 10.5l6.5 2.5L12 20z"/><path d="m9.5 13 5-4.5"/></svg>',
+  check:'<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
+  x:'<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg>',
+  send:'<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3 3 10.5l6.5 2.5L12 20z"/></svg>',
+  copy:'<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></svg>'
+};
+
+function calc(t){
+  var ex=Object.keys(t.exp||{}).map(function(k){ return t.exp[k]; }), keys=Object.keys(t.mem||{}), paid={}, share={}, net={}, byCat={}, total=0, cnt=0;
+  keys.forEach(function(k){ paid[k]=0; share[k]=0; net[k]=0; });
+  ex.forEach(function(e){
+    var a=+e.a||0;
+    if(e.ty==='pay'){ net[e.p]=(net[e.p]||0)+a; net[e.to]=(net[e.to]||0)-a; return; }
+    total+=a; cnt++; byCat[e.c]=(byCat[e.c]||0)+a;
+    var s=Array.isArray(e.s)?e.s:Object.keys(e.s||{}).map(function(k){ return e.s[k]; });
+    var sp=s.filter(function(k){ return k in net; }); if(!sp.length) sp=keys.slice();
+    paid[e.p]=(paid[e.p]||0)+a; net[e.p]=(net[e.p]||0)+a;
+    var per=sp.length?a/sp.length:0; sp.forEach(function(k){ share[k]=(share[k]||0)+per; net[k]=(net[k]||0)-per; });
+  });
+  return {total:total,paid:paid,share:share,net:net,byCat:byCat,count:cnt};
+}
+function settle(net){
+  var D=[], C=[];
+  Object.keys(net).forEach(function(k){ var v=Math.round(net[k]*100)/100; if(v<-0.5) D.push([k,-v]); else if(v>0.5) C.push([k,v]); });
+  D.sort(function(a,b){ return b[1]-a[1]; }); C.sort(function(a,b){ return b[1]-a[1]; });
+  var out=[], i=0, j=0;
+  while(i<D.length&&j<C.length){
+    var x=Math.min(D[i][1],C[j][1]);
+    out.push({f:D[i][0],t:C[j][0],a:Math.round(x)});
+    D[i][1]-=x; C[j][1]-=x;
+    if(D[i][1]<0.5) i++; if(C[j][1]<0.5) j++;
+  }
+  return out.filter(function(o){ return o.a>0; });
+}
+function digits(s){ return String(s==null?'':s).replace(/[০-৯]/g,function(c){ return '০১২৩৪৫৬৭৮৯'.indexOf(c); }); }
+function num(s){ var v=parseFloat(digits(s).replace(/[^\d.]/g,'')); return isFinite(v)&&v>0?Math.round(v*100)/100:0; }
+function money(n){ return '৳'+Math.round(+n||0).toLocaleString('en-US'); }
+function dayDiff(a,b){ if(!a||!b) return 0; var x=Date.parse(a+'T00:00:00'), y=Date.parse(b+'T00:00:00'); if(!isFinite(x)||!isFinite(y)||y<x) return 0; return Math.round((y-x)/864e5)+1; }
+
+
+var S={tours:{},sel:'',tab:'ov',open:false,sheet:false,err:'',busy:false,poll:0,loaded:false}, F=null, X=null, hP=false;
+function load(){ try{ var o=JSON.parse(localStorage.getItem(LSK)||'{}'); S.tours=o.tours||{}; }catch(e){ S.tours={}; } Object.keys(S.tours).forEach(function(k){ norm(S.tours[k]); S.tours[k].id=k; }); }
+function save(){ try{ localStorage.setItem(LSK,JSON.stringify({tours:S.tours})); }catch(e){} }
+function norm(t){
+  t.exp=t.exp||{}; t.cats=t.cats||{}; t.mem=t.mem||{};
+  Object.keys(t.exp).forEach(function(k){ var e=t.exp[k]; if(!e||typeof e!=='object'){ delete t.exp[k]; return; } e.id=k; if(e.s&&!Array.isArray(e.s)) e.s=Object.keys(e.s).map(function(x){ return e.s[x]; }); if(!e.s) e.s=[]; });
+  return t;
+}
+function adopt(t){
+  var u=me(); if(!u||!t.mem||!t.mem.self) return;
+  if(t.mem[u]) delete t.mem.self; else { t.mem[u]=t.mem.self; delete t.mem.self; }
+  Object.keys(t.exp).forEach(function(k){ var e=t.exp[k]; if(e.p==='self') e.p=u; if(e.to==='self') e.to=u; e.s=(e.s||[]).map(function(x){ return x==='self'?u:x; }); });
+  if(t.owner==='self') t.owner=u;
+}
+function realMem(t){ return Object.keys(t.mem||{}).filter(function(k){ return k!=='self'&&k.indexOf('m_')!==0; }); }
+function wire(t){
+  var o={name:t.name,dest:t.dest||'',from:t.from||'',to:t.to||'',budget:+t.budget||0,cats:t.cats||{},mem:t.mem||{},members:{},owner:t.owner||'',ts:t.ts||Date.now(),exp:t.exp||{}};
+  realMem(t).forEach(function(k){ o.members[k]=1; }); return o;
+}
+/* ---- cloud (Firebase REST, same pattern as Status / Chat) ---- */
+async function db(path,opt){
+  var r=R(); if(!r||!r.ok()||!r.ses()) throw new Error('LOGIN');
+  var base=String(r.CFG.dbUrl).replace(/\/+$/,''), tk=await r.token(), res=await r.call(base+'/'+path+'.json?auth='+encodeURIComponent(tk),opt);
+  if(!res.ok) throw new Error('HTTP '+res.status); return res.json();
+}
+async function cloud(fn){ if(!logged()) return false; try{ await fn(); if(S.err==='net') S.err=''; return true; }catch(e){ S.err=/HTTP 40[13]/.test(String(e.message))?'rules':'net'; return false; } }
+async function pushTour(t){
+  adopt(t); if(!logged()){ t.dirty=1; save(); return false; }
+  var ok=await cloud(async function(){
+    await db('tours/'+t.id,{method:'PUT',headers:J,body:JSON.stringify(wire(t))});
+    await Promise.all(realMem(t).map(function(k){ return db('tourIdx/'+k+'/'+t.id,{method:'PUT',headers:J,body:JSON.stringify(Date.now())}); }));
+  });
+  if(ok){ S.err=''; delete t.dirty; } else t.dirty=1;
+  t.cloud=ok||t.cloud; save(); if(S.open) softRender(); return ok;
+}
+async function pushPatch(t,patch){
+  if(!logged()){ t.dirty=1; save(); return false; }
+  if(!t.cloud||t.dirty) return pushTour(t);
+  var ok=await cloud(function(){ return db('tours/'+t.id,{method:'PATCH',headers:J,body:JSON.stringify(patch)}); });
+  if(!ok) t.dirty=1; save(); if(S.open) softRender(); return ok;
+}
+function typing(){ var a=document.activeElement; return !!(a&&$('ftTourOv')&&$('ftTourOv').contains(a)&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)); }
+function softRender(){ if(S.open&&!S.sheet&&!typing()) render(); }
+async function pull(force){
+  if(!logged()||S.busy) return; S.busy=true;
+  try{
+    var me_=me();
+    for(var k in S.tours){ var t0=S.tours[k]; if(!t0.cloud||t0.dirty||(t0.mem&&t0.mem.self)) await pushTour(t0); }
+    var idx=await db('tourIdx/'+me_), ids=Object.keys(idx||{}), got={};
+    await Promise.all(ids.map(async function(id){ try{ var r=await db('tours/'+id); if(r) got[id]=r; }catch(e){} }));
+    var fresh=0;
+    ids.forEach(function(id){
+      if(!got[id]) return; var old=S.tours[id]; if(old&&old.dirty) return;
+      var r=got[id]; if(!old) fresh++;
+      S.tours[id]=norm({id:id,name:r.name||'Tour',dest:r.dest||'',from:r.from||'',to:r.to||'',budget:+r.budget||0,cats:r.cats||{},mem:r.mem||{},owner:r.owner||'',ts:r.ts||0,exp:r.exp||{},cloud:true});
+    });
+    Object.keys(S.tours).forEach(function(id){ var t=S.tours[id]; if(t.cloud&&!t.dirty&&ids.indexOf(id)<0) delete S.tours[id]; });
+    if(S.err==='net') S.err='';
+    save(); if(fresh&&S.loaded) say(L('আপনাকে নতুন ট্যুরে যোগ করা হয়েছে','You were added to a new tour'));
+    S.loaded=true;
+  }catch(e){ if(/HTTP 40[13]/.test(String(e.message))) S.err='rules'; }
+  S.busy=false; softRender();
+}
+function notifyAdded(t,uids){
+  try{ if(!window.ftChatApi||!ftChatApi.sendTo) return;
+    var tx=L('আপনাকে "'+t.name+'" ট্যুরে যোগ করা হয়েছে। মেনু → ট্যুর বাজেট থেকে দেখুন ও খরচ লিখুন।','You were added to the tour "'+t.name+'". Open Menu → Tour budget to see it and add expenses.');
+    uids.forEach(function(u){ if(u!==me()) ftChatApi.sendTo(u,tx); }); }catch(e){}
+}
+/* ---- member / label helpers ---- */
+function minfo(t,k){ var m=(t.mem||{})[k]||{}, fr=(window.ftFrInfo||{})[k]||{}; return {n:m.n||fr.n||m.u||fr.u||'?',u:m.u||fr.u||'',pic:(k===me())?picOk(ls('myProfilePic_v1')):picOk(fr.pic)}; }
+function nameOf(t,k){ return minfo(t,k).n; }
+function nm(t,k){ return k===meKey()?L('আপনি','You'):nameOf(t,k); }
+function av(t,k,sz){ var i=minfo(t,k), s=sz||34; return '<span class="tAv" style="width:'+s+'px;height:'+s+'px;background:'+hue(k)+';font-size:'+Math.round(s*.42)+'px">'+(i.pic?'<img alt="" src="'+i.pic+'">':esc((String(i.n).trim()[0]||'?').toUpperCase()))+'</span>'; }
+function cur(){ return S.sel?S.tours[S.sel]:null; }
+function autoCats(b){ var o={}, sum=0; CATS.forEach(function(c,i){ var v=i<CATS.length-1?Math.round(b*c[5]/100):Math.max(0,b-sum); o[c[0]]=v; sum+=v; }); return o; }
+function sorted(t){ return Object.keys(t.exp).map(function(k){ return t.exp[k]; }).sort(function(a,b){ return String(b.d||'').localeCompare(String(a.d||''))||(b.ts||0)-(a.ts||0); }); }
+function sumText(t){
+  var c=calc(t), tr=settle(c.net), n=Object.keys(t.mem).length||1, ln=[];
+  ln.push(t.name+(t.dest?' — '+t.dest:'')); if(rng(t)) ln.push(rng(t));
+  ln.push(L('মোট খরচ: ','Total spent: ')+money(c.total)+(t.budget?' / '+money(t.budget):'')); ln.push(L('জনপ্রতি: ','Per person: ')+money(c.total/n));
+  if(tr.length){ ln.push(L('হিসাব:','Settle up:')); tr.forEach(function(x){ ln.push('• '+nameOf(t,x.f)+' → '+nameOf(t,x.t)+' '+money(x.a)); }); } else if(c.count) ln.push(L('সব হিসাব মিলে গেছে','All settled'));
+  return ln.join('\n');
+}
+function copyText(s){
+  try{ if(navigator.clipboard&&navigator.clipboard.writeText) return navigator.clipboard.writeText(s).then(function(){ return true; },function(){ return fb(); }); }catch(e){}
+  return Promise.resolve(fb());
+  function fb(){ try{ var a=document.createElement('textarea'); a.value=s; a.style.cssText='position:fixed;opacity:0'; document.body.appendChild(a); a.select(); var ok=document.execCommand('copy'); a.remove(); return ok; }catch(e){ return false; } }
+}
+/* ---- views ---- */
+function banner(){
+  var h='';
+  if(!logged()) h+='<div class="tNote">'+IC.info+'<span>'+L('লগইন না থাকায় ট্যুর শুধু এই ফোনে থাকবে। লগইন করলে বন্ধুদের সাথে শেয়ার করা যাবে।','Not logged in, so tours stay on this phone. Log in to share them with friends.')+'</span></div>';
+  if(S.err==='rules') h+='<div class="tNote bad"><div><b>'+L('সার্ভারে অনুমতি নেই','Server refused')+'</b><span>'+L('বন্ধুদের সাথে শেয়ার করতে Firebase Rules-এর মূল "rules" অবজেক্টের ভেতরে নিচের অংশ যোগ করুন। ততক্ষণ ট্যুর এই ফোনে সেভ থাকবে।','To share with friends add this inside the main "rules" object in Firebase Rules. Until then the tour is saved on this phone.')+'</span><pre>'+esc(RULES)+'</pre><button type="button" class="tGhost" data-a="crules">'+IC.copy+L('কপি করুন','Copy')+'</button></div></div>';
+  return h;
+}
+function vList(){
+  var ids=Object.keys(S.tours).sort(function(a,b){ return (S.tours[b].ts||0)-(S.tours[a].ts||0); }), h=banner();
+  if(!ids.length) return h+'<div class="tEmpty">'+IC.plane+'<b>'+L('এখনো কোনো ট্যুর নেই','No tours yet')+'</b><p>'+L('বন্ধুদের সাথে ঘুরতে যাওয়ার আগে বাজেট ঠিক করুন, খরচ লিখুন আর শেষে হিসাব মিলিয়ে নিন।','Plan the budget with friends, log expenses and settle up at the end.')+'</p><button type="button" class="tBtn" data-a="new">'+L('নতুন ট্যুর শুরু করুন','Start a new tour')+'</button></div>';
+  ids.forEach(function(id){
+    var t=S.tours[id], c=calc(t), pct=t.budget?c.total/t.budget*100:0, ks=Object.keys(t.mem);
+    h+='<button type="button" class="tCard" data-a="open" data-id="'+esc(id)+'"><div class="tcTop"><span class="tcIc">'+tic('plane')+'</span><span class="tcTx"><b>'+esc(t.name)+'</b><small>'+(t.dest?esc(t.dest)+' · ':'')+(rng(t)||L('তারিখ ঠিক হয়নি','No dates'))+'</small></span>'+(t.cloud?'<i class="tcCl" title="Synced"></i>':'')+'</div>'
+      +'<div class="tcBar'+(pct>100?' over':pct>80?' warn':'')+'"><i style="width:'+Math.min(100,pct).toFixed(1)+'%"></i></div>'
+      +'<div class="tcFt"><span>'+L('খরচ ','Spent ')+'<b>'+money(c.total)+'</b>'+(t.budget?' / '+money(t.budget):'')+'</span><span class="tcMem">'+ks.slice(0,4).map(function(k){ return av(t,k,24); }).join('')+(ks.length>4?'<em>+'+(ks.length-4)+'</em>':'')+'</span></div></button>';
+  });
+  return h+'<button type="button" class="tFab" data-a="new">'+IC.plus+'<span>'+L('নতুন ট্যুর','New tour')+'</span></button>';
+}
+function vRow(t,e){
+  if(e.ty==='pay') return '<button type="button" class="tRow" data-a="editx" data-id="'+esc(e.id)+'"><span class="trIc" style="background:#10b98122;color:#10b981">'+tic('check')+'</span><span class="trTx"><b>'+esc(nm(t,e.p))+' → '+esc(nm(t,e.to))+'</b><small>'+L('পরিশোধ','Payment')+' · '+esc(fdate(e.d))+'</small></span><span class="trAm ok">'+money(e.a)+'</span></button>';
+  var c=catOf(e.c), n=(e.s&&e.s.length)?e.s.length:Object.keys(t.mem).length;
+  return '<button type="button" class="tRow" data-a="editx" data-id="'+esc(e.id)+'"><span class="trIc" style="background:'+c[4]+'22;color:'+c[4]+'">'+tic(c[1])+'</span><span class="trTx"><b>'+esc(e.t||cn(c))+'</b><small>'+L('দিয়েছেন ','Paid by ')+esc(nm(t,e.p))+' · '+n+L(' জনে ভাগ',' way split')+'</small></span><span class="trAm">'+money(e.a)+'</span></button>';
+}
+function vOv(t,c){
+  var keys=Object.keys(t.mem), n=keys.length||1, b=+t.budget||0, left=b-c.total, pct=b?c.total/b*100:0, days=dayDiff(t.from,t.to);
+  var h='<div class="tHero'+(pct>100?' over':pct>80?' warn':'')+'"><div class="thTop"><span>'+L('মোট বাজেট','Total budget')+'</span><b>'+(b?money(b):'—')+'</b></div><div class="thBar"><i style="width:'+Math.min(100,pct).toFixed(1)+'%"></i></div>'
+    +'<div class="thRow"><div><small>'+L('খরচ হয়েছে','Spent')+'</small><b>'+money(c.total)+'</b></div><div><small>'+(left>=0?L('বাকি আছে','Left'):L('বেশি খরচ','Over budget'))+'</small><b>'+(b?money(Math.abs(left)):'—')+'</b></div><div><small>'+L('জনপ্রতি খরচ','Per person')+'</small><b>'+money(c.total/n)+'</b></div></div>'
+    +'<div class="thMeta">'+(t.dest?IC.pin+' '+esc(t.dest)+(rng(t)?' · ':''):'')+rng(t)+(days?' · '+days+L(' দিন',' days'):'')+'</div></div>';
+  if(b) h+='<div class="tPills"><span>'+L('জনপ্রতি বাজেট ','Budget / person ')+'<b>'+money(b/n)+'</b></span>'+(days?'<span>'+L('দিনপ্রতি বাজেট ','Budget / day ')+'<b>'+money(b/days)+'</b></span>':'')+'</div>';
+  var cs=CATS.filter(function(x){ return c.byCat[x[0]]>0; });
+  if(cs.length){ var acc=0, grad=cs.map(function(x){ var p=c.byCat[x[0]]/c.total*100, a=acc; acc+=p; return x[4]+' '+a.toFixed(2)+'% '+acc.toFixed(2)+'%'; }).join(',');
+    h+='<div class="tCard2"><h4>'+L('কোথায় কত খরচ','Where it went')+'</h4><div class="tDon"><div class="tDonR" style="background:conic-gradient('+grad+')"><span>'+money(c.total)+'</span></div><div class="tLeg">'+cs.map(function(x){ return '<div><i style="background:'+x[4]+'"></i><span>'+esc(cn(x))+'</span><b>'+money(c.byCat[x[0]])+'</b></div>'; }).join('')+'</div></div></div>'; }
+  h+='<div class="tCard2"><h4>'+L('কে কত দিয়েছে','Who paid what')+'</h4>'+keys.map(function(k){ var nt=Math.round(c.net[k]||0); return '<div class="tPer">'+av(t,k,38)+'<span class="tpTx"><b>'+esc(nm(t,k))+'</b><small>'+L('দিয়েছেন ','Paid ')+money(c.paid[k])+' · '+L('ভাগ ','Share ')+money(c.share[k])+'</small></span><span class="tNet '+(nt>0?'pos':nt<0?'neg':'')+'">'+(nt>0?'+':nt<0?'−':'')+money(Math.abs(nt))+'</span></div>'; }).join('')+'</div>';
+  var rc=sorted(t).slice(0,3);
+  if(rc.length) h+='<div class="tCard2"><h4>'+L('সাম্প্রতিক খরচ','Recent expenses')+'</h4>'+rc.map(function(e){ return vRow(t,e); }).join('')+'<button type="button" class="tLink" data-a="tab" data-v="ex">'+L('সব দেখুন','See all')+'</button></div>';
+  else h+='<div class="tNote">'+IC.info+'<span>'+L('"খরচ যোগ" চেপে প্রথম খরচটি লিখুন। কে দিয়েছে আর কারা ভাগ করবে বেছে নিন।','Tap "Add expense" to log the first one. Pick who paid and who splits it.')+'</span></div>';
+  return h;
+}
+function vEx(t,c){
+  var list=sorted(t); if(!list.length) return '<div class="tEmpty small"><b>'+L('এখনো কোনো খরচ নেই','No expenses yet')+'</b><p>'+L('নিচের বাটন চেপে খরচ যোগ করুন।','Tap the button below to add one.')+'</p></div>';
+  var h='', last='';
+  list.forEach(function(e){ var d=e.d||''; if(d!==last){ last=d; h+='<div class="tDay">'+esc(fdate(d)||L('তারিখ নেই','No date'))+'</div>'; } h+=vRow(t,e); });
+  return '<div class="tCard2 flush">'+h+'</div>';
+}
+function vPl(t,c){
+  var sum=0, b=+t.budget||0, n=Object.keys(t.mem).length||1, days=dayDiff(t.from,t.to); CATS.forEach(function(x){ sum+=+t.cats[x[0]]||0; });
+  var rem=b-sum, h='<div class="tCard2"><div class="tPl3"><div><small>'+L('মোট বাজেট','Total budget')+'</small><b>'+(b?money(b):'—')+'</b></div><div><small>'+L('ভাগ করা','Planned')+'</small><b>'+money(sum)+'</b></div><div><small>'+(rem>=0?L('বাকি','Unplanned'):L('বেশি','Over'))+'</small><b class="'+(rem<0?'bad':'')+'">'+money(Math.abs(rem))+'</b></div></div>'
+    +'<div class="tBtns"><button type="button" class="tGhost" data-a="autop">'+L('অটো ভাগ করুন','Auto split')+'</button><button type="button" class="tGhost" data-a="tedit">'+L('বাজেট বদলান','Change budget')+'</button></div></div>';
+  CATS.forEach(function(x){
+    var pl=+t.cats[x[0]]||0, sp=c.byCat[x[0]]||0, p=pl?Math.min(100,sp/pl*100):(sp?100:0), over=pl&&sp>pl;
+    h+='<div class="tPlRow"><div class="tPlHd"><span class="trIc" style="background:'+x[4]+'22;color:'+x[4]+'">'+tic(x[1])+'</span><b>'+esc(cn(x))+'</b><label class="tPlI"><em>৳</em><input class="tPlIn" inputmode="decimal" data-cat="'+x[0]+'" value="'+(pl||'')+'" placeholder="0"></label></div><div class="tBar2'+(over?' over':'')+'"><i style="width:'+p.toFixed(1)+'%;background:'+x[4]+'"></i></div><div class="tPlFt"><span>'+L('খরচ ','Spent ')+money(sp)+'</span><span class="'+(over?'bad':'')+'">'+(pl?(over?L('বেশি ','Over ')+money(sp-pl):L('বাকি ','Left ')+money(pl-sp)):'')+'</span></div></div>';
+  });
+  if(b) h+='<div class="tPills"><span>'+L('জনপ্রতি ','Per person ')+'<b>'+money(b/n)+'</b></span>'+(days?'<span>'+L('দিনপ্রতি ','Per day ')+'<b>'+money(b/days)+'</b></span>':'')+'</div>';
+  return h;
+}
+function vSt(t,c){
+  var keys=Object.keys(t.mem), mx=1, tr=settle(c.net);
+  keys.forEach(function(k){ mx=Math.max(mx,Math.abs(c.net[k]||0)); });
+  var h='<div class="tCard2"><h4>'+L('কার কত পাওনা/দেনা','Balances')+'</h4>'+keys.map(function(k){ var v=Math.round(c.net[k]||0), w=Math.round(Math.abs(v)/mx*100);
+    return '<div class="tPer">'+av(t,k,38)+'<span class="tpTx"><b>'+esc(nm(t,k))+'</b><span class="tBal"><i class="'+(v>0?'pos':'neg')+'" style="width:'+w+'%"></i></span></span><span class="tNet '+(v>0?'pos':v<0?'neg':'')+'">'+(v>0?L('পাবেন ','Gets '):v<0?L('দেবেন ','Owes '):'')+money(Math.abs(v))+'</span></div>'; }).join('')+'</div>';
+  h+='<div class="tCard2"><h4>'+L('কে কাকে দেবে','Who pays whom')+'</h4>';
+  if(!c.count) h+='<p class="tMut">'+L('খরচ যোগ করলে এখানে হিসাব দেখাবে।','Add expenses to see the settle-up here.')+'</p>';
+  else if(!tr.length) h+='<div class="tDone">'+IC.check+' '+L('সব হিসাব মিলে গেছে','Everyone is settled')+'</div>';
+  else h+=tr.map(function(x){ return '<div class="tPay">'+av(t,x.f,34)+'<span class="tpArr">→</span>'+av(t,x.t,34)+'<span class="tpTx"><b>'+esc(nm(t,x.f))+' → '+esc(nm(t,x.t))+'</b><small>'+money(x.a)+'</small></span><button type="button" class="tMini" data-a="pay" data-f="'+esc(x.f)+'" data-t="'+esc(x.t)+'" data-amt="'+x.a+'">'+L('পরিশোধ হয়েছে','Mark paid')+'</button></div>'; }).join('');
+  h+='</div><div class="tBtns two"><button type="button" class="tGhost" data-a="copy">'+IC.copy+L('সারাংশ কপি','Copy summary')+'</button><button type="button" class="tBtn sm" data-a="share">'+IC.send+L('বন্ধুদের পাঠান','Send to friends')+'</button></div>';
+  return h;
+}
+function vDetail(t){
+  var c=calc(t), tabs=[['ov',L('সারাংশ','Overview')],['ex',L('খরচ','Expenses')],['pl',L('প্ল্যান','Plan')],['st',L('হিসাব','Settle')]];
+  var h=banner()+'<div class="tTabs">'+tabs.map(function(x){ return '<button type="button" class="'+(S.tab===x[0]?'on':'')+'" data-a="tab" data-v="'+x[0]+'">'+x[1]+'</button>'; }).join('')+'</div>';
+  h+=S.tab==='ex'?vEx(t,c):S.tab==='pl'?vPl(t,c):S.tab==='st'?vSt(t,c):vOv(t,c);
+  if(S.tab==='ov'||S.tab==='ex') h+='<button type="button" class="tFab" data-a="addx">'+IC.plus+'<span>'+L('খরচ যোগ','Add expense')+'</span></button>';
+  return h;
+}
+function render(){
+  if(!S.open||!$('tBody')) return; var t=cur(); if(S.sel&&!t) S.sel='';
+  $('tTitle').textContent=t?t.name:L('ট্যুর বাজেট','Tour budget');
+  var tp=$('tTop'); tp.innerHTML=t?IC.more:IC.plus; tp.setAttribute('data-a',t?'more':'new');
+  $('tBody').innerHTML=t?vDetail(t):vList();
+}
+/* ---- sheets ---- */
+function showSheet(html){ var w=$('tSheet'); w.innerHTML='<div class="tSh" data-a="sx"></div><div class="tSp" role="dialog" aria-modal="true"><div class="tGrab"></div>'+html+'</div>'; w.classList.add('on'); S.sheet=true; }
+function closeSheet(){ var w=$('tSheet'); if(w){ w.classList.remove('on'); w.innerHTML=''; } S.sheet=false; F=null; X=null; }
+function fld(id,lb,ph,val,extra){ return '<label class="tLb" for="'+id+'">'+lb+'</label><input class="tIn" id="'+id+'" placeholder="'+esc(ph||'')+'" value="'+esc(val||'')+'" '+(extra||'')+'>'; }
+function drawMem(){
+  var t=F, h='';
+  Object.keys(F.mem).forEach(function(k){ var m=F.mem[k], me_=k===meKey(); h+='<span class="tChip on">'+av({mem:F.mem},k,22)+esc(me_?L('আপনি','You'):(m.n||m.u||'?'))+(me_?'':'<button type="button" data-a="trm" data-k="'+esc(k)+'" aria-label="Remove">'+IC.x+'</button>')+'</span>'; });
+  var e=$('tfM'); if(e) e.innerHTML=h;
+  [].forEach.call(document.querySelectorAll('#tfFr [data-k]'),function(b){ b.classList.toggle('on',!!F.mem[b.getAttribute('data-k')]); });
+}
+function openTourForm(id){
+  var t=id?S.tours[id]:null, mem={};
+  if(t) Object.keys(t.mem).forEach(function(k){ mem[k]={n:t.mem[k].n||'',u:t.mem[k].u||''}; }); else mem[meKey()]={n:myN()||L('আমি','Me'),u:myU()};
+  F={id:id||'',mem:mem};
+  var fr=window.ftFrInfo||{}, fk=logged()?Object.keys(fr):[];
+  var h='<h3>'+(t?L('ট্যুর এডিট','Edit tour'):L('নতুন ট্যুর','New tour'))+'</h3>'
+    +fld('tfN',L('ট্যুরের নাম','Tour name'),L('যেমন: কক্সবাজার ট্রিপ','e.g. Cox\'s Bazar trip'),t?t.name:'','maxlength="40"')
+    +fld('tfD',L('গন্তব্য','Destination'),L('কোথায় যাচ্ছেন','Where to'),t?t.dest:'','maxlength="40"')
+    +'<div class="tTwo"><div><label class="tLb" for="tfF">'+L('শুরু','From')+'</label><input class="tIn" id="tfF" type="date" value="'+esc(t?t.from:'')+'"></div><div><label class="tLb" for="tfT">'+L('শেষ','To')+'</label><input class="tIn" id="tfT" type="date" value="'+esc(t?t.to:'')+'"></div></div>'
+    +fld('tfB',L('মোট বাজেট (৳)','Total budget (৳)'),'0',t&&t.budget?t.budget:'','inputmode="decimal"')
+    +'<label class="tLb">'+L('সদস্য','Members')+'</label><div class="tChips" id="tfM"></div>'
+    +(fk.length?'<label class="tLb">'+L('বন্ধুদের যোগ করুন','Add friends')+'</label><div class="tChips" id="tfFr">'+fk.map(function(k){ var f=fr[k]||{}; return '<button type="button" class="tChip" data-a="tfr" data-k="'+esc(k)+'" data-n="'+esc(f.n||'')+'" data-u="'+esc(f.u||'')+'">'+av({mem:{}},k,22)+esc(f.n||f.u||'?')+'</button>'; }).join('')+'</div>':'')
+    +'<label class="tLb" for="tfMn">'+L('অ্যাপে নেই এমন সদস্য','Member without the app')+'</label><div class="tAddM"><input class="tIn" id="tfMn" placeholder="'+L('নাম লিখুন','Type a name')+'" maxlength="24"><button type="button" class="tBtn sm" data-a="tadd">'+L('যোগ','Add')+'</button></div>'
+    +'<button type="button" class="tBtn" data-a="tsave">'+(t?L('সেভ করুন','Save'):L('ট্যুর তৈরি করুন','Create tour'))+'</button>';
+  showSheet(h); drawMem();
+}
+async function saveTour(){
+  var name=$('tfN').value.trim(); if(!name){ say(L('ট্যুরের নাম দিন','Enter a tour name')); $('tfN').focus(); return; }
+  var from=$('tfF').value, to=$('tfT').value; if(from&&to&&to<from){ say(L('শেষের তারিখ শুরুর আগে হতে পারে না','End date is before the start date')); return; }
+  var budget=num($('tfB').value), dest=$('tfD').value.trim(), t, added=[], removed=[], now=Date.now();
+  if(F.id){
+    t=S.tours[F.id]; var oldR=realMem(t); t.name=name; t.dest=dest; t.from=from; t.to=to; t.budget=budget; t.mem=F.mem; t.ts=now;
+    var sumC=0; CATS.forEach(function(x){ sumC+=+t.cats[x[0]]||0; }); if(budget&&!sumC) t.cats=autoCats(budget);
+    var newR=realMem(t); added=newR.filter(function(k){ return oldR.indexOf(k)<0; }); removed=oldR.filter(function(k){ return newR.indexOf(k)<0; });
+    save(); closeSheet(); render();
+    var ok=await pushPatch(t,{name:name,dest:dest,from:from,to:to,budget:budget,cats:t.cats,mem:t.mem,members:wire(t).members,ts:now});
+    if(ok&&t.cloud){ await cloud(async function(){ await Promise.all(added.map(function(k){ return db('tourIdx/'+k+'/'+t.id,{method:'PUT',headers:J,body:JSON.stringify(now)}); }).concat(removed.map(function(k){ return db('tourIdx/'+k+'/'+t.id,{method:'DELETE'}); }))); }); }
+    if(added.length) notifyAdded(t,added);
+  } else {
+    t={id:'t'+rid(),name:name,dest:dest,from:from,to:to,budget:budget,cats:budget?autoCats(budget):{},mem:F.mem,owner:meKey(),ts:now,exp:{}};
+    S.tours[t.id]=t; S.sel=t.id; S.tab='ov'; save(); closeSheet(); render();
+    var ok2=await pushTour(t); if(ok2) notifyAdded(t,realMem(t));
+  }
+  if(S.err==='rules') render();
+}
+function openExpForm(id){
+  var t=cur(); if(!t) return; var e=id?t.exp[id]:null;
+  if(e&&e.ty==='pay'){ if(confirm(L('এই পরিশোধের রেকর্ড মুছবেন?','Delete this payment record?'))) delExp(t,id); return; }
+  var keys=Object.keys(t.mem);
+  X={id:id||'',c:e?e.c:'food',p:e?e.p:meKey(),s:(e&&e.s&&e.s.length)?e.s.slice():keys.slice()};
+  var chips=function(act,arr,on){ return arr.map(function(x){ return '<button type="button" class="tChip'+(on(x[0])?' on':'')+'" data-a="'+act+'" data-v="'+esc(x[0])+'">'+x[1]+'</button>'; }).join(''); };
+  var pk=keys.slice(); if(X.p&&pk.indexOf(X.p)<0) pk.push(X.p);
+  var h='<h3>'+(e?L('খরচ এডিট','Edit expense'):L('নতুন খরচ','New expense'))+'</h3>'
+    +'<label class="tLb" for="xfA">'+L('কত টাকা','Amount')+' (৳)</label><input class="tIn big" id="xfA" inputmode="decimal" placeholder="0" value="'+(e?esc(e.a):'')+'">'
+    +fld('xfT',L('কিসের খরচ','What for'),L('যেমন: দুপুরের খাবার','e.g. Lunch'),e?e.t:'','maxlength="40"')
+    +'<label class="tLb">'+L('ক্যাটাগরি','Category')+'</label><div class="tChips">'+chips('xc',CATS.map(function(c){ return [c[0],tic(c[1])+' '+esc(cn(c))]; }),function(v){ return v===X.c; })+'</div>'
+    +'<label class="tLb">'+L('কে দিয়েছে','Paid by')+'</label><div class="tChips" id="xfP">'+chips('xp',pk.map(function(k){ return [k,esc(nm(t,k))]; }),function(v){ return v===X.p; })+'</div>'
+    +'<label class="tLb">'+L('কারা ভাগ করবে','Split between')+' <button type="button" class="tLinkS" data-a="xall">'+L('সবাই','All')+'</button></label><div class="tChips" id="xfS">'+chips('xs',keys.map(function(k){ return [k,esc(nm(t,k))]; }),function(v){ return X.s.indexOf(v)>=0; })+'</div>'
+    +'<label class="tLb" for="xfD">'+L('তারিখ','Date')+'</label><input class="tIn" id="xfD" type="date" value="'+esc(e&&e.d?e.d:today())+'">'
+    +'<div class="tBtns"><button type="button" class="tBtn" data-a="xsave">'+L('সেভ করুন','Save')+'</button>'+(e?'<button type="button" class="tDanger" data-a="xdel" data-id="'+esc(id)+'">'+L('মুছুন','Delete')+'</button>':'')+'</div>';
+  showSheet(h);
+}
+async function saveExp(){
+  var t=cur(); if(!t||!X) return; var a=num($('xfA').value); if(!a){ say(L('টাকার পরিমাণ লিখুন','Enter the amount')); $('xfA').focus(); return; }
+  var keys=Object.keys(t.mem), s=X.s.filter(function(k){ return keys.indexOf(k)>=0; }); if(!s.length) s=keys.slice(); if(s.length===keys.length) s=[];
+  var old=X.id?t.exp[X.id]:null, id=X.id||('e'+rid()), c=catOf(X.c), now=Date.now();
+  var e={id:id,t:$('xfT').value.trim()||cn(c),a:a,c:X.c,p:X.p,s:s,d:$('xfD').value||today(),ts:old?old.ts:now,by:old?old.by:meKey()};
+  t.exp[id]=e; t.ts=now; save(); closeSheet(); render();
+  var p={ts:now}; p['exp/'+id]=e; await pushPatch(t,p);
+}
+async function delExp(t,id){ delete t.exp[id]; t.ts=Date.now(); save(); closeSheet(); render(); var p={ts:t.ts}; p['exp/'+id]=null; await pushPatch(t,p); }
+async function addPay(t,f,to,a){
+  var id='e'+rid(), e={id:id,ty:'pay',p:f,to:to,a:a,d:today(),ts:Date.now(),by:meKey()}; t.exp[id]=e; t.ts=Date.now(); save(); render();
+  var p={ts:t.ts}; p['exp/'+id]=e; await pushPatch(t,p);
+}
+function openMore(){
+  var t=cur(); if(!t) return; var own=!t.cloud||t.owner===meKey()||t.owner==='self';
+  showSheet('<h3>'+esc(t.name)+'</h3><div class="tMenu"><button type="button" data-a="tedit">'+L('ট্যুর ও সদস্য এডিট','Edit tour & members')+'</button><button type="button" data-a="share">'+L('বন্ধুদের চ্যাটে সারাংশ পাঠান','Send summary to friends')+'</button><button type="button" data-a="copy">'+L('সারাংশ কপি করুন','Copy summary')+'</button>'
+    +(own?'<button type="button" class="dg" data-a="tdel">'+L('ট্যুর মুছে ফেলুন','Delete tour')+'</button>':'<button type="button" class="dg" data-a="tleave">'+L('ট্যুর থেকে বের হন','Leave tour')+'</button>')+'</div>');
+}
+async function delTour(t){
+  var ids=realMem(t), id=t.id; delete S.tours[id]; S.sel=''; save(); closeSheet(); render();
+  if(t.cloud&&logged()) await cloud(async function(){ await db('tours/'+id,{method:'DELETE'}); await Promise.all(ids.map(function(k){ return db('tourIdx/'+k+'/'+id,{method:'DELETE'}).catch(function(){}); })); });
+}
+async function leaveTour(t){
+  var id=t.id, u=me(); delete S.tours[id]; S.sel=''; save(); closeSheet(); render();
+  if(t.cloud&&logged()&&u) await cloud(async function(){ var p={}; p['members/'+u]=null; p['mem/'+u]=null; await db('tours/'+id,{method:'PATCH',headers:J,body:JSON.stringify(p)}); await db('tourIdx/'+u+'/'+id,{method:'DELETE'}); });
+}
+async function shareSum(t){
+  var txt=sumText(t), to=realMem(t).filter(function(k){ return k!==me(); });
+  closeSheet();
+  if(to.length&&window.ftChatApi&&ftChatApi.sendTo&&logged()){ var n=0; for(var i=0;i<to.length;i++){ try{ if(await ftChatApi.sendTo(to[i],txt)) n++; }catch(e){} } say(n?L(n+' জনকে সারাংশ পাঠানো হয়েছে','Summary sent to '+n+(n>1?' friends':' friend')):L('পাঠানো যায়নি','Could not send')); return; }
+  try{ if(navigator.share){ await navigator.share({text:txt}); return; } }catch(e){ return; }
+  copyText(txt).then(function(ok){ say(ok?L('সারাংশ কপি হয়েছে','Summary copied'):L('কপি করা যায়নি','Could not copy')); });
+}
+/* ---- events ---- */
+function chipSet(box,v){ [].forEach.call(box.querySelectorAll('.tChip'),function(b){ b.classList.toggle('on',b.getAttribute('data-v')===v); }); }
+function onClick(e){
+  var b=e.target.closest&&e.target.closest('[data-a]'); if(!b) return; var a=b.getAttribute('data-a'), t=cur();
+  switch(a){
+    case 'back': goBack(); break;
+    case 'new': openTourForm(''); break;
+    case 'open': S.sel=b.getAttribute('data-id'); S.tab='ov'; render(); var bd=$('tBody'); if(bd) bd.scrollTop=0; break;
+    case 'tab': S.tab=b.getAttribute('data-v'); render(); break;
+    case 'more': openMore(); break;
+    case 'addx': openExpForm(''); break;
+    case 'editx': openExpForm(b.getAttribute('data-id')); break;
+    case 'sx': closeSheet(); break;
+    case 'tedit': closeSheet(); if(t) openTourForm(t.id); break;
+    case 'tfr': { var k=b.getAttribute('data-k'); if(!F) break; if(F.mem[k]) delete F.mem[k]; else F.mem[k]={n:b.getAttribute('data-n'),u:b.getAttribute('data-u')}; drawMem(); break; }
+    case 'trm': if(F){ delete F.mem[b.getAttribute('data-k')]; drawMem(); } break;
+    case 'tadd': { var inp=$('tfMn'), v=inp.value.trim(); if(!v||!F) break; if(Object.keys(F.mem).length>=20){ say(L('সর্বোচ্চ ২০ জন','Max 20 members')); break; } F.mem['m_'+rid()]={n:v}; inp.value=''; drawMem(); break; }
+    case 'tsave': saveTour(); break;
+    case 'xc': if(X){ X.c=b.getAttribute('data-v'); chipSet(b.parentNode,X.c); } break;
+    case 'xp': if(X){ X.p=b.getAttribute('data-v'); chipSet($('xfP'),X.p); } break;
+    case 'xs': if(X){ var s=b.getAttribute('data-v'), i=X.s.indexOf(s); if(i>=0) X.s.splice(i,1); else X.s.push(s); b.classList.toggle('on',i<0); } break;
+    case 'xall': if(X&&t){ X.s=Object.keys(t.mem); [].forEach.call($('xfS').querySelectorAll('.tChip'),function(c){ c.classList.add('on'); }); } break;
+    case 'xsave': saveExp(); break;
+    case 'xdel': if(t&&confirm(L('এই খরচ মুছবেন?','Delete this expense?'))) delExp(t,b.getAttribute('data-id')); break;
+    case 'pay': if(t) addPay(t,b.getAttribute('data-f'),b.getAttribute('data-t'),+b.getAttribute('data-amt')||0); break;
+    case 'autop': if(t){ if(!t.budget){ say(L('আগে মোট বাজেট দিন','Set a total budget first')); openTourForm(t.id); break; } t.cats=autoCats(t.budget); t.ts=Date.now(); save(); render(); pushPatch(t,{cats:t.cats,ts:t.ts}); } break;
+    case 'share': if(t) shareSum(t); break;
+    case 'copy': if(t){ closeSheet(); copyText(sumText(t)).then(function(ok){ say(ok?L('সারাংশ কপি হয়েছে','Summary copied'):L('কপি করা যায়নি','Could not copy')); }); } break;
+    case 'tdel': if(t&&confirm(L('এই ট্যুর ও সব খরচ মুছে যাবে। নিশ্চিত?','This deletes the tour and all its expenses. Sure?'))) delTour(t); break;
+    case 'tleave': if(t&&confirm(L('এই ট্যুর থেকে বের হবেন?','Leave this tour?'))) leaveTour(t); break;
+    case 'crules': copyText(RULES).then(function(ok){ say(ok?L('কপি হয়েছে','Copied'):L('কপি করা যায়নি','Could not copy')); }); break;
+  }
+}
+function onChange(e){
+  var i=e.target; if(!i.classList||!i.classList.contains('tPlIn')) return; var t=cur(); if(!t) return;
+  var k=i.getAttribute('data-cat'), v=num(i.value); t.cats[k]=v; t.ts=Date.now(); save(); render();
+  var p={ts:t.ts}; p['cats/'+k]=v; pushPatch(t,p);
+}
+/* ---- shell / lifecycle ---- */
+function fit(){
+  var ov=$('ftTourOv'), vv=window.visualViewport; if(!ov||!S.open||!vv) return;
+  if(window.innerHeight-vv.height>120){ ov.style.bottom='auto'; ov.style.top=Math.round(vv.offsetTop)+'px'; ov.style.height=Math.round(vv.height)+'px'; }
+  else { ov.style.bottom=''; ov.style.top=''; ov.style.height=''; }
+}
+function ensure(){
+  if($('ftTourOv')) return;
+  var ov=document.createElement('div'); ov.id='ftTourOv';
+  ov.innerHTML='<div class="tbar"><button type="button" class="tb" data-a="back" aria-label="Back">'+IC.back+'</button><b id="tTitle"></b><button type="button" class="tb" id="tTop" data-a="new"></button></div><div class="tbody" id="tBody"></div><div class="tSheetW" id="tSheet"></div>';
+  document.body.appendChild(ov); ov.addEventListener('click',onClick); ov.addEventListener('change',onChange);
+  if(window.visualViewport){ visualViewport.addEventListener('resize',fit); visualViewport.addEventListener('scroll',fit); }
+}
+function histPush(){ if(!hP){ try{ history.pushState({ftTour:1},''); hP=true; }catch(e){} } }
+function goBack(){ if(S.sheet){ closeSheet(); return; } if(S.sel){ S.sel=''; render(); return; } closeTour(); }
+function openTour(){
+  ensure(); load(); S.open=true; S.sel=''; S.tab='ov'; S.sheet=false;
+  document.body.classList.add('ftTourOpen'); $('ftTourOv').classList.add('on'); render(); histPush();
+  pull(true); clearInterval(S.poll); S.poll=setInterval(function(){ if(S.open&&!document.hidden) pull(); },15000);
+}
+function closeTour(){
+  S.open=false; clearInterval(S.poll); closeSheet(); var ov=$('ftTourOv'); if(ov) ov.classList.remove('on'); document.body.classList.remove('ftTourOpen');
+  if(hP){ hP=false; try{ history.back(); }catch(e){} }
+}
+window.addEventListener('popstate',function(){ if(!hP) return; hP=false; if(S.open){ goBack(); if(S.open) histPush(); } });
+window.ftTour={open:openTour,close:closeTour};
+})();
+
+</script>
 </body>
 </html>
