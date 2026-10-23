@@ -12052,6 +12052,37 @@ details.setBox.ftShow>summary{display:none!important;} details.setBox.ftShow{mar
 .mnL{font-size:14px;font-weight:700;line-height:1.25;min-width:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
 .mnFt{display:flex;gap:8px;padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--border);}
 .mnFt .mnT{flex:1;}
+
+.mnCard{background:var(--card);border:1px solid var(--border);border-radius:20px;overflow:hidden;}
+.mnR{display:flex;align-items:center;gap:12px;width:100%;padding:9px 12px;border:0;background:transparent;color:var(--text);font:inherit;text-align:left;cursor:pointer;position:relative;min-width:0;-webkit-tap-highlight-color:transparent;}
+.mnR+.mnR::before{content:"";position:absolute;left:62px;right:0;top:0;height:1px;background:var(--border);}
+.mnR:active{background:color-mix(in srgb,var(--primary) 8%,transparent);}
+.mnR.on{background:color-mix(in srgb,var(--primary) 9%,transparent);}.mnR.on .mnL{color:var(--primary);}
+.mnR .mnL{flex:1;min-width:0;display:block;font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mnR>svg{width:18px;height:18px;stroke:var(--muted);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex:none;}
+.mnR .mnI{width:38px;height:38px;border-radius:12px;font-size:19px;}
+.mnI.g{background:linear-gradient(145deg,var(--c),color-mix(in srgb,var(--c) 68%,#000));box-shadow:none;color:#fff;}
+.mnI.g .mi,.mnI.g svg{color:#fff!important;}.mnI.g svg{width:21px;height:21px;}
+.mnI.g svg{fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
+.mnSec{margin-top:16px;}
+
+.ftCI{width:46px;height:46px;border-radius:15px;flex:none;display:grid;place-items:center;background:linear-gradient(145deg,var(--c),color-mix(in srgb,var(--c) 68%,#000));box-shadow:0 6px 14px -8px var(--c);}
+.ftCI svg{width:24px;height:24px;fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
+.ftGc+.ftGc{margin-top:14px;}
+#ftGroups{margin-top:14px;}
+.ftRt span.s{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+details.setBox.ftShow{margin:0 0 14px;scroll-margin-top:70px;}
+.ftSecH{display:block;font-size:13.5px;font-weight:700;color:var(--primary);margin:0;padding:14px 16px 0;letter-spacing:.1px;line-height:1.3;text-align:left;}
+#ftDetBar{padding:0 2px;}#ftDetBar .t{line-height:1.25;text-align:left;min-width:0;}
+/* profile hub: no tabs - every part is its own card with a blue heading */
+details.setBox:has(#phHub){border:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;}
+details.setBox:has(#phHub)>.ftSecH{display:none;}
+details.setBox:has(#phHub)>.setBody{padding:0!important;}
+#phHub .phNav{display:none!important;}
+#phHub .phHd{margin-bottom:14px;}
+#phHub .phP,#phHub .phP.on{display:block!important;background:var(--card);border:1px solid var(--border);border-radius:22px;padding:14px 14px 16px;margin:0 0 14px;}
+#phHub .phP:empty{display:none!important;}
+#phHub .phP::before{content:attr(data-t);display:block;color:var(--primary);font-weight:700;font-size:13.5px;line-height:1.3;margin:0 2px 12px;}
 </style>
 <script>
 /* ===== Settings redesign (grouped icon rows with drill-in pages) + side menu drawer ===== */
@@ -12081,7 +12112,7 @@ function subOf(d){ const s=SUB[d.id]||SUB[kOf(d)]; return s?L(s[0],s[1]):''; }
 function who(){ const r=R(), s=r&&r.ses&&r.ses(); const nm=($('setName')&&$('setName').textContent)||'', un=(function(){ try{ return (localStorage.getItem('myUsername_v1')||'').replace(/^@/,''); }catch(e){ return ''; } })(); return {name:nm.trim(),email:s&&s.email?s.email:'',un:un,on:!!(s&&s.email)}; }
 function avatar(){ const im=$('setAvImg'), tx=($('setAvTxt')&&$('setAvTxt').textContent)||'U'; return (im&&im.style.display==='block'&&okPic(im.getAttribute('src')))?'<img alt="" src="'+im.getAttribute('src')+'">':esc(tx); }
 /* ---------- settings list ---------- */
-let lastSig='', deep=false, retTab=null;
+let lastSig='', deep=false, retTab=null, menuCats=[];
 function banner(){
   const w=who(), el=$('ftBan'); if(!el) return;
   el.innerHTML='<div class="ftBanAv">'+avatar()+'</div><div class="ftBanTx"><b>'+(w.name?L('হ্যালো ','Hello ')+esc(w.name):L('স্বাগতম','Welcome'))+'</b><span>'+esc(w.un?'@'+w.un:(w.email||L('প্রোফাইল ও অ্যাকাউন্ট','Profile & account')))+'</span></div>'+CHEV;
@@ -12100,33 +12131,67 @@ function build(force){
   const seq=[].slice.call(sec.children).filter(n=>n.matches&&(n.matches('details.setBox')||n.matches('.setGroup.ftCat')));
   const sig=seq.map(n=>n.matches('details.setBox')?'d:'+kOf(n)+':'+(h3Of(n)?h3Of(n).textContent:''):'g:'+n.textContent).join('|')+'|'+(bn()?'b':'e');
   if(!force&&sig===lastSig) return; lastSig=sig;
-  let html='', open=false, pend='';
-  const close=()=>{ if(open){ html+='</div>'; open=false; } };
-  seq.forEach(n=>{
-    if(n.matches('.setGroup')){ close(); pend='<div class="ftGl">'+n.innerHTML+'</div>'; return; }
+  const CI={
+ look:['#8b5cf6','<svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.3-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.3A3.7 3.7 0 0 0 21 10.7C21 6.4 17 3 12 3Z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10.5" cy="7" r="1"/><circle cx="15.5" cy="7.5" r="1"/></svg>'],
+ acct:['#0ea5e9','<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-3.6 3.6-6 8-6s8 2.4 8 6"/></svg>'],
+ money:['#10b981','<svg viewBox="0 0 24 24"><path d="M19 7V5a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>'],
+ remind:['#ef4444','<svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>'],
+ secu:['#22c55e','<svg viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>'],
+ data:['#3b82f6','<svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>'],
+ pref:['#f59e0b','<svg viewBox="0 0 24 24"><path d="M4 6h8M18 6h2M4 12h2M12 12h8M4 18h10M20 18h0"/><circle cx="15" cy="6" r="2.4"/><circle cx="9" cy="12" r="2.4"/><circle cx="17" cy="18" r="2.4"/></svg>'],
+ help:['#14b8a6','<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6"/><path d="M12 17h.01"/></svg>'],
+ more:['#64748b','<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>']
+};
+const nameOf=d=>{ const h=h3Of(d); if(!h) return ''; const x=h.querySelector(bn()?'.bn':'.en'); return ((x||h).textContent||'').trim(); };
+let cats=[], cur=null;
+seq.forEach(n=>{
+    if(n.matches('.setGroup')){ cur={k:n.dataset.cat||'more',t:n.innerHTML,items:[]}; cats.push(cur); return; }
     if(isMoved(n)) return;
-    if(!open){ html+=pend+'<div class="ftGc">'; pend=''; open=true; }
-    const c=chipOf(n), s=subOf(n);
-    html+='<div class="ftRow" data-k="'+esc(kOf(n))+'"><span class="setIco" style="--c:'+c.c+'">'+c.i+'</span><div class="ftRt"><b>'+titleHtml(n)+'</b>'+(s?'<span class="s">'+esc(s)+'</span>':'')+'</div>'+CHEV+'</div>';
+    if(!cur){ cur={k:'more',t:L('সেটিংস','Settings'),items:[]}; cats.push(cur); }
+    cur.items.push(n);
   });
-  close();
+  cats=cats.filter(c=>c.items.length);
+  menuCats=cats.map(c=>({k:c.k,t:c.t,ci:CI[c.k]||CI.more}));
+  const crow=c=>{ const ci=CI[c.k]||CI.more; return '<div class="ftRow" data-cat="'+esc(c.k)+'"><span class="ftCI" style="--c:'+ci[0]+'">'+ci[1]+'</span><div class="ftRt"><b>'+c.t+'</b><span class="s">'+esc(c.items.map(nameOf).filter(Boolean).join(', '))+'</span></div>'+CHEV+'</div>'; };
+  const MAIN=['look','acct','money','remind','secu','data'];
+  const m1=cats.filter(c=>MAIN.indexOf(c.k)>-1), m2=cats.filter(c=>MAIN.indexOf(c.k)<0);
+  const html=(m1.length?'<div class="ftGc">'+m1.map(crow).join('')+'</div>':'')+(m2.length?'<div class="ftGc">'+m2.map(crow).join('')+'</div>':'');
   $('ftGroups').innerHTML=html; $('ftBkSlot').innerHTML=bkCard(); try{ if(window.ftCloud) ftCloud.refresh(); }catch(e){}
 }
-function onList(e){ const b=e.target.closest('.ftBan'); if(b){ window.ftSetOpen('settings_profile'); return; } const r=e.target.closest('.ftRow'); if(r) window.ftSetOpen(r.dataset.k); }
+function onList(e){ const b=e.target.closest('.ftBan'); if(b){ window.ftSetOpen('settings_profile'); return; } const r=e.target.closest('.ftRow'); if(r&&r.dataset.cat!==undefined) openCat(r.dataset.cat); }
 function ensureBar(){
   let bar=$('ftDetBar'); if(bar) return bar;
   bar=document.createElement('div'); bar.id='ftDetBar'; bar.innerHTML='<button type="button" aria-label="back"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></button><div class="t"></div>';
   bar.querySelector('button').onclick=()=>window.ftSetBack(); sec.insertBefore(bar,sec.firstChild); return bar;
 }
 function exitDetail(){ sec.classList.remove('ftDetail'); dets().forEach(d=>d.classList.remove('ftShow')); }
+function catOf(d){ let p=d.previousElementSibling; while(p){ if(p.matches&&p.matches('.setGroup.ftCat')) return p; p=p.previousElementSibling; } return null; }
+function openCat(cat,focus,from){
+  build();
+  const ds=dets().filter(x=>!isMoved(x)&&(catOf(x)?catOf(x).dataset.cat:'')===cat);
+  let list=ds, title='';
+  if(focus&&isMoved(focus)) list=[focus];
+  if(!list.length&&focus) list=[focus];
+  if(!list.length){ exitDetail(); window.scrollTo(0,0); return; }
+  const g=catOf(list[0]); title=g?g.innerHTML:titleHtml(list[0]);
+  dets().forEach(x=>{ x.classList.remove('ftShow'); const o=x.querySelector(':scope > .ftSecH'); if(o) o.remove(); });
+  list.forEach(x=>{
+    x.classList.add('ftShow'); x.open=true;
+    const h=document.createElement('div'); h.className='ftSecH'; h.innerHTML=titleHtml(x);
+    const sm=x.querySelector(':scope > summary'); if(sm) sm.after(h); else x.prepend(h);
+  });
+  ensureBar().querySelector('.t').innerHTML=title; sec.classList.add('ftDetail');
+  window.scrollTo(0,0);
+  if(focus&&list[0]!==focus){ setTimeout(()=>{ try{ focus.scrollIntoView({block:'start'}); }catch(e){} },60); }
+}
 window.ftSetOpen=function(key,from){
   build(); deep=true; try{ activateTab('settings'); }catch(e){} deep=false;
   retTab=from||null;
   const d=dets().find(x=>kOf(x)===key);
   if(!d){ exitDetail(); window.scrollTo(0,0); return; }
-  dets().forEach(x=>x.classList.remove('ftShow')); d.classList.add('ftShow'); d.open=true;
-  ensureBar().querySelector('.t').innerHTML=titleHtml(d); sec.classList.add('ftDetail'); window.scrollTo(0,0);
+  const g=catOf(d); openCat(g?g.dataset.cat:'',d);
 };
+window.ftSetCat=function(cat,from){ build(); deep=true; try{ activateTab('settings'); }catch(e){} deep=false; retTab=from||null; openCat(cat); };
 window.ftSetBack=function(){ const r=retTab; retTab=null; exitDetail(); if(r&&r!=='settings'){ try{ activateTab(r); }catch(e){} } else build(true); window.scrollTo(0,0); };
 const _at=window.activateTab;
 window.activateTab=function(n){ const r=_at.apply(this,arguments); if(n==='settings'){ if(!deep){ exitDetail(); retTab=null; } build(); } else{ exitDetail(); retTab=null; } return r; };
@@ -12137,12 +12202,15 @@ build(); [600,1500,3200,6500].forEach(ms=>setTimeout(()=>build(),ms));
 const TABS=[
  ['everyday','প্রতিদিন','Everyday',[['dash','হোম','Home','home','#6366f1'],['add','যোগ করুন','Add entry','plus','#10b981'],['tx','লেনদেন','Transactions','clipboard','#0ea5e9'],['hist','হিস্ট্রি','History','clock','#f59e0b'],['acc','একাউন্ট','Accounts','wallet','#14b8a6']]],
  ['money','অর্থ ও লক্ষ্য','Money & goals',[['loan','লোন','Loans','bank','#ef4444'],['challenge','চ্যালেঞ্জ','Challenges','svg:cg-trophy','#f59e0b'],['zakat','যাকাত','Zakat','coin','#22c55e']]],
- ['more','ইনসাইট ও আরও','Insights & more',[['report','রিপোর্ট','Reports','bars','#6366f1'],['chat','AI চ্যাট','AI Chat','bot','#8b5cf6'],['friends','বন্ধু','Friends','user','#0ea5e9'],['@inbox','মেসেজ','Messages','message','#10b981'],['@tour','ট্যুর বাজেট','Tour budget','bus','#f59e0b'],['notes','নোট ও টাস্ক','Notes & tasks','clipboard','#a78bfa'],['profile','প্রোফাইল','Profile','user','#ec4899'],['@search','ইউজার খুঁজুন','Find users','search','#0ea5e9'],['@blood','ইমারজেন্সি হেল্প','Emergency help','drop','#e11d48']]]
+ ['insight','ইনসাইট','Insights',[['report','রিপোর্ট','Reports','bars','#6366f1'],['chat','AI চ্যাট','AI Chat','bot','#8b5cf6']]],
+ ['social','কমিউনিটি ও যোগাযোগ','Community & contact',[['friends','বন্ধু','Friends','user','#0ea5e9'],['@inbox','মেসেজ','Messages','message','#10b981'],['profile','প্রোফাইল','Profile','user','#ec4899'],['@search','ইউজার খুঁজুন','Find users','search','#0ea5e9'],['@blood','ইমারজেন্সি হেল্প','Emergency help','drop','#e11d48']]],
+ ['tools','টুলস','Tools',[['@tour','ট্যুর বাজেট','Tour budget','bus','#f59e0b'],['notes','নোট ও টাস্ক','Notes & tasks','clipboard','#a78bfa']]]
 ];
 const icon=n=>n.indexOf('svg:')===0?'<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#'+n.slice(4)+'"/></svg>':'<i class="mi" style="--m:var(--ic-'+n+')"></i>';
 const cur=()=>{ const s=document.querySelector('.section.active'); return s?s.id.replace('sec-',''):''; };
 function tile(a,k,c,ic,lb,on){ return '<button type="button" class="mnT'+(on?' on':'')+'" data-a="'+a+'" data-k="'+esc(k)+'" style="--c:'+c+'"><span class="mnI">'+ic+'</span><span class="mnL">'+lb+'</span></button>'; }
 function fillMenu(){
+  try{ build(); }catch(e){}
   const w=who(), c=cur(), det=sec.classList.contains('ftDetail')?kOf(dets().find(d=>d.classList.contains('ftShow'))||sec):'';
   const lg=$('headerLogoEl'), logo=$('mnLogo'); if(lg&&logo) logo.innerHTML=lg.innerHTML;
   const nm=document.querySelector('[data-i18n="app_title"]'); if(nm&&$('mnName')) $('mnName').textContent=nm.textContent;
@@ -12150,15 +12218,17 @@ function fillMenu(){
     ? '<div class="mnPro" data-a="tab" data-k="profile"><div class="av">'+avatar()+'</div><div class="tx"><b>'+(w.name?esc(w.name):L('আমার প্রোফাইল','My profile'))+'</b><span>'+(w.on?'<i></i>':'')+esc(w.un?'@'+w.un:(w.email||L('প্রোফাইল দেখুন','View profile')))+'</span></div>'+CHEV+'</div>'
     : '<div class="mnPro mnLogin" data-a="login" role="button" tabindex="0"><div class="av">'+icon('user')+'</div><div class="tx"><b>'+L('লগইন করুন','Log in')+'</b><span>'+L('ক্লাউড ব্যাকআপ ও বন্ধুদের সাথে যুক্ত হন','Back up to the cloud and connect with friends')+'</span></div><span class="mnLgBtn">'+L('লগইন','Log in')+'</span></div>';
   h+=bkCard();
-  const mv=dets().filter(isMoved).map(d=>{ const ch=chipOf(d), k=kOf(d); return tile('mset',k,ch.c,ch.i,titleHtml(d),det&&det===k); });
-  const mvHtml=mv.length?'<div class="mnSec">'+L('অর্থ ও বাজেট','Money & budget')+'</div><div class="mnGrid">'+mv.join('')+'</div>':'';
+  const R=(a,k,c,ic,lb,on)=>'<button type="button" class="mnR'+(on?' on':'')+'" data-a="'+a+'" data-k="'+esc(k)+'" style="--c:'+c+'"><span class="mnI g">'+ic+'</span><span class="mnL">'+lb+'</span>'+CHEV+'</button>';
+  const card=rows=>'<div class="mnCard">'+rows.join('')+'</div>';
+  const sect=(t,rows)=>rows.length?'<div class="mnSec">'+t+'</div>'+card(rows):'';
+  const mv=dets().filter(isMoved).map(d=>{ const ch=chipOf(d), k=kOf(d); return R('mset',k,ch.c,ch.i,titleHtml(d),det&&det===k); });
   TABS.forEach(g=>{
-    const items=g[3].filter(x=>x[0]==='@search'?!!window.ppGoSearch:x[0]==='@blood'?!!window.ftBlood:x[0]==='@inbox'?!!window.ftOpenInbox:x[0]==='@tour'?!!window.ftTour:(!!$('sec-'+x[0])||x[0]==='tx')).map(x=>tile(x[0]==='@search'?'search':x[0]==='@blood'?'blood':x[0]==='@inbox'?'inbox':x[0]==='@tour'?'tour':'tab',x[0],x[4],icon(x[3]),L(x[1],x[2]),x[0]===c&&c!=='settings'));
-    if(items.length) h+='<div class="mnSec">'+L(g[1],g[2])+'</div><div class="mnGrid">'+items.join('')+'</div>';
-    if(g[0]==='money') h+=mvHtml;
+    const rows=g[3].filter(x=>x[0]==='@search'?!!window.ppGoSearch:x[0]==='@blood'?!!window.ftBlood:x[0]==='@inbox'?!!window.ftOpenInbox:x[0]==='@tour'?!!window.ftTour:(!!$('sec-'+x[0])||x[0]==='tx')).map(x=>R(x[0]==='@search'?'search':x[0]==='@blood'?'blood':x[0]==='@inbox'?'inbox':x[0]==='@tour'?'tour':'tab',x[0],x[4],icon(x[3]),L(x[1],x[2]),x[0]===c&&c!=='settings'));
+    h+=sect(L(g[1],g[2]),g[0]==='money'?rows.concat(mv):rows);
   });
-  const FT=tile('tab','settings','#64748b',icon('settings'),L('সেটিংস','Settings'),c==='settings'&&!det)+tile('about','about','#8b5cf6','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.2M12 7.8h.01"/></svg>',L('অ্যাপ সম্পর্কে','About'),false)+(window.ftInstall?tile('install','install','#16a34a',icon('download'),(window.ftInstall.installed()?L('অ্যাপ ইনস্টল হয়েছে','App installed'):L('অ্যাপ ইনস্টল','Install app')),false):'')+tile('logout','logout','#ef4444',icon('power'),L('লগআউট','Logout'),false);
-  $('mnBody').innerHTML=h+'<div class="mnSec">'+L('আরও','More')+'</div><div class="mnGrid">'+FT+'</div>';
+  h+=sect(L('সেটিংস','Settings'),[R('tab','settings','#64748b',icon('settings'),L('সব সেটিংস','All settings'),c==='settings'&&!det)].concat(menuCats.map(m=>R('cat',m.k,m.ci[0],m.ci[1],m.t,false))));
+  h+=sect(L('অ্যাপ','App'),[R('about','about','#8b5cf6','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.2M12 7.8h.01"/></svg>',L('অ্যাপ সম্পর্কে','About'),false)].concat(window.ftInstall?[R('install','install','#16a34a',icon('download'),(window.ftInstall.installed()?L('অ্যাপ ইনস্টল হয়েছে','App installed'):L('অ্যাপ ইনস্টল','Install app')),false)]:[]).concat([R('logout','logout','#ef4444',icon('power'),L('লগআউট','Logout'),false)]));
+  $('mnBody').innerHTML=h;
   $('mnFt').innerHTML=''; try{ if(window.ftCloud) ftCloud.refresh(); }catch(e){}
 }
 const ov=document.createElement('div'); ov.id='ftMnOv';
@@ -12174,6 +12244,7 @@ function onMenu(e){
     if(a==='tab'){ try{ activateTab(k); }catch(x){} }
     else if(a==='mset') window.ftSetOpen(k,from);
     else if(a==='set') window.ftSetOpen(k);
+    else if(a==='cat') window.ftSetCat(k,from);
     else if(a==='search'&&window.ppGoSearch) window.ppGoSearch();
     else if(a==='blood'&&window.ftBlood) window.ftBlood.open('');
     else if(a==='inbox'&&window.ftOpenInbox) window.ftOpenInbox();
@@ -13660,7 +13731,7 @@ var OK=/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/, sig='';
 var mi=function(n){return '<i class="mi" style="--m:var(--ic-'+n+')"></i>';};
 function det(){ var h=document.querySelector('#sec-settings details.setBox h3[data-i18n="settings_profile"]'); return h?h.closest('details'):null; }
 function show(k){ var hub=$('phHub'); if(!hub) return; [].forEach.call(hub.querySelectorAll('.phP'),function(p){ p.classList.toggle('on',p.id==='phP_'+k); }); [].forEach.call(hub.querySelectorAll('.phNav button'),function(b){ b.classList.toggle('on',b.dataset.k===k); }); }
-function labels(){ var hub=$('phHub'); if(!hub) return; [].forEach.call(hub.querySelectorAll('.phNav button'),function(b){ var p=P.filter(function(x){return x[0]===b.dataset.k;})[0]; b.innerHTML=mi(p[3])+'<span>'+L(p[1],p[2])+'</span>'; }); }
+function labels(){ var hub=$('phHub'); if(!hub) return; [].forEach.call(hub.querySelectorAll('.phNav button'),function(b){ var p=P.filter(function(x){return x[0]===b.dataset.k;})[0]; b.innerHTML=mi(p[3])+'<span>'+L(p[1],p[2])+'</span>'; }); P.forEach(function(p){ var e=$('phP_'+p[0]); if(e) e.setAttribute('data-t',L(p[1],p[2])); }); }
 function refresh(force){
   var av=$('phAv'); if(!av) return; var nm=g('myName_v1'), un=g('myUsername_v1').replace(/^@/,''), pic=g('myProfilePic_v1'), cv=g('myCoverPic_v1'), r=document.querySelector('#pfStudio .psRing b');
   var bi=g('myBio_v1'),jb=g('myJob_v1'),ct=g('myCity_v1'); var s=[nm,un,pic.length,cv.length,r?r.textContent:'',bn(),bi,jb,ct].join('|'); if(!force&&s===sig) return; sig=s;
@@ -13700,7 +13771,7 @@ function pass(){
   return miss===0;
 }
 var n=0; (function tick(){ var ok=false; try{ ok=pass(); }catch(e){} if(!ok&&n++<40) setTimeout(tick,500); })();
-var so=window.ftSetOpen; if(so) window.ftSetOpen=function(k){ var t=KEY[k], a=[].slice.call(arguments); if(t) a[0]='settings_profile'; var r=so.apply(this,a); if(t){ try{ pass(); }catch(e){} show(t); } return r; };
+var so=window.ftSetOpen; if(so) window.ftSetOpen=function(k){ var t=KEY[k], a=[].slice.call(arguments); if(t) a[0]='settings_profile'; var r=so.apply(this,a); if(t){ try{ pass(); }catch(e){} show(t); if(t!=='me'){ setTimeout(function(){ var e=$('phP_'+t); if(e) try{ e.scrollIntoView({block:'start'}); }catch(x){} },80); } } return r; };
 var at=window.activateTab; if(at) window.activateTab=function(x){ var r=at.apply(this,arguments); if(x==='settings') setTimeout(function(){ try{ pass(); refresh(true); }catch(e){} },80); return r; };
 var al=window.applyLanguage; if(al) window.applyLanguage=function(){ var r=al.apply(this,arguments); try{ refresh(true); }catch(e){} return r; };
 })();
@@ -14271,6 +14342,41 @@ html body .heroDots{position:relative;z-index:2;}
 .ppRow .ppBd{padding:3px 9px;border-radius:10px;background:color-mix(in srgb,var(--bdR) 12%,transparent);color:var(--bdR);font-weight:900;font-size:12px;border:1px solid color-mix(in srgb,var(--bdR) 28%,transparent);display:inline-flex;align-items:center;gap:5px;line-height:1.3}
 .ppRow .ppBd i{width:6px;height:6px;border-radius:50%;background:#16a34a}.ppRow .ppBd.off i{background:#94a3b8}
 .ppRow .ppFr{padding:2px 8px;border-radius:99px;background:color-mix(in srgb,#2563eb 13%,transparent);color:#3b82f6;font-weight:700;font-size:10.5px}
+
+/* ---- v3: compact professional donor cards + follow the user's theme (red only for blood-group / drop icons) ---- */
+#bdEmg,#bdSheetOv,.bdBan,.bdShort,.bdReqBtn,.bdCard,.bdSheet{--bdT:var(--primary);--bdG:var(--grad,var(--primary))}
+.bdHd{background:linear-gradient(135deg,var(--bdR),var(--bdR2) 70%,#7f1d1d);box-shadow:0 14px 30px -18px var(--bdR)}
+.bdHd .bdHdIc{color:#fff}
+.bdChip.on,.bdSave{background:var(--bdG);box-shadow:0 6px 14px -8px var(--bdT)}
+.bdBan{background:linear-gradient(135deg,var(--bdR),var(--bdR2));box-shadow:0 12px 24px -16px var(--bdR)}
+.bdMain2{background:var(--bdT)}
+.bdSecT a,.bdSheet h3 .d{color:var(--bdT)}.bdSheet h3 .d{color:var(--bdR)}
+.bdDots i.on{background:var(--bdT)}
+.bdIn:focus{border-color:var(--bdT)}
+.bdSw input:checked+i{background:var(--bdT)}
+.bdLgChk input{accent-color:var(--bdT)}
+.bdScroll .bdChip.on{background:color-mix(in srgb,var(--bdT) 13%,var(--card));color:var(--bdT);border-color:var(--bdT)}
+.bdReqBtn{border-color:color-mix(in srgb,var(--bdT) 50%,var(--border));background:color-mix(in srgb,var(--bdT) 5%,var(--card))}
+.bdReqBtn .ic{background:color-mix(in srgb,var(--bdT) 13%,transparent);color:var(--bdT)}
+.bdSec2 .mi,.bdSee>b .mi{color:var(--bdT)}
+.bdCard::before{background:var(--bdT)}
+.bdCard.rest::before{background:#94a3b8}
+/* compact card */
+.bdCard{gap:10px;padding:8px 10px 8px 12px;border-radius:16px;margin-bottom:8px;box-shadow:none}
+.bdCard::before{top:10px;bottom:10px;width:2.5px}
+.bdAvW{width:40px;height:40px}.bdAv{border-radius:14px;font-size:16px;border-width:1.5px}
+.bdDot{width:11px;height:11px;border-width:2px;right:-2px;bottom:-2px}
+.bdWho b{font-size:13.5px}.bdWho small{font-size:11px}
+.bdBg{min-width:36px;height:28px;padding:0 7px;border-radius:10px;font-size:13px;box-shadow:none;background:linear-gradient(135deg,var(--bdR),var(--bdR2))}
+.bdMeta{gap:5px;margin-top:5px}.bdTag{padding:2px 8px;font-size:10.5px}
+.bdAct{gap:6px;margin-top:7px;flex-wrap:nowrap}
+.bdBtn{padding:0 11px;height:28px;border-radius:9px;font-size:12px;gap:5px;box-sizing:border-box;white-space:nowrap}
+.bdBtn .bdSv{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.bdBtn.msg{background:var(--bdG);color:#fff}
+.bdBtn.tel{background:color-mix(in srgb,var(--bdT) 11%,transparent);color:var(--bdT);border:1px solid color-mix(in srgb,var(--bdT) 32%,transparent)}
+.bdSlide.bdCard{padding:10px 12px 10px 14px}
+.bdSlide .bdAvW{width:44px;height:44px}.bdSlide .bdBg{min-width:38px;height:30px;font-size:14px}
+.bdAvW{cursor:pointer}
 </style>
 <script id="ftBloodJs">
 /* ===== Blood donors & Emergency help ===== */
@@ -14431,10 +14537,11 @@ function metaHtml(r){
   else if(r.av===0) h+='<span class="bdTag rest"><i class="bdTd"></i>'+tx('এখন বিশ্রামে','Resting')+'</span>';
   return h?'<div class="bdMeta">'+h+'</div>':'';
 }
+var SV_MSG='<svg class="bdSv" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/><path d="M8.5 11h7M8.5 14h4"/></svg>';
+var SV_TEL='<svg class="bdSv" viewBox="0 0 24 24"><path d="M5 4h3.5l1.7 4.3-2.2 1.4a11 11 0 0 0 5.3 5.3l1.4-2.2L19 14.5V18a2 2 0 0 1-2 2A13 13 0 0 1 3 6a2 2 0 0 1 2-2Z"/></svg>';
 function actHtml(r){
-  var h='<button type="button" class="bdBtn msg" data-bd="msg" data-uid="'+esc(r.uid)+'">'+ic('send')+tx('মেসেজ','Message')+'</button>';
-  if(r.ph) h+='<a class="bdBtn tel" href="tel:'+esc(r.ph.replace(/[^\d+]/g,''))+'">'+esc(r.ph)+'</a>';
-  h+='<button type="button" class="bdBtn pro ico" data-bd="prof" data-uid="'+esc(r.uid)+'" aria-label="'+tx('প্রোফাইল','Profile')+'" title="'+tx('প্রোফাইল','Profile')+'">'+ic('user')+'</button>';
+  var h='<button type="button" class="bdBtn msg" data-bd="msg" data-uid="'+esc(r.uid)+'">'+SV_MSG+tx('এসএমএস','SMS')+'</button>';
+  if(r.ph) h+='<a class="bdBtn tel" href="tel:'+esc(r.ph.replace(/[^\d+]/g,''))+'">'+SV_TEL+tx('যোগাযোগ','Contact')+'</a>';
   return h;
 }
 function innerHtml(r){
@@ -15455,29 +15562,30 @@ window.ftEmo=function(ch){ var k=String(ch==null?'':ch).replace(/\uFE0F/g,''); r
 </style>
 <style id="bdCardV2">
 /* compact donor cards */
-html .bdCard{align-items:center;gap:11px;padding:9px 11px 9px 14px;border-radius:17px;margin-bottom:8px;background:linear-gradient(180deg,color-mix(in srgb,var(--bdR) 4%,var(--card)),var(--card));box-shadow:0 6px 16px -14px rgba(0,0,0,.45)}
-html .bdCard::before{top:13px;bottom:13px;width:3px}
-html .bdCard .bdAvW{width:46px;height:46px}
-html .bdCard .bdAv{border-radius:50%;font-size:17px;border-width:2px}
-html .bdCard .bdDot{width:12px;height:12px;right:-1px;bottom:-1px;border-width:2px}
+html .bdCard{align-items:center;gap:10px;padding:7px 10px 7px 13px;border-radius:15px;margin-bottom:7px;background:var(--card);box-shadow:none}
+html .bdCard::before{top:11px;bottom:11px;width:2.5px;background:var(--bdT,var(--primary))}
+html .bdCard.rest::before{background:#94a3b8}
+html .bdCard .bdAvW{width:38px;height:38px}
+html .bdCard .bdAv{border-radius:50%;font-size:15px;border-width:1.5px}
+html .bdCard .bdDot{width:10px;height:10px;right:-1px;bottom:-1px;border-width:2px}
 html .bdCard .bdTop{gap:8px}
-html .bdCard .bdWho b{font-size:14px;line-height:1.25}
-html .bdCard .bdWho small{font-size:11.5px;line-height:1.3;margin-top:1px}
-html .bdCard .bdBg{min-width:38px;height:32px;padding:0 9px;border-radius:11px;font-size:13.5px;letter-spacing:.2px;box-shadow:0 6px 12px -8px var(--bdR)}
-html .bdCard .bdMeta{gap:5px;margin-top:6px}
-html .bdCard .bdTag{padding:2px 8px;font-size:10.5px;line-height:1.5}
+html .bdCard .bdWho b{font-size:13.5px;line-height:1.25}
+html .bdCard .bdWho small{font-size:11px;line-height:1.25;margin-top:0}
+html .bdCard .bdBg{min-width:34px;height:26px;padding:0 8px;border-radius:9px;font-size:13px;letter-spacing:.2px;box-shadow:none}
+html .bdCard .bdMeta{gap:5px;margin-top:4px}
+html .bdCard .bdTag{padding:1px 7px;font-size:10px;line-height:1.5}
 html .bdCard .bdTag .mi{font-size:11px}
-html .bdCard .bdAct{gap:6px;margin-top:8px;flex-wrap:wrap}
-html .bdCard .bdBtn{height:30px;padding:0 11px;border-radius:10px;font-size:12px;gap:5px;box-sizing:border-box;justify-content:center;white-space:nowrap}
+html .bdCard .bdAct{gap:6px;margin-top:6px;flex-wrap:nowrap}
+html .bdCard .bdBtn{height:27px;padding:0 10px;border-radius:9px;font-size:11.5px;gap:5px;box-sizing:border-box;justify-content:center;white-space:nowrap}
 html .bdCard .bdBtn .mi{font-size:13px}
-html .bdCard .bdBtn.msg{background:linear-gradient(135deg,var(--bdR),var(--bdR2,var(--bdR)));box-shadow:0 6px 12px -8px var(--bdR)}
+html .bdCard .bdBtn.msg{background:var(--bdG,var(--primary));color:#fff;box-shadow:none}
 html .bdCard .bdBtn.tel{font-weight:800;letter-spacing:.2px}
 html .bdCard .bdBtn.ico{width:30px;padding:0}
-html .bdCard.bdSlide{padding:11px 13px 11px 16px;border-radius:19px}
-html .bdCard.bdSlide .bdAvW{width:52px;height:52px}
-html .bdCard.bdSlide .bdWho b{font-size:15px}
-html .bdCard.bdSlide .bdBg{min-width:44px;height:36px;font-size:15.5px;border-radius:12px}
-html .bdCard.bdSlide .bdAct{margin-top:9px}
+html .bdCard.bdSlide{padding:8px 11px 8px 14px;border-radius:16px}
+html .bdCard.bdSlide .bdAvW{width:42px;height:42px}
+html .bdCard.bdSlide .bdWho b{font-size:14px}
+html .bdCard.bdSlide .bdBg{min-width:38px;height:28px;font-size:14px;border-radius:10px}
+html .bdCard.bdSlide .bdAct{margin-top:7px}
 html .bdTrack{gap:10px}
 html .bdDots{margin:8px 0 0}
 html .bdDots i{width:6px;height:6px}
@@ -15833,6 +15941,23 @@ body.ftTourOpen #bottomNav{display:none!important}
 #ftTourOv .tMenu{display:flex;flex-direction:column;gap:8px;margin-top:10px}
 #ftTourOv .tMenu button{height:50px;border-radius:16px;border:1px solid var(--border);background:var(--card);font-weight:700;font-size:14.5px;text-align:left;padding:0 16px;cursor:pointer}
 #ftTourOv .tMenu button.dg{color:#ef4444;border-color:#ef444455}
+
+#ftTourOv .tTabs button{font-size:12.5px;padding:0 2px}
+#ftTourOv .tPer[data-a]{cursor:pointer;border-radius:12px;-webkit-tap-highlight-color:transparent}
+#ftTourOv .tPer[data-a]:active{background:color-mix(in srgb,var(--text) 6%,transparent)}
+#ftTourOv .tMb{display:block;height:6px;border-radius:6px;background:color-mix(in srgb,var(--text) 10%,transparent);overflow:hidden;margin-top:6px}
+#ftTourOv .tMb i{display:block;height:100%;border-radius:6px;background:var(--grad,var(--primary));transition:width .35s}
+#ftTourOv .tMb i.full{background:#22c55e}
+#ftTourOv .tDue{flex:none;font-weight:800;font-size:12.5px;text-align:right}
+#ftTourOv .tDue{min-width:74px}
+#ftTourOv .tDue.ok,#ftTourOv .tNet.ok{color:#16a34a}
+#ftTourOv .tStat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+#ftTourOv .tStat>div{padding:10px;border-radius:14px;border:1px solid var(--border);background:var(--card);min-width:0}
+#ftTourOv .tStat small{display:block;font-size:11px;color:var(--muted)}
+#ftTourOv .tStat b{display:block;font-size:14.5px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ftTourOv .tTgRow{display:flex;align-items:center;gap:10px;padding:8px 0}
+#ftTourOv .tTgRow .tPlI{width:130px}
+#ftTourOv .tTgIn{flex:1;min-width:0;width:100%;border:0;outline:0;background:transparent;color:var(--text);font:inherit;font-weight:800;font-size:15px;text-align:right}
 @media (prefers-reduced-motion:reduce){#ftTourOv.on,#ftTourOv .tSh,#ftTourOv .tSp{animation:none}}
 </style>
 <script id="ftTourJs">
@@ -15877,18 +16002,18 @@ var IC={
 };
 
 function calc(t){
-  var ex=Object.keys(t.exp||{}).map(function(k){ return t.exp[k]; }), keys=Object.keys(t.mem||{}), paid={}, share={}, net={}, byCat={}, total=0, cnt=0;
-  keys.forEach(function(k){ paid[k]=0; share[k]=0; net[k]=0; });
+  var ex=Object.keys(t.exp||{}).map(function(k){ return t.exp[k]; }), keys=Object.keys(t.mem||{}), paid={}, share={}, net={}, byCat={}, total=0, cnt=0, dep={}, recv={}, fundBy={}, fundIn=0, fundOut=0;
+  keys.forEach(function(k){ paid[k]=0; share[k]=0; net[k]=0; dep[k]=0; recv[k]=0; });
   ex.forEach(function(e){
     var a=+e.a||0;
-    if(e.ty==='pay'){ net[e.p]=(net[e.p]||0)+a; net[e.to]=(net[e.to]||0)-a; return; }
+    if(e.ty==='pay'||e.ty==='dep'){ net[e.p]=(net[e.p]||0)+a; net[e.to]=(net[e.to]||0)-a; if(e.ty==='dep'){ dep[e.p]=(dep[e.p]||0)+a; recv[e.to]=(recv[e.to]||0)+a; fundIn+=a; } return; }
     total+=a; cnt++; byCat[e.c]=(byCat[e.c]||0)+a;
     var s=Array.isArray(e.s)?e.s:Object.keys(e.s||{}).map(function(k){ return e.s[k]; });
     var sp=s.filter(function(k){ return k in net; }); if(!sp.length) sp=keys.slice();
-    paid[e.p]=(paid[e.p]||0)+a; net[e.p]=(net[e.p]||0)+a;
+    paid[e.p]=(paid[e.p]||0)+a; net[e.p]=(net[e.p]||0)+a; if(e.f){ fundOut+=a; fundBy[e.p]=(fundBy[e.p]||0)+a; }
     var per=sp.length?a/sp.length:0; sp.forEach(function(k){ share[k]=(share[k]||0)+per; net[k]=(net[k]||0)-per; });
   });
-  return {total:total,paid:paid,share:share,net:net,byCat:byCat,count:cnt};
+  return {total:total,paid:paid,share:share,net:net,byCat:byCat,count:cnt,dep:dep,recv:recv,fundBy:fundBy,fundIn:fundIn,fundOut:fundOut};
 }
 function settle(net){
   var D=[], C=[];
@@ -15909,7 +16034,7 @@ function money(n){ return '৳'+Math.round(+n||0).toLocaleString('en-US'); }
 function dayDiff(a,b){ if(!a||!b) return 0; var x=Date.parse(a+'T00:00:00'), y=Date.parse(b+'T00:00:00'); if(!isFinite(x)||!isFinite(y)||y<x) return 0; return Math.round((y-x)/864e5)+1; }
 
 
-var S={tours:{},sel:'',tab:'ov',open:false,sheet:false,err:'',busy:false,poll:0,loaded:false}, F=null, X=null, hP=false;
+var S={tours:{},sel:'',tab:'ov',fcat:'',open:false,sheet:false,err:'',busy:false,poll:0,loaded:false}, F=null, X=null, D=null, hP=false;
 function load(){ try{ var o=JSON.parse(localStorage.getItem(LSK)||'{}'); S.tours=o.tours||{}; }catch(e){ S.tours={}; } Object.keys(S.tours).forEach(function(k){ norm(S.tours[k]); S.tours[k].id=k; }); }
 function save(){ try{ localStorage.setItem(LSK,JSON.stringify({tours:S.tours})); }catch(e){} }
 function norm(t){
@@ -15985,10 +16110,20 @@ function av(t,k,sz){ var i=minfo(t,k), s=sz||34; return '<span class="tAv" style
 function cur(){ return S.sel?S.tours[S.sel]:null; }
 function autoCats(b){ var o={}, sum=0; CATS.forEach(function(c,i){ var v=i<CATS.length-1?Math.round(b*c[5]/100):Math.max(0,b-sum); o[c[0]]=v; sum+=v; }); return o; }
 function sorted(t){ return Object.keys(t.exp).map(function(k){ return t.exp[k]; }).sort(function(a,b){ return String(b.d||'').localeCompare(String(a.d||''))||(b.ts||0)-(a.ts||0); }); }
+function ledger(t){ return sorted(t).filter(function(e){ return e.ty!=='dep'; }); }
+function deps(t){ return sorted(t).filter(function(e){ return e.ty==='dep'; }); }
+function tgOf(t,k){ var m=(t.mem||{})[k]||{}; return +m.tg>0?+m.tg:(t.budget?Math.round(t.budget/(Object.keys(t.mem).length||1)):0); }
+function chipsH(act,arr,on){ return arr.map(function(x){ return '<button type="button" class="tChip'+(on(x[0])?' on':'')+'" data-a="'+act+'" data-v="'+esc(x[0])+'">'+x[1]+'</button>'; }).join(''); }
+function isReal(k){ return !!k&&k!=='self'&&k.indexOf('m_')!==0; }
+var METHODS=[['Cash','ক্যাশ','Cash'],['bKash','বিকাশ','bKash'],['Nagad','নগদ','Nagad'],['Rocket','রকেট','Rocket'],['Bank','ব্যাংক','Bank'],['Other','অন্যান্য','Other']];
+function mName(v){ for(var i=0;i<METHODS.length;i++) if(METHODS[i][0]===v) return bn()?METHODS[i][1]:METHODS[i][2]; return v||''; }
 function sumText(t){
   var c=calc(t), tr=settle(c.net), n=Object.keys(t.mem).length||1, ln=[];
   ln.push(t.name+(t.dest?' — '+t.dest:'')); if(rng(t)) ln.push(rng(t));
   ln.push(L('মোট খরচ: ','Total spent: ')+money(c.total)+(t.budget?' / '+money(t.budget):'')); ln.push(L('জনপ্রতি: ','Per person: ')+money(c.total/n));
+  if(c.fundIn) ln.push(L('ফান্ড: জমা ','Fund: collected ')+money(c.fundIn)+L(', ফান্ড থেকে খরচ ',', spent from fund ')+money(c.fundOut)+L(', ফান্ডে আছে ',', left in fund ')+money(c.fundIn-c.fundOut));
+  ln.push(L('সদস্য অনুযায়ী:','By member:'));
+  Object.keys(t.mem).forEach(function(k){ var tg=tgOf(t,k); ln.push('• '+nameOf(t,k)+': '+L('জমা ','deposited ')+money(c.dep[k])+(tg?' / '+money(tg):'')+L(', নিজে খরচ ',', paid ')+money(c.paid[k])+L(', ভাগ ',', share ')+money(c.share[k])); });
   if(tr.length){ ln.push(L('হিসাব:','Settle up:')); tr.forEach(function(x){ ln.push('• '+nameOf(t,x.f)+' → '+nameOf(t,x.t)+' '+money(x.a)); }); } else if(c.count) ln.push(L('সব হিসাব মিলে গেছে','All settled'));
   return ln.join('\n');
 }
@@ -16026,20 +16161,29 @@ function vOv(t,c){
     +'<div class="thRow"><div><small>'+L('খরচ হয়েছে','Spent')+'</small><b>'+money(c.total)+'</b></div><div><small>'+(left>=0?L('বাকি আছে','Left'):L('বেশি খরচ','Over budget'))+'</small><b>'+(b?money(Math.abs(left)):'—')+'</b></div><div><small>'+L('জনপ্রতি খরচ','Per person')+'</small><b>'+money(c.total/n)+'</b></div></div>'
     +'<div class="thMeta">'+(t.dest?IC.pin+' '+esc(t.dest)+(rng(t)?' · ':''):'')+rng(t)+(days?' · '+days+L(' দিন',' days'):'')+'</div></div>';
   if(b) h+='<div class="tPills"><span>'+L('জনপ্রতি বাজেট ','Budget / person ')+'<b>'+money(b/n)+'</b></span>'+(days?'<span>'+L('দিনপ্রতি বাজেট ','Budget / day ')+'<b>'+money(b/days)+'</b></span>':'')+'</div>';
+  var sp0=ledger(t).filter(function(e){ return !e.ty; }), ds={}, big=null;
+  sp0.forEach(function(e){ ds[e.d||'']=1; if(!big||e.a>big.a) big=e; });
+  var nd=Object.keys(ds).length, pp=[];
+  if(c.fundIn) pp.push('<span>'+L('ফান্ডে জমা ','Collected ')+'<b>'+money(c.fundIn)+'</b></span><span>'+L('ফান্ডে আছে ','In fund ')+'<b>'+money(c.fundIn-c.fundOut)+'</b></span>');
+  if(nd) pp.push('<span>'+L('দিনে গড় ','Avg / day ')+'<b>'+money(c.total/nd)+'</b></span>');
+  if(big) pp.push('<span>'+L('সবচেয়ে বড় ','Biggest ')+'<b>'+money(big.a)+'</b> · '+esc(big.t||cn(catOf(big.c)))+'</span>');
+  if(pp.length) h+='<div class="tPills">'+pp.join('')+'</div>';
   var cs=CATS.filter(function(x){ return c.byCat[x[0]]>0; });
   if(cs.length){ var acc=0, grad=cs.map(function(x){ var p=c.byCat[x[0]]/c.total*100, a=acc; acc+=p; return x[4]+' '+a.toFixed(2)+'% '+acc.toFixed(2)+'%'; }).join(',');
     h+='<div class="tCard2"><h4>'+L('কোথায় কত খরচ','Where it went')+'</h4><div class="tDon"><div class="tDonR" style="background:conic-gradient('+grad+')"><span>'+money(c.total)+'</span></div><div class="tLeg">'+cs.map(function(x){ return '<div><i style="background:'+x[4]+'"></i><span>'+esc(cn(x))+'</span><b>'+money(c.byCat[x[0]])+'</b></div>'; }).join('')+'</div></div></div>'; }
-  h+='<div class="tCard2"><h4>'+L('কে কত দিয়েছে','Who paid what')+'</h4>'+keys.map(function(k){ var nt=Math.round(c.net[k]||0); return '<div class="tPer">'+av(t,k,38)+'<span class="tpTx"><b>'+esc(nm(t,k))+'</b><small>'+L('দিয়েছেন ','Paid ')+money(c.paid[k])+' · '+L('ভাগ ','Share ')+money(c.share[k])+'</small></span><span class="tNet '+(nt>0?'pos':nt<0?'neg':'')+'">'+(nt>0?'+':nt<0?'−':'')+money(Math.abs(nt))+'</span></div>'; }).join('')+'</div>';
-  var rc=sorted(t).slice(0,3);
+  h+='<div class="tCard2"><h4>'+L('কে কত দিয়েছে','Who paid what')+'</h4>'+keys.map(function(k){ var nt=Math.round(c.net[k]||0); return '<div class="tPer" data-a="mem" data-k="'+esc(k)+'">'+av(t,k,38)+'<span class="tpTx"><b>'+esc(nm(t,k))+'</b><small>'+L('দিয়েছেন ','Paid ')+money(c.paid[k])+' · '+L('ভাগ ','Share ')+money(c.share[k])+(c.fundIn?' · '+L('জমা ','Deposited ')+money(c.dep[k]):'')+'</small></span><span class="tNet '+(nt>0?'pos':nt<0?'neg':'')+'">'+(nt>0?'+':nt<0?'−':'')+money(Math.abs(nt))+'</span></div>'; }).join('')+'</div>';
+  var rc=ledger(t).slice(0,3);
   if(rc.length) h+='<div class="tCard2"><h4>'+L('সাম্প্রতিক খরচ','Recent expenses')+'</h4>'+rc.map(function(e){ return vRow(t,e); }).join('')+'<button type="button" class="tLink" data-a="tab" data-v="ex">'+L('সব দেখুন','See all')+'</button></div>';
   else h+='<div class="tNote">'+IC.info+'<span>'+L('"খরচ যোগ" চেপে প্রথম খরচটি লিখুন। কে দিয়েছে আর কারা ভাগ করবে বেছে নিন।','Tap "Add expense" to log the first one. Pick who paid and who splits it.')+'</span></div>';
   return h;
 }
 function vEx(t,c){
-  var list=sorted(t); if(!list.length) return '<div class="tEmpty small"><b>'+L('এখনো কোনো খরচ নেই','No expenses yet')+'</b><p>'+L('নিচের বাটন চেপে খরচ যোগ করুন।','Tap the button below to add one.')+'</p></div>';
+  var all=ledger(t), fc=S.fcat||'', list=fc?all.filter(function(e){ return !e.ty&&e.c===fc; }):all; if(!all.length) return '<div class="tEmpty small"><b>'+L('এখনো কোনো খরচ নেই','No expenses yet')+'</b><p>'+L('নিচের বাটন চেপে খরচ যোগ করুন।','Tap the button below to add one.')+'</p></div>';
   var h='', last='';
+  var fch='<div class="tChips" style="margin:0 0 10px">'+chipsH('fcat',[['',L('সব','All')]].concat(CATS.filter(function(x){ return c.byCat[x[0]]>0; }).map(function(x){ return [x[0],tic(x[1])+' '+esc(cn(x))]; })),function(v){ return v===fc; })+'</div>';
+  if(!list.length) return fch+'<div class="tEmpty small"><b>'+L('এই ক্যাটাগরিতে খরচ নেই','No expenses in this category')+'</b></div>';
   list.forEach(function(e){ var d=e.d||''; if(d!==last){ last=d; h+='<div class="tDay">'+esc(fdate(d)||L('তারিখ নেই','No date'))+'</div>'; } h+=vRow(t,e); });
-  return '<div class="tCard2 flush">'+h+'</div>';
+  return fch+'<div class="tCard2 flush">'+h+'</div>';
 }
 function vPl(t,c){
   var sum=0, b=+t.budget||0, n=Object.keys(t.mem).length||1, days=dayDiff(t.from,t.to); CATS.forEach(function(x){ sum+=+t.cats[x[0]]||0; });
@@ -16056,7 +16200,7 @@ function vSt(t,c){
   var keys=Object.keys(t.mem), mx=1, tr=settle(c.net);
   keys.forEach(function(k){ mx=Math.max(mx,Math.abs(c.net[k]||0)); });
   var h='<div class="tCard2"><h4>'+L('কার কত পাওনা/দেনা','Balances')+'</h4>'+keys.map(function(k){ var v=Math.round(c.net[k]||0), w=Math.round(Math.abs(v)/mx*100);
-    return '<div class="tPer">'+av(t,k,38)+'<span class="tpTx"><b>'+esc(nm(t,k))+'</b><span class="tBal"><i class="'+(v>0?'pos':'neg')+'" style="width:'+w+'%"></i></span></span><span class="tNet '+(v>0?'pos':v<0?'neg':'')+'">'+(v>0?L('পাবেন ','Gets '):v<0?L('দেবেন ','Owes '):'')+money(Math.abs(v))+'</span></div>'; }).join('')+'</div>';
+    return '<div class="tPer" data-a="mem" data-k="'+esc(k)+'">'+av(t,k,38)+'<span class="tpTx"><b>'+esc(nm(t,k))+'</b><span class="tBal"><i class="'+(v>0?'pos':'neg')+'" style="width:'+w+'%"></i></span></span><span class="tNet '+(v>0?'pos':v<0?'neg':'')+'">'+(v>0?L('পাবেন ','Gets '):v<0?L('দেবেন ','Owes '):'')+money(Math.abs(v))+'</span></div>'; }).join('')+'</div>';
   h+='<div class="tCard2"><h4>'+L('কে কাকে দেবে','Who pays whom')+'</h4>';
   if(!c.count) h+='<p class="tMut">'+L('খরচ যোগ করলে এখানে হিসাব দেখাবে।','Add expenses to see the settle-up here.')+'</p>';
   else if(!tr.length) h+='<div class="tDone">'+IC.check+' '+L('সব হিসাব মিলে গেছে','Everyone is settled')+'</div>';
@@ -16064,10 +16208,91 @@ function vSt(t,c){
   h+='</div><div class="tBtns two"><button type="button" class="tGhost" data-a="copy">'+IC.copy+L('সারাংশ কপি','Copy summary')+'</button><button type="button" class="tBtn sm" data-a="share">'+IC.send+L('বন্ধুদের পাঠান','Send to friends')+'</button></div>';
   return h;
 }
+function vDep(t,e){
+  return '<button type="button" class="tRow" data-a="editd" data-id="'+esc(e.id)+'"><span class="trIc" style="background:#10b98122;color:#10b981">'+tic('wallet')+'</span><span class="trTx"><b>'+esc(nm(t,e.p))+(e.to&&e.to!==e.p?' → '+esc(nm(t,e.to)):'')+'</b><small>'+(e.m?esc(mName(e.m))+' · ':'')+esc(fdate(e.d))+(e.n?' · '+esc(e.n):'')+'</small></span><span class="trAm ok">+'+money(e.a)+'</span></button>';
+}
+function vFd(t,c){
+  var keys=Object.keys(t.mem), tgT=0; keys.forEach(function(k){ tgT+=tgOf(t,k); });
+  var pct=tgT?Math.min(100,c.fundIn/tgT*100):(c.fundIn?100:0), bal=c.fundIn-c.fundOut;
+  var h='<div class="tHero'+(bal<0?' over':'')+'"><div class="thTop"><span>'+L('ফান্ডে জমা হয়েছে','Collected in fund')+'</span><b>'+money(c.fundIn)+'</b></div><div class="thBar"><i style="width:'+pct.toFixed(1)+'%"></i></div>'
+    +'<div class="thRow"><div><small>'+L('মোট টার্গেট','Target')+'</small><b>'+(tgT?money(tgT):'—')+'</b></div><div><small>'+L('ফান্ড থেকে খরচ','Spent from fund')+'</small><b>'+money(c.fundOut)+'</b></div><div><small>'+(bal>=0?L('ফান্ডে আছে','In fund'):L('ফান্ড ঘাটতি','Fund short'))+'</small><b>'+money(Math.abs(bal))+'</b></div></div>'
+    +'<div class="thMeta">'+(tgT&&tgT>c.fundIn?L('এখনো জমা বাকি ','Still to collect ')+money(tgT-c.fundIn):(tgT?L('টার্গেট পূর্ণ','Target reached'):L('টার্গেট ঠিক করা হয়নি','No target set')))+'</div></div>';
+  h+='<div class="tBtns two"><button type="button" class="tBtn sm" data-a="addd">'+IC.plus+L('জমা যোগ করুন','Add deposit')+'</button><button type="button" class="tGhost" data-a="tgs">'+L('টার্গেট ঠিক করুন','Set targets')+'</button></div>';
+  h+='<div class="tCard2"><h4>'+L('কে কত জমা দিয়েছে','Who deposited what')+'</h4>'+keys.map(function(k){
+    var d=c.dep[k]||0, tg=tgOf(t,k), due=tg-d, p=tg?Math.min(100,d/tg*100):(d?100:0);
+    var st=!tg?'':(due>0?'<span class="tDue bad">'+L('বাকি ','Due ')+money(due)+'</span>':(due<0?'<span class="tDue ok">'+L('বেশি ','Extra ')+money(-due)+'</span>':'<span class="tDue ok">✓ '+L('পূর্ণ','Paid')+'</span>'));
+    return '<div class="tPer" data-a="mem" data-k="'+esc(k)+'">'+av(t,k,38)+'<span class="tpTx"><b>'+esc(nm(t,k))+'</b><small>'+L('জমা ','Deposited ')+money(d)+(tg?' / '+money(tg):'')+'</small><span class="tMb"><i class="'+(tg&&d>=tg?'full':'')+'" style="width:'+p.toFixed(1)+'%"></i></span></span>'+st+'</div>'; }).join('')+'</div>';
+  var hold=keys.filter(function(k){ return c.recv[k]>0; });
+  if(hold.length) h+='<div class="tCard2"><h4>'+L('টাকা কার কাছে আছে','Who holds the money')+'</h4>'+hold.map(function(k){ var cash=c.recv[k]-(c.fundBy[k]||0); return '<div class="tPer" data-a="mem" data-k="'+esc(k)+'">'+av(t,k,38)+'<span class="tpTx"><b>'+esc(nm(t,k))+'</b><small>'+L('গ্রহণ ','Received ')+money(c.recv[k])+' · '+L('ফান্ড থেকে খরচ ','Spent ')+money(c.fundBy[k]||0)+'</small></span><span class="tNet '+(cash<0?'neg':'pos')+'">'+money(cash)+'</span></div>'; }).join('')+'</div>';
+  var dl=deps(t);
+  h+=dl.length?'<div class="tCard2 flush">'+dl.map(function(e){ return vDep(t,e); }).join('')+'</div>':'<div class="tNote">'+IC.info+'<span>'+L('কে কত টাকা দিয়েছে লিখে রাখতে \"জমা যোগ করুন\" চাপুন। কার কাছে টাকা জমা আছে সেটাও বেছে নেওয়া যাবে।','Tap \"Add deposit\" to record who gave how much, and who is holding the money.')+'</span></div>';
+  return h;
+}
+function lite(t,e,k){
+  var ic='#64748b', t1='', sub=esc(fdate(e.d)), am='', cl='';
+  if(e.ty==='dep'){ ic='#10b981'; if(e.p===k){ t1=L('জমা দিয়েছেন','Deposited')+(e.to!==k?' → '+esc(nm(t,e.to)):''); am='+'+money(e.a); cl='ok'; } else { t1=L('জমা নিয়েছেন','Received')+' ← '+esc(nm(t,e.p)); am=money(e.a); } if(e.m) sub=esc(mName(e.m))+' · '+sub; }
+  else if(e.ty==='pay'){ ic='#0ea5e9'; t1=e.p===k?L('পরিশোধ করেছেন','Paid')+' → '+esc(nm(t,e.to)):L('পেয়েছেন','Received')+' ← '+esc(nm(t,e.p)); am=money(e.a); }
+  else { var c=catOf(e.c); ic=c[4]; t1=esc(e.t||cn(c)); sub=L('খরচ','Expense')+(e.f?' · '+L('ফান্ড','Fund'):'')+' · '+sub; am=money(e.a); }
+  return '<div class="tPer"><span class="trIc" style="background:'+ic+'22;color:'+ic+';width:34px;height:34px;font-size:16px">'+tic(e.ty==='dep'?'wallet':e.ty==='pay'?'check':catOf(e.c)[1])+'</span><span class="tpTx"><b>'+t1+'</b><small>'+sub+'</small></span><span class="tNet '+cl+'">'+am+'</span></div>';
+}
+function openMemSheet(k){
+  var t=cur(); if(!t||!t.mem[k]) return; var c=calc(t), d=c.dep[k]||0, tg=tgOf(t,k), due=tg-d, nt=Math.round(c.net[k]||0);
+  var recs=sorted(t).filter(function(e){ return e.p===k||e.to===k; });
+  var st=function(l,v,x){ return '<div><small>'+l+'</small><b class="'+(x||'')+'">'+v+'</b></div>'; };
+  var canR=isReal(k)&&k!==meKey()&&logged()&&window.ftChatApi&&ftChatApi.sendTo;
+  var h='<h3 style="display:flex;align-items:center;gap:10px">'+av(t,k,36)+esc(nm(t,k))+'</h3>'
+   +'<div class="tStat">'+st(L('জমা দিয়েছেন','Deposited'),money(d))+st(L('টার্গেট','Target'),tg?money(tg):'—')+st(due>0?L('জমা বাকি','Still due'):L('বেশি জমা','Extra'),tg?money(Math.abs(due)):'—',due>0?'bad':'')+'</div>'
+   +'<div class="tStat">'+st(L('নিজে খরচ করেছেন','Paid for group'),money(c.paid[k]||0))+st(L('তার ভাগ','His/her share'),money(c.share[k]||0))+st(nt>0?L('পাবেন','Gets'):nt<0?L('দেবেন','Owes'):L('হিসাব','Balance'),nt?money(Math.abs(nt)):L('মিলেছে','Settled'),nt<0?'bad':'')+'</div>'
+   +'<div class="tBtns two"><button type="button" class="tBtn sm" data-a="addd" data-k="'+esc(k)+'">'+IC.plus+L('জমা নিন','Add deposit')+'</button>'+(canR?'<button type="button" class="tGhost" data-a="remind" data-k="'+esc(k)+'">'+IC.send+L('রিমাইন্ডার','Remind')+'</button>':'')+'</div>'
+   +'<div class="tLb">'+L('লেনদেনের তালিকা','Transactions')+'</div>'+(recs.length?recs.map(function(e){ return lite(t,e,k); }).join(''):'<p class="tMut">'+L('কোনো লেনদেন নেই','No transactions yet')+'</p>');
+  showSheet(h);
+}
+function openDepForm(id,pre){
+  var t=cur(); if(!t) return; var e=id?t.exp[id]:null, keys=Object.keys(t.mem), dl=deps(t);
+  var holder=e?e.to:(dl[0]?dl[0].to:(keys.indexOf(t.owner)>=0?t.owner:meKey()));
+  D={id:id||'',p:e?e.p:((pre&&pre.p)||meKey()),to:holder,m:e?(e.m||''):'Cash'};
+  var pk=keys.slice(); [D.p,D.to].forEach(function(k){ if(k&&pk.indexOf(k)<0) pk.push(k); });
+  var kc=function(act,on){ return chipsH(act,pk.map(function(k){ return [k,esc(nm(t,k))]; }),on); };
+  var h='<h3>'+(e?L('জমা এডিট','Edit deposit'):L('ফান্ডে জমা','Add to fund'))+'</h3>'
+   +'<label class="tLb" for="dfA">'+L('কত টাকা','Amount')+' (৳)</label><input class="tIn big" id="dfA" inputmode="decimal" placeholder="0" value="'+(e?esc(e.a):'')+'">'
+   +'<label class="tLb">'+L('কে দিয়েছে','Deposited by')+'</label><div class="tChips" id="dfP">'+kc('dp',function(v){ return v===D.p; })+'</div>'
+   +'<label class="tLb">'+L('টাকা কার কাছে জমা','Held by')+'</label><div class="tChips" id="dfT">'+kc('dt',function(v){ return v===D.to; })+'</div>'
+   +'<label class="tLb">'+L('মাধ্যম','Method')+'</label><div class="tChips" id="dfM">'+chipsH('dm',METHODS.map(function(m){ return [m[0],esc(bn()?m[1]:m[2])]; }),function(v){ return v===D.m; })+'</div>'
+   +fld('dfN',L('নোট (ঐচ্ছিক)','Note (optional)'),L('যেমন: প্রথম কিস্তি','e.g. First installment'),e?e.n:'','maxlength="40"')
+   +'<label class="tLb" for="dfD">'+L('তারিখ','Date')+'</label><input class="tIn" id="dfD" type="date" value="'+esc(e&&e.d?e.d:today())+'">'
+   +'<div class="tBtns"><button type="button" class="tBtn" data-a="dsave">'+L('সেভ করুন','Save')+'</button>'+(e?'<button type="button" class="tDanger" data-a="ddel" data-id="'+esc(id)+'">'+L('মুছুন','Delete')+'</button>':'')+'</div>';
+  showSheet(h);
+}
+async function saveDep(){
+  var t=cur(); if(!t||!D) return; var a=num($('dfA').value); if(!a){ say(L('টাকার পরিমাণ লিখুন','Enter the amount')); $('dfA').focus(); return; }
+  var old=D.id?t.exp[D.id]:null, id=D.id||('e'+rid()), now=Date.now();
+  var e={id:id,ty:'dep',p:D.p,to:D.to,a:a,m:D.m||'',n:$('dfN').value.trim(),d:$('dfD').value||today(),ts:old?old.ts:now,by:old?old.by:meKey()};
+  t.exp[id]=e; t.ts=now; save(); closeSheet(); render();
+  var p={ts:now}; p['exp/'+id]=e; await pushPatch(t,p);
+}
+function openTgForm(){
+  var t=cur(); if(!t) return; var keys=Object.keys(t.mem);
+  showSheet('<h3>'+L('জমার টার্গেট','Deposit targets')+'</h3><p class="tMut">'+L('ট্যুরের জন্য প্রত্যেকে কত টাকা দেবে ঠিক করুন।','Set how much each member should put in for the tour.')+'</p>'
+    +keys.map(function(k){ return '<div class="tTgRow">'+av(t,k,36)+'<span class="tpTx"><b>'+esc(nm(t,k))+'</b></span><label class="tPlI"><em>৳</em><input class="tTgIn" inputmode="decimal" data-k="'+esc(k)+'" value="'+(tgOf(t,k)||'')+'" placeholder="0"></label></div>'; }).join('')
+    +'<div class="tBtns"><button type="button" class="tGhost" data-a="tgeq">'+L('সমান ভাগ','Split equally')+'</button></div><button type="button" class="tBtn" data-a="tgsave">'+L('সেভ করুন','Save')+'</button>');
+}
+async function saveTg(){
+  var t=cur(); if(!t) return;
+  [].forEach.call(document.querySelectorAll('#tSheet .tTgIn'),function(i){ var k=i.getAttribute('data-k'), v=num(i.value); if(!t.mem[k]) return; if(v>0) t.mem[k].tg=v; else delete t.mem[k].tg; });
+  t.ts=Date.now(); save(); closeSheet(); render(); await pushPatch(t,{mem:t.mem,ts:t.ts});
+}
+async function remindMem(k){
+  var t=cur(); if(!t) return; var c=calc(t), tg=tgOf(t,k), due=tg-(c.dep[k]||0), nt=Math.round(c.net[k]||0), tx;
+  if(due>0) tx=L('ট্যুর \"'+t.name+'\": আপনার জমা ৳'+Math.round(c.dep[k]||0)+' / ৳'+Math.round(tg)+'। আরও '+money(due)+' জমা দিতে হবে।','Tour \"'+t.name+'\": you have deposited '+money(c.dep[k]||0)+' of '+money(tg)+'. '+money(due)+' still due.');
+  else if(nt<0) tx=L('ট্যুর \"'+t.name+'\": হিসাব অনুযায়ী আপনার '+money(-nt)+' দেওয়ার আছে।','Tour \"'+t.name+'\": by the final calculation you owe '+money(-nt)+'.');
+  else { say(L('এই সদস্যের কোনো বকেয়া নেই','Nothing is due from this member')); return; }
+  closeSheet(); try{ var ok=await ftChatApi.sendTo(k,tx); say(ok?L('রিমাইন্ডার পাঠানো হয়েছে','Reminder sent'):L('পাঠানো যায়নি','Could not send')); }catch(e){ say(L('পাঠানো যায়নি','Could not send')); }
+}
 function vDetail(t){
-  var c=calc(t), tabs=[['ov',L('সারাংশ','Overview')],['ex',L('খরচ','Expenses')],['pl',L('প্ল্যান','Plan')],['st',L('হিসাব','Settle')]];
+  var c=calc(t), tabs=[['ov',L('সারাংশ','Overview')],['ex',L('খরচ','Expenses')],['fd',L('ফান্ড','Fund')],['pl',L('প্ল্যান','Plan')],['st',L('হিসাব','Settle')]];
   var h=banner()+'<div class="tTabs">'+tabs.map(function(x){ return '<button type="button" class="'+(S.tab===x[0]?'on':'')+'" data-a="tab" data-v="'+x[0]+'">'+x[1]+'</button>'; }).join('')+'</div>';
-  h+=S.tab==='ex'?vEx(t,c):S.tab==='pl'?vPl(t,c):S.tab==='st'?vSt(t,c):vOv(t,c);
+  h+=S.tab==='ex'?vEx(t,c):S.tab==='fd'?vFd(t,c):S.tab==='pl'?vPl(t,c):S.tab==='st'?vSt(t,c):vOv(t,c);
+  if(S.tab==='fd') h+='<button type="button" class="tFab" data-a="addd">'+IC.plus+'<span>'+L('জমা যোগ','Add deposit')+'</span></button>';
   if(S.tab==='ov'||S.tab==='ex') h+='<button type="button" class="tFab" data-a="addx">'+IC.plus+'<span>'+L('খরচ যোগ','Add expense')+'</span></button>';
   return h;
 }
@@ -16079,7 +16304,7 @@ function render(){
 }
 /* ---- sheets ---- */
 function showSheet(html){ var w=$('tSheet'); w.innerHTML='<div class="tSh" data-a="sx"></div><div class="tSp" role="dialog" aria-modal="true"><div class="tGrab"></div>'+html+'</div>'; w.classList.add('on'); S.sheet=true; }
-function closeSheet(){ var w=$('tSheet'); if(w){ w.classList.remove('on'); w.innerHTML=''; } S.sheet=false; F=null; X=null; }
+function closeSheet(){ var w=$('tSheet'); if(w){ w.classList.remove('on'); w.innerHTML=''; } S.sheet=false; F=null; X=null; D=null; }
 function fld(id,lb,ph,val,extra){ return '<label class="tLb" for="'+id+'">'+lb+'</label><input class="tIn" id="'+id+'" placeholder="'+esc(ph||'')+'" value="'+esc(val||'')+'" '+(extra||'')+'>'; }
 function drawMem(){
   var t=F, h='';
@@ -16089,7 +16314,7 @@ function drawMem(){
 }
 function openTourForm(id){
   var t=id?S.tours[id]:null, mem={};
-  if(t) Object.keys(t.mem).forEach(function(k){ mem[k]={n:t.mem[k].n||'',u:t.mem[k].u||''}; }); else mem[meKey()]={n:myN()||L('আমি','Me'),u:myU()};
+  if(t) Object.keys(t.mem).forEach(function(k){ mem[k]={n:t.mem[k].n||'',u:t.mem[k].u||''}; if(+t.mem[k].tg>0) mem[k].tg=+t.mem[k].tg; }); else mem[meKey()]={n:myN()||L('আমি','Me'),u:myU()};
   F={id:id||'',mem:mem};
   var fr=window.ftFrInfo||{}, fk=logged()?Object.keys(fr):[];
   var h='<h3>'+(t?L('ট্যুর এডিট','Edit tour'):L('নতুন ট্যুর','New tour'))+'</h3>'
@@ -16124,9 +16349,11 @@ async function saveTour(){
 }
 function openExpForm(id){
   var t=cur(); if(!t) return; var e=id?t.exp[id]:null;
+  if(e&&e.ty==='dep'){ openDepForm(id); return; }
   if(e&&e.ty==='pay'){ if(confirm(L('এই পরিশোধের রেকর্ড মুছবেন?','Delete this payment record?'))) delExp(t,id); return; }
   var keys=Object.keys(t.mem);
-  X={id:id||'',c:e?e.c:'food',p:e?e.p:meKey(),s:(e&&e.s&&e.s.length)?e.s.slice():keys.slice()};
+  var c0=calc(t), hold=Object.keys(c0.recv).filter(function(k){ return c0.recv[k]>0; });
+  X={id:id||'',c:e?e.c:'food',p:e?e.p:meKey(),s:(e&&e.s&&e.s.length)?e.s.slice():keys.slice(),f:0}; X.f=e?(e.f?1:0):(hold.indexOf(X.p)>=0?1:0);
   var chips=function(act,arr,on){ return arr.map(function(x){ return '<button type="button" class="tChip'+(on(x[0])?' on':'')+'" data-a="'+act+'" data-v="'+esc(x[0])+'">'+x[1]+'</button>'; }).join(''); };
   var pk=keys.slice(); if(X.p&&pk.indexOf(X.p)<0) pk.push(X.p);
   var h='<h3>'+(e?L('খরচ এডিট','Edit expense'):L('নতুন খরচ','New expense'))+'</h3>'
@@ -16134,6 +16361,7 @@ function openExpForm(id){
     +fld('xfT',L('কিসের খরচ','What for'),L('যেমন: দুপুরের খাবার','e.g. Lunch'),e?e.t:'','maxlength="40"')
     +'<label class="tLb">'+L('ক্যাটাগরি','Category')+'</label><div class="tChips">'+chips('xc',CATS.map(function(c){ return [c[0],tic(c[1])+' '+esc(cn(c))]; }),function(v){ return v===X.c; })+'</div>'
     +'<label class="tLb">'+L('কে দিয়েছে','Paid by')+'</label><div class="tChips" id="xfP">'+chips('xp',pk.map(function(k){ return [k,esc(nm(t,k))]; }),function(v){ return v===X.p; })+'</div>'
+    +(c0.fundIn?'<label class="tLb">'+L('টাকার উৎস','Paid from')+'</label><div class="tChips" id="xfF">'+chips('xf',[['0',L('নিজের পকেট','Own pocket')],['1',L('ট্যুর ফান্ড','Tour fund')]],function(v){ return String(X.f)===v; })+'</div>':'')
     +'<label class="tLb">'+L('কারা ভাগ করবে','Split between')+' <button type="button" class="tLinkS" data-a="xall">'+L('সবাই','All')+'</button></label><div class="tChips" id="xfS">'+chips('xs',keys.map(function(k){ return [k,esc(nm(t,k))]; }),function(v){ return X.s.indexOf(v)>=0; })+'</div>'
     +'<label class="tLb" for="xfD">'+L('তারিখ','Date')+'</label><input class="tIn" id="xfD" type="date" value="'+esc(e&&e.d?e.d:today())+'">'
     +'<div class="tBtns"><button type="button" class="tBtn" data-a="xsave">'+L('সেভ করুন','Save')+'</button>'+(e?'<button type="button" class="tDanger" data-a="xdel" data-id="'+esc(id)+'">'+L('মুছুন','Delete')+'</button>':'')+'</div>';
@@ -16143,7 +16371,7 @@ async function saveExp(){
   var t=cur(); if(!t||!X) return; var a=num($('xfA').value); if(!a){ say(L('টাকার পরিমাণ লিখুন','Enter the amount')); $('xfA').focus(); return; }
   var keys=Object.keys(t.mem), s=X.s.filter(function(k){ return keys.indexOf(k)>=0; }); if(!s.length) s=keys.slice(); if(s.length===keys.length) s=[];
   var old=X.id?t.exp[X.id]:null, id=X.id||('e'+rid()), c=catOf(X.c), now=Date.now();
-  var e={id:id,t:$('xfT').value.trim()||cn(c),a:a,c:X.c,p:X.p,s:s,d:$('xfD').value||today(),ts:old?old.ts:now,by:old?old.by:meKey()};
+  var e={id:id,t:$('xfT').value.trim()||cn(c),a:a,c:X.c,p:X.p,s:s,d:$('xfD').value||today(),ts:old?old.ts:now,by:old?old.by:meKey()}; if(X.f) e.f=1;
   t.exp[id]=e; t.ts=now; save(); closeSheet(); render();
   var p={ts:now}; p['exp/'+id]=e; await pushPatch(t,p);
 }
@@ -16191,7 +16419,21 @@ function onClick(e){
     case 'tadd': { var inp=$('tfMn'), v=inp.value.trim(); if(!v||!F) break; if(Object.keys(F.mem).length>=20){ say(L('সর্বোচ্চ ২০ জন','Max 20 members')); break; } F.mem['m_'+rid()]={n:v}; inp.value=''; drawMem(); break; }
     case 'tsave': saveTour(); break;
     case 'xc': if(X){ X.c=b.getAttribute('data-v'); chipSet(b.parentNode,X.c); } break;
-    case 'xp': if(X){ X.p=b.getAttribute('data-v'); chipSet($('xfP'),X.p); } break;
+    case 'xp': if(X){ X.p=b.getAttribute('data-v'); chipSet($('xfP'),X.p); if($('xfF')&&t){ var c1=calc(t); X.f=c1.recv[X.p]>0?1:0; chipSet($('xfF'),String(X.f)); } } break;
+    case 'xf': if(X){ X.f=+b.getAttribute('data-v')||0; chipSet($('xfF'),String(X.f)); } break;
+    case 'fcat': S.fcat=b.getAttribute('data-v')||''; render(); break;
+    case 'mem': openMemSheet(b.getAttribute('data-k')); break;
+    case 'addd': { var pk0=b.getAttribute('data-k'); closeSheet(); openDepForm('',pk0?{p:pk0}:null); break; }
+    case 'editd': openDepForm(b.getAttribute('data-id')); break;
+    case 'dp': if(D){ D.p=b.getAttribute('data-v'); chipSet($('dfP'),D.p); } break;
+    case 'dt': if(D){ D.to=b.getAttribute('data-v'); chipSet($('dfT'),D.to); } break;
+    case 'dm': if(D){ D.m=b.getAttribute('data-v'); chipSet($('dfM'),D.m); } break;
+    case 'dsave': saveDep(); break;
+    case 'ddel': if(t&&confirm(L('এই জমার রেকর্ড মুছবেন?','Delete this deposit?'))) delExp(t,b.getAttribute('data-id')); break;
+    case 'tgs': openTgForm(); break;
+    case 'tgeq': if(t){ var nn=Object.keys(t.mem).length||1, base=t.budget?Math.round(t.budget/nn):0; if(!base){ say(L('আগে মোট বাজেট দিন','Set a total budget first')); break; } [].forEach.call(document.querySelectorAll('#tSheet .tTgIn'),function(i){ i.value=base; }); } break;
+    case 'tgsave': saveTg(); break;
+    case 'remind': remindMem(b.getAttribute('data-k')); break;
     case 'xs': if(X){ var s=b.getAttribute('data-v'), i=X.s.indexOf(s); if(i>=0) X.s.splice(i,1); else X.s.push(s); b.classList.toggle('on',i<0); } break;
     case 'xall': if(X&&t){ X.s=Object.keys(t.mem); [].forEach.call($('xfS').querySelectorAll('.tChip'),function(c){ c.classList.add('on'); }); } break;
     case 'xsave': saveExp(); break;
