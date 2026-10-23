@@ -49,7 +49,7 @@ function mi(n){return '<i class="mi" style="--m:var(--ic-'+n+')"></i>';}
 function noteFmt(n){n=String(n||'');var R='\u{1F501}';if(n.indexOf(R)===0){return mi('repeat')+' '+esc(n.slice(R.length).trim());}return esc(n);}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#f4f5f7; --card:#ffffff; --text:#1a1c1e; --muted:#6b7280; --border:#e5e7eb;
@@ -83,7 +83,7 @@ function noteFmt(n){n=String(n||'');var R='\u{1F501}';if(n.indexOf(R)===0){retur
 html{scroll-padding-top:env(safe-area-inset-top,0px); height:100%;}
 *{box-sizing:border-box;}
 body{
-  margin:0; font-family:'Noto Sans Bengali','Segoe UI',sans-serif; background:var(--bg); color:var(--text);
+  margin:0; font-family:'Noto Sans Bengali','Nirmala UI','Vrinda','Shonar Bangla','Kohinoor Bangla','Bangla Sangam MN','Segoe UI',system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text);
   height:100%; -webkit-font-smoothing:antialiased;
 }
 .wrap{max-width:520px; margin:0 auto; padding:14px 14px 90px;}
@@ -3135,7 +3135,7 @@ html[data-theme*="yellow"] .cPad button.op{color:#000}
     <div id="backupStatusText" style="font-size:12.5px; color:var(--primary); margin-top:8px;"></div>
   </div>
   <div class="box" id="accountBox">
-    <h3><span class="bn">লগআউট</span><span class="en">Logout</span></h3>
+    <h3><span class="bn">লগআউট ও লগইন করা ডিভাইস</span><span class="en">Logout &amp; logged-in devices</span></h3>
     <div style="font-size:13.5px; font-weight:700; word-break:break-all;" id="acWho"></div>
     <div style="font-size:12.5px; color:var(--muted); margin:4px 0 10px;"><span class="bn">লগআউট করলে এই ফোনের ডেটা মুছবে না। আবার লগইন বা গেস্ট হিসেবে ঢুকতে পারবেন।</span><span class="en">Logging out keeps the data on this phone. You can log in again or continue as guest.</span></div>
     <div id="devWrap" class="dvWrap" style="display:none;">
@@ -3166,6 +3166,10 @@ html[data-theme*="yellow"] .cPad button.op{color:#000}
     <label data-i18n="lbl_goal_target">লক্ষ্যের পরিমাণ (টাকা)</label>
     <input type="number" id="goalTargetInput" placeholder="0">
     <button class="typebtn" style="width:100%; margin-top:8px;" onclick="saveGoal()" data-i18n="btn_save">সংরক্ষণ করুন</button>
+  </div>
+  <div class="box" id="periodSetBox">
+    <h3 id="perTitle">খরচের সময়কাল</h3>
+    <div id="perBody"></div>
   </div>
   <div class="box" id="spSetBox">
     <h3 id="spSetTitle">সঞ্চয় পরিকল্পনা</h3>
@@ -3199,21 +3203,6 @@ html[data-theme*="yellow"] .cPad button.op{color:#000}
     <div id="recList" style="margin-top:10px;"></div>
   </div>
   <div class="box">
-    <h3 data-i18n="settings_logo">অ্যাপ লোগো</h3>
-    <p style="font-size:12.5px; color:var(--muted); margin:0 0 10px;" data-i18n="logo_note">চাইলে অ্যাপের ডিফল্ট লোগোর বদলে নিজের ছবি বা লোগো বসাতে পারেন। এটা লগইন স্ক্রিন ও উপরের টাইটেলে দেখাবে।</p>
-    <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
-      <div id="logoPreviewWrap" style="width:52px; height:52px; border-radius:14px; overflow:hidden; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; background:var(--bg); flex-shrink:0;">
-        <span id="logoPreviewEmoji" style="font-size:28px;"><i class="mi" style="--m:var(--ic-wallet)"></i></span>
-        <img id="logoPreviewImg" style="display:none; width:100%; height:100%; object-fit:cover;">
-      </div>
-      <div style="flex:1;">
-        <input type="file" id="logoFileInput" accept="image/*" style="display:none;" onchange="handleLogoUpload(this)">
-        <button class="typebtn" style="width:100%;" onclick="document.getElementById('logoFileInput').click()" data-i18n="btn_change_logo">লোগো পরিবর্তন করুন</button>
-      </div>
-    </div>
-    <button class="typebtn" id="logoResetBtn" style="width:100%; display:none;" onclick="resetLogo()" data-i18n="btn_reset_logo">ডিফল্ট লোগোতে ফিরে যান</button>
-  </div>
-  <div class="box">
     <h3 data-i18n="lock_heading">অ্যাপ লক (ফিঙ্গারপ্রিন্ট)</h3>
     <p style="font-size:12.5px; color:var(--muted); margin:0 0 8px;" data-i18n="lock_note">চালু করলে অ্যাপ খোলার সময় আপনার ফোনের ফিঙ্গারপ্রিন্ট বা ফেস আনলক দিয়ে যাচাই করতে হবে।</p>
     <div style="font-size:13.5px; margin-bottom:10px;"><span data-i18n="lbl_status">অবস্থা:</span> <span id="lockStatusText" data-i18n="status_off">বন্ধ আছে</span></div>
@@ -3232,14 +3221,6 @@ html[data-theme*="yellow"] .cPad button.op{color:#000}
       <button class="main" onclick="setupPin()" data-i18n="btn_set_pin">পিন সেট করুন</button>
     </div>
     <button class="typebtn" id="pinDisableBtn" style="width:100%; display:none;" onclick="disablePin()" data-i18n="btn_disable_pin">পিন বন্ধ করুন</button>
-  </div>
-  <div class="box">
-    <h3 data-i18n="contact_heading">সাহায্য / যোগাযোগ</h3>
-    <p style="font-size:12.5px; color:var(--muted); margin:0 0 8px;" data-i18n="contact_note">অ্যাপ নিয়ে কোনো সমস্যা বা কাস্টম কাজের জন্য এডমিনের সাথে যোগাযোগ করুন:</p>
-    <a class="contactbox" href="https://t.me/mehedimadbor" target="_blank" rel="noopener">
-      <span style="font-size:22px;"><i class="mi" style="--m:var(--ic-send)"></i></span>
-      <span><b>Telegram</b><br><span style="color:var(--muted);">@mehedimadbor</span></span>
-    </a>
   </div>
   <div class="box" id="devModeBox">
     <h3 data-i18n="dev_mode_title">ডেভেলপার মোড</h3>
@@ -3276,18 +3257,6 @@ html[data-theme*="yellow"] .cPad button.op{color:#000}
       <button class="typebtn" onclick="disableNotifPopup()" data-i18n="btn_notif_off">বন্ধ করুন</button>
     </div>
     <button class="typebtn" style="width:100%; margin-top:8px;" onclick="previewNotifPopup()" data-i18n="btn_notif_preview">প্রিভিউ দেখুন</button>
-    
-      </div>
-      <div class="devCard">
-        <div class="devCH"><b data-i18n="notice_heading">রিমোট নোটিশ (সব ইউজারের জন্য)</b></div>
-        <p class="devNote" data-i18n="notice_note">একটা JSON ফাইলের লিংক দিন (যেমন GitHub-এ রাখা notice.json)। ফাইলে on:true দিলে সব ইউজার অ্যাপ খুললে সেই মেসেজ দেখবে। ফাইলটা এডিট করলেই সবার কাছে নতুন মেসেজ যাবে। স্থায়ীভাবে সব ইউজারের জন্য কাজ করাতে কোডের NOTICE_URL-এ লিংকটা বসিয়ে দিন।</p>
-    
-        <label data-i18n="lbl_notice_url">নোটিশ ফাইলের লিংক (টেস্টের জন্য)</label>
-    <input type="url" id="noticeUrlInput" placeholder="https://.../notice.json">
-    <div class="row2" style="margin-top:8px;">
-      <button class="typebtn" onclick="saveNoticeUrl()" data-i18n="btn_notice_save">লিংক সেভ করুন</button>
-      <button class="typebtn" onclick="testRemoteNotice()" data-i18n="btn_notice_test">টেস্ট করুন</button>
-    </div>
     
       </div>
     </div>
@@ -4168,6 +4137,32 @@ function isFixedTx(tx){
   return isFixedCategory(tx.category);
 }
 function isDailyExpense(tx){ return isExpenseLike(tx) && !isFixedTx(tx); }
+/* ===== খরচের সময়কাল: ক্যালেন্ডার মাস | প্রতি মাসে N তারিখ থেকে | নিজের নির্দিষ্ট তারিখ ===== */
+function ftPeriod(dateStr){
+  var d=dateStr||todayStr(), sp=(typeof data!=='undefined'&&data&&data.spendPeriod)||{}, mode=sp.mode||'month';
+  var P=d.split('-').map(Number), pad=function(n){ return String(n).padStart(2,'0'); };
+  var dimOf=function(y,m){ return new Date(y,m,0).getDate(); };
+  var ds=function(y,m,dd){ return y+'-'+pad(m)+'-'+pad(dd); };
+  var num=function(x){ var a=x.split('-').map(Number); return Math.round(Date.UTC(a[0],a[1]-1,a[2])/86400000); };
+  var fromNum=function(n){ var t=new Date(n*86400000); return ds(t.getUTCFullYear(),t.getUTCMonth()+1,t.getUTCDate()); };
+  var start,end;
+  if(mode==='range'&&sp.from&&sp.to&&sp.from<=sp.to){ start=sp.from; end=sp.to; }
+  else if(mode==='cycle'){
+    var sd=Math.min(31,Math.max(1,parseInt(sp.sd)||1)), y=P[0], m=P[1];
+    if(P[2]<Math.min(sd,dimOf(y,m))){ m--; if(m<1){ m=12; y--; } }
+    start=ds(y,m,Math.min(sd,dimOf(y,m)));
+    var ny=y, nm=m+1; if(nm>12){ nm=1; ny++; }
+    end=fromNum(num(ds(ny,nm,Math.min(sd,dimOf(ny,nm))))-1);
+  } else { mode='month'; start=ds(P[0],P[1],1); end=ds(P[0],P[1],dimOf(P[0],P[1])); }
+  var total=num(end)-num(start)+1, state=d<start?'before':(d>end?'after':'in'), leftAfter=Math.max(0,num(end)-num(d));
+  return {mode:mode,start:start,end:end,total:total,state:state,day:Math.max(0,num(d)-num(start)+1),left:leftAfter,
+    dl:state==='after'?1:(state==='before'?total:leftAfter+1)};
+}
+var FT_CAL_SVG='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16.5" rx="3"/><path d="M8 2.5v4M16 2.5v4M3 10h18"/></svg>';
+function ftPeriodText(PR){
+  var f=function(x){ try{ return new Date(x+'T00:00:00').toLocaleDateString(currentLang==='bn'?'bn-BD':'en-GB',{day:'numeric',month:'short'}); }catch(e){ return x; } };
+  return f(PR.start)+' – '+f(PR.end);
+}
 /* খাত অনুযায়ী ভাগ: monthStr দিলে সেই মাস, না দিলে সব সময় */
 function calcSplitForMonth(monthStr){
   var daily={}, fixed={}, dT=0, fT=0;
@@ -4850,18 +4845,17 @@ function applyCustomLogo(dataUrl){
     const el = document.getElementById(id); if(!el) return;
     el.textContent = ''; const im = document.createElement('img'); im.src = dataUrl; im.alt = 'logo'; el.appendChild(im);
   });
-  document.getElementById('logoPreviewEmoji').style.display = 'none';
-  const pi = document.getElementById('logoPreviewImg');
-  pi.src = dataUrl; pi.style.display = 'block';
-  document.getElementById('logoResetBtn').style.display = 'block';
+  const pe = document.getElementById('logoPreviewEmoji'); if(pe) pe.style.display = 'none';
+  const pi = document.getElementById('logoPreviewImg'); if(pi){ pi.src = dataUrl; pi.style.display = 'block'; }
+  const rb = document.getElementById('logoResetBtn'); if(rb) rb.style.display = 'block';
 }
 function resetLogo(){
   try{ localStorage.removeItem('customLogo_v1'); }catch(e){}
   document.getElementById('loginLogoEl').innerHTML = mi('wallet');
   document.getElementById('headerLogoEl').innerHTML = mi('wallet');
-  document.getElementById('logoPreviewEmoji').style.display = 'inline';
-  document.getElementById('logoPreviewImg').style.display = 'none';
-  document.getElementById('logoResetBtn').style.display = 'none';
+  const pe = document.getElementById('logoPreviewEmoji'); if(pe) pe.style.display = 'inline';
+  const pi = document.getElementById('logoPreviewImg'); if(pi) pi.style.display = 'none';
+  const rb = document.getElementById('logoResetBtn'); if(rb) rb.style.display = 'none';
 }
 function loadSavedLogo(){
   let saved = '';
@@ -5611,7 +5605,8 @@ function getNoticeUrl(){
   return u || NOTICE_URL;
 }
 function saveNoticeUrl(){
-  const v = document.getElementById('noticeUrlInput').value.trim();
+  const _ni = document.getElementById('noticeUrlInput'); if(!_ni) return;
+  const v = _ni.value.trim();
   try{ localStorage.setItem('noticeUrl_v1', v); }catch(e){}
   alert(t('notice_saved'));
 }
@@ -5639,7 +5634,8 @@ async function checkRemoteNotice(){
   showNotifPopup(n.title || '', n.message || '', n.type || 'info');
 }
 async function testRemoteNotice(){
-  const inp = document.getElementById('noticeUrlInput').value.trim();
+  const _ni2 = document.getElementById('noticeUrlInput');
+  const inp = _ni2 ? _ni2.value.trim() : '';
   if(inp){ try{ localStorage.setItem('noticeUrl_v1', inp); }catch(e){} }
   if(!getNoticeUrl()){ alert(t('notice_url_empty')); return; }
   const n = await fetchRemoteNotice();
@@ -6250,9 +6246,9 @@ if(devUnlocked){
 
   // ---- settings: accordion cards + hero ----
   const ICONS={settings_theme:['palette','#8b5cf6'],settings_lang:['globe','#0ea5e9'],settings_profile:['user','#2563eb'],backup_heading:['cloud','#14b8a6'],
-    settings_budget:['target','#f97316'],settings_goal:['flag','#eab308'],settings_recurring:['repeat','#06b6d4'],settings_logo:['image','#ec4899'],
-    lock_heading:['lock','#64748b'],pin_heading:['key','#ef4444'],contact_heading:['message','#22c55e'],dev_heading:['settings','#475569'],dev_mode_title:['settings','#7c3aed']}
-  const ICON_ID={bdSetBox:['drop','#e11d48'],installBox:['download','#16a34a'],inviteBox:['share','#10b981'],ntBox:['bell','#f59e0b'],spSetBox:['bank','#6366f1'],wgSetBox:['bolt','#f59e0b'],accountBox:['power','#ef4444']};;
+    settings_budget:['target','#f97316'],settings_goal:['flag','#eab308'],settings_recurring:['repeat','#06b6d4'],
+    lock_heading:['lock','#64748b'],pin_heading:['key','#ef4444'],dev_heading:['settings','#475569'],dev_mode_title:['settings','#7c3aed']}
+  const ICON_ID={periodSetBox:['calendar','#0ea5e9'],bdSetBox:['drop','#e11d48'],installBox:['download','#16a34a'],inviteBox:['share','#10b981'],ntBox:['bell','#f59e0b'],spSetBox:['bank','#6366f1'],wgSetBox:['bolt','#f59e0b'],accountBox:['power','#ef4444']};;
   document.querySelectorAll('#sec-settings > .box').forEach(box=>{
     const h=box.querySelector(':scope > h3'); if(!h) return;
     const key=h.getAttribute('data-i18n')||'', ic=ICON_ID[box.id]||ICONS[key]||['settings','#64748b'];
@@ -6813,7 +6809,7 @@ if(devUnlocked){
     const _pi=[1,2,3,4,5,6].map(k=>sum(T.filter(x=>x.type==='deposit'&&x.date.slice(0,7)===_pm(k)))).filter(v=>v>0), refI=Math.max(earned,_pi.length?_pi.reduce((a,b)=>a+b,0)/_pi.length:0);
     const resvI=(data.recurring||[]).filter(r=>(r.type==='expense'||r.type==='save_to_account')&&r.lastMonth!==key).reduce((a,r)=>a+(+r.amount||0),0)+ftPendingFixed(key).total;
     const fxM=sum(mT.filter(isFixedTx)), pendFx=ftPendingFixed(key).total, upE=(data.recurring||[]).filter(r=>r.type==='expense'&&r.lastMonth!==key).reduce((a,r)=>a+(+r.amount||0),0);
-    const avg=(spent-fxM)/Math.max(day,1), proj=fxM+pendFx+upE+avg*dim, need=avg*left, spare=bal-need-resvI, safe=Math.max(0,bal-resvI)/(left+1);
+    const avg=(spent-fxM)/Math.max(day,1), proj=fxM+pendFx+upE+avg*dim, need=avg*left, spare=bal-need-resvI, safe=Math.max(0,bal-resvI)/ftPeriod().dl;
     const cat={}; mT.filter(isDailyExpense).forEach(x=>{ const k=x.category||Lg('অন্যান্য','Other'); cat[k]=(cat[k]||0)+(+x.amount||0); });
     const es=Object.entries(cat).sort((a,b)=>b[1]-a[1]), top=es[0], topP=top&&(spent-fxM)>0?Math.round(top[1]/(spent-fxM)*100):0;
     /* verdict + 0-100 score */
@@ -7673,6 +7669,50 @@ qaRender(); week();
 })();
 </script>
 <script>
+/* ===== FinTrack: spending period setting (custom month start / custom dates) ===== */
+(function(){
+const $=id=>document.getElementById(id), bn=()=>currentLang==='bn', L=(b,e)=>bn()?b:e;
+function cfg(){ return Object.assign({mode:'month',sd:1,from:'',to:''},data.spendPeriod||{}); }
+function put(patch){ data.spendPeriod=Object.assign(cfg(),patch); saveData(); try{ renderDash(); }catch(e){} render(); }
+function chip(on,fn,txt){ return '<button type="button" class="chip'+(on?' on':'')+'" onclick="'+fn+'">'+txt+'</button>'; }
+function render(){
+  const box=$('perBody'); if(!box) return;
+  const t=$('perTitle'); if(t) t.textContent=L('খরচের সময়কাল','Spending period');
+  const c=cfg(), PR=ftPeriod(), today=todayStr();
+  const nd=n=>String(n).replace(/\d/g,x=>bn()?'০১২৩৪৫৬৭৮৯'[x]:x);
+  let h='<p style="font-size:12.5px;color:var(--muted);margin:0 0 8px;">'+L('অনেকের মাস ১ তারিখে শুরু হয় না — যেমন ১০ তারিখে বেতন পেলে ১০ তারিখ থেকে পরের মাসের ৯ তারিখ পর্যন্ত একটি মাস। এখানে সময়কাল ঠিক করলে \"আজ কত খরচ করতে পারবেন\" সেই অনুযায়ী বাকি দিন ধরে হিসাব হবে।','Not everyone\'s month starts on the 1st — e.g. if you are paid on the 10th, your month runs from the 10th to the 9th of next month. Set it here and \"how much you can spend today\" counts the days left in that period.')+'</p>';
+  h+='<div class="chips" style="flex-wrap:wrap;">'+chip(c.mode==='month',"ftPer('mode','month')",L('ক্যালেন্ডার মাস (১ – শেষ)','Calendar month (1st – end)'))+chip(c.mode==='cycle',"ftPer('mode','cycle')",L('প্রতি মাসে নির্দিষ্ট তারিখ থেকে','Monthly from a set day'))+chip(c.mode==='range',"ftPer('mode','range')",L('নিজের তারিখ (থেকে – পর্যন্ত)','Custom dates (from – to)'))+'</div>';
+  if(c.mode==='cycle'){
+    h+='<label>'+L('মাস শুরুর তারিখ (১–৩১)','Month starts on day (1–31)')+'</label><div class="chips" style="flex-wrap:wrap;">'+[1,5,7,10,15,20,25,28].map(n=>chip(+c.sd===n,"ftPer('sd',"+n+")",nd(n))).join('')+'</div>'
+      +'<input type="number" min="1" max="31" inputmode="numeric" id="perSd" placeholder="'+L('অন্য তারিখ লিখুন','Other day')+'" value="'+(c.sd||'')+'" onchange="ftPer(\'sd\',this.value)" style="margin-top:6px;">';
+  } else if(c.mode==='range'){
+    h+='<label>'+L('শুরুর তারিখ','From')+'</label><div class="perDt">'+FT_CAL_SVG+'<input type="date" id="perFrom" value="'+(c.from||'')+'" onchange="ftPer(\'from\',this.value)"></div>'
+      +'<label>'+L('শেষ তারিখ','To')+'</label><div class="perDt">'+FT_CAL_SVG+'<input type="date" id="perTo" value="'+(c.to||'')+'" onchange="ftPer(\'to\',this.value)"></div>';
+    if(c.from&&c.to&&c.from>c.to) h+='<div style="color:#ef4444;font-size:12.5px;margin-top:6px;">'+L('শুরুর তারিখ শেষ তারিখের আগে হতে হবে','Start date must be before the end date')+'</div>';
+    else if(!c.from||!c.to) h+='<div style="color:var(--muted);font-size:12.5px;margin-top:6px;">'+L('দুটি তারিখই দিন, নইলে ক্যালেন্ডার মাস ধরা হবে','Pick both dates, otherwise the calendar month is used')+'</div>';
+  }
+  const st=PR.state==='after'?L('এই সময়কাল শেষ হয়ে গেছে — নতুন তারিখ দিন','This period has ended — set new dates'):(PR.state==='before'?L('সময়কাল এখনো শুরু হয়নি','Period has not started yet'):L('বাকি ','Left ')+nd(PR.dl)+L(' দিন (আজসহ)',' days (incl. today)'));
+  h+='<div style="margin-top:10px;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--primary) 8%,transparent);font-size:13px;line-height:1.6;"><span class="perCal">'+FT_CAL_SVG+'</span><b>'+L('বর্তমান সময়কাল','Current period')+':</b> '+ftPeriodText(PR)+' ('+nd(PR.total)+L(' দিন',' days')+')<br><span style="color:'+(PR.state==='after'?'#ef4444':'var(--muted)')+'">'+st+'</span></div>';
+  box.innerHTML=h;
+}
+window.ftPer=function(k,v){
+  if(k==='mode'){ const c=cfg(); if(v==='range'&&!c.from){ const PR=ftPeriod(); put({mode:v,from:PR.start,to:PR.end}); return; } put({mode:v}); return; }
+  if(k==='sd'){ let n=parseInt(v)||1; n=Math.min(31,Math.max(1,n)); put({sd:n}); return; }
+  const o={}; o[k]=v; put(o);
+};
+const _rd=window.renderDash; window.renderDash=function(){ const r=_rd.apply(this,arguments); try{ render(); }catch(e){ console.error(e); } return r; };
+if(!document.getElementById('perCss')){ const st=document.createElement('style'); st.id='perCss'; st.textContent=
+ '.advChip svg,.perCal svg{width:14px;height:14px;vertical-align:-2px;margin-right:5px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}'
++'.perCal{color:var(--primary)}'
++'.perDt{position:relative;display:block}'
++'.perDt>svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:20px;height:20px;fill:none;stroke:var(--primary);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none;z-index:1}'
++'.perDt input[type=date]{padding-left:44px!important;width:100%;box-sizing:border-box;position:relative}'
++'.perDt input[type=date]::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}';
+ document.head.appendChild(st); }
+render(); setTimeout(render,600);
+})();
+</script>
+<script>
 /* ===== FinTrack: Savings planner (monthly savings -> daily spending limit) ===== */
 (function(){
 const $=id=>document.getElementById(id), bn=()=>currentLang==='bn';
@@ -7683,31 +7723,33 @@ let draft=Object.assign(DEF(),JSON.parse(JSON.stringify(data.savePlan||{})));
 function monthIncome(ym){
   return data.transactions.filter(x=>x.type==='deposit'&&x.date.slice(0,7)===ym).reduce((s,x)=>s+x.amount,0);
 }
+function periodIncome(PR){
+  return data.transactions.filter(x=>x.type==='deposit'&&x.date>=PR.start&&x.date<=PR.end).reduce((s,x)=>s+x.amount,0);
+}
 function spCalc(p){
   if(!p||!(+p.target>0)) return null;
-  const today=todayStr(), ym=today.slice(0,7), P=today.split('-').map(Number);
-  const dim=new Date(P[0],P[1],0).getDate(), left=dim-P[2]+1;
-  const inc = p.inc==='custom' ? (+p.custom||0) : monthIncome(ym);
+  const today=todayStr(), ym=today.slice(0,7), PR=ftPeriod(), inR=d=>d>=PR.start&&d<=PR.end;
+  const dim=PR.total, left=PR.dl;
+  const inc = p.inc==='custom' ? (+p.custom||0) : periodIncome(PR);
   const ex=(p.ex||[]).filter(c=>data.categories.includes(c));
-  const map=calcByCategoryForMonth(ym);
+  const map={}; data.transactions.forEach(tx=>{ if(isExpenseLike(tx)&&inR(tx.date)) map[tx.category]=(map[tx.category]||0)+tx.amount; });
   let reserved=0; const exRows=[];
   ex.forEach(c=>{ const v=Math.max(map[c]||0, +(data.budgets||{})[c]||0); reserved+=v; exRows.push([c,v]); });
-  /* ভাড়া/বিলের মতো নির্ধারিত মাসিক খরচ নিজে থেকেই আলাদা রাখা হয় (দেওয়া হয়ে থাকলে সেটা, নইলে বাজেট বা প্রত্যাশিত পরিমাণ) */
   const exAll=ex.slice(), pfMap={}; ftPendingFixed(ym).items.forEach(it=>{ pfMap[it[0]]=it[1]; });
   data.categories.forEach(c=>{ if(ex.includes(c)||!isFixedCategory(c)) return; exAll.push(c);
     const v=Math.max(map[c]||0, +(data.budgets||{})[c]||0, pfMap[c]||0); if(v>0){ reserved+=v; exRows.push([c,v]); } });
-  { let extra=0; data.transactions.forEach(x=>{ if(isFixedTx(x)&&x.date.slice(0,7)===ym&&!exAll.includes(x.category)) extra+=x.amount; });
+  { let extra=0; data.transactions.forEach(x=>{ if(isFixedTx(x)&&inR(x.date)&&!exAll.includes(x.category)) extra+=x.amount; });
     if(extra>0){ reserved+=extra; exRows.push([L('নিয়মিত এন্ট্রি','Recurring entries'),extra]); } }
-  let spentOther=0; data.transactions.forEach(x=>{ if(isExpenseLike(x)&&x.date.slice(0,7)===ym&&!exAll.includes(x.category)&&!isFixedTx(x)) spentOther+=x.amount; });
+  let spentOther=0; data.transactions.forEach(x=>{ if(isExpenseLike(x)&&inR(x.date)&&!exAll.includes(x.category)&&!isFixedTx(x)) spentOther+=x.amount; });
   const todaySpent=data.transactions.filter(x=>isExpenseLike(x)&&x.date===today&&!exAll.includes(x.category)&&!isFixedTx(x)).reduce((s,x)=>s+x.amount,0);
   const target=+p.target;
-  const avail=inc-target-reserved;               // মাসের মোট খরচযোগ্য (মাসিক বাজেট)
-  const remain=avail-spentOther;                 // মাসে এখনো বাকি
-  const fixedDaily=avail/dim;                    // ফিক্সড দৈনিক গড়
-  const before=spentOther-todaySpent;            // আজকের আগে পর্যন্ত খরচ
-  const todayLimit=(avail-before)/left;          // আজকের সীমা (আগের দিনের খরচ অনুযায়ী সমন্বয়)
-  const tomorrowLimit = left>1 ? (avail-spentOther)/(left-1) : null; // আজকের খরচ ধরে আগামীকালের সীমা
-  return {inc,target,reserved,exRows,avail,spentOther,todaySpent,remain,dim,left,fixedDaily,todayLimit,tomorrowLimit,
+  const avail=inc-target-reserved;
+  const remain=avail-spentOther;
+  const fixedDaily=avail/dim;
+  const before=spentOther-todaySpent;
+  const todayLimit=(avail-before)/left;
+  const tomorrowLimit = left>1 ? (avail-spentOther)/(left-1) : null;
+  return {inc,target,reserved,exRows,avail,spentOther,todaySpent,remain,dim,left,fixedDaily,todayLimit,tomorrowLimit,period:PR,
     todayLeft:todayLimit-todaySpent, over:todaySpent>Math.max(0,todayLimit)+0.5, monthOver:remain<0};
 }
 function tile(l,v,c){return `<div style="background:color-mix(in srgb,var(--primary) 8%,transparent);border-radius:12px;padding:9px 11px;min-width:0;"><div style="font-size:11.5px;color:var(--muted);">${l}</div><div style="font-size:15px;font-weight:700;${c?'color:'+c:''}">${v}</div></div>`;}
@@ -7742,7 +7784,8 @@ function spHtml(p){
     ${tile(L('বাদ দেওয়া খাত','Excluded'),fmt(r.reserved))}${tile(L('মাসিক খরচযোগ্য','Monthly spendable'),fmt(r.avail))}
   </div>`;
   h+=row(L('ফিক্সড দৈনিক গড় (সারা মাস)','Fixed daily average (whole month)'),fmt(r.fixedDaily));
-  h+=row(L('মাসের বাকি দিন (আজসহ)','Days left (incl. today)'),String(r.left));
+  h+=row(L('সময়কাল','Period'),ftPeriodText(r.period)+' · '+r.dim+L(' দিন',' days'));
+  h+=row(L('বাকি দিন (আজসহ)','Days left (incl. today)'),String(r.left));
   if(r.exRows.length) h+=`<div style="font-size:11.5px;color:var(--muted);margin-top:8px;">${L('বাদ দেওয়া','Excluded')}: ${r.exRows.map(x=>esc(x[0])+' '+fmt(x[1])).join(' • ')}</div>`;
   h+=`<div style="font-size:11.5px;color:var(--muted);margin-top:6px;">${L('হিসাব: আয় − সঞ্চয় − বাদ দেওয়া খাত = মাসিক খরচযোগ্য। বাকি টাকা বাকি দিন দিয়ে ভাগ হয়ে প্রতিদিনের সীমা ঠিক হয়।','Income − savings − excluded categories = monthly spendable. What remains is divided by the days left to set each day\'s limit.')}</div>`;
   return h;
@@ -7757,15 +7800,15 @@ function renderSP(){
   $('spBody').innerHTML=spHtml(p);
 }
 function prev(){ const e=$('spPrev'); if(e) e.innerHTML=spHtml(draft); }
-function baseIncome(){ return draft.inc==='custom'?(+draft.custom||0):monthIncome(todayStr().slice(0,7)); }
+function baseIncome(){ return draft.inc==='custom'?(+draft.custom||0):periodIncome(ftPeriod()); }
 function renderSet(){
   const box=$('spSetBody'); if(!box) return;
   $('spSetTitle').textContent=L('সঞ্চয় পরিকল্পনা (দৈনিক খরচ সীমা)','Savings Planner (daily limit)');
   const ch=(on,fn,txt)=>`<button type="button" class="chip${on?' on':''}" onclick="${fn}">${txt}</button>`;
   box.innerHTML=`<p style="font-size:12.5px;color:var(--muted);margin:0 0 8px;">${L('মাসে কত সঞ্চয় করতে চান দিন। মোট আয় থেকে সঞ্চয় ও নির্বাচিত খাতের খরচ (বা বাজেট, যেটা বেশি) বাদ দিয়ে যা থাকবে তার ভিত্তিতে দৈনিক ও মাসিক বাজেট ড্যাশবোর্ডে দেখাবে। সীমা ছাড়ালে সতর্কতা আসবে এবং পরের দিনের সীমা নিজে থেকে ঠিক হয়ে যাবে।','Set how much you want to save monthly. Savings and the selected categories (their spending or budget, whichever is higher) are deducted from income, and the dashboard shows your daily and monthly budget from the rest. You get a warning when you cross the limit, and the limit for the next day adjusts automatically.')}</p>
   <label>${L('আয়ের ভিত্তি','Income basis')}</label>
-  <div class="chips" style="flex-wrap:wrap;">${ch(draft.inc==='actual',"spInc('actual')",L('এ মাসের আসল আয়','This month\'s income'))}${ch(draft.inc==='custom',"spInc('custom')",L('নিজে আয় দিন','Custom income'))}</div>
-  ${draft.inc==='custom'?`<label>${L('মাসিক আয় (টাকা)','Monthly income (Taka)')}</label><input type="number" id="spCustom" placeholder="0" value="${draft.custom||''}" oninput="spIn()">`:`<div style="font-size:12.5px;color:var(--muted);margin:0 0 6px;">${L('এ মাসের আয়','Income this month')}: <b>${fmt(monthIncome(todayStr().slice(0,7)))}</b></div>`}
+  <div class="chips" style="flex-wrap:wrap;">${ch(draft.inc==='actual',"spInc('actual')",L('এই সময়কালের আসল আয়','This period\'s income'))}${ch(draft.inc==='custom',"spInc('custom')",L('নিজে আয় দিন','Custom income'))}</div>
+  ${draft.inc==='custom'?`<label>${L('মাসিক আয় (টাকা)','Monthly income (Taka)')}</label><input type="number" id="spCustom" placeholder="0" value="${draft.custom||''}" oninput="spIn()">`:`<div style="font-size:12.5px;color:var(--muted);margin:0 0 6px;">${L('এই সময়কালের আয়','Income this period')}: <b>${fmt(periodIncome(ftPeriod()))}</b></div>`}
   <label>${L('মাসিক সঞ্চয় (টাকা)','Monthly savings (Taka)')}</label>
   <input type="number" id="spTarget" placeholder="0" value="${draft.target||''}" oninput="spIn()">
   <div class="chips" style="margin-top:6px;flex-wrap:wrap;">${[10,20,30,50].map(n=>ch(false,`spPct(${n})`,L('আয়ের '+n+'%',n+'% of income'))).join('')}</div>
@@ -10694,17 +10737,17 @@ function adv(){
   const burn=sum(T.filter(x=>isDailyExpense(x)&&x.date>=f30&&x.date<=today))/span30+ftFixedPerDay(), runway=burn>0&&span30>=3?Math.max(0,Math.floor(bal/burn)):null;
   const fxA=sum(T.filter(x=>isFixedTx(x)&&x.date.slice(0,7)===key)), pendA=ftPendingFixed(key).total, proj=day>=3?fxA+pendA+(spent-fxA)/day*dim:null, nzI=I.slice(0,5).filter(v=>v>0), avgI=Math.max(earned,nzI.length?sum(nzI.map(v=>({amount:v})))/nzI.length:0);
   const nzE=E.slice(0,5).filter(v=>v>0), avgE=nzE.length?sum(nzE.map(v=>({amount:v})))/nzE.length:(day>=7&&proj!=null?proj:null);
-  const safe=left>0&&avgI>0?Math.max(0,(avgI-spent)/left):0, em=avgE>0?(bal+acc)/avgE:null, nw=bal+acc+get-owe, dr=(bal+acc+get)>0?owe/(bal+acc+get):(owe>0?1:0);
+  const PRs=ftPeriod(), inP=x=>x.date>=PRs.start&&x.date<=PRs.end, sLeft=PRs.mode==='month'?left:PRs.left, sSpent=PRs.mode==='month'?spent:sum(T.filter(x=>isExpenseLike(x)&&inP(x))), sInc=PRs.mode==='month'?avgI:Math.max(avgI,sum(T.filter(x=>x.type==='deposit'&&inP(x)))), safe=sLeft>0&&sInc>0?Math.max(0,(sInc-sSpent)/sLeft):0, em=avgE>0?(bal+acc)/avgE:null, nw=bal+acc+get-owe, dr=(bal+acc+get)>0?owe/(bal+acc+get):(owe>0?1:0);
   const hist=E.slice(0,5), fi=hist.findIndex(v=>v>0), hs=fi<0?[]:hist.slice(fi), nn=hs.length, mxm=(nn-1)/2, mym=nn?hs.reduce((a,v)=>a+v,0)/nn:0, den=hs.reduce((a,_,i)=>a+(i-mxm)*(i-mxm),0), slope=nn>=3&&den>0?hs.reduce((a,v,i)=>a+(i-mxm)*(v-mym),0)/den:0;
   let score=Math.round((sre==null?0:Math.min(Math.max(sre,0),30)/30)*35+(runway==null?(bal>0?25:0):Math.min(runway,90)/90*25)+(1-Math.min(dr,1))*20+(em==null?0:Math.min(Math.max(em,0),6)/6*20));
   const sc=score>=70?'var(--green)':score>=40?'var(--amber)':'var(--red)', lb=score>=70?Lg('ভালো','Good'):score>=40?Lg('মোটামুটি','Fair'):Lg('সতর্ক','Needs care');
   const tile=(l,v,s2)=>'<div class="advT"><small>'+l+'</small><b>'+v+'</b><small>'+s2+'</small></div>';
-  const dl=left+1, spT=sum(T.filter(x=>isDailyExpense(x)&&x.date===today)), resv=(data.recurring||[]).filter(r=>(r.type==='expense'||r.type==='save_to_account')&&r.lastMonth!==key).reduce((a,r)=>a+(+r.amount||0),0)+ftPendingFixed(key).total, startBal=Math.max(0,bal+spT-resv), perLeft=startBal/dl, remT=perLeft-spT, usedPct=perLeft>0?Math.min(100,spT/perLeft*100):(spT>0?100:0);
+  const PR=ftPeriod(), dl=PR.dl, spT=sum(T.filter(x=>isDailyExpense(x)&&x.date===today)), resv=(data.recurring||[]).filter(r=>(r.type==='expense'||r.type==='save_to_account')&&r.lastMonth!==key).reduce((a,r)=>a+(+r.amount||0),0)+ftPendingFixed(key).total, startBal=Math.max(0,bal+spT-resv), perLeft=startBal/dl, remT=perLeft-spT, usedPct=perLeft>0?Math.min(100,spT/perLeft*100):(spT>0?100:0);
   const dcol=remT<0?'var(--red)':usedPct>=80?'var(--amber)':'var(--green)';
   /* এখনকার সীমা = বর্তমান ব্যালেন্স ÷ আজসহ বাকি দিন (প্রতি লেনদেনের পর বদলায়); perLeft = দিনের শুরুর সীমা */
   const liveLim=Math.max(0,bal-resv)/dl;
   /* গতকালের সীমা: গতকাল শেষে ব্যালেন্স ÷ গতকাল থেকে সেই মাসের বাকি দিন (বাস্তব ক্যালেন্ডার অনুযায়ী ২৮/২৯/৩০/৩১) */
-  const _yd=new Date(today+'T00:00:00'); _yd.setDate(_yd.getDate()-1); const yStr=fmtDate(_yd), yDim=new Date(_yd.getFullYear(),_yd.getMonth()+1,0).getDate(), yDl=yDim-_yd.getDate()+1;
+  const _yd=new Date(today+'T00:00:00'); _yd.setDate(_yd.getDate()-1); const yStr=fmtDate(_yd), yDl=ftPeriod(yStr).dl;
   const netT=data.transactions.reduce((a,tx)=>a+((tx.fund||tx.date!==today)?0:TYPE_META[tx.type].sign*tx.amount),0), spY=sum(T.filter(x=>isDailyExpense(x)&&x.date===yStr));
   const hasY=T.some(x=>x.date&&x.date<=yStr), yLimit=hasY?Math.max(0,bal-netT+spY-resv)/yDl:null, dY=yLimit==null?null:liveLim-yLimit;
   const tomLimit=dl>1?Math.max(0,startBal-spT)/(dl-1):null, dT=tomLimit==null?null:tomLimit-liveLim;
@@ -10712,7 +10755,7 @@ function adv(){
   const dmsg=startBal<=0&&spT<=0?Lg('ব্যালেন্স নেই — আয় বা জমা যোগ করুন','No balance left — add income or a deposit'):remT>=0?Lg('আজ দিনের শুরুর সীমার মধ্যে আছেন','Within today\'s starting limit'):Lg('আজ সীমার চেয়ে '+fmt(-remT)+' বেশি খরচ হয়েছে','You are '+fmt(-remT)+' over today\'s limit');
   const dlt=(d,base)=>d==null?'<em style="color:var(--muted)">—</em>':Math.abs(d)<0.005?'<em style="color:var(--muted)">● '+Lg('একই','same')+'</em>':'<em style="color:'+(d>0?'var(--green)':'var(--red)')+'">'+(d>0?'▲ ':'▼ ')+fmt(Math.abs(d))+' '+(d>0?Lg('বেশি','more'):Lg('কম','less'))+'</em>';
   const C=2*Math.PI*40, off=C*(1-Math.min(100,usedPct)/100);
-  const daily='<div class="advDaily" style="--ac:'+dcol+'"><div class="advDH">'+ic('gauge')+' '+Lg('আজ কত খরচ করতে পারবেন','How much you can spend today')+'<span class="advChip">'+Lg(dl+' দিন বাকি · মাস '+dim+' দিনের',dl+' days left · '+dim+'-day month')+'</span></div>'
+  const daily='<div class="advDaily" style="--ac:'+dcol+'"><div class="advDH">'+ic('gauge')+' '+Lg('আজ কত খরচ করতে পারবেন','How much you can spend today')+'<span class="advChip">'+FT_CAL_SVG+(PR.mode==='month'?Lg(dl+' দিন বাকি · মাস '+PR.total+' দিনের',dl+' days left · '+PR.total+'-day month'):Lg(dl+' দিন বাকি · '+ftPeriodText(PR),dl+' days left · '+ftPeriodText(PR)))+'</span></div>'
     +'<div class="advTop"><div class="advRing"><svg viewBox="0 0 100 100"><circle class="tr" cx="50" cy="50" r="40"/><circle class="fg" cx="50" cy="50" r="40" stroke="'+dcol+'" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'"/></svg>'
     +'<div class="advRingC"><b style="color:'+dcol+'">'+fmt(spT)+'</b><small>'+Lg('আজ খরচ','spent today')+'</small></div></div>'
     +'<div class="advTopR"><div class="lbl">'+Lg('আজকের সীমা','Today\'s limit')+'</div><div class="big" style="color:'+dcol+'">'+fmt(liveLim)+'</div>'
@@ -10727,7 +10770,7 @@ function adv(){
    +tile(Lg('সঞ্চয়ের হার','Savings rate'),sr==null?'—':sr+'%',Lg('এই মাসের আয় থেকে','of this month\'s income'))
    +tile(Lg('ব্যালেন্সে চলবে','Runway'),runway==null?'—':runway+Lg(' দিন',' days'),Lg('দৈনিক গড় ','avg ')+fmt(burn))
    +tile(Lg('মাস শেষে খরচ','Month-end spend'),proj==null?'—':fmt(proj),Lg('বর্তমান গতিতে','at current pace'))
-   +tile(Lg('দৈনিক নিরাপদ সীমা','Safe daily limit'),left>0&&avgI>0?fmt(safe):'—',Lg('বাকি '+left+' দিন','for '+left+' days left'))
+   +tile(Lg('দৈনিক নিরাপদ সীমা','Safe daily limit'),sLeft>0&&sInc>0?fmt(safe):'—',Lg('বাকি '+sLeft+' দিন','for '+sLeft+' days left'))
    +tile(Lg('নিট সম্পদ','Net worth'),fmt(nw),Lg('ব্যালেন্স+সঞ্চয়+পাওনা−দেনা','balance+savings+owed−debt'))
    +tile(Lg('জরুরি তহবিল','Emergency fund'),em==null?'—':em.toFixed(1)+Lg(' মাস',' mo'),Lg('গড় মাসিক খরচের ভিত্তিতে','at avg monthly spend'))+'</div>';
   if(!document.getElementById('advInsCss')){ const st=document.createElement('style'); st.id='advInsCss'; st.textContent=
@@ -10947,16 +10990,18 @@ window.ftNotify=notify;
 var sec=document.getElementById('sec-settings'); if(!sec) return;
 var bl=function(b,e){ return '<span class="bn">'+b+'</span><span class="en">'+e+'</span>'; };
 var CATS=[
- ['look','চেহারা ও ভাষা','Appearance & language',['settings_theme','settings_lang','settings_logo']],
- ['acct','অ্যাকাউন্ট ও প্রোফাইল','Account & profile',['settings_profile','accountBox','bdSetBox','inviteBox']],
- ['money','অর্থ ও বাজেট','Money & budget',['settings_budget','settings_goal','spSetBox','settings_recurring','payBox']],
+ ['invite','বন্ধুদের ইনভাইট করুন','Invite friends',['inviteBox']],
+ ['look','চেহারা ও ভাষা','Appearance & language',['settings_theme','settings_lang']],
+ ['acct','অ্যাকাউন্ট ও প্রোফাইল','Account & profile',['settings_profile','bdSetBox']],
+ ['money','অর্থ ও বাজেট','Money & budget',['settings_budget','settings_goal','periodSetBox','spSetBox','settings_recurring','payBox']],
  ['remind','রিমাইন্ডার ও নোটিফিকেশন','Reminders & notifications',['rmBox','ntSetBox','ntBox']],
  ['secu','নিরাপত্তা ও লক','Security & lock',['lock_heading','pin_heading','secPlusBox']],
  ['data','ডেটা ও ব্যাকআপ','Data & backup',['cloudSyncBox','backup_heading']],
  ['pref','অ্যাপ পছন্দ ও উইজেট','Preferences & widgets',['installBox','prefPlusBox','wgSetBox']],
- ['help','সহায়তা ও ডেভেলপার','Support & developer',['contact_heading','devModeBox','dev_mode_title']]
+ ['help','সহায়তা ও ডেভেলপার','Support & developer',['devModeBox','dev_mode_title']]
 ];
 var OTHER=['more','অন্যান্য','More',[]];
+var LOGOUT=['logout','লগআউট ও সেশন','Logout & sessions',['accountBox']];
 function keyOf(d){ if(d.id) return d.id; var h=d.querySelector(':scope > summary h3'); return h&&h.getAttribute('data-i18n')||''; }
 function keysOf(d){ var k=[d.id]; var h=d.querySelector(':scope > summary h3'); if(h) k.push(h.getAttribute('data-i18n')||''); return k; }
 function arrange(){
@@ -10966,10 +11011,10 @@ function arrange(){
     [].slice.call(sec.children).forEach(function(n){ if(n.classList&&n.classList.contains('setGroup')&&!n.classList.contains('ftCat')) n.remove(); });
     var anchor=document.getElementById('ftCatAnchor');
     if(!anchor){ anchor=document.createElement('div'); anchor.id='ftCatAnchor'; anchor.style.display='none'; dets[0].before(anchor); }
-    var cats=CATS.concat([OTHER]), buckets=cats.map(function(){ return []; });
+    var cats=CATS.concat([OTHER,LOGOUT]), buckets=cats.map(function(){ return []; });
     dets.forEach(function(d){
       var ks=keysOf(d), hit=-1;
-      for(var i=0;i<CATS.length&&hit<0;i++){ for(var j=0;j<ks.length;j++){ var p=CATS[i][3].indexOf(ks[j]); if(ks[j]&&p>-1){ hit=i; d._ftPos=p; break; } } }
+      for(var i=0;i<cats.length&&hit<0;i++){ for(var j=0;j<ks.length;j++){ var p=cats[i][3].indexOf(ks[j]); if(ks[j]&&p>-1){ hit=i; d._ftPos=p; break; } } }
       if(hit<0){ hit=CATS.length; d._ftPos=99; }
       buckets[hit].push(d);
     });
@@ -12080,7 +12125,20 @@ details.setBox:has(#phHub)>.ftSecH{display:none;}
 details.setBox:has(#phHub)>.setBody{padding:0!important;}
 #phHub .phNav{display:none!important;}
 #phHub .phHd{margin-bottom:14px;}
-#phHub .phP,#phHub .phP.on{display:block!important;background:var(--card);border:1px solid var(--border);border-radius:22px;padding:14px 14px 16px;margin:0 0 14px;}
+#phHub .phP{display:none!important;background:var(--card);border:1px solid var(--border);border-radius:22px;padding:14px 14px 16px;margin:0 0 14px;}
+#phHub .phP.on{display:block!important;}
+#phHub:not([data-v=list]) .phList{display:none;}
+#phHub:not([data-v=me]) .phCt{display:none!important;}
+#phHub details.psMv>summary{display:none!important;}
+#phHub details.psMv>.setBody{padding:0!important;}
+#phHub:not([data-v=list]):not([data-v=me]) .phHd{display:none;}
+#phHub .phList{background:var(--card);border:1px solid var(--border);border-radius:22px;overflow:hidden;margin:0 0 14px;}
+#phHub .phItem{display:flex;align-items:center;gap:14px;width:100%;padding:12px 14px;border:0;background:transparent;color:var(--text);font:inherit;text-align:left;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;}
+#phHub .phItem+.phItem::before{content:"";position:absolute;left:74px;right:0;top:0;height:1px;background:var(--border);}
+#phHub .phItem:active{background:color-mix(in srgb,var(--primary) 8%,transparent);}
+#phHub .phRt{flex:1;min-width:0;}#phHub .phRt b{display:block;font-size:15.5px;font-weight:700;}
+#phHub .phRt .s{display:block;font-size:12.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#phHub .phCh{width:18px;height:18px;flex:none;fill:none;stroke:var(--muted);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
 #phHub .phP:empty{display:none!important;}
 #phHub .phP::before{content:attr(data-t);display:block;color:var(--primary);font-weight:700;font-size:13.5px;line-height:1.3;margin:0 2px 12px;}
 </style>
@@ -12093,13 +12151,13 @@ const R=()=>{ try{ return window.ftCloud&&ftCloud._raw?ftCloud._raw():null; }cat
 const okPic=s=>typeof s==='string'&&/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/.test(s);
 const CHEV='<svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>';
 const SUB={
- settings_theme:['লাইট/ডার্ক মোড ও রঙ','Light, dark & colours'],settings_lang:['বাংলা বা English','Bangla or English'],settings_logo:['অ্যাপের লোগো বদলান','Change the app logo'],
+ settings_theme:['লাইট/ডার্ক মোড ও রঙ','Light, dark & colours'],settings_lang:['বাংলা বা English','Bangla or English'],
  settings_profile:['নাম, ছবি, ইউজারনেম ও ইমেইল','Name, photo, username & email'],bdSetBox:['রক্তদাতা প্রোফাইল ও জরুরি সহায়তা','Blood donor profile & urgent help'],inviteBox:['বন্ধুদের ইনভাইট ও রেফারেল','Invite friends & referrals'],installBox:['হোম স্ক্রিনে অ্যাপ হিসেবে যোগ করুন','Add to your home screen'],accountBox:['অ্যাকাউন্ট থেকে সাইন আউট','Sign out of your account'],
- settings_budget:['খাতভিত্তিক মাসিক সীমা','Monthly limits by category'],settings_goal:['সঞ্চয়ের লক্ষ্য ঠিক করুন','Set your savings goal'],spSetBox:['নিয়মিত সঞ্চয় পরিকল্পনা','Regular savings plan'],
+ settings_budget:['খাতভিত্তিক মাসিক সীমা','Monthly limits by category'],settings_goal:['সঞ্চয়ের লক্ষ্য ঠিক করুন','Set your savings goal'],periodSetBox:['মাস শুরুর তারিখ ও নিজের সময়কাল','Month start date & custom period'],spSetBox:['নিয়মিত সঞ্চয় পরিকল্পনা','Regular savings plan'],
  settings_recurring:['স্বয়ংক্রিয় নিয়মিত এন্ট্রি','Automatic recurring entries'],rmBox:['রিমাইন্ডার সেট করুন','Set reminders'],ntSetBox:['নোটিফিকেশন পছন্দ','Notification preferences'],ntBox:['নোটিফিকেশনের অবস্থা','Notification status'],
  lock_heading:['ফিঙ্গারপ্রিন্ট দিয়ে লক','Lock with fingerprint'],pin_heading:['পিন দিয়ে অ্যাপ লক','Lock the app with a PIN'],secPlusBox:['অতিরিক্ত নিরাপত্তা','Extra security'],
  cloudSyncBox:['ক্লাউড সিঙ্ক ও অ্যাকাউন্ট','Cloud sync & account'],backup_heading:['ব্যাকআপ ও রিস্টোর','Backup & restore'],prefPlusBox:['অ্যাপের আচরণ ও হোম','App behaviour & home'],wgSetBox:['হোম উইজেট','Home widgets'],
- contact_heading:['সাহায্য ও যোগাযোগ','Help & contact'],devModeBox:['ডেভেলপার টুল','Developer tools'],dev_mode_title:['ডেভেলপার টুল','Developer tools'],payBox:['পেমেন্ট ও লেনদেন সেটিং','Payment & transaction options']
+ devModeBox:['ডেভেলপার টুল','Developer tools'],dev_mode_title:['ডেভেলপার টুল','Developer tools'],payBox:['পেমেন্ট ও লেনদেন সেটিং','Payment & transaction options']
 };
 const MOVED=['settings_budget','settings_goal','spSetBox','settings_recurring','payBox'];
 const dets=()=>[].slice.call(sec.children).filter(n=>n.matches&&n.matches('details.setBox'));
@@ -12132,6 +12190,7 @@ function build(force){
   const sig=seq.map(n=>n.matches('details.setBox')?'d:'+kOf(n)+':'+(h3Of(n)?h3Of(n).textContent:''):'g:'+n.textContent).join('|')+'|'+(bn()?'b':'e');
   if(!force&&sig===lastSig) return; lastSig=sig;
   const CI={
+ invite:['#f59e0b','<svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.3 10.8 7.4-4.3M8.3 13.2l7.4 4.3"/></svg>'],
  look:['#8b5cf6','<svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.3-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.3A3.7 3.7 0 0 0 21 10.7C21 6.4 17 3 12 3Z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10.5" cy="7" r="1"/><circle cx="15.5" cy="7.5" r="1"/></svg>'],
  acct:['#0ea5e9','<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-3.6 3.6-6 8-6s8 2.4 8 6"/></svg>'],
  money:['#10b981','<svg viewBox="0 0 24 24"><path d="M19 7V5a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>'],
@@ -12140,6 +12199,7 @@ function build(force){
  data:['#3b82f6','<svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>'],
  pref:['#f59e0b','<svg viewBox="0 0 24 24"><path d="M4 6h8M18 6h2M4 12h2M12 12h8M4 18h10M20 18h0"/><circle cx="15" cy="6" r="2.4"/><circle cx="9" cy="12" r="2.4"/><circle cx="17" cy="18" r="2.4"/></svg>'],
  help:['#14b8a6','<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6"/><path d="M12 17h.01"/></svg>'],
+ logout:['#ef4444','<svg viewBox="0 0 24 24"><path d="M12 3v8"/><path d="M7.2 6.3a8 8 0 1 0 9.6 0"/></svg>'],
  more:['#64748b','<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>']
 };
 const nameOf=d=>{ const h=h3Of(d); if(!h) return ''; const x=h.querySelector(bn()?'.bn':'.en'); return ((x||h).textContent||'').trim(); };
@@ -12152,10 +12212,10 @@ seq.forEach(n=>{
   });
   cats=cats.filter(c=>c.items.length);
   menuCats=cats.map(c=>({k:c.k,t:c.t,ci:CI[c.k]||CI.more}));
-  const crow=c=>{ const ci=CI[c.k]||CI.more; return '<div class="ftRow" data-cat="'+esc(c.k)+'"><span class="ftCI" style="--c:'+ci[0]+'">'+ci[1]+'</span><div class="ftRt"><b>'+c.t+'</b><span class="s">'+esc(c.items.map(nameOf).filter(Boolean).join(', '))+'</span></div>'+CHEV+'</div>'; };
-  const MAIN=['look','acct','money','remind','secu','data'];
-  const m1=cats.filter(c=>MAIN.indexOf(c.k)>-1), m2=cats.filter(c=>MAIN.indexOf(c.k)<0);
-  const html=(m1.length?'<div class="ftGc">'+m1.map(crow).join('')+'</div>':'')+(m2.length?'<div class="ftGc">'+m2.map(crow).join('')+'</div>':'');
+  const crow=c=>{ const ci=CI[c.k]||CI.more; return '<div class="ftRow" data-cat="'+esc(c.k)+'"><span class="ftCI" style="--c:'+ci[0]+'">'+ci[1]+'</span><div class="ftRt"><b>'+c.t+'</b><span class="s">'+esc(c.k==='invite'?L('লিংক শেয়ার করে বন্ধুদের ডাকুন','Share your link and invite friends'):c.k==='acct'?L('প্রোফাইল, লগইন ও যোগাযোগ, রক্তদাতা','Profile, login & contact, blood donor'):c.items.map(nameOf).filter(Boolean).join(', '))+'</span></div>'+CHEV+'</div>'; };
+  const MAIN=['invite','look','acct','money','remind','secu','data'];
+  const m1=cats.filter(c=>MAIN.indexOf(c.k)>-1), m3=cats.filter(c=>c.k==='logout'), m2=cats.filter(c=>MAIN.indexOf(c.k)<0&&c.k!=='logout');
+  const html=[m1,m2,m3].map(g=>g.length?'<div class="ftGc">'+g.map(crow).join('')+'</div>':'').join('');
   $('ftGroups').innerHTML=html; $('ftBkSlot').innerHTML=bkCard(); try{ if(window.ftCloud) ftCloud.refresh(); }catch(e){}
 }
 function onList(e){ const b=e.target.closest('.ftBan'); if(b){ window.ftSetOpen('settings_profile'); return; } const r=e.target.closest('.ftRow'); if(r&&r.dataset.cat!==undefined) openCat(r.dataset.cat); }
@@ -12226,7 +12286,7 @@ function fillMenu(){
     const rows=g[3].filter(x=>x[0]==='@search'?!!window.ppGoSearch:x[0]==='@blood'?!!window.ftBlood:x[0]==='@inbox'?!!window.ftOpenInbox:x[0]==='@tour'?!!window.ftTour:(!!$('sec-'+x[0])||x[0]==='tx')).map(x=>R(x[0]==='@search'?'search':x[0]==='@blood'?'blood':x[0]==='@inbox'?'inbox':x[0]==='@tour'?'tour':'tab',x[0],x[4],icon(x[3]),L(x[1],x[2]),x[0]===c&&c!=='settings'));
     h+=sect(L(g[1],g[2]),g[0]==='money'?rows.concat(mv):rows);
   });
-  h+=sect(L('সেটিংস','Settings'),[R('tab','settings','#64748b',icon('settings'),L('সব সেটিংস','All settings'),c==='settings'&&!det)].concat(menuCats.map(m=>R('cat',m.k,m.ci[0],m.ci[1],m.t,false))));
+  h+=sect(L('সেটিংস','Settings'),[R('tab','settings','#64748b',icon('settings'),L('সব সেটিংস','All settings'),c==='settings'&&!det)].concat(menuCats.filter(m=>m.k!=='logout').map(m=>R('cat',m.k,m.ci[0],m.ci[1],m.t,false))));
   h+=sect(L('অ্যাপ','App'),[R('about','about','#8b5cf6','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.2M12 7.8h.01"/></svg>',L('অ্যাপ সম্পর্কে','About'),false)].concat(window.ftInstall?[R('install','install','#16a34a',icon('download'),(window.ftInstall.installed()?L('অ্যাপ ইনস্টল হয়েছে','App installed'):L('অ্যাপ ইনস্টল','Install app')),false)]:[]).concat([R('logout','logout','#ef4444',icon('power'),L('লগআউট','Logout'),false)]));
   $('mnBody').innerHTML=h;
   $('mnFt').innerHTML=''; try{ if(window.ftCloud) ftCloud.refresh(); }catch(e){}
@@ -12425,6 +12485,10 @@ document.addEventListener('visibilitychange',()=>{ if(!document.hidden) poll(); 
 .abDI{width:42px;height:42px;border-radius:14px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;background:var(--grad,var(--primary));}
 .abDI svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
 .abDev small{display:block;font-size:11.5px;color:var(--muted);} .abDev b{display:block;font-size:16px;color:var(--text);}
+.abDev>div{min-width:0;flex:1;}
+.abTg{flex:none;width:42px;height:42px;border-radius:14px;border:0;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--primary);background:color-mix(in srgb,var(--primary) 12%,transparent);transition:transform .12s,background .2s;-webkit-tap-highlight-color:transparent;}
+.abTg:active{transform:scale(.93);background:color-mix(in srgb,var(--primary) 22%,transparent);}
+.abTg svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
 .abPh{position:relative;width:92px;height:92px;margin:0 auto 12px;border-radius:50%;padding:3px;background:rgba(255,255,255,.9);box-shadow:0 10px 24px rgba(0,0,0,.3);}
 .abPh img,.abPh span{width:100%;height:100%;border-radius:50%;object-fit:cover;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:800;color:var(--primary);background:var(--bg);}
 .abNm{position:relative;display:block;font-size:21px;font-weight:800;letter-spacing:.2px;}
@@ -12460,7 +12524,8 @@ const ic={
  trash:'<svg viewBox="0 0 24 24"><path d="M4.5 7h15M9.5 7V4.8h5V7M6.5 7l.8 12.2h9.4L17.5 7M10 11v5M14 11v5"/></svg>',
  phone:'<svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2.6"/><path d="M11 18h2"/></svg>',
  user:'<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
-x:'<svg viewBox="0 0 24 24"><path d="m6.5 6.5 11 11M17.5 6.5l-11 11"/></svg>'
+x:'<svg viewBox="0 0 24 24"><path d="m6.5 6.5 11 11M17.5 6.5l-11 11"/></svg>',
+ send:'<svg viewBox="0 0 24 24"><path d="M21 3 10.2 13.8"/><path d="M21 3l-6.6 18-4.2-7.2L3 9.6z"/></svg>'
 };
 const row=(c,i,t,d)=>'<div class="abRow"><span class="abIc" style="--c:'+c+'">'+ic[i]+'</span><div><b>'+t+'</b><p>'+d+'</p></div></div>';
 const appName=()=>{ const n=document.querySelector('[data-i18n="app_title"]'); return (n&&n.textContent.trim())||'FinTrack'; };
@@ -12468,7 +12533,7 @@ const logoHtml=()=>{ const l=document.getElementById('headerLogoEl'); const h=l?
 function html(){
   return '<div class="abCard" role="dialog" aria-modal="true"><button type="button" class="abX" aria-label="Close" onclick="ftAboutClose()">'+ic.x+'</button>'
   +'<div class="abHero"><span class="abLogo">'+logoHtml()+'</span><b class="abApp">'+E(appName())+'</b><span class="abTag">'+L('আপনার হিসাব, আপনার নিয়ন্ত্রণ','Your money, your control')+'</span></div>'
-  +'<div class="abBody"><div class="abDev"><span class="abDI">'+ic.user+'</span><div><small>'+L('ডেভেলপার ও নির্মাতা','Developer & Creator')+'</small><b>'+E(DEV.name)+'</b></div></div>'
+  +'<div class="abBody"><div class="abDev"><span class="abDI">'+ic.user+'</span><div><small>'+L('ডেভেলপার ও নির্মাতা','Developer & Creator')+'</small><b>'+E(DEV.name)+'</b></div><button type="button" class="abTg" aria-label="'+L('এডমিনের সাথে যোগাযোগ','Contact the admin')+'" onclick="ftContactAdmin()">'+ic.send+'</button></div>'
   +'<div class="abSec"><h4>'+ic.info+' '+L('অ্যাপ সম্পর্কে','About this app')+'</h4><p class="abTxt">'
   +L('এই অ্যাপটি আমি নিজের দৈনন্দিন জীবনের প্রয়োজন থেকে তৈরি করেছি। ব্যবহার করতে গিয়ে মনে হয়েছে, আমার মতো আরও অনেকেরই এমন একটি সহজ ও নির্ভরযোগ্য হিসাবের অ্যাপ প্রয়োজন হতে পারে। সেই উদ্দেশ্যেই এটি সবার জন্য প্রকাশ করা হয়েছে।','I built this app to meet my own everyday needs. While using it, I realised that many others could benefit from a simple and reliable money tracker too. That is why I have made it available to everyone.')
   +'</p></div>'
@@ -12486,6 +12551,7 @@ window.ftAbout=function(){
   ov.innerHTML=html(); requestAnimationFrame(()=>ov.classList.add('on'));
 };
 window.ftAboutClose=function(){ if(ov) ov.classList.remove('on'); };
+window.ftContactAdmin=function(){ try{ window.open('https://t.me/mehedimadbor','_blank','noopener,noreferrer'); }catch(e){} };
 window.ftAboutRestore=function(){
   const o=getSnap(); if(!o||!o.d) return;
   if(!confirm(L('এই ব্যাকআপ পুনরুদ্ধার করলে বর্তমান ডেটার জায়গায় ব্যাকআপের ডেটা বসবে। চালিয়ে যাবেন?','Restoring will replace your current data with this backup. Continue?'))) return;
@@ -13725,13 +13791,22 @@ details.psMv>.setBody{padding:6px 2px 4px!important;}
 (function(){
 var $=function(i){return document.getElementById(i);}, bn=function(){try{return currentLang==='bn';}catch(e){return true;}}, L=function(b,e){return bn()?b:e;};
 var g=function(k){try{return localStorage.getItem(k)||'';}catch(e){return '';}};
-var P=[['me','প্রোফাইল','Profile','user'],['login','লগইন ও যোগাযোগ','Login & contact','key'],['soc','সোশ্যাল ও প্রাইভেসি','Social & privacy','shield'],['acct','অ্যাকাউন্ট','Account','settings']];
-var KEY={settings_profile:'me',inviteBox:'acct',cloudSyncBox:'acct'};
+var P=[
+ ['me','প্রোফাইল','Profile','user','#0ea5e9','<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-3.6 3.6-6 8-6s8 2.4 8 6"/></svg>','ছবি, কভার, নাম, বায়ো','Photo, cover, name, bio'],
+ ['login','লগইন ও যোগাযোগ','Login & contact','key','#10b981','<svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="m11 12 8-8M16 7l3 3M14 9l2 2"/></svg>','ইমেইল, মোবাইল, পাসওয়ার্ড','Email, mobile, password'],
+ ['soc','সোশ্যাল ও প্রাইভেসি','Social & privacy','shield','#8b5cf6','<svg viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>','সোশ্যাল লিংক, কে কী দেখবে','Social links, who sees what'],
+ ['blood','রক্তদাতা প্রোফাইল','Blood donor profile','drop','#e11d48','<svg viewBox="0 0 24 24"><path d="M12 3s6 6.2 6 10.5A6 6 0 0 1 6 13.5C6 9.2 12 3 12 3Z"/></svg>','রক্তের গ্রুপ, শহর, ফোন নম্বর','Blood group, city, phone'],
+];
+var KEY={settings_profile:'me',bdSetBox:'blood'};
 var OK=/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/, sig='';
 var mi=function(n){return '<i class="mi" style="--m:var(--ic-'+n+')"></i>';};
 function det(){ var h=document.querySelector('#sec-settings details.setBox h3[data-i18n="settings_profile"]'); return h?h.closest('details'):null; }
-function show(k){ var hub=$('phHub'); if(!hub) return; [].forEach.call(hub.querySelectorAll('.phP'),function(p){ p.classList.toggle('on',p.id==='phP_'+k); }); [].forEach.call(hub.querySelectorAll('.phNav button'),function(b){ b.classList.toggle('on',b.dataset.k===k); }); }
-function labels(){ var hub=$('phHub'); if(!hub) return; [].forEach.call(hub.querySelectorAll('.phNav button'),function(b){ var p=P.filter(function(x){return x[0]===b.dataset.k;})[0]; b.innerHTML=mi(p[3])+'<span>'+L(p[1],p[2])+'</span>'; }); P.forEach(function(p){ var e=$('phP_'+p[0]); if(e) e.setAttribute('data-t',L(p[1],p[2])); }); }
+function show(k){ var hub=$('phHub'); if(!hub) return; hub.dataset.v=k; [].forEach.call(hub.querySelectorAll('.phP'),function(p){ p.classList.toggle('on',p.id==='phP_'+k); }); }
+function barTitle(h){ var t=document.querySelector('#ftDetBar .t'); if(t) t.innerHTML=h; }
+function catTitle(){ var g=document.querySelector('#sec-settings .ftCat[data-cat="acct"]'); return g?g.innerHTML:L('অ্যাকাউন্ট ও প্রোফাইল','Account & profile'); }
+function go(k){ show(k); if(k==='list') barTitle(catTitle()); else { var p=P.filter(function(x){return x[0]===k;})[0]; if(p) barTitle(L(p[1],p[2])); } try{ window.scrollTo(0,0); }catch(e){} }
+var CH='<svg class="phCh" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>';
+function labels(){ var hub=$('phHub'); if(!hub) return; [].forEach.call(hub.querySelectorAll('.phNav button'),function(b){ var p=P.filter(function(x){return x[0]===b.dataset.k;})[0]; b.innerHTML=mi(p[3])+'<span>'+L(p[1],p[2])+'</span>'; }); P.forEach(function(p){ var e=$('phP_'+p[0]); if(e) e.setAttribute('data-t',L(p[1],p[2])); }); var ls=$('phList'); if(ls) ls.innerHTML=P.map(function(p){ return '<button type="button" class="phItem" data-k="'+p[0]+'"><span class="ftCI" style="--c:'+p[4]+'">'+p[5]+'</span><span class="phRt"><b>'+L(p[1],p[2])+'</b><span class="s">'+L(p[6],p[7])+'</span></span>'+CH+'</button>'; }).join(''); }
 function refresh(force){
   var av=$('phAv'); if(!av) return; var nm=g('myName_v1'), un=g('myUsername_v1').replace(/^@/,''), pic=g('myProfilePic_v1'), cv=g('myCoverPic_v1'), r=document.querySelector('#pfStudio .psRing b');
   var bi=g('myBio_v1'),jb=g('myJob_v1'),ct=g('myCity_v1'); var s=[nm,un,pic.length,cv.length,r?r.textContent:'',bn(),bi,jb,ct].join('|'); if(!force&&s===sig) return; sig=s;
@@ -13746,17 +13821,18 @@ function build(){
   var d=det(); if(!d) return null; var hub=$('phHub'); if(hub) return hub; var b=d.querySelector(':scope > .setBody'); if(!b) return null;
   hub=document.createElement('div'); hub.id='phHub';
   hub.innerHTML='<div class="phHd"><div class="phCv" id="phCv"><div><button type="button" class="phIb" id="phCvB" aria-label="cover">'+mi('image')+'</button><button type="button" class="phIb" id="phCvX" aria-label="remove cover">'+mi('trash')+'</button></div></div><div class="phRow"><div class="phAv" id="phAv"></div><div class="phTx"><b id="phNm"></b><span id="phUn"></span></div><span class="phPct" id="phPct"></span></div><div class="phAbout" id="phAbout"></div></div><input type="file" id="phCvIn" accept="image/*" hidden>'
-   +'<div class="phNav">'+P.map(function(p){return '<button type="button" data-k="'+p[0]+'"></button>';}).join('')+'</div>'+P.map(function(p){return '<div class="phP" id="phP_'+p[0]+'"></div>';}).join('');
+   +'<div class="phList" id="phList"></div><div class="phNav">'+P.map(function(p){return '<button type="button" data-k="'+p[0]+'"></button>';}).join('')+'</div>'+P.map(function(p){return '<div class="phP" id="phP_'+p[0]+'"></div>';}).join('');
   b.insertBefore(hub,b.firstChild);
   hub.addEventListener('click',function(e){
-    var n=e.target.closest('.phNav button'); if(n){ show(n.dataset.k); return; }
+    var n=e.target.closest('.phNav button'); if(n){ go(n.dataset.k); return; }
+    var rw=e.target.closest('.phItem'); if(rw){ go(rw.dataset.k); return; }
     if(e.target.closest('#phAv')){ var f=$('profilePicInput'); if(f) f.click(); return; }
     if(e.target.closest('#phCvB')){ $('phCvIn').click(); return; }
     if(e.target.closest('#phCvX')){ try{ ppCvDel(); }catch(x){} setTimeout(function(){ refresh(true); },300); }
   });
-  hub.addEventListener('click',function(e){ var m=e.target.closest('.psMiss button[data-i]'); if(m&&+m.dataset.i>=1&&+m.dataset.i<=4) show('login'); },true);
+  hub.addEventListener('click',function(e){ var m=e.target.closest('.psMiss button[data-i]'); if(m&&+m.dataset.i>=1&&+m.dataset.i<=4) go('login'); },true);
   $('phCvIn').addEventListener('change',function(){ try{ ppCover(this); }catch(x){} setTimeout(function(){ refresh(true); },1500); });
-  show('me'); refresh(true); setInterval(function(){ if(document.visibilityState==='visible') refresh(); },2500);
+  show('list'); refresh(true); setInterval(function(){ if(document.visibilityState==='visible') refresh(); },2500);
   return hub;
 }
 function put(id,n){ var p=$('phP_'+id); if(p&&n&&n.parentNode!==p) p.appendChild(n); }
@@ -13767,12 +13843,13 @@ function pass(){
   if(st) put('me',st); else miss++;
   if(pn&&pn.closest('.pfCard')) put('login',pn.closest('.pfCard')); else miss++;
   if(ps) put('soc',ps); else miss++;
-  ['inviteBox','cloudSyncBox'].forEach(function(k){ var e=$(k); if(!e){ miss++; return; } if(e.tagName==='DETAILS'){ e.classList.add('psMv'); e.open=true; } put('acct',e); });
+  [['bdSetBox','blood']].forEach(function(q){ var e=$(q[0]); if(!e){ if(q[0]!=='bdSetBox') miss++; return; } if(e.tagName==='DETAILS'){ e.classList.add('psMv'); e.open=true; } put(q[1],e); });
   return miss===0;
 }
 var n=0; (function tick(){ var ok=false; try{ ok=pass(); }catch(e){} if(!ok&&n++<40) setTimeout(tick,500); })();
-var so=window.ftSetOpen; if(so) window.ftSetOpen=function(k){ var t=KEY[k], a=[].slice.call(arguments); if(t) a[0]='settings_profile'; var r=so.apply(this,a); if(t){ try{ pass(); }catch(e){} show(t); if(t!=='me'){ setTimeout(function(){ var e=$('phP_'+t); if(e) try{ e.scrollIntoView({block:'start'}); }catch(x){} },80); } } return r; };
-var at=window.activateTab; if(at) window.activateTab=function(x){ var r=at.apply(this,arguments); if(x==='settings') setTimeout(function(){ try{ pass(); refresh(true); }catch(e){} },80); return r; };
+var so=window.ftSetOpen; if(so) window.ftSetOpen=function(k){ var t=KEY[k], a=[].slice.call(arguments); if(t) a[0]='settings_profile'; var r=so.apply(this,a); if(t){ try{ pass(); }catch(e){} go(t); } return r; };
+var sb=window.ftSetBack; if(sb) window.ftSetBack=function(){ var hub=$('phHub'), d=det(); if(hub&&d&&d.classList.contains('ftShow')&&hub.dataset.v&&hub.dataset.v!=='list'){ go('list'); return; } var r=sb.apply(this,arguments); try{ show('list'); }catch(e){} return r; };
+var at=window.activateTab; if(at) window.activateTab=function(x){ var r=at.apply(this,arguments); if(x!=='settings'){ try{ show('list'); }catch(e){} } if(x==='settings') setTimeout(function(){ try{ pass(); refresh(true); }catch(e){} },80); return r; };
 var al=window.applyLanguage; if(al) window.applyLanguage=function(){ var r=al.apply(this,arguments); try{ refresh(true); }catch(e){} return r; };
 })();
 </script>
@@ -14805,11 +14882,45 @@ function ensureBanner(){
   b.innerHTML='<span class="ic">'+DROP+'</span><div><b>'+tx('রক্তের গ্রুপ ও ফোন নম্বর যোগ করুন','Add your blood group & phone')+'</b><small>'+tx('জরুরি সময়ে মানুষ আপনাকে খুঁজে পাবে — মাত্র ১ মিনিট','People can reach you in emergencies — takes a minute')+'</small></div><span class="go">›</span>';
   b.onclick=openSheet; d.insertBefore(b,d.firstChild);
 }
+/* small invite popup (red & white) - replaces the big sheet as the automatic reminder */
+function ensurePromptCss(){
+  if($('bdPromptCss')) return;
+  var s=document.createElement('style'); s.id='bdPromptCss';
+  s.textContent='#bdPromptOv{position:fixed;inset:0;z-index:99996;background:rgba(20,6,10,.45);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;padding:24px}'
+  +'#bdPromptOv.on{display:flex}'
+  +'.bdPr{position:relative;width:100%;max-width:292px;background:#fff;color:#2a1216;border-radius:24px;padding:0 20px 18px;text-align:center;box-shadow:0 24px 50px -16px rgba(190,18,60,.55),0 0 0 1px rgba(225,29,72,.08);overflow:hidden;animation:bdPrIn .28s cubic-bezier(.2,.9,.3,1.2) both}'
+  +'@keyframes bdPrIn{from{opacity:0;transform:translateY(14px) scale(.94)}}'
+  +'.bdPr::before{content:"";display:block;height:62px;margin:0 -20px;background:linear-gradient(135deg,#e11d48,#be123c 70%,#9f1239)}'
+  +'.bdPr::after{content:"";position:absolute;top:-34px;right:-26px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.12)}'
+  +'.bdPrIc{position:relative;z-index:1;width:56px;height:56px;margin:-30px auto 10px;border-radius:50%;background:#fff;color:#e11d48;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px -6px rgba(190,18,60,.5),0 0 0 4px #fff}'
+  +'.bdPrIc .mi{width:30px;height:30px;display:block;background:#e11d48}'
+  +'.bdPr h4{margin:0 0 6px;font-size:16.5px;font-weight:800;color:#9f1239;line-height:1.5}'
+  +'.bdPr p{margin:0 0 14px;font-size:13px;line-height:1.65;color:#5b3a40}'
+  +'.bdPr .bdPrGo{width:100%;height:44px;border:0;border-radius:14px;background:linear-gradient(135deg,#f43f5e,#be123c);color:#fff;font:inherit;font-size:14.5px;font-weight:800;cursor:pointer;box-shadow:0 10px 20px -10px #be123c;transition:transform .12s}'
+  +'.bdPr .bdPrGo:active{transform:scale(.97)}'
+  +'.bdPr .bdPrLt{width:100%;height:40px;margin-top:6px;border:0;border-radius:12px;background:#fff1f3;color:#be123c;font:inherit;font-size:13px;font-weight:700;cursor:pointer}'
+  +'.bdPr .bdPrLt:active{background:#ffe4e9}';
+  document.head.appendChild(s);
+}
+function closePrompt(later){ var ov=$('bdPromptOv'); if(ov) ov.classList.remove('on'); if(later) lset(K.rem,String(Date.now())); }
+function openPrompt(){
+  ensurePromptCss();
+  var ov=$('bdPromptOv'); if(!ov){ ov=document.createElement('div'); ov.id='bdPromptOv'; document.body.appendChild(ov); ov.addEventListener('click',function(e){ if(e.target===ov) closePrompt(true); }); }
+  ov.innerHTML='<div class="bdPr" role="dialog" aria-modal="true"><div class="bdPrIc">'+DROP+'</div>'
+   +'<h4>'+tx('রক্তদাতা হতে চান?','Become a blood donor?')+'</h4>'
+   +'<p>'+tx('আপনি কি রক্তদাতা হতে চান? জীবন বাঁচাতে আমাদের সাথে যুক্ত হোন। রক্তদাতা হিসেবে নিবন্ধন করতে এখনই ক্লিক করুন।','Would you like to become a blood donor? Join us in saving lives. Click now to register as a blood donor.')+'</p>'
+   +'<button type="button" class="bdPrGo" id="bdPrGo">'+tx('এখনই নিবন্ধন করুন','Register now')+'</button>'
+   +'<button type="button" class="bdPrLt" id="bdPrLt">'+tx('পরে মনে করান','Remind me later')+'</button></div>';
+  ov.classList.add('on');
+  $('bdPrGo').onclick=function(){ closePrompt(false); openSheet(); };
+  $('bdPrLt').onclick=function(){ closePrompt(true); };
+}
 function remind(){
   if(!appReady()||complete()) return;
   if($('bdSheetOv')&&$('bdSheetOv').classList.contains('on')) return;
+  if($('bdPromptOv')&&$('bdPromptOv').classList.contains('on')) return;
   var last=+ls(K.rem)||0; if(Date.now()-last<25*60*1000) return;
-  openSheet(); lset(K.rem,String(Date.now()));
+  openPrompt(); lset(K.rem,String(Date.now()));
 }
 
 /* ---------- public API ---------- */
@@ -16481,5 +16592,98 @@ window.ftTour={open:openTour,close:closeTour};
 })();
 
 </script>
+<style id="ftBnFix">
+/* ===== Bangla text fix: tall vowel signs / conjuncts must never be cut off ===== */
+html,body{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+button,input,select,textarea{font-family:inherit;}
+html .bdCard .bdWho b,
+html .bdCard .bdWho small,
+html body #ftDetBar .t,
+html body #ftInPg .ipTop h2,
+html body #ftIpS,
+html body #ftIpT,
+html body #ftIpTabs button,
+html body #phHub .phP::before,
+html body .advT small,
+html body .bdRow .t small,
+html body .bnbtn .lbl,
+html body .cgBadge,
+html body .chatmsg,
+html body .fcFx div,
+html body .fcMsg,
+html body .fcQt,
+html body .fcSw small,
+html body .ftIpPan h3,
+html body .ftRt span.s,
+html body .ftSecH,
+html body .gtNm,
+html body .hc .hcSub,
+html body .lgTitle,
+html body .lkHappy .lkTxt,
+html body .mnL,
+html body .mnPro.mnLogin .tx span,
+html body .nsCard p,
+html body .ntIt small,
+html body .pfText,
+html body .phCt .phCtTx small,
+html body .ppBn,
+html body .ppReqBn b,
+html body .ppRkS .n,
+html body .ppRow .ppBd,
+html body .ppSetTx small,
+html body .setSub,
+html body .setTt h3,
+html body .smsTxt{line-height:1.55!important;}
+html body #bottomNav .bnbtn .lbl,
+html body #ftFullBar b,
+html body #ftRecBox .rcTx b,
+html body #ftRecBox .rcTx span,
+html body #ftTourOv .tLeg span,
+html body #ftTourOv .tStat b,
+html body #ftTourOv .tbar b,
+html body #ftTourOv .tcTx b,
+html body #ftTourOv .tcTx small,
+html body #ftTourOv .tpTx b,
+html body #ftTourOv .trTx b,
+html body #ftTourOv .trTx small,
+html body #ftWarnOv .ftFrNm b,
+html body #ftWarnOv .ftFrNm small,
+html body #gtSendOv .gsTx b,
+html body #phHub .phRt .s,
+html body #sec-friends .frTx b,
+html body .bdShort small,
+html body .bdWho b,
+html body .bdWho small,
+html body .cScrLbl,
+html body .calcItem .cn,
+html body .fcRp span,
+html body .fcRt b span:first-child,
+html body .fcRt p,
+html body .ftBanTx b,
+html body .ftBanTx span,
+html body .ftRt span.s,
+html body .gtShTx small,
+html body .hc .hcLbl,
+html body .lbPod b,
+html body .lbPod small,
+html body .lbWho b,
+html body .lbWho small,
+html body .mnPro .tx b,
+html body .mnPro .tx span,
+html body .mnR .mnL,
+html body .pfHdS,
+html body .pfName,
+html body .pfVal,
+html body .phTx b,
+html body .phTx span,
+html body .ppRow .ppLoc,
+html body .setName,
+html body .setPill,
+html body .setSub,
+html body .stOv.stEd .stPill b,
+html body .txleft .t1,
+html body .txleft .t2{line-height:1.55!important;padding-top:.14em;padding-bottom:.2em;}
+html body #bottomNav .bnbtn .lbl{line-height:1.5!important;padding:.14em 0 .2em;margin-bottom:2px;}
+</style>
 </body>
 </html>
