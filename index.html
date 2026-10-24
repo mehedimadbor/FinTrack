@@ -359,6 +359,27 @@ details.gsetup summary::-webkit-details-marker{display:none;}
   #printArea .barbg{background:#e5e7eb !important; height:1.4mm !important; border-radius:1mm; margin-top:1mm; overflow:hidden;}
   #printArea .barfg{background:var(--grad) !important; height:100%; border-radius:1mm;}
   #printArea .empty{color:#6b7280; font-size:9.5pt;}
+  /* raw statement tables */
+  #printArea .pd-per{font-size:9pt; color:#6b7280; margin:-1mm 0 3.5mm;}
+  #printArea .pd-kpis{display:grid !important; grid-template-columns:repeat(4,1fr); gap:2.5mm; margin:0 0 3mm;}
+  #printArea .pd-k{border:1px solid #e5e7eb; border-top:.9mm solid var(--pc,#2563eb); border-radius:2mm; padding:2.2mm 2.6mm; background:#f8fafc !important; break-inside:avoid;}
+  #printArea .pd-kl{font-size:7.5pt; color:#6b7280;}
+  #printArea .pd-kv{font-size:12.5pt; font-weight:800; margin-top:.8mm; white-space:nowrap;}
+  #printArea .pd-h{font-size:10.5pt; font-weight:800; color:var(--pc,#2563eb); margin:5.5mm 0 1.8mm; padding-left:2.2mm; border-left:1mm solid var(--pc,#2563eb); break-after:avoid; page-break-after:avoid;}
+  #printArea .pd-top{font-size:9pt; margin:0 0 2mm;}
+  #printArea table.pd-tbl{width:100%; border-collapse:collapse; font-size:9pt;}
+  #printArea table.pd-tbl thead{display:table-header-group;}
+  #printArea table.pd-tbl th{background:#eef2f7 !important; font-weight:700; text-align:left; padding:1.4mm 1.8mm; border-bottom:.3mm solid #cbd5e1; font-size:8pt; color:#374151;}
+  #printArea table.pd-tbl td{padding:1.3mm 1.8mm; border-bottom:.2mm solid #e5e7eb; vertical-align:top;}
+  #printArea table.pd-tbl tr{break-inside:avoid; page-break-inside:avoid;}
+  #printArea table.pd-tbl .n{text-align:right; white-space:nowrap;}
+  #printArea table.pd-tbl tr.pd-b td{font-weight:800; background:#f8fafc !important; border-top:.3mm solid #94a3b8;}
+  #printArea table.pd-tbl tr.pd-g td{font-size:7.8pt; font-weight:800; color:var(--pc,#2563eb); padding-top:3mm; border-bottom:.3mm solid var(--pc,#2563eb);}
+  #printArea table.pd-days{font-size:7.8pt;}
+  #printArea table.pd-days th{font-size:7pt; padding:1.3mm 1mm;}
+  #printArea table.pd-days td{padding:1.1mm 1mm;}
+  #printArea .pd-pb{height:1.3mm; background:#e5e7eb !important; border-radius:1mm; overflow:hidden; margin-top:.8mm;}
+  #printArea .pd-pb i{display:block; height:100%; background:var(--grad) !important;}
 }
 
 .askOverlay{position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px;}
@@ -4662,7 +4683,117 @@ function printWithLetterhead(bodyHtml){
   window.print();
 }
 
-// ---- Print monthly report ----
+// ---- Raw statement print: only figures (totals, category-wise, loans, savings, date-wise) ----
+function ftPrintRaw(list, opt){
+  opt = opt || {};
+  const B = currentLang==='bn', T = (b,e)=>B?b:e;
+  const num = v=>+v||0, r2 = v=>Math.round(v*100)/100;
+  const sum = a=>r2(a.reduce((n,x)=>n+num(x.amount),0));
+  const of = ty=>sum(list.filter(x=>x.type===ty));
+  const income = of('deposit'), loanGiven = of('loan_given'), gotBack = of('loan_repay_given'), loanTaken = of('loan_taken'), paidBack = of('loan_repay_taken');
+  const saved = of('save_to_account'), used = of('use_from_account');
+  const expList = list.filter(isExpenseLike), expense = sum(expList);
+  const start = opt.from || (opt.month ? opt.month+'-01' : '');
+  let opening = 0;
+  if(start) data.transactions.forEach(tx=>{ if(!tx.fund && tx.date<start) opening += TYPE_META[tx.type].sign*num(tx.amount); });
+  opening = r2(opening);
+  const cash = r2(list.reduce((a,x)=> x.fund ? a : a + TYPE_META[x.type].sign*num(x.amount), 0));
+  const closing = r2(opening + cash);
+  const net = r2(income - expense);
+  const M = v=>fmt(v), Z = v=>Math.round(v*100)?fmt(v):'–';
+  const G='#16a34a', R='#dc2626';
+  const fd = d=>d.slice(8)+'/'+d.slice(5,7)+'/'+d.slice(0,4);
+  const pLabel = (opt.from||opt.to) ? `${opt.from?fd(opt.from):'…'} → ${opt.to?fd(opt.to):'…'}` : (opt.month || T('সব সময়','All time'));
+
+  const kpi = (l,v,c)=>`<div class="pd-k"><div class="pd-kl">${l}</div><div class="pd-kv" style="color:${c||'#1a1c1e'}">${v}</div></div>`;
+  const row = (l,v,c,bold)=>`<tr${bold?' class="pd-b"':''}><td>${l}</td><td class="n"${c?` style="color:${c}"`:''}>${v}</td></tr>`;
+  const grp = l=>`<tr class="pd-g"><td colspan="2">${l}</td></tr>`;
+
+  let html = `<h2>${T('আর্থিক হিসাব বিবরণী','Financial statement')}</h2>`
+    + `<div class="pd-per">${T('সময়কাল','Period')}: <b>${esc(pLabel)}</b> &nbsp;·&nbsp; ${list.length} ${T('টি লেনদেন','transactions')}</div>`;
+  if(!list.length){ html += `<p class="empty">${esc(t('empty_no_tx'))}</p>`; printWithLetterhead(html); return; }
+
+  html += `<div class="pd-kpis">`
+    + kpi(T('মোট আয়/জমা','Total income'), M(income), G)
+    + kpi(T('মোট খরচ','Total expense'), M(expense), R)
+    + kpi(T('নিট (আয় − খরচ)','Net (income − expense)'), (net<0?'−':'')+M(Math.abs(net)), net<0?R:G)
+    + kpi(T('হাতে আছে (শেষে)','Balance in hand'), M(closing))
+    + `</div>`;
+
+  /* summary */
+  html += `<div class="pd-h">${T('হিসাবের সারাংশ','Summary')}</div><table class="pd-tbl pd-sum"><tbody>`
+    + grp(T('নগদ প্রবাহ','Cash flow'))
+    + row(T('শুরুর ব্যালেন্স','Opening balance'), M(opening))
+    + row(T('মোট আয়/জমা','Total income'), M(income), G)
+    + row(T('মোট খরচ','Total expense'), M(expense), R)
+    + row(T('ব্যালেন্স পরিবর্তন (সব লেনদেনসহ)','Balance change (all transactions)'), (cash<0?'−':'+')+M(Math.abs(cash)), cash<0?R:G)
+    + row(T('শেষ ব্যালেন্স (হাতে আছে)','Closing balance (in hand)'), M(closing), '', true)
+    + grp(T('সঞ্চয়','Savings'))
+    + row(T('সঞ্চয়ে জমা','Saved'), M(saved), G)
+    + row(T('সঞ্চয় থেকে ব্যবহার','Used from savings'), M(used), R)
+    + row(T('নিট সঞ্চয় (এই সময়ে)','Net savings (this period)'), (saved-used<0?'−':'')+M(Math.abs(r2(saved-used))), '', true)
+    + grp(T('লোন (এই সময়ে)','Loans (this period)'))
+    + row(T('লোন দেওয়া হয়েছে','Loan given'), M(loanGiven))
+    + row(T('দেওয়া লোন ফেরত পেয়েছি','Received back'), M(gotBack))
+    + row(T('আমি লোন নিয়েছি','Loan taken'), M(loanTaken))
+    + row(T('নেওয়া লোন ফেরত দিয়েছি','Paid back'), M(paidBack))
+    + `</tbody></table>`;
+
+  /* category-wise expense */
+  html += `<div class="pd-h">${T('খাত অনুযায়ী খরচ','Expense by category')}</div>`;
+  const byCat = {}; expList.forEach(x=>{ const k = x.category || T('অন্যান্য','Other'); byCat[k] = (byCat[k]||0) + num(x.amount); });
+  const cats = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  if(!cats.length) html += `<p class="empty">${esc(t('empty_no_expense'))}</p>`;
+  else{
+    html += `<p class="pd-top">${T('সবচেয়ে বেশি খরচ','Highest spending')}: <b>${esc(cats[0][0])}</b> — ${M(cats[0][1])} (${Math.round(cats[0][1]/expense*100)}%)</p>`
+      + `<table class="pd-tbl"><thead><tr><th style="width:6mm">#</th><th>${T('খাত','Category')}</th><th class="n">${T('টাকা','Amount')}</th><th class="n" style="width:14mm">%</th></tr></thead><tbody>`
+      + cats.map((c,i)=>{ const p=expense? c[1]/expense*100 : 0; return `<tr><td>${i+1}</td><td>${esc(c[0])}<div class="pd-pb"><i style="width:${Math.max(2,Math.round(p))}%"></i></div></td><td class="n">${M(c[1])}</td><td class="n">${p.toFixed(1)}%</td></tr>`; }).join('')
+      + `<tr class="pd-b"><td></td><td>${T('মোট','Total')}</td><td class="n">${M(expense)}</td><td class="n">100%</td></tr></tbody></table>`;
+  }
+
+  /* loans outstanding now */
+  const {getMap, oweMap} = calcLoans();
+  const ge = Object.entries(getMap).filter(([,v])=>Math.round(v)!==0), oe = Object.entries(oweMap).filter(([,v])=>Math.round(v)!==0);
+  const gTot = r2(ge.reduce((n,[,v])=>n+v,0)), oTot = r2(oe.reduce((n,[,v])=>n+v,0));
+  html += `<div class="pd-h">${T('লোনের বর্তমান অবস্থা (এখন পর্যন্ত বাকি)','Loans outstanding (as of today)')}</div>`;
+  if(!ge.length && !oe.length) html += `<p class="empty">${esc(t('empty_no_one'))}</p>`;
+  else{
+    html += `<table class="pd-tbl"><thead><tr><th>${T('নাম','Name')}</th><th>${T('ধরন','Type')}</th><th class="n">${T('বাকি টাকা','Outstanding')}</th></tr></thead><tbody>`
+      + ge.map(([p,v])=>`<tr><td>${esc(p)}</td><td>${T('আমি পাব','I will receive')}</td><td class="n" style="color:${G}">${M(Math.abs(v))}</td></tr>`).join('')
+      + oe.map(([p,v])=>`<tr><td>${esc(p)}</td><td>${T('আমি দেব','I owe')}</td><td class="n" style="color:${R}">${M(Math.abs(v))}</td></tr>`).join('')
+      + `<tr class="pd-b"><td colspan="2">${T('মোট আমি পাব','Total to receive')}</td><td class="n">${M(gTot)}</td></tr>`
+      + `<tr class="pd-b"><td colspan="2">${T('মোট আমি দেব','Total I owe')}</td><td class="n">${M(oTot)}</td></tr></tbody></table>`;
+  }
+
+  /* date-wise */
+  const days = {};
+  list.forEach(x=>{
+    const d = days[x.date] || (days[x.date] = {inc:0,exp:0,sav:0,lg:0,lr:0,lt:0,lp:0,cash:0}), a = num(x.amount);
+    if(x.type==='deposit') d.inc += a;
+    if(isExpenseLike(x)) d.exp += a;
+    if(x.type==='save_to_account') d.sav += a;
+    if(x.type==='use_from_account') d.sav -= a;
+    if(x.type==='loan_given') d.lg += a;
+    if(x.type==='loan_repay_given') d.lr += a;
+    if(x.type==='loan_taken') d.lt += a;
+    if(x.type==='loan_repay_taken') d.lp += a;
+    if(!x.fund) d.cash += TYPE_META[x.type].sign*a;
+  });
+  let run = opening; const tot = {inc:0,exp:0,sav:0,lg:0,lr:0,lt:0,lp:0};
+  const drows = Object.keys(days).sort().map(k=>{
+    const d = days[k]; run = r2(run + d.cash);
+    Object.keys(tot).forEach(z=>{ tot[z] += d[z]; });
+    return `<tr><td>${fd(k)}</td><td class="n" style="color:${d.inc?G:'inherit'}">${Z(d.inc)}</td><td class="n" style="color:${d.exp?R:'inherit'}">${Z(d.exp)}</td><td class="n">${d.sav<0?'−':''}${Z(Math.abs(d.sav))}</td><td class="n">${Z(d.lg)}</td><td class="n">${Z(d.lr)}</td><td class="n">${Z(d.lt)}</td><td class="n">${Z(d.lp)}</td><td class="n"><b>${M(run)}</b></td></tr>`;
+  }).join('');
+  const netSav = r2(tot.sav);
+  html += `<div class="pd-h">${T('তারিখ অনুযায়ী হিসাব','Date-wise statement')}</div>`
+    + `<table class="pd-tbl pd-days"><thead><tr><th>${T('তারিখ','Date')}</th><th class="n">${T('আয়','Income')}</th><th class="n">${T('খরচ','Expense')}</th><th class="n">${T('সঞ্চয়','Savings')}</th><th class="n">${T('লোন দিলাম','Loan given')}</th><th class="n">${T('ফেরত পেলাম','Got back')}</th><th class="n">${T('লোন নিলাম','Loan taken')}</th><th class="n">${T('ফেরত দিলাম','Paid back')}</th><th class="n">${T('ব্যালেন্স','Balance')}</th></tr></thead><tbody>`
+    + drows
+    + `<tr class="pd-b"><td>${T('মোট','Total')}</td><td class="n">${Z(tot.inc)}</td><td class="n">${Z(tot.exp)}</td><td class="n">${netSav<0?'−':''}${Z(Math.abs(netSav))}</td><td class="n">${Z(tot.lg)}</td><td class="n">${Z(tot.lr)}</td><td class="n">${Z(tot.lt)}</td><td class="n">${Z(tot.lp)}</td><td class="n">${M(closing)}</td></tr></tbody></table>`;
+  printWithLetterhead(html);
+}
+
+// ---- Print monthly report (History tab) ----
 function printMonthlyReport(){
   const month = document.getElementById('filterMonth').value;
   let hf = document.getElementById('histFrom').value, ht = document.getElementById('histTo').value;
@@ -4671,30 +4802,7 @@ function printMonthlyReport(){
   let list = [...data.transactions];
   if(rng) list = list.filter(tx=> (!hf || tx.date>=hf) && (!ht || tx.date<=ht));
   else if(month) list = list.filter(tx=>tx.date.slice(0,7)===month);
-  list.sort((a,b)=> (a.date+a.time).localeCompare(b.date+b.time));
-  let totalCredit=0, totalDebit=0;
-  list.forEach(tx=>{
-    const amt = TYPE_META[tx.type].sign * tx.amount;
-    if(amt>=0) totalCredit+=amt; else totalDebit+=Math.abs(amt);
-  });
-  const {getMap, oweMap} = calcLoans();
-  const title = rng ? `${t('report_title')} — ${hf||'…'} → ${ht||'…'}` : (month ? `${t('report_title')} — ${month}` : t('report_title_all'));
-  let html = `<h2>${esc(title)}</h2>`;
-  html += `<p><b>${t('report_total_credit')}:</b> ${fmt(totalCredit)} &nbsp; <b>${t('report_total_debit')}:</b> ${fmt(totalDebit)} &nbsp; <b>${t('report_net')}:</b> ${fmt(totalCredit-totalDebit)}</p>`;
-  html += `<h3>${t('report_transactions')}</h3>`;
-  if(!list.length){ html += `<p>${t('empty_no_tx')}</p>`; }
-  list.forEach(tx=>{
-    const meta = TYPE_META[tx.type];
-    const sub = txSubLabel(tx);
-    html += `<div class="prow"><span>${tx.date} — ${esc(t(meta.label))}${sub?' · '+esc(sub):''}${tx.fund?' · '+esc(tx.fund):''}</span><span>${meta.sign>0?'+':'-'}${fmt(tx.amount)}</span></div>`;
-  });
-  html += `<h3>${t('report_loan_summary')}</h3>`;
-  const getEntries = Object.entries(getMap).filter(([,v])=>Math.round(v)!==0);
-  const oweEntries = Object.entries(oweMap).filter(([,v])=>Math.round(v)!==0);
-  if(!getEntries.length && !oweEntries.length){ html += `<p>${t('empty_no_one')}</p>`; }
-  getEntries.forEach(([p,v])=>{ html += `<div class="prow"><span>${esc(p)} (${t('loan_people_owe_me')})</span><span>+${fmt(Math.abs(v))}</span></div>`; });
-  oweEntries.forEach(([p,v])=>{ html += `<div class="prow"><span>${esc(p)} (${t('loan_people_i_owe')})</span><span>-${fmt(Math.abs(v))}</span></div>`; });
-  printWithLetterhead(html);
+  ftPrintRaw(list, rng ? {from:hf, to:ht} : {month:month});
 }
 
 // ---- Send money (quick loan_given) ----
@@ -5480,9 +5588,11 @@ function setReportRange(kind){
 }
 function printReport(){
   const m = document.getElementById('reportMonth').value;
-  const f = document.getElementById('reportFrom').value, to = document.getElementById('reportTo').value;
-  const period = (f || to) ? `${f || '…'} → ${to || '…'}` : (m || t('hist_show_all'));
-  printWithLetterhead(`<h2>${esc(t('tab_report'))} (${esc(period)})</h2>` + document.getElementById('reportBody').innerHTML);
+  let f = document.getElementById('reportFrom').value, to = document.getElementById('reportTo').value;
+  if(f && to && f > to){ const sw = f; f = to; to = sw; }
+  const rng = !!(f || to);
+  const list = data.transactions.filter(x=> rng ? ((!f || x.date>=f) && (!to || x.date<=to)) : (!m || x.date.slice(0,7)===m));
+  ftPrintRaw(list, rng ? {from:f, to:to} : {month:m});
 }
 
 // ---- Developer mode & notification popup ----
@@ -7098,7 +7208,7 @@ const av=document.querySelector('#homeProfile .pfAvatar'); if(av) av.appendChild
 const lbdg=document.createElement('div'); lbdg.className='pfBadge lockPfBadge'; lbdg.style.display='none';
 const lav=document.querySelector('#lockOverlay .lockAvatarWrap'); if(lav) lav.appendChild(lbdg);
 const lkOv=$('lockOverlay'); if(lkOv) new MutationObserver(()=>updBadge()).observe(lkOv,{attributes:true,attributeFilter:['style']});
-bdg.addEventListener('click',e=>{ e.stopPropagation(); showRm('manual'); });
+bdg.addEventListener('click',e=>{ e.stopPropagation(); try{ activateTab('dash'); }catch(_){} paintFocus(); setTimeout(()=>{ if(fbox.style.display!=='none'){ try{ fbox.scrollIntoView({behavior:'smooth',block:'center'}); }catch(_){} } else showRm('manual'); },140); });
 function pendingN(){ const td=todayStr(); let n=R().filter(r=>!r.done&&r.date<=td).length; try{ n+=calcLoanReminders().filter(x=>x.days<=0).length; }catch(e){} return n; }
 function updBadge(){
   try{ const n=pendingN(), tx=n>9?dg(9)+'+':dg(n); bdg.style.display=n?'flex':'none'; bdg.textContent=tx; lbdg.style.display=n?'flex':'none'; lbdg.textContent=tx;
@@ -7135,6 +7245,11 @@ function paintRm(){
   o.querySelector('.rmBody').innerHTML=h;
 }
 function showRm(reason){
+  /* app-open / timer no longer pop up: pending reminders now sit on the dashboard in place of the monthly summary */
+  if(reason==='open'||reason==='timer'){
+    if(reason==='timer'){ markAll(); try{ if(navigator.vibrate) navigator.vibrate([180,90,180]); }catch(e){} try{ paintFocus(); }catch(e){} }
+    return false;
+  }
   if($('rmPop')) return true;
   if(reason!=='manual'&&ls('rmPopup_v1','1')!=='1') return false;
   if(reason==='open'&&ls('rmFreq_v1','every')==='daily'&&ls('rmDay_v1','')===todayStr()) return false;
@@ -7208,7 +7323,7 @@ function tg(b,e,k,def,fn){
 const box=document.createElement('details'); box.className='box setBox'; box.id='rmBox';
 box.innerHTML='<summary><span class="setIco" style="--c:#8b5cf6">'+mi('bell')+'</span><h3>'+bl('রিমাইন্ডার','Reminders')+'</h3><svg viewBox="0 0 24 24" class="setChev"><path d="m9 6 6 6-6 6"/></svg></summary><div class="setBody"></div>';
 const bd=box.querySelector('.setBody');
-bd.appendChild(tg('অ্যাপ খুললে রিমাইন্ডার পপআপ','Reminder popup when app opens','rmPopup_v1','1'));
+bd.appendChild(tg('ড্যাশবোর্ডে বাকি রিমাইন্ডার দেখাও','Show pending reminders on the dashboard','rmPopup_v1','1'));
 bd.appendChild(tg('আগামীকালেরগুলোও দেখাও','Also show tomorrow\u2019s','rmTomorrow_v1','1'));
 const fr=document.createElement('label'); fr.className='ftRow';
 fr.innerHTML='<span>'+bl('কতবার দেখাবে','How often')+'</span><select><option value="every">'+L('প্রতিবার খুললে','Every time · প্রতিবার')+'</option><option value="daily">'+L('দিনে একবার','Once a day · দিনে একবার')+'</option></select>';
@@ -7218,7 +7333,36 @@ addB.innerHTML=mi('plus')+' '+bl('নতুন রিমাইন্ডার','
 const lst=document.createElement('div'); lst.id='rmListEl'; lst.style.marginTop='12px'; bd.appendChild(lst);
 const pref=$('prefPlusBox'); if(pref) pref.after(box); else $('sec-settings').appendChild(box);
 
-/* ---------- dashboard card ---------- */
+/* ---------- dashboard: pending reminder card takes the place of "This month at a glance" until the action is done ---------- */
+const css3=document.createElement('style');
+css3.textContent='.monthBox.rmSwap{display:none!important}.rmFocus{border:1px solid color-mix(in srgb,var(--primary) 40%,var(--border))}.rmFocus .rmDashH h3{display:flex;align-items:center;gap:8px}.rmCnt{min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:var(--red);color:#fff;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center}.rmFocus .rmHint{font-size:12px;color:var(--muted);margin:-2px 0 10px}.rmFocus .rmAct button{width:40px;height:40px}';
+document.head.appendChild(css3);
+const fbox=document.createElement('div'); fbox.className='box rmFocus'; fbox.id='rmFocusBox'; fbox.style.display='none';
+fbox.addEventListener('click',e=>{
+  const b=e.target.closest('button[data-a]'); if(!b) return; const a=b.dataset.a, row=b.closest('.rmRow'), id=row&&row.dataset.id; if(!id) return;
+  if(a==='done') doneR(id);
+  else if(a==='snz'){ const r=R().find(x=>x.id===id); if(r){ r.snz=Date.now()+36e5; saveData(); refresh(); say(L('১ ঘণ্টা পরে আবার মনে করাব','Will remind you again in 1 hour')); } }
+});
+let fSig='';
+function dueNow(){
+  const td=todayStr(), nt=nowTime(), now=Date.now();
+  return R().filter(r=>!r.done&&(r.date<td||(r.date===td&&(!r.time||r.time<=nt)))&&(!r.snz||r.snz<=now)).sort(cmp);
+}
+function paintFocus(){
+  try{
+    const mb=document.querySelector('#sec-dash .monthBox'); if(!mb||!data) return;
+    const list=ls('rmPopup_v1','1')==='1'?dueNow():[];
+    if(fbox.nextSibling!==mb||fbox.parentNode!==mb.parentNode) mb.parentNode.insertBefore(fbox,mb);
+    mb.classList.toggle('rmSwap',list.length>0);
+    if(!list.length){ fbox.style.display='none'; fSig=''; return; }
+    fbox.style.display='';
+    const sig=list.map(key).join(',')+'|'+(bn()?1:0);
+    if(sig===fSig) return; fSig=sig;
+    fbox.innerHTML='<div class="rmDashH"><h3>'+mi('bell')+L('আজকের রিমাইন্ডার','Today\u2019s reminders')+'<span class="rmCnt">'+dg(list.length)+'</span></h3></div>'
+      +'<div class="rmHint">'+L('কাজ সম্পন্ন করলে এটি সরে গিয়ে মাসের সারসংক্ষেপ দেখাবে','Complete the action and this makes way for the monthly summary')+'</div>'
+      +list.map(r=>rowH(r,true)).join('');
+  }catch(e){}
+}
 const dbox=document.createElement('div'); dbox.className='box'; dbox.id='rmDashBox';
 const rb=$('remindBox'); if(rb) rb.after(dbox); else $('sec-dash').appendChild(dbox);
 
@@ -7230,7 +7374,7 @@ function refresh(){
       return '<div class="rmRow'+(r.done?' done':'')+'" data-id="'+r.id+'"><span class="rmChip" style="--c:'+k[1]+'">'+mi(r.done?'check-circle':k[0])+'</span><div class="rmTx" data-a="edit" style="cursor:pointer"><b>'+esc(r.title)+'</b><small class="'+(!r.done&&r.date<todayStr()?'late':'')+'">'+(r.done?L('সম্পন্ন','Done'):sub(r))+'</small></div><div class="rmAct"><button type="button" class="rmMini del" data-a="del" aria-label="delete">'+mi('trash')+'</button></div></div>';
     }).join(''):'<div class="rmEmpty">'+L('এখনো কোনো রিমাইন্ডার নেই','No reminders yet')+'</div>';
     const td=todayStr(), lim=addD(td,7), up=R().filter(r=>!r.done&&r.date<=lim).sort(cmp);
-    updBadge();
+    updBadge(); paintFocus();
     dbox.innerHTML='<div class="rmDashH"><h3>'+L('রিমাইন্ডার','Reminders')+'</h3><button type="button" class="rmMini" data-a="add" aria-label="add">'+mi('plus')+'</button></div>'
       +(up.length?up.slice(0,4).map(r=>{ const k=KIND[r.kind]||KIND.other; return '<div class="rmRow" data-id="'+r.id+'"><span class="rmChip" style="--c:'+k[1]+'">'+mi(k[0])+'</span><div class="rmTx" data-a="edit" style="cursor:pointer"><b>'+esc(r.title)+'</b><small class="'+(r.date<td?'late':'')+'">'+sub(r)+'</small></div><div class="rmAct"><button type="button" data-a="done" aria-label="done">'+mi('check')+'</button></div></div>'; }).join('')+(up.length>4?'<div class="rmMore">+'+dg(up.length-4)+' '+L('আরও','more')+'</div>':''):'<div class="rmEmpty">'+L('আগামী ৭ দিনে কোনো রিমাইন্ডার নেই','No reminders in the next 7 days')+'</div>');
   }catch(e){}
@@ -7255,7 +7399,7 @@ window.checkNotifPopupOnLoad=function(){
   return origCheck.apply(this,arguments);
 };
 function tick(){
-  updBadge();
+  updBadge(); paintFocus();
   try{
     if(document.hidden||!data||$('rmPop')||$('rmForm')||$('appDlg')) return;
     const lk=$('lockOverlay'); if(lk&&lk.style.display==='flex') return;
@@ -7557,7 +7701,7 @@ const box=$('devModeBox');
 function tog2(b,e,key,def,fn){ const l=document.createElement('label'); l.className='ftRow'; l.innerHTML='<span>'+bl(b,e)+'</span><input type="checkbox">'; const c=l.querySelector('input'); c.checked=ls(key,def)==='1'; c.onchange=()=>{ st(key,c.checked?'1':'0'); fn&&fn(); }; return l; }
 $('devSw').appendChild(tog2('অ্যাড পেজে কুইক বাটন ও সাম্প্রতিক এন্ট্রি','Quick buttons & recent entries on Add page','qaOn_v1','1',qaRender));
 $('devSw').appendChild(tog2('মেনুতে প্রোফাইল বক্সের নিচে লাইভ ক্লাউড ব্যাকআপ বক্স','Live cloud backup box below the profile box in menus','pfSyncInfo_v1','1',()=>{ try{ ftCloud.refresh(); }catch(e){} }));
-$('devSw').appendChild(tog2('অ্যাপ খুললে রিমাইন্ডার পপআপ','Reminder popup when app opens','rmPopup_v1','1'));
+$('devSw').appendChild(tog2('ড্যাশবোর্ডে বাকি রিমাইন্ডার দেখাও','Show pending reminders on the dashboard','rmPopup_v1','1'));
 $('devSw').appendChild(tog2('সঠিক পিন দিলে নিজে থেকে অ্যাপে ঢুকবে','Auto-unlock when PIN is correct','autoUnlock_v1','1',()=>{try{const pd=document.querySelector('.pkPad');if(pd)pd.classList.toggle('auto',ls('autoUnlock_v1','1')==='1'&&+ls('appPinLen_v1',0)>=4)}catch(e){}}));
 
 /* ---------- Dashboard customisation switches ---------- */
@@ -11831,10 +11975,21 @@ const myName=()=>{ try{ return localStorage.getItem('myName_v1')||''; }catch(e){
 const myPic=()=>{ try{ return localStorage.getItem('myProfilePic_v1')||''; }catch(e){ return ''; } };
 const myCover=()=>{ try{ return localStorage.getItem('myCoverPic_v1')||''; }catch(e){ return ''; } };
 const lsv=(k,n)=>{ try{ return String(localStorage.getItem(k)||'').trim().slice(0,n); }catch(e){ return ''; } };
-const myAbout=()=>({b:lsv('myBio_v1',80),j:lsv('myJob_v1',40),c:lsv('myCity_v1',40)});
+const REL_K={single:['অবিবাহিত','Single'],rel:['সম্পর্কে আছি','In a relationship'],married:['বিবাহিত','Married']}, GEN_K={m:['পুরুষ','Male'],f:['নারী','Female'],o:['অন্যান্য','Other']};
+const pk=(v,m)=>Object.prototype.hasOwnProperty.call(m,v)?v:'';
+const myAbout=()=>({b:lsv('myBio_v1',80),j:lsv('myJob_v1',40),c:lsv('myCity_v1',40),h:lsv('myHome_v1',40),r:pk(lsv('myRel_v1',12),REL_K),g:pk(lsv('myGender_v1',4),GEN_K),l:lsv('myLangs_v1',60)});
 const fcOf=r=>{ const n=r&&r.fc; return (typeof n==='number'&&isFinite(n)&&n>=0)?Math.min(Math.floor(n),1e6):null; };
-const recAbout=r=>({b:String((r&&r.b)||'').slice(0,80),j:String((r&&r.j)||'').slice(0,40),c:String((r&&r.c)||'').slice(0,40)});
-function aboutHtml(a){ if(!a||!(a.b||a.j||a.c)) return ''; const ch=(n,t)=>t?'<span><i class="mi" style="--m:var(--ic-'+n+')"></i>'+esc(t)+'</span>':''; return '<div class="ppAbout">'+(a.b?'<p>'+esc(a.b)+'</p>':'')+((a.j||a.c)?'<div class="ppAbC">'+ch('bag',a.j)+ch('pin',a.c)+'</div>':'')+'</div>'; }
+const recAbout=r=>({b:String((r&&r.b)||'').slice(0,80),j:String((r&&r.j)||'').slice(0,40),c:String((r&&r.c)||'').slice(0,40),h:String((r&&r.h)||'').replace(/[<>]/g,'').slice(0,40),r:pk(String((r&&r.r)||''),REL_K),g:pk(String((r&&r.g)||''),GEN_K),l:String((r&&r.l)||'').replace(/[<>]/g,'').slice(0,60)});
+function aboutHtml(a){
+  if(!a||!(a.b||a.j||a.c||a.h||a.r||a.g||a.l)) return '';
+  const S=p=>'<svg viewBox="0 0 24 24" aria-hidden="true">'+p+'</svg>';
+  const IC={work:S('<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 13h18"/>'),loc:S('<path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/>'),home:S('<path d="M3 11 12 4l9 7M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>'),heart:S('<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"/>'),gen:S('<circle cx="9" cy="12" r="5"/><circle cx="15" cy="12" r="5"/>'),lang:S('<path d="M4 5h9M8.5 3v2M6 5c.5 4 3 7 7 8M12 5c-.5 4-3.5 7-8 8.5"/><path d="m13 20 4-9 4 9M14.5 17h5"/>')};
+  const row=(i,t)=>t?'<div class="ppGlR"><span class="ppGlI">'+IC[i]+'</span><span class="ppGlT">'+t+'</span></div>':'';
+  const b=x=>'<b>'+esc(x)+'</b>';
+  const rows=row('work',a.j?esc(a.j):'')+row('loc',a.c?L('থাকেন ','Lives in ')+b(a.c):'')+row('home',a.h?L('নিজ জেলা ','From ')+b(a.h):'')
+    +row('heart',a.r?b(L(REL_K[a.r][0],REL_K[a.r][1])):'')+row('gen',a.g?b(L(GEN_K[a.g][0],GEN_K[a.g][1])):'')+row('lang',a.l?L('ভাষা ','Speaks ')+b(a.l):'');
+  return '<div class="ppAbout">'+(a.b?'<p>'+esc(a.b)+'</p>':'')+(rows?'<div class="ppGl"><div class="ppGlH">'+L('এক নজরে','At a glance')+'</div>'+rows+'</div>':'')+'</div>';
+}
 const meUid=()=>{ try{ const r=R(); return r&&r.ses&&r.ses()?r.ses().uid:''; }catch(e){ return ''; } };
 const LK='ftProfLock_v1';
 const mySoc=()=>{ try{ return cleanSoc(JSON.parse(localStorage.getItem('mySocial_v1')||'{}')); }catch(e){ return {}; } };
@@ -11944,7 +12099,7 @@ async function pub(force){
     if(localStorage.getItem(PUB)==='0') return;
     const r=R(); if(!r||!r.ok()||!r.ses()){ pubSt={k:'login',t:''}; return; }
     let pic=''; try{ if(window.ftPicThumb) pic=await window.ftPicThumb(); }catch(e){}
-    const p=mine(), lk=localStorage.getItem(LK)==='1', soc=mySoc(), ab=myAbout(), fc=window.ftFrCount?ftFrCount():null, rec=lk?{pic:pic||'',cv:myCover(),lk:1,t:Date.now()}:{n:myName(),u:myUn(),pic:pic||'',cv:myCover(),soc,b:ab.b,j:ab.j,c:ab.c,p,t:Date.now()}; if(!lk&&fc!=null) rec.fc=fc; const sig=JSON.stringify([lk,rec.n,rec.u,(pic||'').length,myCover().length,soc,ab,p,rec.fc]);
+    const p=mine(), lk=localStorage.getItem(LK)==='1', soc=mySoc(), ab=myAbout(), fc=window.ftFrCount?ftFrCount():null, rec=lk?{pic:pic||'',cv:myCover(),lk:1,t:Date.now()}:{n:myName(),u:myUn(),pic:pic||'',cv:myCover(),soc,b:ab.b,j:ab.j,c:ab.c,h:ab.h,r:ab.r,g:ab.g,l:ab.l,p,t:Date.now()}; if(!lk&&fc!=null) rec.fc=fc; const sig=JSON.stringify([lk,rec.n,rec.u,(pic||'').length,myCover().length,soc,ab,p,rec.fc]);
     if(!force&&sig===lastSig) return;
     await db('profiles/'+r.ses().uid,{method:'PUT',headers:J,body:JSON.stringify(rec)});
     lastSig=sig; pubSt={k:'ok',t:''};
@@ -12141,6 +12296,25 @@ details.setBox:has(#phHub)>.setBody{padding:0!important;}
 #phHub .phCh{width:18px;height:18px;flex:none;fill:none;stroke:var(--muted);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
 #phHub .phP:empty{display:none!important;}
 #phHub .phP::before{content:attr(data-t);display:block;color:var(--primary);font-weight:700;font-size:13.5px;line-height:1.3;margin:0 2px 12px;}
+#ftMn .mnScGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 6px;}
+#ftMn .mnSc{display:flex;flex-direction:column;align-items:center;gap:6px;padding:4px 0;border:0;background:transparent;color:var(--text);font:inherit;cursor:pointer;min-width:0;-webkit-tap-highlight-color:transparent;}
+#ftMn .mnSc:active{transform:scale(.94);}
+#ftMn .mnSc .mnI{width:48px;height:48px;border-radius:16px;}
+#ftMn .mnScL{font-size:11.5px;font-weight:600;line-height:1.2;text-align:center;max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+#ftMn .mnScAdd .mnI{background:transparent;border:1.8px dashed color-mix(in srgb,var(--primary) 55%,transparent);box-shadow:none;}
+#ftMn .mnScAdd .mnI svg{width:24px;height:24px;fill:none;stroke:var(--primary);stroke-width:2.2;stroke-linecap:round;color:var(--primary);}
+#ftScPk{position:fixed;inset:0;z-index:9460;}
+#ftScPk .scBd{position:absolute;inset:0;background:rgba(0,0,0,.5);}
+#ftScPk .scSh{position:absolute;left:0;right:0;bottom:0;max-height:84vh;display:flex;flex-direction:column;background:var(--bg);color:var(--text);border-radius:24px 24px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.3);animation:ftPop .22s ease both;}
+#ftScPk .scHd{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 16px 8px;}
+#ftScPk .scHd b{font-size:17px;}
+#ftScPk .scOk{border:0;border-radius:12px;background:var(--primary);color:#fff;font:inherit;font-weight:700;font-size:14px;padding:8px 16px;cursor:pointer;}
+#ftScPk .scList{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 14px calc(18px + env(safe-area-inset-bottom,0px));}
+#ftScPk .scG{font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:14px 4px 8px;}
+#ftScPk .scChk{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);flex:none;position:relative;}
+#ftScPk .scRow.on .scChk{background:var(--primary);border-color:var(--primary);}
+#ftScPk .scRow.on .scChk::after{content:"";position:absolute;left:6px;top:2.5px;width:5px;height:10px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg);}
+#ftScPk .scRow.on{background:transparent;}
 </style>
 <script>
 /* ===== Settings redesign (grouped icon rows with drill-in pages) + side menu drawer ===== */
@@ -12160,6 +12334,13 @@ const SUB={
  devModeBox:['ডেভেলপার টুল','Developer tools'],dev_mode_title:['ডেভেলপার টুল','Developer tools'],payBox:['পেমেন্ট ও লেনদেন সেটিং','Payment & transaction options']
 };
 const MOVED=['settings_budget','settings_goal','spSetBox','settings_recurring','payBox'];
+const PHS=[
+ ['phMe','প্রোফাইল','Profile','#0ea5e9','<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-3.6 3.6-6 8-6s8 2.4 8 6"/></svg>','ছবি, কভার, বায়ো ও ব্যক্তিগত তথ্য','Photo, cover, bio & personal details'],
+ ['phLogin','লগইন ও যোগাযোগ','Login & contact','#10b981','<svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="m11 12 8-8M16 7l3 3M14 9l2 2"/></svg>','ইমেইল, মোবাইল, পাসওয়ার্ড','Email, mobile, password'],
+ ['phSoc','সোশ্যাল ও প্রাইভেসি','Social & privacy','#8b5cf6','<svg viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>','সোশ্যাল লিংক, কে কী দেখবে','Social links, who sees what'],
+ ['bdSetBox','রক্তদাতা প্রোফাইল','Blood donor profile','#e11d48','<svg viewBox="0 0 24 24"><path d="M12 3s6 6.2 6 10.5A6 6 0 0 1 6 13.5C6 9.2 12 3 12 3Z"/></svg>','রক্তের গ্রুপ, শহর, ফোন নম্বর','Blood group, city, phone']
+];
+const phrow=p=>'<div class="ftRow" data-ph="'+p[0]+'"><span class="ftCI" style="--c:'+p[3]+'">'+p[4]+'</span><div class="ftRt"><b>'+L(p[1],p[2])+'</b><span class="s">'+L(p[5],p[6])+'</span></div>'+CHEV+'</div>';
 const dets=()=>[].slice.call(sec.children).filter(n=>n.matches&&n.matches('details.setBox'));
 const h3Of=d=>d.querySelector(':scope > summary h3');
 function kOf(d){ const h=h3Of(d); return d.id||(h&&h.getAttribute('data-i18n'))||''; }
@@ -12211,14 +12392,14 @@ seq.forEach(n=>{
     cur.items.push(n);
   });
   cats=cats.filter(c=>c.items.length);
-  menuCats=cats.map(c=>({k:c.k,t:c.t,ci:CI[c.k]||CI.more}));
-  const crow=c=>{ const ci=CI[c.k]||CI.more; return '<div class="ftRow" data-cat="'+esc(c.k)+'"><span class="ftCI" style="--c:'+ci[0]+'">'+ci[1]+'</span><div class="ftRt"><b>'+c.t+'</b><span class="s">'+esc(c.k==='invite'?L('লিংক শেয়ার করে বন্ধুদের ডাকুন','Share your link and invite friends'):c.k==='acct'?L('প্রোফাইল, লগইন ও যোগাযোগ, রক্তদাতা','Profile, login & contact, blood donor'):c.items.map(nameOf).filter(Boolean).join(', '))+'</span></div>'+CHEV+'</div>'; };
+  menuCats=cats.filter(c=>c.k!=='acct').map(c=>({k:c.k,t:c.t,ci:CI[c.k]||CI.more}));
+  const crow=c=>{ if(c.k==='acct') return PHS.map(phrow).join(''); const ci=CI[c.k]||CI.more; return '<div class="ftRow" data-cat="'+esc(c.k)+'"><span class="ftCI" style="--c:'+ci[0]+'">'+ci[1]+'</span><div class="ftRt"><b>'+c.t+'</b><span class="s">'+esc(c.k==='invite'?L('লিংক শেয়ার করে বন্ধুদের ডাকুন','Share your link and invite friends'):c.k==='acct'?L('প্রোফাইল, লগইন ও যোগাযোগ, রক্তদাতা','Profile, login & contact, blood donor'):c.items.map(nameOf).filter(Boolean).join(', '))+'</span></div>'+CHEV+'</div>'; };
   const MAIN=['invite','look','acct','money','remind','secu','data'];
   const m1=cats.filter(c=>MAIN.indexOf(c.k)>-1), m3=cats.filter(c=>c.k==='logout'), m2=cats.filter(c=>MAIN.indexOf(c.k)<0&&c.k!=='logout');
   const html=[m1,m2,m3].map(g=>g.length?'<div class="ftGc">'+g.map(crow).join('')+'</div>':'').join('');
   $('ftGroups').innerHTML=html; $('ftBkSlot').innerHTML=bkCard(); try{ if(window.ftCloud) ftCloud.refresh(); }catch(e){}
 }
-function onList(e){ const b=e.target.closest('.ftBan'); if(b){ window.ftSetOpen('settings_profile'); return; } const r=e.target.closest('.ftRow'); if(r&&r.dataset.cat!==undefined) openCat(r.dataset.cat); }
+function onList(e){ const b=e.target.closest('.ftBan'); if(b){ window.ftSetOpen('settings_profile'); return; } const r=e.target.closest('.ftRow'); if(r&&r.dataset.ph){ window.ftSetOpen(r.dataset.ph); return; } if(r&&r.dataset.cat!==undefined) openCat(r.dataset.cat); }
 function ensureBar(){
   let bar=$('ftDetBar'); if(bar) return bar;
   bar=document.createElement('div'); bar.id='ftDetBar'; bar.innerHTML='<button type="button" aria-label="back"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></button><div class="t"></div>';
@@ -12269,6 +12450,49 @@ const TABS=[
 const icon=n=>n.indexOf('svg:')===0?'<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#'+n.slice(4)+'"/></svg>':'<i class="mi" style="--m:var(--ic-'+n+')"></i>';
 const cur=()=>{ const s=document.querySelector('.section.active'); return s?s.id.replace('sec-',''):''; };
 function tile(a,k,c,ic,lb,on){ return '<button type="button" class="mnT'+(on?' on':'')+'" data-a="'+a+'" data-k="'+esc(k)+'" style="--c:'+c+'"><span class="mnI">'+ic+'</span><span class="mnL">'+lb+'</span></button>'; }
+/* ---------- custom shortcuts (replaces the fixed "Everyday" group) ---------- */
+const SCK='ftMnSc_v1';
+function scGet(){ try{ const a=JSON.parse(localStorage.getItem(SCK)||'[]'); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+function scSet(a){ try{ localStorage.setItem(SCK,JSON.stringify(a)); }catch(e){} }
+function scItems(){
+  const out=[], seen={}, add=o=>{ if(!seen[o.id]){ seen[o.id]=1; out.push(o); } };
+  TABS.forEach(g=>g[3].forEach(x=>{
+    const k=x[0], ok=k==='@search'?!!window.ppGoSearch:k==='@blood'?!!window.ftBlood:k==='@inbox'?!!window.ftOpenInbox:k==='@tour'?!!window.ftTour:(!!$('sec-'+k)||k==='tx');
+    if(!ok) return;
+    const a=k==='@search'?'search':k==='@blood'?'blood':k==='@inbox'?'inbox':k==='@tour'?'tour':'tab';
+    add({id:'f:'+k,g:'f',a:a,k:k,c:x[4],ic:icon(x[3]),lb:L(x[1],x[2])});
+  }));
+  [['expense','খরচ যোগ করুন','Add expense','arrow-out','#ef4444',()=>!!window.quickAdd],['deposit','জমা যোগ করুন','Add income','arrow-in','#22c55e',()=>!!window.quickAdd],['calc','ক্যালকুলেটর','Calculator','sheet','#f59e0b',()=>!!window.calcOpen]].forEach(x=>{
+    if(x[5]()) add({id:'f:@'+x[0],g:'f',a:'fn',k:x[0],c:x[4],ic:icon(x[3]),lb:L(x[1],x[2])});
+  });
+  try{ build(); }catch(e){}
+  menuCats.filter(m=>m.k!=='logout'&&m.k!=='acct').forEach(m=>add({id:'c:'+m.k,g:'c',a:'cat',k:m.k,c:m.ci[0],ic:m.ci[1],lb:m.t}));
+  PHS.forEach(p=>add({id:'p:'+p[0],g:'c',a:'mset',k:p[0],c:p[3],ic:p[4],lb:L(p[1],p[2])}));
+  dets().forEach(d=>{ const k=kOf(d); if(!k||k==='settings_profile'||k==='bdSetBox') return; const g=catOf(d); if(g&&g.dataset.cat==='logout') return; const ch=chipOf(d); add({id:'d:'+k,g:'d',a:'mset',k:k,c:ch.c,ic:ch.i,lb:titleHtml(d)}); });
+  return out;
+}
+function scSection(){
+  const sel=scGet(), map={}; scItems().forEach(o=>{ map[o.id]=o; });
+  const tiles=sel.map(id=>map[id]).filter(Boolean).map(o=>'<button type="button" class="mnSc" data-a="'+o.a+'" data-k="'+esc(o.k)+'" style="--c:'+o.c+'"><span class="mnI g">'+o.ic+'</span><span class="mnScL">'+o.lb+'</span></button>').join('');
+  const plus='<button type="button" class="mnSc mnScAdd" data-a="scAdd" aria-label="'+L('শর্টকাট যোগ করুন','Add shortcut')+'"><span class="mnI"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span></button>';
+  return '<div class="mnSec">'+L('শর্টকাট','Shortcuts')+'</div><div class="mnScGrid">'+tiles+plus+'</div>';
+}
+function openPicker(){
+  if($('ftScPk')) return;
+  const items=scItems(); let sel=scGet();
+  const GR=[['f',L('ফিচার','Features')],['c',L('সেটিংস বিভাগ','Settings sections')],['d',L('সেটিংস অপশন','Settings options')]];
+  const o=document.createElement('div'); o.id='ftScPk';
+  o.innerHTML='<div class="scBd"></div><div class="scSh"><div class="scHd"><b>'+L('শর্টকাট বেছে নিন','Choose shortcuts')+'</b><button type="button" class="scOk">'+L('হয়েছে','Done')+'</button></div><div class="scList">'
+    +GR.map(g=>{ const rows=items.filter(i=>i.g===g[0]); return rows.length?'<div class="scG">'+g[1]+'</div><div class="mnCard">'+rows.map(i=>'<button type="button" class="mnR scRow'+(sel.indexOf(i.id)>-1?' on':'')+'" data-id="'+esc(i.id)+'" style="--c:'+i.c+'"><span class="mnI g">'+i.ic+'</span><span class="mnL">'+i.lb+'</span><span class="scChk"></span></button>').join('')+'</div>':''; }).join('')+'</div></div>';
+  document.body.appendChild(o);
+  const close=()=>{ o.remove(); try{ fillMenu(); }catch(e){} };
+  o.querySelector('.scBd').onclick=close; o.querySelector('.scOk').onclick=close;
+  o.querySelector('.scList').addEventListener('click',e=>{
+    const b=e.target.closest('.scRow'); if(!b) return; const id=b.dataset.id, i=sel.indexOf(id);
+    if(i>-1){ sel.splice(i,1); b.classList.remove('on'); } else { sel.push(id); b.classList.add('on'); }
+    scSet(sel);
+  });
+}
 function fillMenu(){
   try{ build(); }catch(e){}
   const w=who(), c=cur(), det=sec.classList.contains('ftDetail')?kOf(dets().find(d=>d.classList.contains('ftShow'))||sec):'';
@@ -12278,15 +12502,17 @@ function fillMenu(){
     ? '<div class="mnPro" data-a="tab" data-k="profile"><div class="av">'+avatar()+'</div><div class="tx"><b>'+(w.name?esc(w.name):L('আমার প্রোফাইল','My profile'))+'</b><span>'+(w.on?'<i></i>':'')+esc(w.un?'@'+w.un:(w.email||L('প্রোফাইল দেখুন','View profile')))+'</span></div>'+CHEV+'</div>'
     : '<div class="mnPro mnLogin" data-a="login" role="button" tabindex="0"><div class="av">'+icon('user')+'</div><div class="tx"><b>'+L('লগইন করুন','Log in')+'</b><span>'+L('ক্লাউড ব্যাকআপ ও বন্ধুদের সাথে যুক্ত হন','Back up to the cloud and connect with friends')+'</span></div><span class="mnLgBtn">'+L('লগইন','Log in')+'</span></div>';
   h+=bkCard();
+  h+=scSection();
   const R=(a,k,c,ic,lb,on)=>'<button type="button" class="mnR'+(on?' on':'')+'" data-a="'+a+'" data-k="'+esc(k)+'" style="--c:'+c+'"><span class="mnI g">'+ic+'</span><span class="mnL">'+lb+'</span>'+CHEV+'</button>';
   const card=rows=>'<div class="mnCard">'+rows.join('')+'</div>';
   const sect=(t,rows)=>rows.length?'<div class="mnSec">'+t+'</div>'+card(rows):'';
   const mv=dets().filter(isMoved).map(d=>{ const ch=chipOf(d), k=kOf(d); return R('mset',k,ch.c,ch.i,titleHtml(d),det&&det===k); });
   TABS.forEach(g=>{
+    if(g[0]==='everyday') return;
     const rows=g[3].filter(x=>x[0]==='@search'?!!window.ppGoSearch:x[0]==='@blood'?!!window.ftBlood:x[0]==='@inbox'?!!window.ftOpenInbox:x[0]==='@tour'?!!window.ftTour:(!!$('sec-'+x[0])||x[0]==='tx')).map(x=>R(x[0]==='@search'?'search':x[0]==='@blood'?'blood':x[0]==='@inbox'?'inbox':x[0]==='@tour'?'tour':'tab',x[0],x[4],icon(x[3]),L(x[1],x[2]),x[0]===c&&c!=='settings'));
     h+=sect(L(g[1],g[2]),g[0]==='money'?rows.concat(mv):rows);
   });
-  h+=sect(L('সেটিংস','Settings'),[R('tab','settings','#64748b',icon('settings'),L('সব সেটিংস','All settings'),c==='settings'&&!det)].concat(menuCats.filter(m=>m.k!=='logout').map(m=>R('cat',m.k,m.ci[0],m.ci[1],m.t,false))));
+  h+='<div class="mnCard" style="margin-top:16px">'+R('tab','settings','#64748b',icon('settings'),L('সেটিংস','Settings'),c==='settings'&&!det)+'</div>';
   h+=sect(L('অ্যাপ','App'),[R('about','about','#8b5cf6','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.2M12 7.8h.01"/></svg>',L('অ্যাপ সম্পর্কে','About'),false)].concat(window.ftInstall?[R('install','install','#16a34a',icon('download'),(window.ftInstall.installed()?L('অ্যাপ ইনস্টল হয়েছে','App installed'):L('অ্যাপ ইনস্টল','Install app')),false)]:[]).concat([R('logout','logout','#ef4444',icon('power'),L('লগআউট','Logout'),false)]));
   $('mnBody').innerHTML=h;
   $('mnFt').innerHTML=''; try{ if(window.ftCloud) ftCloud.refresh(); }catch(e){}
@@ -12299,9 +12525,9 @@ function openMenu(){ fillMenu(); ov.classList.add('on'); mn.classList.add('on');
 function closeMenu(){ ov.classList.remove('on'); mn.classList.remove('on'); mn.setAttribute('aria-hidden','true'); }
 window.ftMenuOpen=openMenu; window.ftMenuClose=closeMenu;
 function onMenu(e){
-  const b=e.target.closest('[data-a]'); if(!b) return; const a=b.dataset.a, k=b.dataset.k, from=cur(); closeMenu();
+  const b=e.target.closest('[data-a]'); if(!b) return; const a=b.dataset.a, k=b.dataset.k, from=cur(); if(a==='scAdd'){ openPicker(); return; } closeMenu();
   setTimeout(()=>{
-    if(a==='tab'){ try{ activateTab(k); }catch(x){} }
+    if(a==='tab'){ try{ activateTab(k); }catch(x){} if(window.ftFsOn&&k!=='dash'&&['chat','friends','profile','notes'].indexOf(k)<0&&k!=='settings') ftFsOn(from); }
     else if(a==='mset') window.ftSetOpen(k,from);
     else if(a==='set') window.ftSetOpen(k);
     else if(a==='cat') window.ftSetCat(k,from);
@@ -12309,7 +12535,8 @@ function onMenu(e){
     else if(a==='blood'&&window.ftBlood) window.ftBlood.open('');
     else if(a==='inbox'&&window.ftOpenInbox) window.ftOpenInbox();
     else if(a==='tour'&&window.ftTour) window.ftTour.open();
- else if(a==='about'&&window.ftAbout) window.ftAbout();
+ else if(a==='fn'){ if(k==='expense'&&window.quickAdd) quickAdd('expense'); else if(k==='deposit'&&window.quickAdd) quickAdd('deposit'); else if(k==='calc'&&window.calcOpen) calcOpen(); }
+    else if(a==='about'&&window.ftAbout) window.ftAbout();
     else if(a==='install'&&window.ftInstall) window.ftInstall.open();
     else if(a==='login'){ const ls=$('loginScreen'); if(ls){ try{ if(window.ftCloud&&ftCloud.loginMode) ftCloud.loginMode('in'); }catch(x){} try{ if(window.loginPicRefresh) loginPicRefresh(); }catch(x){} document.documentElement.classList.remove('hasUser'); ls.style.zIndex='9500'; ls.style.display='flex'; ls.scrollTop=0; } }
     else if(a==='logout'&&window.ftCloud&&ftCloud.accountLogout) ftCloud.accountLogout();
@@ -13792,19 +14019,19 @@ details.psMv>.setBody{padding:6px 2px 4px!important;}
 var $=function(i){return document.getElementById(i);}, bn=function(){try{return currentLang==='bn';}catch(e){return true;}}, L=function(b,e){return bn()?b:e;};
 var g=function(k){try{return localStorage.getItem(k)||'';}catch(e){return '';}};
 var P=[
- ['me','প্রোফাইল','Profile','user','#0ea5e9','<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-3.6 3.6-6 8-6s8 2.4 8 6"/></svg>','ছবি, কভার, নাম, বায়ো','Photo, cover, name, bio'],
+ ['me','প্রোফাইল এডিট','Edit profile','user','#0ea5e9','<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-3.6 3.6-6 8-6s8 2.4 8 6"/></svg>','ছবি, কভার, নাম, বায়ো','Photo, cover, name, bio'],
  ['login','লগইন ও যোগাযোগ','Login & contact','key','#10b981','<svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="m11 12 8-8M16 7l3 3M14 9l2 2"/></svg>','ইমেইল, মোবাইল, পাসওয়ার্ড','Email, mobile, password'],
  ['soc','সোশ্যাল ও প্রাইভেসি','Social & privacy','shield','#8b5cf6','<svg viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>','সোশ্যাল লিংক, কে কী দেখবে','Social links, who sees what'],
  ['blood','রক্তদাতা প্রোফাইল','Blood donor profile','drop','#e11d48','<svg viewBox="0 0 24 24"><path d="M12 3s6 6.2 6 10.5A6 6 0 0 1 6 13.5C6 9.2 12 3 12 3Z"/></svg>','রক্তের গ্রুপ, শহর, ফোন নম্বর','Blood group, city, phone'],
 ];
-var KEY={settings_profile:'me',bdSetBox:'blood'};
+var KEY={settings_profile:'me',bdSetBox:'blood',phMe:'me',phLogin:'login',phSoc:'soc'};
 var OK=/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/, sig='';
 var mi=function(n){return '<i class="mi" style="--m:var(--ic-'+n+')"></i>';};
 function det(){ var h=document.querySelector('#sec-settings details.setBox h3[data-i18n="settings_profile"]'); return h?h.closest('details'):null; }
 function show(k){ var hub=$('phHub'); if(!hub) return; hub.dataset.v=k; [].forEach.call(hub.querySelectorAll('.phP'),function(p){ p.classList.toggle('on',p.id==='phP_'+k); }); }
 function barTitle(h){ var t=document.querySelector('#ftDetBar .t'); if(t) t.innerHTML=h; }
 function catTitle(){ var g=document.querySelector('#sec-settings .ftCat[data-cat="acct"]'); return g?g.innerHTML:L('অ্যাকাউন্ট ও প্রোফাইল','Account & profile'); }
-function go(k){ show(k); if(k==='list') barTitle(catTitle()); else { var p=P.filter(function(x){return x[0]===k;})[0]; if(p) barTitle(L(p[1],p[2])); } try{ window.scrollTo(0,0); }catch(e){} }
+function go(k){ show(k); if(k==='me'){ try{ window.ftFbRefresh&&ftFbRefresh(); }catch(e){} } if(k==='list') barTitle(catTitle()); else { var p=P.filter(function(x){return x[0]===k;})[0]; if(p) barTitle(L(p[1],p[2])); } try{ window.scrollTo(0,0); }catch(e){} }
 var CH='<svg class="phCh" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>';
 function labels(){ var hub=$('phHub'); if(!hub) return; [].forEach.call(hub.querySelectorAll('.phNav button'),function(b){ var p=P.filter(function(x){return x[0]===b.dataset.k;})[0]; b.innerHTML=mi(p[3])+'<span>'+L(p[1],p[2])+'</span>'; }); P.forEach(function(p){ var e=$('phP_'+p[0]); if(e) e.setAttribute('data-t',L(p[1],p[2])); }); var ls=$('phList'); if(ls) ls.innerHTML=P.map(function(p){ return '<button type="button" class="phItem" data-k="'+p[0]+'"><span class="ftCI" style="--c:'+p[4]+'">'+p[5]+'</span><span class="phRt"><b>'+L(p[1],p[2])+'</b><span class="s">'+L(p[6],p[7])+'</span></span>'+CH+'</button>'; }).join(''); }
 function refresh(force){
@@ -13815,7 +14042,7 @@ function refresh(force){
   $('phCvX').style.display=cv?'flex':'none';
   $('phNm').textContent=nm||L('নাম দিন','Add your name'); $('phUn').textContent=un?'@'+un:L('ইউজারনেম দিন','Add a username');
   var ab=$('phAbout'); if(ab){ var esc=function(x){return String(x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}; ab.innerHTML=(bi?'<p>'+esc(bi)+'</p>':'')+((jb||ct)?'<div>'+(jb?'<span>'+mi('bag')+esc(jb)+'</span>':'')+(ct?'<span>'+mi('pin')+esc(ct)+'</span>':'')+'</div>':''); ab.style.display=(bi||jb||ct)?'':'none'; }
-  $('phPct').textContent=r?r.textContent+' '+L('সম্পূর্ণ','done'):''; $('phPct').style.display=r?'':'none'; labels();
+  $('phPct').textContent=r?r.textContent+' '+L('সম্পূর্ণ','done'):''; $('phPct').style.display=r?'':'none'; labels(); try{ window.ftFbRefresh&&ftFbRefresh(); }catch(e){}
 }
 function build(){
   var d=det(); if(!d) return null; var hub=$('phHub'); if(hub) return hub; var b=d.querySelector(':scope > .setBody'); if(!b) return null;
@@ -13832,11 +14059,12 @@ function build(){
   });
   hub.addEventListener('click',function(e){ var m=e.target.closest('.psMiss button[data-i]'); if(m&&+m.dataset.i>=1&&+m.dataset.i<=4) go('login'); },true);
   $('phCvIn').addEventListener('change',function(){ try{ ppCover(this); }catch(x){} setTimeout(function(){ refresh(true); },1500); });
-  show('list'); refresh(true); setInterval(function(){ if(document.visibilityState==='visible') refresh(); },2500);
+  show('me'); refresh(true); setInterval(function(){ if(document.visibilityState==='visible') refresh(); },2500);
   return hub;
 }
 function put(id,n){ var p=$('phP_'+id); if(p&&n&&n.parentNode!==p) p.appendChild(n); }
 window.ftPhRefresh=function(f){ try{ refresh(f); }catch(e){} };
+window.ftPhGo=function(k){ var h=$('phHub'); if(h) h.dataset.from=(h.dataset.v==='me')?'me':''; go(k); };
 function pass(){
   var hub=build(); if(!hub) return false; var miss=0, pw=$('profilePicWrap'), st=$('pfStudio'), pn=$('pfn'), ps=$('ppSetBox');
   if(pw){ put('me',pw.parentNode); } else miss++;
@@ -13847,10 +14075,175 @@ function pass(){
   return miss===0;
 }
 var n=0; (function tick(){ var ok=false; try{ ok=pass(); }catch(e){} if(!ok&&n++<40) setTimeout(tick,500); })();
-var so=window.ftSetOpen; if(so) window.ftSetOpen=function(k){ var t=KEY[k], a=[].slice.call(arguments); if(t) a[0]='settings_profile'; var r=so.apply(this,a); if(t){ try{ pass(); }catch(e){} go(t); } return r; };
-var sb=window.ftSetBack; if(sb) window.ftSetBack=function(){ var hub=$('phHub'), d=det(); if(hub&&d&&d.classList.contains('ftShow')&&hub.dataset.v&&hub.dataset.v!=='list'){ go('list'); return; } var r=sb.apply(this,arguments); try{ show('list'); }catch(e){} return r; };
-var at=window.activateTab; if(at) window.activateTab=function(x){ var r=at.apply(this,arguments); if(x!=='settings'){ try{ show('list'); }catch(e){} } if(x==='settings') setTimeout(function(){ try{ pass(); refresh(true); }catch(e){} },80); return r; };
+var so=window.ftSetOpen; if(so) window.ftSetOpen=function(k){ var t=KEY[k], a=[].slice.call(arguments); if(t) a[0]='settings_profile'; var r=so.apply(this,a); if(t){ try{ pass(); }catch(e){} var h0=$('phHub'); if(h0) h0.dataset.from=''; go(t); } return r; };
+var sb=window.ftSetBack; if(sb) window.ftSetBack=function(){ var hub=$('phHub'), d=det(); if(hub&&d&&d.classList.contains('ftShow')&&hub.dataset.from==='me'&&hub.dataset.v!=='me'){ hub.dataset.from=''; go('me'); return; } var r=sb.apply(this,arguments); try{ show('me'); }catch(e){} return r; };
+var at=window.activateTab; if(at) window.activateTab=function(x){ var r=at.apply(this,arguments); if(x!=='settings'){ try{ show('me'); }catch(e){} } if(x==='settings') setTimeout(function(){ try{ pass(); refresh(true); }catch(e){} },80); return r; };
 var al=window.applyLanguage; if(al) window.applyLanguage=function(){ var r=al.apply(this,arguments); try{ refresh(true); }catch(e){} return r; };
+})();
+</script>
+
+<style id="ftFbCss">
+/* ===== Edit profile page (cover + avatar + Intro / Personal details / Work) ===== */
+#phHub .phHd,#phHub .phList,#phHub .phNav{display:none!important;}
+#phHub #phP_me{background:transparent!important;border:0!important;padding:0!important;margin:0!important;}
+#phHub #phP_me::before{display:none!important;}
+#phHub #phP_me>*:not(#fbEdit){display:none!important;}
+#fbEdit{margin:0 -14px;}
+#fbEdit .fbCover{height:190px;background:var(--grad) center/cover no-repeat;position:relative;}
+#fbEdit .fbCam{width:42px;height:42px;border-radius:50%;border:0;background:#fff;color:#111;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.3);-webkit-tap-highlight-color:transparent;}
+#fbEdit .fbCam:active{transform:scale(.92);}
+#fbEdit svg{fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
+#fbEdit .fbCam svg{width:21px;height:21px;stroke-width:2;}
+#fbEdit .fbCvB{position:absolute;right:14px;bottom:40px;}
+#fbEdit .fbCvX{position:absolute;right:64px;bottom:44px;width:34px;height:34px;background:rgba(0,0,0,.55);color:#fff;}
+#fbEdit .fbCvX svg{width:17px;height:17px;}
+#fbEdit .fbSheet{position:relative;margin-top:-28px;background:var(--card);border-radius:28px 28px 0 0;padding:66px 16px 10px;min-height:300px;}
+#fbEdit .fbAvW{position:absolute;left:50%;top:-58px;transform:translateX(-50%);width:116px;height:116px;}
+#fbEdit .fbAv{width:116px;height:116px;border-radius:50%;border:4px solid var(--pfAcc,var(--primary));box-shadow:0 0 0 4px var(--card);background:var(--grad);color:#fff;font-weight:800;font-size:46px;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;box-sizing:border-box;}
+#fbEdit .fbAv img{width:100%;height:100%;object-fit:cover;display:block;}
+#fbEdit .fbAvB{position:absolute;right:-2px;bottom:4px;width:38px;height:38px;}
+#fbEdit .fbId{text-align:center;margin-bottom:6px;}
+#fbEdit .fbId b{display:block;font-size:21px;font-weight:800;color:var(--text);}
+#fbEdit .fbId span{display:block;font-size:13px;color:var(--muted);margin-top:2px;}
+#fbEdit .fbPct{display:inline-block;margin-top:8px;font-size:11.5px;font-weight:800;padding:4px 11px;border-radius:99px;background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary);}
+#fbEdit .fbSec{margin-top:4px;}
+#fbEdit .fbSecH{display:flex;align-items:center;justify-content:space-between;width:100%;border:0;background:none;color:var(--text);font:inherit;font-size:19px;font-weight:800;padding:16px 2px 8px;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent;}
+#fbEdit .fbSecH svg{width:22px;height:22px;stroke-width:2.3;transition:transform .2s;flex:none;}
+#fbEdit .fbSec.shut .fbSecH svg{transform:rotate(180deg);}
+#fbEdit .fbSec.shut .fbSecB{display:none;}
+#fbEdit .fbRow{display:flex;align-items:center;gap:14px;padding:11px 2px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+#fbEdit .fbRow:active{opacity:.7;}
+#fbEdit .fbI{width:28px;flex:none;display:flex;justify-content:center;color:var(--text);}
+#fbEdit .fbI svg{width:26px;height:26px;stroke-width:1.7;}
+#fbEdit .fbT{flex:1;min-width:0;}
+#fbEdit .fbT b{display:block;font-size:15.5px;font-weight:700;color:var(--text);word-break:break-word;line-height:1.4;}
+#fbEdit .fbT small{display:block;font-size:13px;color:var(--muted);margin-top:1px;}
+#fbEdit .fbRow.fbNone .fbT b{color:var(--muted);font-weight:600;}
+#fbEdit .fbPen{width:38px;height:38px;border:0;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;padding:0;flex:none;cursor:pointer;}
+#fbEdit .fbPen svg{width:23px;height:23px;stroke-width:1.8;}
+#fbEdit .fbAcc{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;}
+#fbEdit .fbAcc button{width:30px;height:30px;border-radius:50%;border:2px solid transparent;background:var(--c);cursor:pointer;padding:0;}
+#fbEdit .fbAcc button.on{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--c);}
+#fbEdit .fbBtn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin:14px 0 6px;height:44px;border-radius:14px;border:1px solid var(--border);background:var(--bg);color:var(--text);font:inherit;font-weight:700;font-size:14px;cursor:pointer;}
+#fbEdit .fbBtn svg{width:19px;height:19px;}
+#fbEd{position:fixed;inset:0;z-index:9480;}
+#fbEd .fbEdBd{position:absolute;inset:0;background:rgba(0,0,0,.5);}
+#fbEd .fbEdSh{position:absolute;left:0;right:0;bottom:0;background:var(--bg);color:var(--text);border-radius:24px 24px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 40px rgba(0,0,0,.3);animation:ftPop .2s ease both;}
+#fbEd .fbEdSh>b{display:block;font-size:17px;margin-bottom:12px;}
+#fbEd input,#fbEd select{width:100%;box-sizing:border-box;height:48px;border-radius:14px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font:inherit;font-size:15px;padding:0 14px;}
+#fbEd input:focus,#fbEd select:focus{outline:0;border-color:var(--primary);}
+#fbEd .fbEdAc{display:flex;gap:10px;margin-top:14px;}
+#fbEd .fbEdAc button{flex:1;height:46px;border-radius:14px;border:1px solid var(--border);background:var(--card);color:var(--text);font:inherit;font-weight:700;font-size:14px;cursor:pointer;}
+#fbEd .fbEdAc .fbEdOk{background:var(--primary);color:#fff;border-color:transparent;}
+</style>
+<script id="ftFbEdit">
+(function(){
+var $=function(i){return document.getElementById(i);};
+var bn=function(){try{return currentLang==='bn';}catch(e){return true;}}, L=function(b,e){return bn()?b:e;};
+var g=function(k){try{return localStorage.getItem(k)||'';}catch(e){return '';}};
+var E=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
+var OK=/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/;
+var ACC=['#2563eb','#7c3aed','#db2777','#ef4444','#f97316','#16a34a','#0d9488','#475569'];
+try{ ['myHome_v1','myBirth_v1','myRel_v1','myGender_v1','myLangs_v1'].forEach(function(k){ if(typeof BACKUP_KEYS!=='undefined'&&BACKUP_KEYS.indexOf(k)<0) BACKUP_KEYS.push(k); }); }catch(e){}
+var S=function(p){return '<svg viewBox="0 0 24 24">'+p+'</svg>';};
+var IC={
+ cam:S('<path d="M4 8h3l1.6-2.5h6.8L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.6"/>'),
+ pen:S('<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>'),
+ up:S('<path d="m6 15 6-6 6 6"/>'),
+ trash:S('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'),
+ user:S('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'),
+ bio:S('<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/><path d="M8.5 11h7M8.5 14h4"/>'),
+ pin:S('<path d="m15 4 5 5-3 1-3.5 3.5.5 4-1.5 1.5-3.5-3.5L5 20l-1-1 4.5-4.5L5 11l1.5-1.5 4 .5L14 6.5z"/>'),
+ loc:S('<path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/>'),
+ home:S('<path d="M3 11 12 4l9 7M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>'),
+ cake:S('<path d="M4 20h16v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2z"/><path d="M4 16c2 1.5 4 1.5 6 0s4-1.5 6 0 3 1 4 0M12 12V8M12 5.5V6"/>'),
+ heart:S('<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"/>'),
+ gen:S('<circle cx="9" cy="12" r="5"/><circle cx="15" cy="12" r="5"/>'),
+ lang:S('<path d="M4 5h9M8.5 3v2M6 5c.5 4 3 7 7 8M12 5c-.5 4-3.5 7-8 8.5"/><path d="m13 20 4-9 4 9M14.5 17h5"/>'),
+ work:S('<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 13h18"/>'),
+ pal:S('<path d="M12 3a9 9 0 1 0 0 18c1.4 0 2-1 1.6-2-.5-1.3.3-2.5 1.7-2.5H17a4 4 0 0 0 4-4c0-5-4-9.5-9-9.5z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7.5" r="1"/>'),
+ share:S('<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.2 10.8 7.6-3.6M8.2 13.2l7.6 3.6"/>')
+};
+var REL={single:['অবিবাহিত','Single'],rel:['সম্পর্কে আছি','In a relationship'],married:['বিবাহিত','Married'],none:['বলতে চাই না','Prefer not to say']};
+var GEN={m:['পুরুষ','Male'],f:['নারী','Female'],o:['অন্যান্য','Other']};
+var F={
+ bio:{k:'myBio_v1',t:['বায়ো','Bio'],ic:'bio',max:80,pub:1},
+ city:{k:'myCity_v1',t:['বর্তমান শহর','Current city'],ic:'loc',max:40,pub:1},
+ home:{k:'myHome_v1',t:['নিজ জেলা','Hometown'],ic:'home',max:40,pub:1},
+ birth:{k:'myBirth_v1',t:['জন্মতারিখ','Birthday'],ic:'cake',type:'date'},
+ rel:{k:'myRel_v1',t:['সম্পর্কের অবস্থা','Relationship status'],ic:'heart',type:'sel',opts:REL,pub:1},
+ gender:{k:'myGender_v1',t:['লিঙ্গ','Gender'],ic:'gen',type:'sel',opts:GEN,pub:1},
+ langs:{k:'myLangs_v1',t:['ভাষা','Languages'],ic:'lang',max:60,pub:1},
+ job:{k:'myJob_v1',t:['পেশা / কাজ','Work'],ic:'work',max:40,pub:1}
+};
+function val(f){
+  var d=F[f], v=g(d.k); if(!v) return '';
+  if(d.type==='sel') return d.opts[v]?L(d.opts[v][0],d.opts[v][1]):'';
+  if(d.type==='date'){ var x=new Date(v+'T12:00:00'); return isNaN(x)?v:x.toLocaleDateString(bn()?'bn-BD':'en-GB',{day:'numeric',month:'long',year:'numeric'}); }
+  return v;
+}
+function row(f){
+  var d=F[f], v=val(f), lb=L(d.t[0],d.t[1]);
+  return '<div class="fbRow'+(v?'':' fbNone')+'" data-f="'+f+'"><span class="fbI">'+IC[d.ic]+'</span><div class="fbT"><b>'+E(v||lb)+'</b>'+(v?'<small>'+E(lb)+'</small>':'')+'</div><button type="button" class="fbPen" aria-label="edit">'+IC.pen+'</button></div>';
+}
+function sp(ic,key,v,lb){ return '<div class="fbRow'+(v?'':' fbNone')+'" data-s="'+key+'"><span class="fbI">'+IC[ic]+'</span><div class="fbT"><b>'+E(v||lb)+'</b>'+(v?'<small>'+E(lb)+'</small>':'')+'</div><button type="button" class="fbPen" aria-label="edit">'+IC.pen+'</button></div>'; }
+var shut={};
+function sec(id,title,body){ return '<div class="fbSec'+(shut[id]?' shut':'')+'" data-id="'+id+'"><button type="button" class="fbSecH"><span>'+E(title)+'</span>'+IC.up+'</button><div class="fbSecB">'+body+'</div></div>'; }
+function socNames(){ var o={}; try{ o=JSON.parse(g('mySocial_v1')||'{}')||{}; }catch(e){} var N={fb:'Facebook',ig:'Instagram',tg:'Telegram',wa:'WhatsApp'}; return Object.keys(N).filter(function(k){return o[k];}).map(function(k){return N[k];}).join(', '); }
+function render(){
+  var host=$('fbEdit'); if(!host) return;
+  var nm=g('myName_v1'), un=g('myUsername_v1').replace(/^@/,''), pic=g('myProfilePic_v1'), cv=g('myCoverPic_v1'), acc=g('myAccent_v1')||ACC[0];
+  var pr=document.querySelector('#pfStudio .psRing b'), pct=pr?pr.textContent.trim():'';
+  var h='<div class="fbCover" id="fbCv"'+(OK.test(cv)?' style="background-image:url(&quot;'+cv+'&quot;)"':'')+'>'+(cv?'<button type="button" class="fbCam fbCvX" aria-label="remove cover">'+IC.trash+'</button>':'')+'<button type="button" class="fbCam fbCvB" aria-label="cover">'+IC.cam+'</button></div>'
+   +'<div class="fbSheet"><div class="fbAvW"><div class="fbAv">'+(OK.test(pic)?'<img alt="" src="'+pic+'">':E((nm.trim()[0]||'U').toUpperCase()))+'</div><button type="button" class="fbCam fbAvB" aria-label="photo">'+IC.cam+'</button></div>'
+   +'<div class="fbId"><b>'+E(nm||L('নাম দিন','Add your name'))+'</b><span>'+E(un?'@'+un:L('ইউজারনেম দিন','Add a username'))+'</span>'+(pct?'<span class="fbPct">'+E(pct)+' '+L('সম্পূর্ণ','done')+'</span>':'')+'</div>'
+   +sec('intro',L('পরিচিতি','Intro'),sp('user','name',nm,L('নাম ও ইউজারনেম','Name & username'))+row('bio')+sp('pin','pin',socNames(),L('পিন করা তথ্য','Pinned details')))
+   +sec('pers',L('ব্যক্তিগত তথ্য','Personal details'),row('city')+row('home')+row('birth')+row('rel')+row('gender')+row('langs'))
+   +sec('work',L('কাজ','Work'),row('job'))
+   +sec('look',L('প্রোফাইল সাজান','Customize'),'<div class="fbRow" style="cursor:default"><span class="fbI">'+IC.pal+'</span><div class="fbT"><b>'+L('প্রোফাইল রঙ','Profile colour')+'</b><div class="fbAcc">'+ACC.map(function(c){ return '<button type="button" aria-label="'+c+'" data-c="'+c+'" style="--c:'+c+'" class="'+(c.toLowerCase()===acc.toLowerCase()?'on':'')+'"></button>'; }).join('')+'</div></div></div><button type="button" class="fbBtn" data-share="1">'+IC.share+L('প্রোফাইল শেয়ার করুন','Share profile')+'</button>')
+   +'</div>';
+  host.innerHTML=h;
+}
+function toast(m){ try{ if(window.toast) window.toast(m); }catch(e){} }
+function openEd(f){
+  var d=F[f]; if(!d||$('fbEd')) return; var cur=g(d.k), o=document.createElement('div'); o.id='fbEd';
+  var inp=d.type==='sel'?'<select id="fbEdV"><option value="">—</option>'+Object.keys(d.opts).map(function(k){ return '<option value="'+k+'"'+(cur===k?' selected':'')+'>'+E(L(d.opts[k][0],d.opts[k][1]))+'</option>'; }).join('')+'</select>'
+    :'<input id="fbEdV" type="'+(d.type==='date'?'date':'text')+'"'+(d.max?' maxlength="'+d.max+'"':'')+(d.type==='date'?' max="'+new Date().toISOString().slice(0,10)+'"':'')+' value="'+E(cur)+'">';
+  o.innerHTML='<div class="fbEdBd"></div><div class="fbEdSh"><b>'+E(L(d.t[0],d.t[1]))+'</b>'+inp+'<div class="fbEdAc"><button type="button" class="fbEdX">'+L('বাতিল','Cancel')+'</button><button type="button" class="fbEdOk">'+L('সংরক্ষণ','Save')+'</button></div></div>';
+  document.body.appendChild(o);
+  var close=function(){ o.remove(); };
+  o.querySelector('.fbEdBd').onclick=close; o.querySelector('.fbEdX').onclick=close;
+  var save=function(){
+    var v=($('fbEdV').value||'').trim(); if(d.max) v=v.slice(0,d.max);
+    try{ if(v) localStorage.setItem(d.k,v); else localStorage.removeItem(d.k); }catch(e){}
+    if(d.pub){ try{ if(window.ppRepub) window.ppRepub(); }catch(e){} }
+    try{ if(window.ftPhRefresh) window.ftPhRefresh(true); }catch(e){}
+    close(); render(); toast(L('সংরক্ষিত হয়েছে','Saved'));
+  };
+  o.querySelector('.fbEdOk').onclick=save;
+  var iv=$('fbEdV'); if(iv&&iv.tagName==='INPUT'&&iv.type==='text'){ iv.addEventListener('keydown',function(e){ if(e.key==='Enter') save(); }); setTimeout(function(){ try{ iv.focus(); }catch(e){} },120); }
+}
+function bind(host){
+  host.addEventListener('click',function(e){
+    var t=e.target;
+    var sh=t.closest('.fbSecH'); if(sh){ var s=sh.parentNode; s.classList.toggle('shut'); shut[s.dataset.id]=s.classList.contains('shut'); return; }
+    if(t.closest('.fbCvX')){ try{ ppCvDel(); }catch(x){} setTimeout(function(){ try{ ftPhRefresh(true); }catch(x){} render(); },350); return; }
+    if(t.closest('.fbCvB')){ var ci=$('phCvIn'); if(ci) ci.click(); return; }
+    if(t.closest('.fbAvB')||t.closest('.fbAv')){ var pi=$('profilePicInput'); if(pi) pi.click(); return; }
+    var ac=t.closest('.fbAcc button'); if(ac){ var a=ac.dataset.c; try{ localStorage.setItem('myAccent_v1',a); }catch(x){} var r=document.documentElement; r.style.setProperty('--pfAcc',a); r.setAttribute('data-pfacc','1'); render(); return; }
+    if(t.closest('[data-share]')){ var b=$('psShare'); if(b) b.click(); return; }
+    var rw=t.closest('.fbRow'); if(!rw) return;
+    if(rw.dataset.f) openEd(rw.dataset.f);
+    else if(rw.dataset.s==='name'){ if(window.ftPhGo) ftPhGo('login'); }
+    else if(rw.dataset.s==='pin'){ if(window.ftPhGo) ftPhGo('soc'); }
+  });
+}
+window.ftFbRefresh=function(){ try{ render(); }catch(e){} };
+function mount(){
+  var p=$('phP_me'); if(!p) return false; if($('fbEdit')) return true;
+  var d=document.createElement('div'); d.id='fbEdit'; p.insertBefore(d,p.firstChild); bind(d); render(); return true;
+}
+var n=0, iv=setInterval(function(){ var ok=false; try{ ok=mount(); }catch(e){} if(ok||n++>120) clearInterval(iv); },500);
 })();
 </script>
 
@@ -14616,16 +15009,26 @@ function metaHtml(r){
 }
 var SV_MSG='<svg class="bdSv" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/><path d="M8.5 11h7M8.5 14h4"/></svg>';
 var SV_TEL='<svg class="bdSv" viewBox="0 0 24 24"><path d="M5 4h3.5l1.7 4.3-2.2 1.4a11 11 0 0 0 5.3 5.3l1.4-2.2L19 14.5V18a2 2 0 0 1-2 2A13 13 0 0 1 3 6a2 2 0 0 1 2-2Z"/></svg>';
+var SV_ADD='<svg class="bdSv" viewBox="0 0 24 24"><circle cx="9.5" cy="8.5" r="3.6"/><path d="M3 19.5c.5-3.4 3.1-5.3 6.5-5.3 1.4 0 2.6.3 3.6.9M18 8.5v6M15 11.5h6"/></svg>';
+var SV_OKI='<svg class="bdSv" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+function frState(uid){ try{ return window.ftFr?ftFr.state(uid):'none'; }catch(e){ return 'none'; } }
 function actHtml(r){
-  var h='<button type="button" class="bdBtn msg" data-bd="msg" data-uid="'+esc(r.uid)+'">'+SV_MSG+tx('এসএমএস','SMS')+'</button>';
-  if(r.ph) h+='<a class="bdBtn tel" href="tel:'+esc(r.ph.replace(/[^\d+]/g,''))+'">'+SV_TEL+tx('যোগাযোগ','Contact')+'</a>';
+  var s0=ses(), mine=!!(s0&&s0.uid===r.uid), st=mine?'me':frState(r.uid), h='', u=esc(r.uid);
+  if(!mine){
+    if(st==='none') h+='<button type="button" class="dcB add" data-bd="add" data-uid="'+u+'" aria-label="Add friend">'+SV_ADD+'</button>';
+    else if(st==='in') h+='<button type="button" class="dcB add" data-bd="acc" data-uid="'+u+'" aria-label="Accept request">'+SV_OKI+'</button>';
+    else if(st==='sent') h+='<button type="button" class="dcB sent" data-bd="can" data-uid="'+u+'" aria-label="Request sent">'+SV_OKI+'</button>';
+    h+='<button type="button" class="dcB" data-bd="msg" data-uid="'+u+'" aria-label="Message">'+SV_MSG+'</button>';
+  }
+  if(r.ph) h+='<a class="dcB" href="tel:'+esc(r.ph.replace(/[^\d+]/g,''))+'" aria-label="Call">'+SV_TEL+'</a>';
   return h;
 }
 function innerHtml(r){
-  return avHtml(r)+'<div class="bdMain"><div class="bdTop"><div class="bdWho"><b>'+esc(r.n||r.u)+'</b><small>'+(r.u?'@'+esc(r.u):'')+'</small></div><span class="bdBg">'+esc(r.bg)+'</span></div>'+metaHtml(r)+'<div class="bdAct">'+actHtml(r)+'</div></div>';
+  var sub=(r.u?'@'+esc(r.u):'')+(r.c?(r.u?' · ':'')+esc(r.c):'');
+  return '<div class="dcMain" data-bd="prof" data-uid="'+esc(r.uid)+'"><div class="dcAv">'+(r.pic?'<img alt="" src="'+r.pic+'">':initial(r))+'<i class="dcDot'+(r.av===1?'':r.av===0?' off':' unk')+'"></i><span class="dcBg">'+esc(r.bg)+'</span></div><div class="dcTx"><b>'+esc(r.n||r.u)+'</b><span>'+sub+'</span></div></div><div class="dcAc">'+actHtml(r)+'</div>';
 }
-function cardHtml(r,delay){ return '<div class="bdCard'+(r.av===0?' rest':'')+'" style="animation-delay:'+(delay||0)+'ms">'+innerHtml(r)+'</div>'; }
-function slideHtml(r){ return '<div class="bdCard bdSlide'+(r.av===0?' rest':'')+'">'+innerHtml(r)+'</div>'; }
+function cardHtml(r,delay){ return '<div class="dcRow'+(r.av===0?' rest':'')+'">'+innerHtml(r)+'</div>'; }
+function slideHtml(r){ return '<div class="dcRow dcSlide'+(r.av===0?' rest':'')+'">'+innerHtml(r)+'</div>'; }
 function emptyHtml(c){
   if(c.err==='login') return '<div class="bdEmpty"><b>'+tx('লগইন প্রয়োজন','Login required')+'</b>'+tx('রক্তদাতাদের তালিকা দেখতে ক্লাউড অ্যাকাউন্টে লগইন করুন (সেটিংস → অ্যাকাউন্ট)।','Log in to your cloud account to see donors (Settings → Account).')+'</div>';
   if(c.err==='rules') return '<div class="bdEmpty"><b>'+tx('ডাটাবেস রুলস যোগ করা হয়নি','Database rules are missing')+'</b>'+tx('Firebase Rules-এ "bloodDonors" অংশটি যোগ করুন।','Add the "bloodDonors" part to your Firebase Rules.')+'</div>';
@@ -14692,6 +15095,7 @@ function autoSlide(){
   slideIx=i; try{ t.scrollTo({left:i*w,behavior:'smooth'}); }catch(e){ t.scrollLeft=i*w; } dots(i);
 }
 function rerender(){ renderSearch(); if(emgOpen()) renderEmg(); }
+window.addEventListener('ftFrChange',function(){ try{ if(emgOpen()) renderEmg(); }catch(e){} });
 
 /* ---------- shared click handling ---------- */
 function onClick(ev){
@@ -14703,6 +15107,12 @@ function onClick(ev){
   else if(a==='fa'){ S.av=!S.av; rerender(); }
   else if(a==='fm'){ var mc=nc(myCity()); if(!mc){ toast(tx('আপনার শহরের নাম যোগ করুন।','Add your city first.')); openSheet(); return; } S.city=(S.city===mc)?'':mc; rerender(); }
   else if(a==='clr'){ S.g=''; S.city=''; S.av=false; rerender(); }
+  else if(a==='add'){ var au=b.getAttribute('data-uid'), ar=null; for(var qi=0;qi<cache.rows.length;qi++) if(cache.rows[qi].uid===au) ar=cache.rows[qi];
+    if(!ses()||!window.ftFr){ toast(tx('বন্ধু যোগ করতে ক্লাউড অ্যাকাউন্টে লগইন করুন।','Log in to your cloud account to add friends.')); return; }
+    try{ ftFr.known(au,{n:(ar&&ar.n)||'',u:(ar&&ar.u)||'',pic:(ar&&ar.pic)||''}); }catch(e){}
+    b.disabled=true; Promise.resolve(ftFr.add(au)).then(rerender,rerender); }
+  else if(a==='acc'){ if(window.ftFr) Promise.resolve(ftFr.accept(b.getAttribute('data-uid'))).then(rerender,rerender); }
+  else if(a==='can'){ if(window.ppCancelReq) ppCancelReq(b.getAttribute('data-uid')); setTimeout(rerender,700); }
   else if(a==='msg') message(b.getAttribute('data-uid'));
   else if(a==='prof') viewProfile(b.getAttribute('data-uid'));
   else if(a==='reload'){ load(true).then(rerender); }
@@ -16684,6 +17094,104 @@ html body .stOv.stEd .stPill b,
 html body .txleft .t1,
 html body .txleft .t2{line-height:1.55!important;padding-top:.14em;padding-bottom:.2em;}
 html body #bottomNav .bnbtn .lbl{line-height:1.5!important;padding:.14em 0 .2em;margin-bottom:2px;}
+</style>
+<style id="ftFsCss">
+/* ===== Full-screen pages for every menu tab + all Settings pages ===== */
+#ftFsBar{display:none;position:fixed;top:0;left:0;right:0;z-index:60;align-items:center;gap:12px;box-sizing:border-box;padding:calc(10px + env(safe-area-inset-top,0px)) 14px 10px;background:var(--bg);border-bottom:1px solid var(--border);}
+body.ftFS #ftFsBar{display:flex;}
+body.ftFS header.top,body.ftFS .tabs,body.ftFS #bottomNav,body.ftFS .bottomnav,body.ftFS #ftSetTitle,body.ftFS #ftDetBar{display:none!important;}
+html body.ftFS .wrap{padding-top:calc(68px + env(safe-area-inset-top,0px))!important;padding-bottom:calc(32px + env(safe-area-inset-bottom,0px))!important;}
+#ftFsBar .fsT{flex:1;min-width:0;font-size:20px;font-weight:800;line-height:1.3;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* highlighted back arrow */
+#ftFsBar .fsBack,#ftDetBar button{width:44px;height:44px;border-radius:50%;border:0!important;flex:none;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;background:var(--grad)!important;color:#fff!important;box-shadow:0 6px 16px -4px color-mix(in srgb,var(--primary) 65%,transparent),0 0 0 4px color-mix(in srgb,var(--primary) 18%,transparent);-webkit-tap-highlight-color:transparent;transition:transform .15s;}
+#ftFsBar .fsBack:active,#ftDetBar button:active{transform:scale(.9);}
+#ftFsBar .fsBack svg,#ftDetBar button svg{width:22px;height:22px;stroke:#fff!important;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;}
+</style>
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const bn=()=>{ try{ return currentLang==='bn'; }catch(e){ return true; } };
+const L=(b,e)=>bn()?b:e;
+const cur=()=>{ const s=document.querySelector('.section.active'); return s?s.id.replace('sec-',''):''; };
+const NAMES={add:['যোগ করুন','Add entry'],acc:['একাউন্ট','Accounts'],loan:['লোন','Loans'],report:['রিপোর্ট','Reports'],hist:['হিস্ট্রি','History'],tx:['লেনদেন','Transactions'],challenge:['চ্যালেঞ্জ','Challenges'],zakat:['যাকাত','Zakat'],settings:['সেটিংস','Settings']};
+const NOFS=['dash','chat','friends','profile','notes'];
+const bar=document.createElement('div'); bar.id='ftFsBar';
+bar.innerHTML='<button type="button" class="fsBack" aria-label="Back"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></button><div class="fsT"></div>';
+document.body.appendChild(bar);
+let fs=false, keep=false, origin='dash', shown='';
+function title(){
+  const c=cur(), sec=$('sec-settings');
+  if(c==='settings'){
+    if(sec&&sec.classList.contains('ftDetail')){ const t=document.querySelector('#ftDetBar .t'); if(t&&t.innerHTML) return t.innerHTML; }
+    return L('সেটিংস','Settings');
+  }
+  if(NAMES[c]) return L(NAMES[c][0],NAMES[c][1]);
+  const tb=document.querySelector('.tab[data-tab="'+c+'"]'); return tb&&tb.textContent.trim()?tb.textContent.trim():c;
+}
+function upd(){ if(!fs) return; const h=title(); if(h!==shown){ shown=h; bar.querySelector('.fsT').innerHTML=h; } }
+function on(){ fs=true; document.body.classList.add('ftFS'); upd(); }
+function off(){ fs=false; shown=''; document.body.classList.remove('ftFS'); }
+window.ftFsOn=function(from){ if(!fs) origin=from&&from!==cur()?from:'dash'; on(); };
+window.ftFsOff=off;
+const prev=window.activateTab;
+window.activateTab=function(n){
+  const before=cur();
+  const r=prev.apply(this,arguments);
+  if(n==='settings'){ if(!fs) origin=(before&&before!=='settings')?before:'dash'; on(); }
+  else if(!keep) off();
+  return r;
+};
+bar.querySelector('.fsBack').onclick=function(){
+  const c=cur(), sec=$('sec-settings');
+  if(c==='settings'&&sec&&sec.classList.contains('ftDetail')&&window.ftSetBack){
+    keep=true; try{ ftSetBack(); }catch(e){} keep=false;
+    if(cur()==='settings'&&!sec.classList.contains('ftDetail')) on(); else off();
+    upd(); window.scrollTo(0,0); return;
+  }
+  off(); try{ activateTab(origin&&origin!==c?origin:'dash'); }catch(e){}
+  window.scrollTo(0,0);
+};
+const sec=$('sec-settings');
+if(sec) new MutationObserver(upd).observe(sec,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+document.addEventListener('click',()=>setTimeout(upd,50),true);
+})();
+</script>
+<style id="dcCss">
+/* ===== Blood donor list: same look as "Recommended friends" (blood group always visible) ===== */
+.bdList{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:2px 12px;box-shadow:0 10px 26px -22px rgba(0,0,0,.4);overflow:hidden;}
+.dcRow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--border);}
+.bdList .dcRow:first-child{border-top:0;}
+.bdTrack .dcRow{flex:0 0 100%;scroll-snap-align:center;margin:0;padding:10px 12px;background:var(--card);border:1px solid var(--border);border-radius:20px;box-sizing:border-box;}
+.dcMain{flex:1;min-width:0;display:flex;align-items:center;gap:11px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.dcMain:active{opacity:.7;}
+.dcAv{position:relative;width:46px;height:46px;border-radius:16px;flex:none;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:var(--primary);background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 18%,var(--bg)),var(--bg));}
+.dcAv img{width:100%;height:100%;object-fit:cover;display:block;border-radius:16px;}
+.dcRow.rest .dcAv img{filter:grayscale(.55);opacity:.85;}
+.dcBg{position:absolute;right:-7px;bottom:-5px;min-width:28px;height:21px;padding:0 5px;box-sizing:border-box;border-radius:11px;background:#e11d48;color:#fff;font-size:11px;font-weight:800;line-height:1;display:flex;align-items:center;justify-content:center;border:2px solid var(--card);}
+.dcDot{position:absolute;left:-3px;top:-3px;width:12px;height:12px;border-radius:50%;background:#22c55e;border:2px solid var(--card);box-sizing:border-box;}
+.dcDot.off{background:#94a3b8;}.dcDot.unk{display:none;}
+.dcTx{min-width:0;}
+.dcTx b{display:block;font-size:14px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dcTx span{display:block;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dcAc{display:flex;gap:6px;flex:none;}
+.dcB{width:36px;height:36px;border-radius:13px;border:1px solid var(--border);background:var(--bg);color:var(--primary);display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;text-decoration:none;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+.dcB:active{transform:scale(.94);}
+.dcB[disabled]{opacity:.6;pointer-events:none;}
+.dcB.add{background:var(--primary);color:#fff;border-color:transparent;box-shadow:0 8px 16px -11px var(--primary);}
+.dcB.sent{color:var(--text);}
+.dcB .bdSv{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
+</style>
+<style id="ftGlance">
+/* ===== profile: "At a glance" (what the user adds in Edit profile) ===== */
+.ppAbout{margin:12px 0 2px;}
+.ppAbout>p{margin:0 0 12px;font-size:14.5px;line-height:1.55;color:var(--text);}
+.ppGl{border-top:1px solid var(--border);padding-top:12px;}
+.ppGlH{font-size:16px;font-weight:800;color:var(--text);margin-bottom:8px;}
+.ppGlR{display:flex;align-items:center;gap:13px;padding:7px 0;}
+.ppGlI{width:24px;height:24px;flex:none;display:flex;align-items:center;justify-content:center;color:var(--text);}
+.ppGlI svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+.ppGlT{font-size:14.5px;color:var(--text);min-width:0;word-break:break-word;line-height:1.4;}
+.ppGlT b{font-weight:700;}
 </style>
 </body>
 </html>
