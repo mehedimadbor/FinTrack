@@ -1184,6 +1184,7 @@ html body #sec-friends .frAv{border-radius:16px;background:linear-gradient(135de
 .nsTo button.p{background:var(--primary);color:#fff}
 html.locked #sec-notes,html.locked #nsSheet,html.locked #nsRem,html.locked #nsToast{display:none!important}
 </style>
+<style id="ftHideSetNav">.bottomnav .bnbtn[data-bn="settings"],#bottomNav .bnbtn[data-bn="settings"]{display:none !important;}</style>
 </head>
 <body>
 <style id="rsStyle">
@@ -4039,6 +4040,7 @@ function saveTx(){
   };
   { const base = data.transactions.filter(x=>x.id!==editingTxId), bad = validateTxSet(base.concat([{id:editingTxId||'new', ...txData}]));
     if(bad){ ftAlertBad(bad); return; } }
+  if(!editingTxId && !window.__ftGuardOk && window.ftSpendGuard && ftSpendGuard(txData, function(){ window.__ftGuardOk=1; try{ saveTx(); }finally{ window.__ftGuardOk=0; } })) return;
   if(editingTxId){
     const idx = data.transactions.findIndex(x=>x.id===editingTxId);
     if(idx>-1) data.transactions[idx] = {id: editingTxId, ...txData};
@@ -8120,6 +8122,7 @@ window.wgAddExp=function(){
   const tx={id:Date.now()+'-'+Math.random().toString(36).slice(2,7),type:'expense',amount,category:cat,source:null,person:null,account:null,note:($('wgNote').value||'').trim(),date:todayStr(),time:nowTime()};
   tx.fund=ftFundFor('expense'); if(tx.fund){ const fb=calcAccountBalances()[tx.fund]||0; if(amount>fb){ toast(tx.fund+L(' একাউন্টে যথেষ্ট টাকা নেই — ব্যালেন্স ',' has not enough balance — ')+fmt(fb)); return; } }
   { const nb=ftNeedBal('expense',amount,tx.fund); if(nb){ ftWarnPopup(nb); return; } }
+  if(!window.__ftGuardOk&&window.ftSpendGuard&&ftSpendGuard(tx,function(){ window.__ftGuardOk=1; try{ window.wgAddExp(); }finally{ window.__ftGuardOk=0; } })) return;
   data.transactions.push(tx); cfg.cat=cat; save(); saveData();
   const refresh=()=>{ ['renderDash','renderAccounts','renderHistory'].forEach(f=>{ try{ window[f](); }catch(e){} }); };
   refresh(); renderWidget();
@@ -11289,406 +11292,9 @@ window.ftPicThumb=function(){ return new Promise(function(res){ try{
 <symbol id="cg-lv4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10l4 5.2L12 20.4 3 9.2Z" fill="currentColor" fill-opacity=".2"/><path d="M3 9.2h18M9.6 4 8.2 9.2 12 20.4l3.8-11.2L14.4 4"/></symbol>
 <symbol id="cg-lv5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m3.6 17.8 1.5-10.2 4.5 4L12 5l2.4 6.6 4.5-4 1.5 10.2Z" fill="currentColor" fill-opacity=".22"/><path d="M4 21h16"/></symbol>
 </defs></svg>
-<div class="notifPopupOverlay" id="cgWishOverlay" style="display:none;">
-  <div class="notifPopupCard" id="cgWishCard">
-    <div class="cgConf" id="cgConf"></div>
-    <div class="notifPopupIcon" id="cgWishIcon" style="font-size:46px;"></div>
-    <div class="notifPopupTitle" id="cgWishTitle"></div>
-    <div class="notifPopupMsg" id="cgWishMsg"></div>
-    <button class="main" style="margin-top:16px;" id="cgWishOk"></button>
-  </div>
-</div>
 <script>
-/* ===== Challenge Arena: numbered challenges, points, levels, badges (new tab) ===== */
-(function(){
-const $=id=>document.getElementById(id), bn=()=>currentLang==='bn', L=(b,e)=>bn()?b:e;
-const bl=(b,e)=>'<span class="bn">'+b+'</span><span class="en">'+e+'</span>';
-const nb=x=>bn()?String(x).replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]):String(x);
-const tt=m=>{ try{ if(window.toast) window.toast(m); }catch(e){} };
-const sv=(n,z)=>'<svg class="cgIc" width="'+(z||18)+'" height="'+(z||18)+'" viewBox="0 0 24 24" aria-hidden="true"><use href="#cg-'+n+'"/></svg>';
-const KI={save:sv('save'),noexp:sv('noexp'),under:sv('under'),log:sv('log'),cnt:sv('log')};
-const okI=z=>'<span style="color:#10b981">'+sv('check',z||15)+'</span>';
-const LV=[[0,'নতুন','Rookie',''],[100,'সঞ্চয়ী','Saver',''],[300,'দক্ষ','Pro',''],[700,'মাস্টার','Master',''],[1500,'লেজেন্ড','Legend','']];
-/* k: save = save >= amt in every block | noexp = no expense in block | under = expense <= amt in block | log = any entry in block
-   n blocks of bd days; skip = misses allowed; pts = points */
-const K=(id,k,amt,n,bd,skip,pts,st,tb,te,db,de,x)=>Object.assign({id:id,k:k,amt:amt,n:n,bd:bd,skip:skip,pts:pts,st:st,tb:tb,te:te,db:db,de:de},x||{});
-const amtOf=c=>c.dl?Math.round((+data.dailyLimit||0)*c.dl):c.amt;
-const CAT=[
-K(1,'noexp',0,1,1,0,20,1,'নো-স্পেন্ড ডে','No-Spend Day','আজ একটাও খরচ করবেন না। দিন শেষে চ্যালেঞ্জ পূর্ণ হবে।','Spend nothing today. Completes when the day ends.',{nk:['পকেট-তালা','Pocket Lock']}),
-K(2,'save',1000,1,1,0,40,2,'আজ {a} সঞ্চয়','Save {a} today','আজই "একাউন্টে জমা রাখলাম" দিয়ে {a} জমান।','Save {a} today with "Saved to Account".'),
-K(3,'save',100,30,1,0,300,4,'রোজ {a} · ১ মাস','{a} every day · 1 month','টানা ৩০ দিন, রোজ কমপক্ষে {a} সঞ্চয়। একদিন মিস হলেই ব্যর্থ!','30 days straight, at least {a} daily. One miss and it fails!',{nk:['লৌহমানব','Iron Saver']}),
-K(4,'save',100,1,1,0,15,1,'ছোট শুরু: আজ {a}','Small start: {a} today','আজ মাত্র {a} জমিয়ে শুরু করুন।','Start small — save just {a} today.'),
-K(5,'noexp',0,3,1,0,70,2,'৩ দিন নো-স্পেন্ড','3-Day No-Spend','টানা ৩ দিন কোনো খরচ নয়।','No spending for 3 days in a row.'),
-K(6,'log',0,7,1,1,50,1,'৭ দিন হিসাব লেখা','7-Day Tracking Habit','৭ দিনের মধ্যে ৬ দিন অন্তত একটা লেনদেন লিখুন।','Log at least one entry on 6 of the next 7 days.'),
-K(7,'save',50,7,1,1,70,2,'৭ দিন · রোজ {a}','7 days · {a} daily','৭ দিনের মধ্যে ৬ দিন {a} করে জমান।','Save {a} on 6 of the next 7 days.'),
-K(8,'under',300,7,1,1,90,2,'৭ দিন · খরচ {a}-এর নিচে','7 days · spend under {a}','রোজের খরচ {a}-এর মধ্যে রাখুন (১ দিন ছাড়)।','Keep daily spending within {a} (1 day grace).'),
-K(9,'noexp',0,1,7,0,150,4,'নো-স্পেন্ড উইক','No-Spend Week','টানা ৭ দিন কোনো খরচ নয়!','Zero spending for 7 days straight!',{nk:['সন্ন্যাসী','The Monk']}),
-K(10,'save',500,4,7,0,150,3,'সাপ্তাহিক {a} · ৪ সপ্তাহ','{a} weekly · 4 weeks','প্রতি সপ্তাহে {a}, টানা ৪ সপ্তাহ।','{a} every week for 4 weeks.'),
-K(11,'save',5000,1,30,0,200,3,'এ মাসে {a} সঞ্চয়','Save {a} this month','৩০ দিনের মধ্যে মোট {a} জমান।','Save a total of {a} within 30 days.'),
-K(12,'save',3000,3,30,0,450,4,'৩ মাস · মাসে {a}','3 months · {a} monthly','টানা ৩ মাস, প্রতি মাসে {a} সঞ্চয়।','{a} every month for 3 months.',{nk:['ধনকুবেরের পথে','Road to Rich']}),
-K(13,'log',0,1,1,0,10,1,'আজ একটা হিসাব লিখুন','Log one entry today','আজ অন্তত একটা লেনদেন লিখে ফেলুন — অভ্যাসের শুরু!','Log at least one entry today — start the habit!',{nk:['প্রথম পদক্ষেপ','First Step']}),
-K(14,'noexp',0,1,1,0,15,1,'হাফ-ডে নো-স্পেন্ড','Half-Day No-Spend','এখন থেকে ১২ ঘণ্টা কোনো খরচ নয়। ঘড়ি চলছে!','No spending for the next 12 hours. The clock is ticking!',{hrs:12,nk:['হাফ-ডে হিরো','Half-Day Hero']}),
-K(15,'save',50,1,1,0,15,1,'আধা-দিনে {a} সঞ্চয়','Save {a} in half a day','১২ ঘণ্টার মধ্যে "একাউন্টে জমা রাখলাম" দিয়ে {a} জমান।','Save {a} within 12 hours using "Saved to Account".',{hrs:12}),
-K(16,'cnt',2,1,1,0,15,1,'আধা-দিনে ২টি হিসাব','2 entries in half a day','১২ ঘণ্টায় অন্তত ২টি লেনদেন লিখুন।','Log at least 2 entries within 12 hours.',{hrs:12}),
-K(17,'cnt',3,1,1,0,20,1,'আজ ৩টি হিসাব লিখুন','Log 3 entries today','আজ অন্তত ৩টি লেনদেন লিখুন — কিছুই বাদ নয়!','Log at least 3 entries today — miss nothing!'),
-K(18,'save',0,1,1,0,25,1,'বাজেটের অর্ধেক সঞ্চয়: {a}','Save half the daily budget: {a}','আজ ডেইলি লিমিটের অর্ধেক জমান।','Save half of your daily limit today.',{dl:.5,nk:['অর্ধেক-জাদু','Half Magic']}),
-K(19,'under',0,1,1,0,20,1,'আধা-দিনে খরচ {a}-এর নিচে','Half-day spend under {a}','১২ ঘণ্টায় খরচ ডেইলি লিমিটের অর্ধেক ({a}) ছাড়াবেন না।','Keep 12-hour spending under half your daily limit ({a}).',{hrs:12,dl:.5}),
-K(20,'under',0,1,1,0,30,2,'আজ বাজেটের মধ্যে: {a}','Stay in budget today: {a}','আজকের খরচ ডেইলি লিমিট {a}-এর মধ্যে রাখুন।','Keep today\'s spending within your daily limit {a}.',{dl:1}),
-K(21,'noexp',0,3,1,0,60,2,'৩ আধা-দিন নো-স্পেন্ড','3 Half-Days No-Spend','টানা ৩টি ১২ ঘণ্টার ব্লকে (দেড় দিন) কোনো খরচ নয়।','Zero spending across three 12-hour blocks (1.5 days).',{hrs:12}),
-K(22,'save',0,3,1,0,80,2,'৩ দিন · রোজ {a} সঞ্চয়','3 days · save {a} daily','টানা ৩ দিন ডেইলি লিমিটের অর্ধেক জমান।','Save half your daily limit for 3 days in a row.',{dl:.5}),
-K(23,'under',0,3,1,0,70,2,'৩ দিন বাজেটের মধ্যে','3 days within budget','টানা ৩ দিন খরচ ডেইলি লিমিট {a}-এর মধ্যে।','Keep spending within {a} for 3 days.',{dl:1}),
-K(24,'cnt',3,7,1,1,80,2,'৭ দিন · রোজ ৩টি হিসাব','7 days · 3 entries daily','৭ দিনের মধ্যে ৬ দিন অন্তত ৩টি করে লেনদেন লিখুন।','Log 3+ entries on 6 of the next 7 days.'),
-K(25,'save',0,7,1,1,140,3,'৭ দিন · বাজেটের অর্ধেক সঞ্চয়','7 days · save half the budget','৭ দিনের মধ্যে ৬ দিন ডেইলি লিমিটের অর্ধেক ({a}) জমান।','Save half your daily limit ({a}) on 6 of 7 days.',{dl:.5}),
-K(26,'under',0,7,1,1,160,3,'৭ দিন · বাজেটের অর্ধেকে চলুন','7 days · half the budget','রোজের খরচ ডেইলি লিমিটের অর্ধেক ({a})-এর মধ্যে রাখুন (১ দিন ছাড়)।','Keep daily spending under half your limit ({a}), 1 day grace.',{dl:.5,nk:['মিতব্যয়ী','Frugal Pro']}),
-K(27,'noexp',0,5,1,0,110,3,'৫ দিন নো-স্পেন্ড','5-Day No-Spend','টানা ৫ দিন কোনো খরচ নয়।','No spending for 5 days straight.'),
-K(28,'save',100,14,1,1,170,3,'১৪ দিন · রোজ {a}','14 days · {a} daily','১৪ দিনের মধ্যে ১৩ দিন {a} করে জমান।','Save {a} on 13 of the next 14 days.'),
-K(29,'log',0,14,1,1,90,2,'১৪ দিন হিসাব লেখা','14-Day Tracking Streak','১৪ দিনের মধ্যে ১৩ দিন অন্তত একটা লেনদেন লিখুন।','Log at least one entry on 13 of 14 days.'),
-K(30,'save',0,30,1,2,400,4,'৩০ দিন · বাজেটের অর্ধেক সঞ্চয়','30 days · save half the budget','৩০ দিনের মধ্যে ২৮ দিন ডেইলি লিমিটের অর্ধেক ({a}) জমান।','Save half your daily limit ({a}) on 28 of 30 days.',{dl:.5,nk:['সঞ্চয়ের সম্রাট','Saving Emperor']}),
-K(31,'under',0,30,1,2,350,4,'৩০ দিন বাজেটের মধ্যে','30 days within budget','৩০ দিনের মধ্যে ২৮ দিন খরচ ডেইলি লিমিট {a}-এর মধ্যে রাখুন।','Stay within {a} on 28 of 30 days.',{dl:1}),
-K(32,'log',0,30,1,2,200,3,'৩০ দিন হিসাব লেখা','30-Day Tracking Master','৩০ দিনের মধ্যে ২৮ দিন অন্তত একটা লেনদেন লিখুন।','Log at least one entry on 28 of 30 days.'),
-K(33,'cnt',100,1,30,0,300,3,'মাসে {a}+ লেনদেন','{a}+ transactions in a month','৩০ দিনের মধ্যে কমপক্ষে {a}টি লেনদেন লিখুন — জিতলে ৩০০ পয়েন্ট!','Log at least {a} transactions within 30 days — win 300 points!',{nk:['হিসাবের রাজা','Ledger King']})
-];
-const PRE={1:[7,15,30,60],7:[2,4,8,12],30:[1,3,6,12]};
-let view='all', filt=0, form=false, draft={bd:1,n:7,amt:''}, queue=[], showing=false;
-
-function cg(){
-  const C=data.challenge=data.challenge||{};
-  if(C.active&&!Array.isArray(C.active)){ const o=C.active; C.active=[{uid:'m'+Date.now().toString(36),id:0,k:'save',amt:o.amount,n:o.n,bd:o.type==='daily'?1:30,skip:0,pts:60,st:2,tb:'সঞ্চয় চ্যালেঞ্জ',te:'Savings challenge',db:'',de:'',start:o.start,startAt:o.start+' 00:00'}]; }
-  if(!Array.isArray(C.active)) C.active=[]; if(!Array.isArray(C.history)) C.history=[];
-  C.xp=+C.xp||0; C.streak=+C.streak||0; return C;
-}
-const fill=(s,a,k)=>String(s||'').replace(/\{a\}/g,k==='cnt'?nb(a):(a>0?fmt(a):'—'));
-const cur=c=>(c.dl&&!c.start)?amtOf(c):c.amt, T=c=>fill(L(c.tb,c.te),cur(c),c.k), D=c=>fill(L(c.db,c.de),cur(c),c.k);
-function addH(s,h){ const m=s.match(/(\d+)-(\d+)-(\d+) (\d+):(\d+)/); return new Date(Date.UTC(+m[1],m[2]-1,+m[3],+m[4],+m[5])+h*36e5).toISOString().slice(0,16).replace('T',' '); }
-const msOf=s=>Date.parse(s.replace(' ','T')+':00Z');
-function addD(s,n){ const p=s.split('-').map(Number); return new Date(Date.UTC(p[0],p[1]-1,p[2]+n)).toISOString().slice(0,10); }
-function diffD(a,b){ const f=s=>{const p=s.split('-').map(Number);return Date.UTC(p[0],p[1]-1,p[2]);}; return Math.round((f(b)-f(a))/864e5); }
-function lv(xp){ let i=0; LV.forEach((l,j)=>{ if(xp>=l[0]) i=j; }); const nx=LV[i+1]; return {i,name:L(LV[i][1],LV[i][2]),emo:LV[i][3],next:nx?nx[0]:0,pct:nx?Math.round((xp-LV[i][0])/(nx[0]-LV[i][0])*100):100}; }
-/* evaluate one active challenge */
-function ev(c){
-  const today=todayStr(), nowS=today+' '+nowTime(), bs=[]; let oks=0, miss=0;
-  const H=c.hrs||c.bd*24, sa=c.startAt||(c.start+' 00:00');
-  for(let i=0;i<c.n;i++){
-    let d0,d1,ended,tx;
-    { const w0=addH(sa,i*H), w1=addH(sa,(i+1)*H); d0=w0.slice(0,10); d1=w1.slice(0,10); ended=nowS>=w1; tx=data.transactions.filter(x=>{ const q=x.date+' '+x.time; return q>=w0&&q<w1; }); }
-    const sum=ty=>tx.filter(x=>x.type===ty).reduce((a,x)=>a+x.amount,0);
-    let st='open', val=0;
-    if(c.k==='save'){ val=sum('save_to_account'); st=val>=c.amt?'ok':ended?'miss':'open'; }
-    else if(c.k==='noexp'){ val=sum('expense'); st=val>0?'miss':ended?'ok':'open'; }
-    else if(c.k==='under'){ val=sum('expense'); st=val>c.amt?'miss':ended?'ok':'open'; }
-    else if(c.k==='cnt'){ val=tx.length; st=val>=c.amt?'ok':ended?'miss':'open'; }
-    else { val=tx.length; st=val>0?'ok':ended?'miss':'open'; }
-    if(st==='ok') oks++; if(st==='miss') miss++;
-    bs.push({st,val,d0,d1,ended});
-  }
-  const need=c.n-(c.skip||0);
-  let cur=bs.findIndex(b=>!b.ended); if(cur<0) cur=c.n-1;
-  const lh=Math.max(0,Math.ceil((msOf(addH(sa,c.n*H))-msOf(nowS))/36e5)), left=c.hrs?lh:Math.ceil(lh/24);
-  return {bs,oks,miss,need,cur,left,state:miss>(c.skip||0)?'failed':oks>=need?'done':'active'};
-}
-function stats(){
-  const C=cg(), h=C.history.filter(x=>x.status==='done');
-  return {done:h.length,saveWins:h.filter(x=>x.k==='save').length,noWins:h.filter(x=>x.k==='noexp').length,monthWins:h.filter(x=>x.bd===30).length,xp:C.xp};
-}
-const BADGES=[['medal','প্রথম জয়','First win',s=>s.done>=1],['target','৫টি জয়','5 wins',s=>s.done>=5],['save','সঞ্চয় ওস্তাদ (৩ জয়)','Saver (3 saving wins)',s=>s.saveWins>=3],['noexp','নো-স্পেন্ড মাস্টার','No-spend master',s=>s.noWins>=1],['calendar','মাসিক বিজয়ী','Monthly winner',s=>s.monthWins>=1],['bolt','৫০০ পয়েন্ট','500 points',s=>s.xp>=500]];
-const stars=n=>[0,1,2,3].map(i=>'<svg class="cgIc" width="13" height="13" viewBox="0 0 24 24" style="color:#f59e0b;opacity:'+(i<n?1:.25)+';margin-right:1px;"><use href="#cg-star"/></svg>').join('');
-const perL=bd=>bd===1?L('দৈনিক','Daily'):bd===7?L('সাপ্তাহিক','Weekly'):L('মাসিক','Monthly');
-const unitL=(bd,n)=>bd===1?L('দিন','day'+(n===1?'':'s')):bd===7?L('সপ্তাহ','week'+(n===1?'':'s')):L('মাস','month'+(n===1?'':'s'));
-function wins(id){ return cg().history.filter(x=>x.status==='done'&&x.id===id).length; }
-
-/* ---------- live countdown (Asia/Dhaka, UTC+6, no DST) ---------- */
-const DHK=6*36e5; let lastFin=0;
-const sAt=c=>c.startAt||(c.start+' 00:00'), hOf=c=>c.hrs||c.bd*24;
-function endMs(c){ return msOf(addH(sAt(c),c.n*hOf(c))); }
-function perEndMs(c,i){ return msOf(addH(sAt(c),(i+1)*hOf(c))); }
-function leftTxt(ms){ const t=Math.max(0,Math.floor(ms/1000)), d=Math.floor(t/86400), h=Math.floor(t%86400/3600), m=Math.floor(t%3600/60), sc=t%60, p=x=>nb(String(x).padStart(2,'0')), U=bn()?['দিন','ঘণ্টা','মিনিট','সেকেন্ড']:['d','h','m','s'];
-  return (d?nb(d)+' '+U[0]+' ':'')+((d||h)?p(h)+' '+U[1]+' ':'')+p(m)+' '+U[2]+' '+p(sc)+' '+U[3]; }
-function cd(c,r){
-  const now=Date.now()+DHK, row=(lbl,ms,sub)=>`<div class="cgCd${sub?' sub':''}${ms-now<36e5?' urgent':''}"><span><i class="pd"></i>${lbl}</span><b data-cgend="${ms}">${leftTxt(ms-now)}</b></div>`;
-  let h=row(L('চ্যালেঞ্জ শেষ হতে বাকি','Challenge ends in'),endMs(c));
-  if(c.n>1&&r.cur<c.n) h+=row(c.hrs?L('এই ধাপ শেষ হতে','This window ends in'):c.bd===1?L('এই ২৪ ঘণ্টা শেষ হতে','This 24h ends in'):c.bd===7?L('এই সপ্তাহ শেষ হতে','This week ends in'):L('এই মাস শেষ হতে','This month ends in'),perEndMs(c,r.cur),1);
-  return h;
-}
-function tick(){
-  const els=document.querySelectorAll('#sec-challenge [data-cgend]'); if(!els.length) return;
-  const now=Date.now()+DHK; let fin=false;
-  els.forEach(el=>{ const ms=+el.dataset.cgend-now; el.textContent=leftTxt(ms); if(el.parentNode) el.parentNode.classList.toggle('urgent',ms<36e5); if(ms<=0) fin=true; });
-  if(fin&&now-lastFin>5000){ lastFin=now; check(); }
-}
-
-/* ---------- views ---------- */
-function hero(){
-  const C=cg(), l=lv(C.xp);
-  return `<div class="cgHero"><div class="cgLv">${sv('lv'+(l.i+1),36)}</div><div class="cgHeroMain"><div class="cgLvName">${L('লেভেল','Level')} ${nb(l.i+1)} · ${esc(l.name)}</div><div class="barbg"><div class="barfg" style="width:${l.pct}%"></div></div><div class="cgSmall">${nb(C.xp)} ${L('পয়েন্ট','pts')} · ${l.next?L('পরের লেভেলে','next level in')+' '+nb(l.next-C.xp):L('সর্বোচ্চ লেভেল! ','Max level! ')}</div></div></div>
-  <div class="cgStats"><div><b>${nb(stats().done)}</b><span>${L('জয়','Wins')}</span></div><div><b>${nb(C.streak)}</b><span>${L('জয়ের স্ট্রিক','Win streak')}</span></div><div><b>${nb(C.active.length)}</b><span>${L('চলমান','Running')}</span></div></div>`;
-}
-function seg(){
-  const n=cg().active.length, b=(k,t)=>`<button class="${view===k?'on':''}" onclick="cgView('${k}')">${t}</button>`;
-  return `<div class="cgSeg">${b('all',L('চ্যালেঞ্জ','Challenges'))}${b('run',L('চলমান','Running')+(n?' ('+nb(n)+')':''))}${b('rank',L('র‍্যাঙ্ক','Ranking'))}${b('trophy',L('অর্জন','Trophies'))}</div>`;
-}
-function formHtml(){
-  const bt=(v,t)=>`<button type="button" class="chip${draft.bd===v?' on':''}" onclick="cgBd(${v})">${t}</button>`;
-  const nt=PRE[draft.bd].map(n=>`<button type="button" class="chip${draft.n===n?' on':''}" onclick="cgN(${n})">${nb(n)} ${unitL(draft.bd,n)}</button>`).join('');
-  return `<div class="cgRun"><div class="cgRunH"><span> ${L('নিজের সঞ্চয় চ্যালেঞ্জ','Your own saving challenge')}</span></div>
-  <div class="cgPick">${bt(1,L('দৈনিক','Daily'))}${bt(7,L('সাপ্তাহিক','Weekly'))}${bt(30,L('মাসিক','Monthly'))}</div>
-  <label>${L('প্রতি '+(draft.bd===1?'দিনে':draft.bd===7?'সপ্তাহে':'মাসে')+' সঞ্চয় (টাকা)','Saving per '+(draft.bd===1?'day':draft.bd===7?'week':'month')+' (Taka)')}</label>
-  <input type="number" id="cgAmt" placeholder="0" value="${draft.amt}" oninput="cgAmtIn()">
-  <label>${L('সময়কাল','Duration')}</label><div class="cgPick">${nt}</div>
-  <div class="cgD" id="cgSum"></div>
-  <button class="main" style="margin-top:10px;" onclick="cgCustom()">${L('চ্যালেঞ্জ শুরু করুন','Start challenge')}</button></div>`;
-}
-function customPts(){ const d=draft.n*draft.bd; return Math.min(500,Math.round(10+d*1.5+Math.log10((+draft.amt||0)+1)*10)); }
-function sum(){ const e=$('cgSum'); if(!e) return; const a=+draft.amt||0; e.textContent=a>0?L(`মোট ${fmt(a*draft.n)} জমাতে হবে · জিতলে +${nb(customPts())} পয়েন্ট`,`Save ${fmt(a*draft.n)} in total · win +${customPts()} pts`):''; }
-const GL=[[1,'সহজ','Easy'],[2,'মাঝারি','Medium'],[3,'কঠিন','Hard'],[4,'চ্যাম্পিয়ন','Champion']];
-function allView(){
-  const run=cg().active.map(c=>c.id).filter(Boolean);
-  const chips=[[0,L('সব','All')],['h',L('আধা-দিন','Half-day')],[1,L('দৈনিক','Daily')],['b',L('বাজেট','Budget')],[7,L('সাপ্তাহিক','Weekly')],[30,L('মাসিক','Monthly')]].map(x=>`<button type="button" class="chip${filt===x[0]?' on':''}" onclick="cgFilt('${x[0]}')">${x[1]}</button>`).join('');
-  const m=c=>!filt||(filt==='h'?!!c.hrs:filt==='b'?!!c.dl:filt===1?(c.bd===1&&!c.hrs):c.bd===filt);
-  const item=c=>{ const w=wins(c.id), on=run.indexOf(c.id)>=0;
-    return `<div class="cgItem"><div class="cgNo">#${nb(c.id)}</div><div class="cgBody"><div class="cgT">${KI[c.k]} ${esc(T(c))}</div><div class="cgD">${esc(D(c))}</div><div class="cgTags"><span class="st">${stars(c.st)}</span><span>+${nb(c.pts)} ${L('পয়েন্ট','pts')}</span><span>${c.hrs?L('আধা-দিন','Half-day'):perL(c.bd)}</span>${c.dl?`<span>${L('বাজেট','Budget')}</span>`:''}${c.nk?`<span>${esc(L(c.nk[0],c.nk[1]))}</span>`:''}${w?`<span>${sv('check',12)} ×${nb(w)}</span>`:''}</div></div><button class="cgGo" ${on?'disabled':''} onclick="cgStart(${c.id})">${on?L('চলছে','Active'):L('শুরু','Start')}</button></div>`; };
-  const items=GL.map(g=>{ const l=CAT.filter(c=>c.st===g[0]&&m(c)).sort((x,y)=>x.pts-y.pts); return l.length?`<div class="cgGrp">${stars(g[0])}<span>${L(g[1],g[2])}</span><i>${nb(l.length)}</i></div>`+l.map(item).join(''):''; }).join('');
-  return `<button class="typebtn" style="width:100%;margin-bottom:10px;" onclick="cgForm()">${form?L('ফর্ম বন্ধ করুন','Close form'):sv('plus',14)+' '+L('নিজের চ্যালেঞ্জ বানান','Create your own challenge')}</button>${form?formHtml():''}
-  <div class="chips" style="margin-bottom:6px;">${chips}</div>${items}`;
-}
-function runView(){
-  const A=cg().active;
-  if(!A.length) return `<div class="cgEmpty"><br>${L('কোনো চ্যালেঞ্জ চলছে না।<br>"চ্যালেঞ্জ" ট্যাব থেকে একটা বেছে নিন!','No challenge running.<br>Pick one from the "Challenges" tab!')}</div>`;
-  return A.map(c=>{
-    const r=ev(c), pct=Math.min(100,Math.round(r.oks/r.need*100)), b=r.bs[r.cur], per=c.hrs?L('এই ১২ ঘণ্টায়','In these 12h'):c.bd===1?L('আজ','Today'):c.bd===7?L('এ সপ্তাহে','This week'):L('এ মাসে','This month');
-    let hint='';
-    if(c.k==='save') hint=`${per}: ${fmt(b.val)} / ${fmt(c.amt)} ${b.st==='ok'?okI(14):''}`;
-    else if(c.k==='noexp') hint=L('এখন পর্যন্ত কোনো খরচ হয়নি','No spending so far')+' '+okI(14);
-    else if(c.k==='under') hint=`${per} ${L('খরচ','spent')}: ${fmt(b.val)} / ${fmt(c.amt)}`;
-    else if(c.k==='cnt') hint=`${per}: ${nb(b.val)} / ${nb(c.amt)} ${L('টি','entries')} ${b.st==='ok'?okI(14):''}`;
-    else hint=`${per}: ${b.val?L('লেখা হয়েছে','logged')+' '+okI(14):L('এখনো লেখা হয়নি','not logged yet')}`;
-    const dots=c.n<=60?`<div class="cgDots">${r.bs.map((x,i)=>`<i class="${x.st==='ok'?'ok':''}${i===r.cur?' now':''}"></i>`).join('')}</div>`:'';
-    return `<div class="cgRun"><div class="cgRunH"><span>${c.id?'#'+nb(c.id)+' ':' '}${KI[c.k]} ${esc(T(c))}</span><button class="cgX" aria-label="cancel" onclick="cgCancel('${c.uid}')">${sv('x',16)}</button></div>
-    <div class="barbg"><div class="barfg" style="width:${pct}%"></div></div>
-    <div class="cgD" style="margin-top:7px;">${L('সম্পন্ন','Done')}: ${nb(r.oks)}/${nb(r.need)} · ${L('বাকি','left')}: ${nb(r.left)} ${c.hrs?L('ঘণ্টা','hrs'):L('দিন','days')} · +${nb(c.pts)} ${L('পয়েন্ট','pts')}<br>${hint}</div>${cd(c,r)}${dots}
-    ${c.k==='save'?`<button class="main" style="margin-top:10px;" onclick="quickAdd('save_to_account')">${L('এখনই সঞ্চয় করুন','Save now')}</button>`:''}</div>`;
-  }).join('');
-}
-function trophyView(){
-  const s=stats(), C=cg();
-  const bd=BADGES.map(b=>`<div class="cgBadge${b[3](s)?'':' off'}"><em>${sv(b[0],32)}</em>${L(b[1],b[2])}</div>`).join('');
-  const h=C.history.slice(-15).reverse().map(x=>`<div class="cgHist"><span><span style="color:${x.status==='done'?'#10b981':'#ef4444'}">${x.status==='done'?sv('check',16):sv('cross',16)}</span>${x.id?'#'+nb(x.id)+' ':''}${esc(T(x))}</span><span>${x.status==='done'?'<b>+'+nb(x.earned)+'</b> ':''}<small>${esc(x.end||'')}</small></span></div>`).join('');
-  return `<div style="font-weight:700;margin:2px 0 8px;">${L('ব্যাজ','Badges')}</div><div class="cgBadges">${bd}</div>
-  <div style="font-weight:700;margin:6px 0 4px;">${L('সাম্প্রতিক ফলাফল','Recent results')}</div>${h||`<div class="cgEmpty">${L('এখনো কোনো ফলাফল নেই','No results yet')}</div>`}`;
-}
-function renderTab(){
-  const s=$('sec-challenge'); if(!s) return;
-  const act=document.activeElement;
-  if(act&&act.id==='cgAmt') return;
-  s.innerHTML=hero()+seg()+(view==='all'?allView():view==='run'?runView():view==='rank'?rankView():trophyView());
-  if(form&&view==='all') sum();
-}
-function renderDashCard(){
-  const g=$('goalBox'); if(!g) return;
-  let b=$('cgDash');
-  if(!b){ b=document.createElement('div'); b.className='box'; b.id='cgDash'; b.onclick=()=>activateTab('challenge'); g.after(b); }
-  const C=cg(), l=lv(C.xp), c=C.active[0];
-  let mini='';
-  if(c){ const r=ev(c); mini=`<div class="barbg" style="margin-top:8px;"><div class="barfg" style="width:${Math.min(100,Math.round(r.oks/r.need*100))}%"></div></div><div class="cgD" style="margin-top:5px;">${c.id?'#'+nb(c.id)+' ':''}${esc(T(c))} · ${nb(r.oks)}/${nb(r.need)}${C.active.length>1?' · +'+nb(C.active.length-1):''}</div>`; }
-  else mini=`<div class="cgD" style="margin-top:6px;">${L('একটা চ্যালেঞ্জ নিয়ে পয়েন্ট জিতুন — ট্যাপ করুন','Take a challenge and win points — tap here')}</div>`;
-  b.innerHTML=`<div class="cgRow"><div class="cgLv" style="width:44px;height:44px;font-size:23px;background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary);">${sv('lv'+(l.i+1),28)}</div><div style="flex:1;min-width:0;"><div style="font-weight:800;font-size:14px;">${L('চ্যালেঞ্জ','Challenges')} · ${L('লেভেল','Lv')} ${nb(l.i+1)}</div><div class="cgD">${nb(C.xp)} ${L('পয়েন্ট','pts')} · ${L('স্ট্রিক','streak')} ${nb(C.streak)}</div></div></div>${mini}`;
-}
-function navDot(){ const b=document.querySelector('#bottomNav .bnbtn[data-bn="challenge"]'); if(b) b.classList.toggle('cgRunning',cg().active.length>0); }
-const renderAll=()=>{ try{ renderTab(); renderDashCard(); navDot(); }catch(e){ console.error(e); } };
-
-/* ---------- actions ---------- */
-/* ---------- live leaderboard: Firebase RTDB  leaderboard/<uid> = {n,u,xp,w,s,t}  (only people who started a challenge) ---------- */
-const lbR=()=>{ try{ return window.ftCloud&&ftCloud._raw?ftCloud._raw():null; }catch(e){ return null; } };
-const lbMe=()=>{ try{ const r=lbR(); return r&&r.ses&&r.ses()?r.ses().uid:''; }catch(e){ return ''; } };
-const lbOk=u=>/^[A-Za-z0-9_-]{6,64}$/.test(u);
-const lbPlays=()=>{ const C=cg(); return C.active.length>0||C.history.length>0; };
-let LB={rows:[],err:'',at:0,sig:''}, lbBusy=false, lbT=0, lbSig='';
-async function lbDb(path,opt,q){
-  const r=lbR(); if(!r||!r.ok()||!r.ses()) throw new Error('LOGIN');
-  const base=String(r.CFG.dbUrl).replace(/\/+$/,''), tk=await r.token();
-  const res=await r.call(base+'/'+path+'.json?'+(q?q+'&':'')+'auth='+encodeURIComponent(tk),opt);
-  if(!res.ok){ const e=new Error('HTTP '+res.status); e.status=res.status; throw e; }
-  return res.json();
-}
-function lbPushSoon(){ clearTimeout(lbT); lbT=setTimeout(lbPush,1500); }
-async function lbPush(){
-  const me=lbMe(); if(!me) return;
-  try{
-    if(!lbPlays()||cg().lbHide){ if(lbSig!=='none'){ await lbDb('leaderboard/'+me,{method:'DELETE'}); lbSig='none'; } return; }
-    const C=cg(), rec={n:(localStorage.getItem('myName_v1')||'').trim().slice(0,40),u:(localStorage.getItem('myUsername_v1')||'').trim().replace(/^@/,'').slice(0,30),xp:C.xp,w:stats().done,s:C.streak};
-    const sig=JSON.stringify(rec); if(sig===lbSig) return;
-    rec.t=Date.now();
-    await lbDb('leaderboard/'+me,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(rec)});
-    lbSig=sig;
-  }catch(e){ if(view==='rank') lbSetErr(e); }
-}
-function lbSetErr(e){
-  const m=String((e&&e.message)||e||''), st=e&&e.status;
-  const n=m==='LOGIN'?'LOGIN':(st===401||st===403)?'RULES':/abort|Failed to fetch|NetworkError/i.test(m)?'NET':'ERR';
-  if(LB.err!==n){ LB.err=n; renderTab(); }
-}
-function lbParse(d){
-  const rows=[]; Object.keys(d||{}).forEach(uid=>{ const v=d[uid]; if(!lbOk(uid)||!v||typeof v!=='object') return;
-    const xp=+v.xp; if(!isFinite(xp)||xp<0) return;
-    rows.push({uid,n:String(v.n||'').slice(0,40),u:String(v.u||'').slice(0,30),xp:Math.floor(xp),w:Math.max(0,+v.w||0),s:Math.max(0,+v.s||0),t:+v.t||0,mv:0}); });
-  rows.sort((a,b)=>b.xp-a.xp||b.w-a.w||a.t-b.t);
-  return rows.slice(0,100);
-}
-async function lbFetch(){
-  if(lbBusy) return; if(!lbMe()){ lbSetErr(new Error('LOGIN')); return; }
-  lbBusy=true;
-  try{
-    let d; try{ d=await lbDb('leaderboard',undefined,'orderBy=%22xp%22&limitToLast=100'); }catch(e){ if(e&&e.status===400) d=await lbDb('leaderboard'); else throw e; }
-    const rows=lbParse(d), sig=JSON.stringify(rows.map(r=>[r.uid,r.n,r.u,r.xp,r.w]));
-    const ch=sig!==LB.sig||LB.err||!LB.at;
-    if(ch){ const old={}; LB.rows.forEach((r,i)=>{ old[r.uid]=i; }); const first=!LB.at;
-      rows.forEach((r,i)=>{ r.mv=(!first&&old[r.uid]!=null)?old[r.uid]-i:0; }); LB={rows,err:'',at:Date.now(),sig}; if(view==='rank') renderTab(); }
-    else LB.at=Date.now();
-  }catch(e){ lbSetErr(e); }
-  finally{ lbBusy=false; }
-}
-async function lbOpen(){ try{ await lbPush(); }catch(e){} lbFetch(); }
-const lbActive=()=>{ const e=$('sec-challenge'); return !!(e&&e.classList.contains('active')); };
-setInterval(()=>{ if(view==='rank'&&!document.hidden&&lbActive()) lbFetch(); },8000);
-document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&view==='rank'&&lbActive()) lbFetch(); });
-function rankView(){
-  const me=lbMe();
-  if(LB.err==='LOGIN'||!me) return `<div class="cgEmpty">${L('র\u200d্যাঙ্কিং দেখতে ও অংশ নিতে ইমেইল দিয়ে লগইন করুন।','Log in with your email to see and join the ranking.')}</div>`;
-  if(LB.err==='RULES') return `<div class="cgEmpty">${L('ডাটাবেস রুলস অনুমতি দিচ্ছে না — Firebase Rules-এ leaderboard যোগ করতে হবে।','Database rules denied access — add the leaderboard rules in Firebase.')}</div>`;
-  if(LB.err==='NET') return `<div class="cgEmpty">${L('ইন্টারনেট সংযোগ নেই।','No internet connection.')}</div>`;
-  if(LB.err) return `<div class="cgEmpty">${L('র\u200d্যাঙ্কিং লোড হয়নি, আবার চেষ্টা করুন।','Could not load the ranking, try again.')}</div>`;
-  if(!LB.at) return `<div class="cgEmpty">${L('লোড হচ্ছে…','Loading…')}</div>`;
-  const rows=LB.rows, myI=rows.findIndex(r=>r.uid===me), hid=!!cg().lbHide, pl=lbPlays()&&!hid;
-  const nmOf=r=>r.n||r.u||'—', initOf=r=>([...nmOf(r)][0]||'?').toUpperCase();
-  const mvH=r=>r.mv>0?`<span class="lbMv up">▲${nb(r.mv)}</span>`:r.mv<0?`<span class="lbMv dn">▼${nb(-r.mv)}</span>`:'';
-  let h=`<div class="lbHead"><span><i class="pd"></i>${L('লাইভ র‍্যাঙ্কিং','Live ranking')}</span><small>${nb(rows.length)} ${L('জন অংশ নিচ্ছেন','players')}</small></div>`;
-  h+=`<div class="lbHide" onclick="cgHide()" role="switch" aria-checked="${hid}"><div class="lbHideT"><b>${L('র‍্যাঙ্কিংয়ে আমাকে লুকান','Hide me from ranking')}</b><small>${hid?L('চালু — অন্যরা আপনাকে দেখতে পাচ্ছে না','On — others cannot see you'):L('বন্ধ — আপনার আইডি সবাই দেখতে পাবে','Off — everyone can see your ID')}</small></div><span class="lbSw${hid?' on':''}"><i></i></span></div>`;
-  /* my position card */
-  if(pl&&myI>=0){
-    const m=rows[myI], l=lv(m.xp), up=myI>0?rows[myI-1]:null, dn=myI<rows.length-1?rows[myI+1]:null;
-    const gap=up?(up.xp-m.xp):0;
-    const msg=!up?L('আপনি এখন সবার শীর্ষে','You are on top right now'):L('পরের জনকে ছাড়াতে আর '+nb(gap+1)+' পয়েন্ট দরকার','Need '+nb(gap+1)+' more pts to pass the next player');
-    h+=`<div class="lbMe"><div class="lbMeNo">#${nb(myI+1)}<small>${L('আপনার র‍্যাঙ্ক','Your rank')}</small></div><div class="lbMeMid"><b>${nb(m.xp)} ${L('পয়েন্ট','pts')}</b><small>${esc(l.name)} · ${msg}</small>${dn?`<small>${L('পরের জন আছেন','Next player is')} ${nb(m.xp-dn.xp)} ${L('পয়েন্ট পেছনে','pts behind')}</small>`:''}</div>${mvH(m)}</div>`;
-  } else if(hid){
-    h+=`<div class="lbMe off"><div class="lbMeMid"><b>${L('আপনি র‍্যাঙ্কিং থেকে লুকানো আছেন','You are hidden from the ranking')}</b><small>${L('চ্যালেঞ্জ চলবে, পয়েন্টও জমবে — শুধু তালিকায় আপনার আইডি দেখা যাবে না।','Your challenges and points continue — your ID just stays off the list.')}</small></div></div>`;
-  } else if(!pl){
-    h+=`<div class="lbMe off"><div class="lbMeMid"><b>${L('আপনি এখনো র‍্যাঙ্কিংয়ে নেই','You are not on the ranking yet')}</b><small>${L('একটি চ্যালেঞ্জ শুরু করলেই আপনার আইডি এখানে দেখা যাবে।','Start a challenge and your ID will appear here.')}</small></div><button class="main" style="width:auto;padding:8px 14px;font-size:13px;" onclick="cgView('all')">${L('শুরু করুন','Start')}</button></div>`;
-  }
-  if(!rows.length) return h+`<div class="cgEmpty">${L('এখনো কেউ চ্যালেঞ্জ শুরু করেনি।','Nobody has started a challenge yet.')}</div>`;
-  /* podium */
-  if(rows.length>=3){
-    const pod=[1,0,2].map(k=>{ const r=rows[k], l=lv(r.xp); return `<div class="lbPod p${k+1}${r.uid===me?' me':''}"><div class="lbCrown">${k===0?'<i class="mi" style="--m:var(--ic-crown)"></i>':''}</div><div class="lbAv big">${esc(initOf(r))}</div><b>${esc(nmOf(r))}</b><small>${r.u?'@'+esc(r.u):esc(l.name)}</small><div class="lbPodPt">${nb(r.xp)}</div><div class="lbPodBase">${nb(k+1)}</div></div>`; }).join('');
-    h+=`<div class="lbPodium">${pod}</div>`;
-  }
-  const start=rows.length>=3?3:0;
-  h+=rows.slice(start).map((r,k)=>{ const i=k+start, l=lv(r.xp);
-    return `<div class="lbRow${r.uid===me?' me':''}"><span class="lbNo n${i<3?i+1:0}">${nb(i+1)}</span><div class="lbAv">${esc(initOf(r))}</div><div class="lbWho"><b>${esc(nmOf(r))}${mvH(r)}</b><small>${r.u?'@'+esc(r.u)+' · ':''}${esc(l.name)}${r.s>1?' · <i class="mi" style="--m:var(--ic-flame)"></i> '+nb(r.s):''}</small></div><div class="lbPt"><b>${nb(r.xp)}</b><small>${r.w?nb(r.w)+' '+L('সম্পন্ন','done'):L('পয়েন্ট','pts')}</small></div></div>`; }).join('');
-  return h;
-}
-
-window.cgHide=()=>{ const C=cg(); C.lbHide=!C.lbHide; saveData(); clearTimeout(lbT); lbSig=''; renderTab(); lbPush().then(()=>lbFetch()).catch(()=>{}); tt(C.lbHide?L('আপনি এখন র‍্যাঙ্কিংয়ে লুকানো','You are now hidden from the ranking'):L('আপনি এখন র‍্যাঙ্কিংয়ে দেখা যাচ্ছেন','You are visible on the ranking again')); };
-window.cgView=v=>{ view=v; renderTab(); if(v==='rank') lbOpen(); };
-window.cgFilt=f=>{ filt=(f==='h'||f==='b')?f:+f; renderTab(); };
-window.cgForm=()=>{ form=!form; renderTab(); };
-window.cgBd=v=>{ draft.bd=v; draft.n=PRE[v][0]; cgAmtIn(); renderTab(); };
-window.cgN=n=>{ draft.n=n; cgAmtIn(); renderTab(); };
-window.cgAmtIn=()=>{ const e=$('cgAmt'); if(e) draft.amt=e.value; sum(); };
-function begin(d){
-  const C=cg();
-  if(C.active.length>=5){ alert(L('একসাথে সর্বোচ্চ ৫টি চ্যালেঞ্জ চালানো যায়।','You can run up to 5 challenges at once.')); return false; }
-  if(d.id&&C.active.some(c=>c.id===d.id)) return false;
-  if(d.dl&&amtOf(d)<=0){ alert(L('আগে সেটিংসে "ডেইলি খরচের লিমিট" সেট করুন — তারপর এই চ্যালেঞ্জ নেওয়া যাবে।','Set your daily spending limit in Settings first, then you can take this challenge.')); return false; }
-  const now=todayStr();
-  C.active.push({uid:Date.now().toString(36)+Math.random().toString(36).slice(2,5),id:d.id||0,k:d.k,amt:d.dl?amtOf(d):d.amt,n:d.n,bd:d.bd,hrs:d.hrs||0,skip:d.skip||0,pts:d.pts,st:d.st,tb:d.tb,te:d.te,db:d.db,de:d.de,start:now,startAt:now+' '+nowTime()});
-  saveData(); view='run'; renderAll(); tt(L('চ্যালেঞ্জ শুরু!  শুভকামনা','Challenge started!  Good luck'));
-  return true;
-}
-window.cgStart=id=>{ const d=CAT.find(c=>c.id===id); if(d) begin(d); };
-window.cgCustom=()=>{
-  cgAmtIn(); const a=parseFloat(draft.amt)||0;
-  if(a<=0){ alert(L('সঞ্চয়ের পরিমাণ দিন।','Enter a saving amount.')); return; }
-  const n=draft.n, bd=draft.bd, days=n*bd, tb=bd===1?`রোজ {a} সঞ্চয় · ${nb(n)} দিন`:bd===7?`সাপ্তাহিক {a} · ${nb(n)} সপ্তাহ`:`মাসে {a} · ${nb(n)} মাস`;
-  const te=bd===1?`{a} daily · ${n} day${n>1?'s':''}`:bd===7?`{a} weekly · ${n} week${n>1?'s':''}`:`{a} monthly · ${n} month${n>1?'s':''}`;
-  if(begin({id:0,k:'save',amt:a,n,bd,skip:0,pts:customPts(),st:days>=60?4:days>=30?3:days>=7?2:1,tb,te,db:'',de:''})){ form=false; draft.amt=''; renderAll(); }
-};
-window.cgCancel=uid=>{
-  const go=()=>{ const C=cg(); C.active=C.active.filter(c=>c.uid!==uid); saveData(); renderAll(); };
-  try{ appDialog(L('এই চ্যালেঞ্জটি বাতিল করবেন? কোনো পয়েন্ট কাটা যাবে না।','Cancel this challenge? No points will be deducted.'),{confirm:true},go); }catch(e){ if(confirm(L('বাতিল করবেন?','Cancel?'))) go(); }
-};
-
-/* ---------- result popup ---------- */
-const WISH=[['অভিনন্দন! আপনি পেরেছেন! ','Congratulations — you did it! '],['দারুণ কাজ! নিয়মিত সঞ্চয়ই বড় সম্পদ গড়ে। ','Great job! Steady saving builds wealth. '],['আপনার ধৈর্য ও শৃঙ্খলাকে স্যালুট! ','Salute to your discipline! '],['শুভেচ্ছা রইল! আজকের জয় আগামীর স্বাধীনতা। ','Best wishes! Today\'s win is tomorrow\'s freedom. '],['চমৎকার! আপনি সত্যিই আর্থিক চ্যাম্পিয়ন! ','Wonderful! You are a true money champion! '],['সাবাশ! এভাবেই এগিয়ে যান, সামনে আরও বড় জয় অপেক্ষা করছে। ','Well done! Keep going — bigger wins are waiting. ']];
-function confetti(){ const w=$('cgConf'); if(!w) return; const cols=['#f59e0b','#10b981','#6366f1','#ef4444','#0ea5e9','#ec4899']; w.innerHTML=''; for(let i=0;i<28;i++){ const s=document.createElement('span'); s.style.left=(Math.random()*100)+'%'; s.style.background=cols[i%cols.length]; s.style.animationDelay=(Math.random()*1.6)+'s'; s.style.animationDuration=(2+Math.random()*1.6)+'s'; w.appendChild(s); } }
-function pump(){
-  if(showing||!queue.length) return; const q=queue.shift(); showing=true;
-  if(q.t==='done'){
-    const w=WISH[Math.floor(Math.random()*WISH.length)];
-    $('cgWishIcon').innerHTML=sv('trophy',54); { const nm=(localStorage.getItem('myName_v1')||'').trim(); $('cgWishTitle').textContent=(nm?nm+', ':'')+L(w[0],w[1]); }
-    $('cgWishMsg').textContent=L(`আপনি #${q.c.id||''} "${T(q.c)}" চ্যালেঞ্জ জিতেছেন!\n+${nb(q.earned)} পয়েন্ট${q.bonus?` (স্ট্রিক বোনাস +${nb(q.bonus)})`:''}`,`You won #${q.c.id||''} "${T(q.c)}"!\n+${q.earned} points${q.bonus?` (streak bonus +${q.bonus})`:''}`)+(q.up?'\n'+L(` লেভেল আপ! এখন আপনি ${q.up.name}`,` Level up! You are now ${q.up.name}`):'');
-    confetti(); if(navigator.vibrate){ try{ navigator.vibrate([120,60,120,60,200]); }catch(e){} }
-    try{ if(window.ftNotify) window.ftNotify({id:'cg-'+q.c.uid,title:L('চ্যালেঞ্জ জিতেছেন! ','Challenge won! '),body:T(q.c)+' +'+q.earned,type:'info'}); }catch(e){}
-  }else if(q.t==='rem'){
-    $('cgWishIcon').innerHTML=sv('flag',54); $('cgWishTitle').textContent=L('চ্যালেঞ্জ চলছে — লেগে থাকুন!','Challenge in progress — keep going!');
-    $('cgWishMsg').textContent=q.list.join('\n')+(q.more?'\n'+L(`+ আরও ${nb(q.more)}টি চলছে`,`+ ${q.more} more running`):'');
-    $('cgConf').innerHTML='';
-  }else{
-    $('cgWishIcon').innerHTML=sv('flag',54); $('cgWishTitle').textContent=L('এবার হয়নি — আবার চেষ্টা করুন!','Not this time — try again!');
-    $('cgWishMsg').textContent=L(`#${q.c.id||''} "${T(q.c)}" পূর্ণ হয়নি। ব্যর্থতায় কোনো পয়েন্ট কাটা যায়নি।`,`#${q.c.id||''} "${T(q.c)}" was not completed. No points were deducted.`);
-    $('cgConf').innerHTML='';
-  }
-  $('cgWishOk').textContent=L('ঠিক আছে','OK'); $('cgWishOverlay').style.display='flex';
-}
-$('cgWishOk').onclick=()=>{ $('cgWishOverlay').style.display='none'; showing=false; renderAll(); pump(); };
-
-/* ---------- engine ---------- */
-function check(){
-  try{
-    const C=cg(); let ch=false;
-    C.active=C.active.filter(c=>{
-      const r=ev(c); if(r.state==='active') return true; ch=true;
-      if(r.state==='done'){
-        const bonus=Math.min(25,C.streak*5), earned=c.pts+bonus, old=lv(C.xp);
-        C.xp+=earned; C.streak+=1;
-        C.history.push(Object.assign({},c,{status:'done',end:todayStr(),earned,bonus}));
-        const nl=lv(C.xp); queue.push({t:'done',c,earned,bonus,up:nl.i>old.i?nl:null});
-      }else{
-        C.streak=0; C.history.push(Object.assign({},c,{status:'failed',end:todayStr(),earned:0})); queue.push({t:'fail',c});
-      }
-      return false;
-    });
-    if(ch){ C.history=C.history.slice(-100); _sd.call(window); }
-    renderAll(); pump();
-    try{ lbPushSoon(); }catch(e){}
-  }catch(e){ console.error(e); }
-}
-const _sd=window.saveData;
-window.saveData=function(){ const x=_sd.apply(this,arguments); setTimeout(check,0); return x; };
-const _rd=window.renderDash;
-window.renderDash=function(){ const r=_rd.apply(this,arguments); try{ renderDashCard(); }catch(e){ console.error(e); } return r; };
-const _at=window.activateTab;
-window.activateTab=function(n){ const r=_at.apply(this,arguments); if(n==='challenge'){ renderAll(); window.scrollTo(0,0); if(view==='rank') lbOpen(); } return r; };
-const _al=window.applyLanguage;
-if(_al) window.applyLanguage=function(){ const r=_al.apply(this,arguments); try{ renderAll(); }catch(e){} return r; };
-
-/* ---------- tab + section ---------- */
-const tab=document.createElement('div'); tab.className='tab'; tab.dataset.tab='challenge'; tab.innerHTML=bl('চ্যালেঞ্জ','Challenge');
-const dt=document.querySelector('.tab[data-tab="dash"]'); 
-tab.addEventListener('click',()=>activateTab('challenge'));
-const sec=document.createElement('div'); sec.className='section'; sec.id='sec-challenge';
-const st=$('sec-settings'); if(st) st.parentNode.insertBefore(sec,st);
-renderAll(); setTimeout(check,1200); setInterval(check,60000); setInterval(tick,1000);
-/* reminder popup: when the app opens (and when you come back after a while) and a challenge is running */
-let lastRem=0;
-function remTxt(c,r){ const b=r.bs[r.cur]||{val:0}, per=c.hrs?L('এই ১২ ঘণ্টায়','In these 12h'):c.bd===1?L('আজ','Today'):c.bd===7?L('এ সপ্তাহে','This week'):L('এ মাসে','This month'); let h;
-  if(c.k==='save') h=`${per}: ${fmt(b.val)}/${fmt(c.amt)}`; else if(c.k==='under') h=`${per} ${L('খরচ','spent')}: ${fmt(b.val)}/${fmt(c.amt)}`;
-  else if(c.k==='noexp') h=b.val>0?L('খরচ হয়ে গেছে','Already spent'):L('এখনো কোনো খরচ হয়নি — চালিয়ে যান!','No spending yet — keep going!');
-  else if(c.k==='cnt') h=`${per}: ${nb(b.val)}/${nb(c.amt)} ${L('টি','entries')}`; else h=`${per}: ${b.val?L('লেখা হয়েছে','logged'):L('এখনো লেখা হয়নি','not logged yet')}`;
-  return `• ${T(c)}\n   ${h} · ${L('বাকি','left')} ${nb(r.left)} ${c.hrs?L('ঘণ্টা','hrs'):L('দিন','days')}`; }
-function ready(){ const h=document.documentElement, vis=e=>e&&getComputedStyle(e).display!=='none'; return !h.classList.contains('locked')&&!vis($('loginScreen'))&&!vis($('lockOverlay')); }
-function remind(force){ if(!force&&Date.now()-lastRem<30*6e4) return; const A=cg().active; if(!A.length) return; lastRem=Date.now(); queue.push({t:'rem',list:A.slice(0,3).map(c=>remTxt(c,ev(c))),more:Math.max(0,A.length-3)}); pump(); }
-let tries=0; (function wait(){ if(ready()) setTimeout(()=>remind(true),1800); else if(tries++<180) setTimeout(wait,1000); })();
-document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&ready()) remind(false); });
-document.addEventListener('visibilitychange',()=>{ if(!document.hidden) check(); });
-})();
+/* Challenge tab container. The old points/levels arena was removed; goal challenges render here. */
+(function(){ var sec=document.createElement('div'); sec.className='section'; sec.id='sec-challenge'; var st=document.getElementById('sec-settings'); if(st&&st.parentNode) st.parentNode.insertBefore(sec,st); })();
 </script>
 
 <style id="ftPpStyle">
@@ -11833,46 +11439,26 @@ const ic=(n,z)=>'<svg class="cgIc" width="'+(z||18)+'" height="'+(z||18)+'" view
 const J={'Content-Type':'application/json'}, PUB='ftProfPublic_v1';
 const R=()=>{ try{ return window.ftCloud&&ftCloud._raw?ftCloud._raw():null; }catch(e){ return null; } };
 const ek=v=>String(v||'').trim().toLowerCase().replace(/\./g,',').replace(/[#$\[\]\/%]/g,'_');
-const LV=[[0,'নতুন','Rookie'],[100,'সঞ্চয়ী','Saver'],[300,'দক্ষ','Pro'],[700,'মাস্টার','Master'],[1500,'লেজেন্ড','Legend']];
 const SK=[[0,'নতুন','Beginner','#94a3b8'],[20,'শিক্ষার্থী','Learner','#0ea5e9'],[40,'স্মার্ট','Smart','#10b981'],[60,'বিশেষজ্ঞ','Expert','#8b5cf6'],[80,'মাস্টার','Master','#f59e0b']];
-const lvOf=xp=>{ let i=0; LV.forEach((l,j)=>{ if(xp>=l[0]) i=j; }); const nx=LV[i+1]; return {i,name:L(LV[i][1],LV[i][2]),next:nx?nx[0]:0,pct:nx?Math.round((xp-LV[i][0])/(nx[0]-LV[i][0])*100):100}; };
 const skOf=s=>{ let i=0; SK.forEach((k,j)=>{ if(s>=k[0]) i=j; }); return {i,name:L(SK[i][1],SK[i][2]),c:SK[i][3]}; };
-/* badges: icon symbol, colour, bn/en title, bn/en how-to, test(profile) */
-const BAD=[
-['first','cg-medal','#f59e0b','প্রথম জয়','First Win','যেকোনো একটা চ্যালেঞ্জ জিতুন।','Win any one challenge.',p=>p.wins>=1],
-['five','cg-target','#ef4444','৫ জয়','5 Wins','মোট ৫টি চ্যালেঞ্জ জিতুন।','Win 5 challenges in total.',p=>p.wins>=5],
-['ten','cg-trophy','#8b5cf6','১০ জয়','10 Wins','মোট ১০টি চ্যালেঞ্জ জিতুন।','Win 10 challenges in total.',p=>p.wins>=10],
-['saver','cg-save','#10b981','সঞ্চয় ওস্তাদ','Saver Pro','৩টি সঞ্চয় চ্যালেঞ্জ জিতুন।','Win 3 saving challenges.',p=>p.sw>=3],
-['nospend','cg-noexp','#0ea5e9','নো-স্পেন্ড মাস্টার','No-Spend Master','একটি নো-স্পেন্ড চ্যালেঞ্জ জিতুন।','Win a no-spend challenge.',p=>p.nw>=1],
-['monthly','cg-calendar','#6366f1','মাসিক বিজয়ী','Monthly Winner','মাসিক পর্বের চ্যালেঞ্জ জিতুন।','Win a monthly-block challenge.',p=>p.mw>=1],
-['st3','pp-flame','#f97316','৩ জয়ের স্ট্রিক','3-Win Streak','পরপর ৩টি চ্যালেঞ্জ জিতুন।','Win 3 challenges in a row.',p=>p.bs>=3],
-['st5','pp-flame','#ef4444','৫ জয়ের স্ট্রিক','5-Win Streak','পরপর ৫টি চ্যালেঞ্জ জিতুন।','Win 5 challenges in a row.',p=>p.bs>=5],
-['xp500','cg-bolt','#eab308','৫০০ পয়েন্ট','500 Points','মোট ৫০০ পয়েন্ট অর্জন করুন।','Earn 500 points in total.',p=>p.xp>=500],
-['legend','cg-lv5','#f59e0b','লেজেন্ড লেভেল','Legend Level','১৫০০ পয়েন্টে লেজেন্ড লেভেলে পৌঁছান।','Reach Legend level at 1500 points.',p=>p.xp>=1500],
-['logger','cg-log','#14b8a6','নিয়মিত লগার','Steady Logger','"নিয়মিত হিসাব" স্কোর ৮০+ রাখুন।','Keep the tracking score at 80+.',p=>p.comp.tr>=80],
-['expert','cg-lv3','#8b5cf6','স্কিল এক্সপার্ট','Skill Expert','মানি ম্যানেজমেন্ট স্কিল ৬০+ করুন।','Reach a money skill score of 60+.',p=>p.skill>=60],
-['master','cg-lv4','#ec4899','স্কিল মাস্টার','Skill Master','মানি ম্যানেজমেন্ট স্কিল ৮০+ করুন।','Reach a money skill score of 80+.',p=>p.skill>=80]
-];
 function addD(s,n){ const p=s.split('-').map(Number); return new Date(Date.UTC(p[0],p[1]-1,p[2]+n)).toISOString().slice(0,10); }
 const clamp=(v,m)=>Math.max(0,Math.min(m,Math.round(+v||0)));
 /* the profile numbers (no balances or amounts are ever published) */
 function mine(){
-  const C=data.challenge||{}, H=Array.isArray(C.history)?C.history:[], xp=+C.xp||0;
-  const done=H.filter(x=>x.status==='done'), fail=H.filter(x=>x.status==='failed');
-  let cur=0,best=0; H.forEach(x=>{ if(x.status==='done'){ cur++; if(cur>best) best=cur; } else cur=0; });
   const t=todayStr(), from=addD(t,-29), tx=data.transactions.filter(x=>x.date>=from&&x.date<=t);
   const sum=ty=>tx.filter(x=>x.type===ty).reduce((a,x)=>a+x.amount,0);
   const inc=sum('deposit'), exp=sum('expense'), sav=sum('save_to_account');
   let sv=0; if(inc>0) sv=Math.min(1,(sav/inc)/.2); else if(sav>0) sv=.6;
   let sp=0; if(inc>0){ const r=exp/inc; sp=r<=.6?1:r>=1.2?0:1-(r-.6)/.6; } else if(exp===0&&tx.length) sp=.5; else sp=exp>0?.15:0;
   if(data.dailyLimit>0){ const m={}; tx.filter(x=>x.type==='expense').forEach(x=>{ m[x.date]=(m[x.date]||0)+x.amount; }); const ds=Object.keys(m); if(ds.length) sp=(sp+ds.filter(d=>m[d]<=data.dailyLimit).length/ds.length)/2; }
-  const tr=Math.min(1,new Set(tx.map(x=>x.date)).size/20), played=done.length+fail.length, wr=played?done.length/played:0;
-  const comp={sv:Math.round(sv*100),sp:Math.round(sp*100),tr:Math.round(tr*100),ch:Math.min(100,done.length*15+Math.round(wr*30))};
-  return {xp,played,wins:done.length,streak:+C.streak||0,bs:best,sw:done.filter(x=>x.k==='save').length,nw:done.filter(x=>x.k==='noexp').length,mw:done.filter(x=>x.bd===30).length,comp,skill:Math.round((comp.tr+comp.ch)/2)};
+  const tr=Math.min(1,new Set(tx.map(x=>x.date)).size/20);
+  const comp={sv:Math.round(sv*100),sp:Math.round(sp*100),tr:Math.round(tr*100)};
+  return {comp,skill:Math.round((comp.sv+comp.sp+comp.tr)/3)};
 }
 /* ===== Smart money-skill card: ring gauge, next-rank goal, 7-day trend, per-skill tips ===== */
-const CP=[['tr','cg-log','#14b8a6','নিয়মিত হিসাব','Tracking','৩০ দিনে ২০ দিন হিসাব লিখলে ১০০।','Logging on 20 of the last 30 days gives 100.'],
-['ch','cg-trophy','#f59e0b','চ্যালেঞ্জ','Challenges','চ্যালেঞ্জ জয় ও জয়ের হারে বাড়ে।','Grows with challenge wins and your win rate.']];
+const CP=[['sv','cg-save','#10b981','সঞ্চয়ের হার','Saving rate','আয়ের ২০% সঞ্চয় করলে ১০০।','Saving 20% of income gives 100.'],
+['sp','cg-under','#0ea5e9','খরচ নিয়ন্ত্রণ','Spending control','খরচ আয়ের ৬০%-এর নিচে ও দৈনিক সীমার মধ্যে থাকলে ১০০।','Spending under 60% of income and within the daily limit gives 100.'],
+['tr','cg-log','#14b8a6','নিয়মিত হিসাব','Tracking','৩০ দিনে ২০ দিন হিসাব লিখলে ১০০।','Logging on 20 of the last 30 days gives 100.']];
 const SKH='ftSkillHist_v1'; let skSel='';
 function detail(){
   const t=todayStr(), from=addD(t,-29), tx=data.transactions.filter(x=>x.date>=from&&x.date<=t);
@@ -11889,7 +11475,7 @@ function skHist(score){
   return Object.keys(h).sort().map(k=>[k,h[k]]);
 }
 function skTip(k,p,d){
-  const c=p.comp, rate=p.played?Math.round(p.wins/p.played*100):0;
+  const c=p.comp;
   if(k==='sv'){ if(!d.hasInc) return L('গত ৩০ দিনে আয় এন্ট্রি নেই। আয় লিখুন, তারপর আয়ের ২০% সঞ্চয়ে পাঠান।','No income logged in 30 days. Log income, then move 20% of it to savings.');
     if(d.savePct>=20) return L('দারুণ! আয়ের '+nb(d.savePct)+'% সঞ্চয় করেছেন (লক্ষ্য ২০%)।','Great! You saved '+d.savePct+'% of income (goal 20%).');
     return L('আয়ের '+nb(d.savePct)+'% সঞ্চয় করেছেন। ২০%-এ পৌঁছাতে আরও '+nb(20-d.savePct)+'% সঞ্চয় করুন।','You saved '+d.savePct+'% of income. Save '+(20-d.savePct)+'% more to reach 20%.'); }
@@ -11902,8 +11488,7 @@ function skTip(k,p,d){
     return r; }
   if(k==='tr'){ if(d.days>=20) return L('৩০ দিনে '+nb(d.days)+' দিন হিসাব লিখেছেন — পূর্ণ স্কোর!','You logged on '+d.days+' of 30 days — full score!');
     return L('৩০ দিনে '+nb(d.days)+' দিন লিখেছেন; ২০ দিন হলে পূর্ণ স্কোর। প্রতিদিন রাতে ১ মিনিট হিসাব মেলান।','Logged on '+d.days+' of 30 days; 20 days gives full score. Spend 1 minute each night.'); }
-  if(!p.played) return L('একটি চ্যালেঞ্জ শুরু করুন — প্রতি জয়ে স্কোর বাড়ে।','Start a challenge — every win raises this score.');
-  return L(nb(p.wins)+'টি জয়, জয়ের হার '+nb(rate)+'%। আরও জিতলে বাড়বে।',p.wins+' win(s), win rate '+rate+'%. More wins raise it.');
+  return '';
 }
 function skTrend(h,score){
   if(h.length<2) return null;
@@ -11942,7 +11527,7 @@ function skillCard(p,s,own,rk){
    +'<div class="skTop" style="--c:'+s.c+'"><div class="skRing"><svg viewBox="0 0 112 112"><circle cx="56" cy="56" r="'+R+'" fill="none" stroke="var(--border)" stroke-width="9"/><circle class="skArc" cx="56" cy="56" r="'+R+'" fill="none" stroke="'+s.c+'" stroke-width="9" stroke-linecap="round" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" style="--C:'+C.toFixed(1)+'" transform="rotate(-90 56 56)"/></svg><div class="skRingTx"><b>'+nb(p.skill)+'</b><span>/'+nb(100)+'</span></div></div>'
    +'<div class="skInfo"><div class="skNm">'+ic('cg-lv'+(s.i+1),22)+' '+esc(s.name)+'</div>'+trChip+goal+'</div></div>'
    +'<div class="ppRkSteps">'+rk+'</div><div class="skBars">'+bars+'</div>'+smart
-   +'<div class="ppNote">'+L('গত ৩০ দিনের লেনদেন ও চ্যালেঞ্জের ফল থেকে হিসাব করা। বারে ট্যাপ করে দেখুন কীভাবে স্কোর হয়। টাকার অঙ্ক কখনো প্রকাশ হয় না।','Based on the last 30 days and challenge results. Tap a bar to see how it is scored. Amounts are never shared.')+'</div></div>';
+   +'<div class="ppNote">'+L('গত ৩০ দিনের লেনদেন থেকে হিসাব করা। বারে ট্যাপ করে দেখুন কীভাবে স্কোর হয়। টাকার অঙ্ক কখনো প্রকাশ হয় না।','Based on the last 30 days of transactions. Tap a bar to see how it is scored. Amounts are never shared.')+'</div></div>';
 }
 window.ppSk=k=>{ skSel=skSel===k?'':k; renderTab(); };
 if(!document.getElementById('skCss')){ const st=document.createElement('style'); st.id='skCss'; st.textContent=
@@ -11967,7 +11552,7 @@ if(!document.getElementById('skCss')){ const st=document.createElement('style');
 +'.skSmart p{margin:6px 0 0;font-size:12.5px;line-height:1.55;color:var(--text)}.skSmart u{text-decoration:none;font-weight:800}.skSmart .skStr{color:var(--muted)}'
 +'.skSpark{display:block;width:100%;height:30px;margin-top:8px}';
 document.head.appendChild(st); }
-function clean(p){ p=p||{}; const c=p.comp||{}; return {xp:clamp(p.xp,1e6),played:clamp(p.played,1e5),wins:clamp(p.wins,1e5),streak:clamp(p.streak,1e5),bs:clamp(p.bs,1e5),sw:clamp(p.sw,1e5),nw:clamp(p.nw,1e5),mw:clamp(p.mw,1e5),comp:{sv:clamp(c.sv,100),sp:clamp(c.sp,100),tr:clamp(c.tr,100),ch:clamp(c.ch,100)},skill:clamp(((+c.tr||0)+(+c.ch||0))/2,100)}; }
+function clean(p){ p=p||{}; const c=p.comp||{}; const sv=clamp(c.sv,100), sp=clamp(c.sp,100), tr=clamp(c.tr,100); return {comp:{sv:sv,sp:sp,tr:tr},skill:clamp((sv+sp+tr)/3,100)}; }
 const okPic=s=>typeof s==='string'&&/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/.test(s)&&s.length<60000;
 const okLoc=s=>typeof s==='string'&&/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/.test(s)&&s.length<4000000;
 const myUn=()=>{ try{ return (localStorage.getItem('myUsername_v1')||'').trim().replace(/^@/,''); }catch(e){ return ''; } };
@@ -12028,18 +11613,12 @@ function renderSet(){ const b=$('ppSetBox'); if(!b) return; const a=document.act
 /* ---------- profile view ---------- */
 function avatar(name,pic,own){ return '<div>'+((okPic(pic)||(own&&okLoc(pic)))?'<img alt="" src="'+pic+'">':esc((String(name||'?').trim()[0]||'?').toUpperCase()))+'</div>'; }
 function profHtml(info){
-  const p=info.p, l=lvOf(p.xp), s=skOf(p.skill), n=BAD.filter(b=>b[7](p)).length, rate=p.played?Math.round(p.wins/p.played*100):0;
+  const p=info.p, s=skOf(p.skill);
   const rk=SK.map((k,j)=>`<div class="ppRkS${j<=s.i?' on':''}${j===s.i?' cur':''}" style="--c:${k[3]}"><span class="d">${ic('cg-lv'+(j+1),18)}</span><span class="n">${L(k[1],k[2])}</span></div>`).join('');
-  const bd=[...BAD].sort((a,b)=>(b[7](p)?1:0)-(a[7](p)?1:0)).map(b=>{ const on=b[7](p); return `<button type="button" class="ppB${on?'':' off'}${sel===b[0]?' sel':''}" style="--c:${b[2]}" onclick="ppBadge('${b[0]}')"><span class="ppDisc">${ic(b[1],30)}${on?'':'<span class="ppLock">'+ic('pp-lock',12)+'</span>'}</span><span class="ppBn">${L(b[3],b[4])}</span></button>`; }).join('');
-  const sb=BAD.find(b=>b[0]===sel), inf=sb?`<div class="ppInfo"><b>${L(sb[3],sb[4])}</b> — ${L(sb[5],sb[6])} ${sb[7](p)?'':'('+L('এখনো লক করা','locked')+')'}</div>`:`<div class="ppInfo">${L('ব্যাজে ট্যাপ করে দেখুন কীভাবে পাওয়া যায়।','Tap a badge to see how to earn it.')}</div>`;
-  const chp=`<span>${ic('cg-lv'+(l.i+1),16)} ${L('লেভেল','Level')} ${nb(l.i+1)} · ${esc(l.name)}</span><span>${ic('cg-target',16)} ${L('স্কিল','Skill')}: ${esc(s.name)}</span>`;
+  const chp=`<span>${ic('cg-target',16)} ${L('স্কিল','Skill')}: ${esc(s.name)}</span>`;
   return hdr(info,!info.uid,s.c,chp)+`
   ${skillCard(p,s,!info.uid,rk)}
-  <div class="ppCard"><h4>${ic('cg-trophy',18)} ${L('চ্যালেঞ্জ রেকর্ড','Challenge record')}</h4>
-  <div class="ppGrid4"><div><b>${nb(p.xp)}</b><span>${L('পয়েন্ট','Points')}</span></div><div><b>${nb(p.wins)}</b><span>${L('জয়','Wins')}</span></div><div><b>${nb(p.played)}</b><span>${L('খেলেছে','Played')}</span></div><div><b>${nb(rate)}%</b><span>${L('জয়ের হার','Win rate')}</span></div></div>
-  <div class="ppBar"><div class="t"><span>${L('লেভেল','Level')} ${nb(l.i+1)} · ${esc(l.name)}</span><span>${l.next?nb(p.xp)+' / '+nb(l.next):L('সর্বোচ্চ','Max')}</span></div><div class="barbg"><div class="barfg" style="width:${l.pct}%"></div></div></div>
-  <div class="ppNote">${ic('pp-flame',14)} ${L('বর্তমান স্ট্রিক','Current streak')}: ${nb(p.streak)} · ${L('সেরা স্ট্রিক','Best streak')}: ${nb(p.bs)}</div></div>
-  <div class="ppCard"><h4>${ic('cg-medal',18)} ${L('ব্যাজ','Badges')} <span class="ppCnt">${nb(n)}/${nb(BAD.length)}</span></h4><div class="ppBadges">${bd}</div>${inf}</div>`;
+  <div class="ppCard fgPf" id="ppCh" data-u="${esc(info.uid||'')}" data-own="${info.uid?0:1}"></div>`;
 }
 /* ---------- state ---------- */
 let keepPane=false, seeds={}, fromFr=false, pane='me', viewed=null, results=[], found={}, q='', msg='', msgBad=false, busy=false, sel='', pubSt={k:'',t:''}, lastSig='', timer=null;
@@ -12084,6 +11663,7 @@ function renderTab(){
   try{ renderSet(); }catch(e){}
   const a=document.activeElement; if(a&&(a.id==='ppQ'||a.classList.contains('ppSi'))) return;
   s.innerHTML=(pane==='me'?profHtml({name:myName(),un:myUn(),pic:myPic(),cv:myCover(),soc:mySoc(),ab:myAbout(),p:mine()}):findHtml());
+  try{ if(window.fgProfFill) window.fgProfFill(s); }catch(e){}
 }
 function renderRes(){ const e=$('ppRes'); if(e) e.innerHTML=resHtml(); }
 /* ---------- cloud ---------- */
@@ -12142,7 +11722,6 @@ async function open(uid){
 }
 /* ---------- actions ---------- */
 window.ppPane=k=>{ fromFr=false; pane=k; viewed=null; sel=''; renderTab(); };
-window.ppBadge=id=>{ sel=sel===id?'':id; renderTab(); };
 window.ppQin=v=>{ q=v; };
 window.ppSearch=()=>search();
 window.ppGoSearch=()=>{ fromFr=false; pane='find'; viewed=null; results=[]; msg=''; sel=''; keepPane=true; try{ activateTab('profile'); }catch(e){} keepPane=false; renderTab(); setTimeout(()=>{ const e=$('ppQ'); if(e) e.focus(); },80); };
@@ -13865,7 +13444,7 @@ var mi=function(n){return '<i class="mi" style="--m:var(--ic-'+n+')"></i>';};
 function accent(){ var a=g('myAccent_v1'); var r=document.documentElement; if(/^#[0-9a-f]{6}$/i.test(a)){ r.style.setProperty('--pfAcc',a); r.setAttribute('data-pfacc','1'); } else { r.removeAttribute('data-pfacc'); r.style.removeProperty('--pfAcc'); } }
 function ses(){ try{return JSON.parse(g('ftSync_v1')||'null');}catch(e){return null;} }
 function hasPhoto(){ var i=$('profilePicImg'); return !!(i&&i.getAttribute('src')&&i.style.display!=='none'); }
-function level(){ var xp=0; try{ xp=+(data.challenge&&data.challenge.xp)||0; }catch(e){} var T=[0,100,300,700,1500], i=0; T.forEach(function(v,j){ if(xp>=v) i=j; }); return i+1; }
+function goalsN(){ try{ return (data.cgGoals||[]).length; }catch(e){ return 0; } }
 function days(){ var j=+g('myJoined_v1'); if(!j){ j=Date.now(); try{ LS.setItem('myJoined_v1',String(j)); }catch(e){} } return Math.max(1,Math.ceil((Date.now()-j)/864e5)); }
 function items(){ var s=ses(); return [
  ['photo',L('ছবি','Photo'),hasPhoto(),'image',function(){ var f=$('profilePicInput'); if(f) f.click(); }],
@@ -13880,7 +13459,7 @@ function render(force){
   b.innerHTML='<h3>'+mi('user')+L('আমার প্রোফাইল স্টুডিও','My profile studio')+'</h3>'
   +'<div class="psTop psCard"><div class="psRing" style="--p:'+pct+'"><b>'+nb(pct)+'%</b></div><div><strong>'+(pct===100?L('প্রোফাইল সম্পূর্ণ!','Profile complete!'):L('প্রোফাইল সম্পূর্ণ করুন','Complete your profile'))+'</strong><p>'+L('সম্পূর্ণ প্রোফাইলে বন্ধুরা সহজে চিনতে পারে এবং অ্যাকাউন্ট রিকভারি সহজ হয়।','A complete profile helps friends find you and makes account recovery easier.')+'</p></div></div>'
   +'<div class="psMiss">'+it.map(function(x,i){ return x[2]?'<button type="button" class="ok" disabled>'+mi('check')+esc(x[1])+'</button>':'<button type="button" data-i="'+i+'">'+mi(x[3])+esc(x[1])+'</button>'; }).join('')+'</div>'
-  +'<div class="psStats"><div style="--k:#2563eb">'+mi('sheet')+'<b>'+nb(tx)+'</b><span>'+L('লেনদেন','Entries')+'</span></div><div style="--k:#f59e0b">'+mi('calendar')+'<b>'+nb(days())+'</b><span>'+L('দিন সাথে','Days')+'</span></div><div style="--k:#7c3aed">'+mi('target')+'<b>'+L('লেভেল ','Lv ')+nb(level())+'</b><span>'+L('চ্যালেঞ্জ','Challenge')+'</span></div><div style="--k:'+(s?'#10b981':'#94a3b8')+'">'+mi('cloud')+'<b>'+(s?L('চালু','On'):L('বন্ধ','Off'))+'</b><span>'+L('ক্লাউড','Cloud')+'</span></div></div>'
+  +'<div class="psStats"><div style="--k:#2563eb">'+mi('sheet')+'<b>'+nb(tx)+'</b><span>'+L('লেনদেন','Entries')+'</span></div><div style="--k:#f59e0b">'+mi('calendar')+'<b>'+nb(days())+'</b><span>'+L('দিন সাথে','Days')+'</span></div><div style="--k:#7c3aed">'+mi('target')+'<b>'+nb(goalsN())+'</b><span>'+L('চ্যালেঞ্জ','Challenge')+'</span></div><div style="--k:'+(s?'#10b981':'#94a3b8')+'">'+mi('cloud')+'<b>'+(s?L('চালু','On'):L('বন্ধ','Off'))+'</b><span>'+L('ক্লাউড','Cloud')+'</span></div></div>'
   +'<div class="psSec"><div class="psLbl">'+mi('palette')+L('প্রোফাইল রঙ','Profile colour')+'</div><div class="psAcc">'+ACC.map(function(c){ return '<button type="button" aria-label="'+c+'" data-c="'+c+'" style="--c:'+c+'" class="'+(c.toLowerCase()===acc.toLowerCase()?'on':'')+'"></button>'; }).join('')+'</div></div>'
   +'<div class="psSec"><div class="psLbl">'+mi('user')+L('আমার সম্পর্কে','About me')+'<em>'+L('প্রোফাইলে সবাই দেখবে','Shown on your profile')+'</em></div>'
   +'<label class="psFld"><span class="psFi" style="--k:#2563eb">'+mi('edit')+'</span><span class="psFt"><small>'+L('বায়ো','Bio')+'</small><input id="psBio" maxlength="80" placeholder="'+L('ছোট বায়ো (সর্বোচ্চ ৮০ অক্ষর)','Short bio (max 80 characters)')+'" value="'+esc(g('myBio_v1'))+'"></span></label>'
@@ -17193,5 +16772,720 @@ document.addEventListener('click',()=>setTimeout(upd,50),true);
 .ppGlT{font-size:14.5px;color:var(--text);min-width:0;word-break:break-word;line-height:1.4;}
 .ppGlT b{font-weight:700;}
 </style>
+<style id="ftSpendGuardCss">
+#ftWarnOv .ftSg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 12px;}
+#ftWarnOv .ftSg div{background:#fef2f2;border-radius:12px;padding:8px 4px;}
+#ftWarnOv .ftSg small{display:block;font-size:11px;color:#6b7280;font-weight:600;}
+#ftWarnOv .ftSg b{display:block;font-size:14px;color:#dc2626;margin-top:2px;white-space:nowrap;}
+#ftWarnOv .ftSg div.n b{color:#1a1c1e;}
+#ftWarnOv p.ftSgP{text-align:left;margin:0 0 10px;font-size:13.5px;}
+#ftWarnOv p.ftSgAsk{font-weight:700;color:#1a1c1e;text-align:center;margin:0 0 14px;}
+#ftWarnOv .ftSgBtns{display:flex;flex-direction:column;gap:8px;}
+</style>
+<script id="ftSpendGuardJs">
+/* Daily-budget guard: before a new expense is saved, warn if it pushes today past the daily limit (skippable) */
+(function(){
+  var T=function(b,e){ return currentLang==='bn'?b:e; };
+  var WARN='<svg viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>';
+  var sumExp=function(f){ var n=0; data.transactions.forEach(function(x){ if(isExpenseLike(x)&&f(x)) n+=(+x.amount||0); }); return n; };
+  window.ftSpendGuard=function(tx,go){
+    try{
+      if(!tx||tx.type!=='expense'||typeof go!=='function') return false;
+      var lim=+data.dailyLimit||0, amt=+tx.amount||0, td=todayStr();
+      if(!(lim>0)||!(amt>0)||tx.date!==td) return false;
+      var today=sumExp(function(x){ return x.date===td; }), after=today+amt;
+      if(after<=lim) return false;
+      var ym=td.slice(0,7), dom=+td.slice(8,10)||1, dim=new Date(+td.slice(0,4),+td.slice(5,7),0).getDate();
+      var mSpent=sumExp(function(x){ return x.date.slice(0,7)===ym&&x.date<=td; })+amt;
+      var allow=lim*dim, proj=mSpent/dom*dim;
+      var old=document.getElementById('ftWarnOv'); if(old) old.remove();
+      var ov=document.createElement('div'); ov.id='ftWarnOv';
+      var box=document.createElement('div'); box.className='ftWarnBox'; box.setAttribute('role','alertdialog'); ov.appendChild(box);
+      var F=function(n){ return fmt(Math.round(n)); };
+      var mLine=proj>allow
+        ? T('এই মাসে এখন পর্যন্ত '+F(mSpent)+' খরচ হবে। এই হারে চললে মাস শেষে প্রায় '+F(proj)+' লাগবে, অথচ মাসের হিসাব '+F(allow)+' — মাস চালাতে কষ্ট হয়ে যাবে।','This month you will have spent '+F(mSpent)+'. At this pace you will need about '+F(proj)+' by month end against a budget of '+F(allow)+' — the month will get hard.')
+        : T('আজকের বাড়তি খরচ মাসের শেষ দিকে টান ফেলতে পারে।','Today\u2019s extra spending can leave you short at the end of the month.');
+      box.innerHTML='<div class="ftWarnIc">'+WARN+'</div><h4>FinTrack says</h4>'
+        +'<div class="ftSg"><div class="n"><small>'+T('আজ (এটিসহ)','Today (with this)')+'</small><b>'+F(after)+'</b></div><div class="n"><small>'+T('দৈনিক সীমা','Daily limit')+'</small><b>'+F(lim)+'</b></div><div><small>'+T('বেশি','Over')+'</small><b>'+F(after-lim)+'</b></div></div>'
+        +'<p class="ftSgP">'+mLine+'</p>'
+        +'<p class="ftSgAsk">'+T('দয়া করে এই খরচটা না করার অনুরোধ রইল।','Please try not to make this expense.')+'</p>'
+        +'<div class="ftSgBtns"><button type="button" class="ftWarnOk ftSgNo">'+T('খরচ করব না','I won\u2019t spend')+'</button><button type="button" class="ftWarnOk ghost ftSgSkip">'+T('স্কিপ করে খরচ করব','Skip & spend anyway')+'</button></div>';
+      document.body.appendChild(ov);
+      box.querySelector('.ftSgNo').onclick=function(){ ov.remove(); };
+      box.querySelector('.ftSgSkip').onclick=function(){ ov.remove(); go(); };
+      return true;
+    }catch(e){ return false; }
+  };
+})();
+</script>
+<style id="ftFeedCss">
+/* ===== Goal challenges (Challenge tab) + FinTrack Feeds ===== */
+#fgBox{margin:0 0 14px;}
+.fgHd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 10px;}
+.fgHd b{font-size:16px;font-weight:800;color:var(--text);}
+.fgNew{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:14px;background:var(--grad,var(--primary));color:#fff;font:inherit;font-weight:700;font-size:13.5px;padding:9px 14px;cursor:pointer;}
+.fgNew svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2.4;stroke-linecap:round;}
+.fgCard{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:14px;margin-bottom:10px;}
+.fgTop{display:flex;align-items:flex-start;gap:10px;}
+.fgTop .fgS{flex:1;min-width:0;font-weight:800;font-size:15px;line-height:1.35;color:var(--text);word-break:break-word;}
+.fgTop small{display:block;color:var(--muted);font-weight:600;font-size:12px;margin-top:2px;}
+.fgIcB{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;color:var(--muted);padding:0;}
+.fgIcB svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.fgIcB.on{background:var(--primary);border-color:var(--primary);color:#fff;}
+.fgAmt{display:flex;justify-content:space-between;align-items:baseline;margin:12px 0 6px;font-size:13px;color:var(--muted);}
+.fgAmt b{font-size:17px;color:var(--text);}
+.fgBar,.fdBar{height:10px;border-radius:6px;background:color-mix(in srgb,var(--primary) 14%,var(--bg));overflow:hidden;}
+.fgBar i,.fdBar i{display:block;height:100%;border-radius:6px;background:var(--grad,var(--primary));transition:width .4s;}
+.fgBar.done i,.fdBar.done i{background:#16a34a;}
+.fgFoot{display:flex;justify-content:space-between;margin-top:6px;font-size:12.5px;color:var(--muted);font-weight:600;}
+.fgFoot b{color:var(--text);}
+.fgEmpty{border:1px dashed var(--border);border-radius:18px;padding:16px;text-align:center;font-size:13px;color:var(--muted);}
+#fgOv{position:fixed;inset:0;z-index:9470;}
+#fgOv .fgBd{position:absolute;inset:0;background:rgba(0,0,0,.5);}
+#fgOv .fgSh{position:absolute;left:0;right:0;bottom:0;max-height:90vh;overflow-y:auto;background:var(--bg);color:var(--text);border-radius:24px 24px 0 0;padding:18px 16px calc(20px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 40px rgba(0,0,0,.3);}
+#fgOv h3{margin:0 0 4px;font-size:18px;}
+#fgOv .fgSub{font-size:12.5px;color:var(--muted);margin:0 0 14px;}
+#fgOv label{display:block;font-size:12.5px;font-weight:700;margin:12px 0 6px;color:var(--text);}
+#fgOv input{width:100%;box-sizing:border-box;height:46px;border-radius:14px;border:1px solid var(--border);background:var(--card);color:var(--text);padding:0 14px;font:inherit;font-size:15px;}
+#fgOv .fgAcc{display:flex;flex-wrap:wrap;gap:8px;}
+#fgOv .fgAc{border:1.5px solid var(--border);background:var(--card);color:var(--text);border-radius:14px;padding:9px 12px;font:inherit;cursor:pointer;text-align:left;}
+#fgOv .fgAc b{display:block;font-size:14px;}
+#fgOv .fgAc small{color:var(--muted);font-size:11.5px;}
+#fgOv .fgAc.on{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 12%,var(--card));}
+#fgOv .fgGo{width:100%;height:48px;border:0;border-radius:15px;background:var(--grad,var(--primary));color:#fff;font:inherit;font-weight:800;font-size:15px;margin-top:18px;cursor:pointer;}
+#fgOv .fgGo.ghost{background:var(--card);color:var(--text);border:1px solid var(--border);margin-top:10px;}
+#fgOv .fgEr{color:#dc2626;font-size:12.5px;font-weight:600;margin-top:10px;min-height:0;}
+#fgOv .fgShareIc{width:60px;height:60px;border-radius:50%;background:color-mix(in srgb,var(--primary) 14%,var(--bg));display:flex;align-items:center;justify-content:center;margin:4px auto 12px;}
+#fgOv .fgShareIc svg{width:30px;height:30px;stroke:var(--primary);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+#fgOv .fgCtr{text-align:center;}
+/* feed page */
+#sec-feed .fdTitle{display:flex;align-items:center;justify-content:space-between;margin:2px 2px 12px;}
+#sec-feed .fdTitle h2{margin:0;font-size:22px;font-weight:800;}
+#sec-feed .fdTitle small{display:block;color:var(--muted);font-size:12.5px;font-weight:600;line-height:1.6;margin-top:4px;padding-top:2px;}
+#sec-feed .fdTitle h2{line-height:1.3;}
+.fdCard{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:14px;margin-bottom:12px;}
+.fdTop{display:flex;align-items:center;gap:10px;cursor:pointer;}
+.fdAv{width:44px;height:44px;border-radius:50%;flex:none;overflow:hidden;background:var(--grad,var(--primary));color:#fff;font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:center;}
+.fdAv img{width:100%;height:100%;object-fit:cover;}
+.fdTop b{display:block;font-size:14.5px;color:var(--text);}
+.fdTop small{color:var(--muted);font-size:12px;}
+.fdSub{margin:12px 0 4px;font-size:15.5px;font-weight:800;line-height:1.4;color:var(--text);word-break:break-word;display:flex;gap:8px;align-items:flex-start;}
+.fdSub svg{width:20px;height:20px;flex:none;margin-top:1px;stroke:var(--primary);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.fdAmtR{display:flex;justify-content:space-between;align-items:baseline;margin:10px 0 6px;font-size:12.5px;color:var(--muted);}
+.fdAmtR b{font-size:17px;color:var(--text);}
+.fdPct{display:flex;justify-content:space-between;margin-top:6px;font-size:12.5px;font-weight:700;color:var(--muted);}
+.fdPct b{color:var(--primary);}
+.fdPct b.ok{color:#16a34a;}
+.fdCmBtn{margin-top:10px;width:100%;height:40px;border-radius:12px;border:1px solid var(--border);background:var(--bg);color:var(--text);font:inherit;font-weight:700;font-size:13.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
+.fdAct{display:flex;gap:8px;margin-top:10px;}
+.fdAct .fdCmBtn{margin-top:0;flex:1;width:auto;min-width:0;}
+.fdShBtn{height:40px;padding:0 14px;border-radius:12px;border:1px solid var(--border);background:var(--bg);color:var(--text);font:inherit;font-weight:700;font-size:13.5px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;flex:none;}
+.fdShBtn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.fdCmBtn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.fdCm{margin-top:10px;border-top:1px solid var(--border);padding-top:10px;}
+.fdC{display:flex;gap:9px;margin-bottom:12px;}
+.fdC .fdAv{width:32px;height:32px;font-size:13px;}
+.fdCb{flex:1;min-width:0;}
+.fdCh{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;}
+.fdCh b{font-size:13px;color:var(--text);}
+.fdCh small{color:var(--muted);font-size:11px;}
+.fdCt{font-size:13.5px;line-height:1.45;color:var(--text);margin:2px 0 6px;word-break:break-word;white-space:pre-wrap;}
+.fdVt{display:flex;gap:8px;align-items:center;}
+.fdV{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 11px;border-radius:15px;border:1px solid var(--border);background:var(--bg);color:var(--muted);font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;}
+.fdV svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.fdV.dn svg{transform:rotate(180deg);}
+.fdV.on{background:color-mix(in srgb,var(--primary) 14%,var(--bg));border-color:var(--primary);color:var(--primary);}
+.fdV.dn.on{background:#fee2e2;border-color:#dc2626;color:#dc2626;}
+.fdDel{margin-left:auto;border:0;background:none;color:var(--muted);font-size:12px;cursor:pointer;padding:4px;}
+.fdIn{display:flex;gap:8px;margin-top:4px;}
+.fdIn input{flex:1;min-width:0;height:42px;border-radius:21px;border:1px solid var(--border);background:var(--bg);color:var(--text);padding:0 14px;font:inherit;font-size:14px;}
+.fdIn button{width:42px;height:42px;border-radius:50%;border:0;background:var(--grad,var(--primary));display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;}
+.fdIn button svg{width:19px;height:19px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.fdMsg{background:var(--card);border:1px dashed var(--border);border-radius:20px;padding:22px 16px;text-align:center;color:var(--muted);font-size:13.5px;line-height:1.55;}
+.fdMsg pre{text-align:left;white-space:pre-wrap;font-size:11px;background:var(--bg);border-radius:12px;padding:10px;margin:10px 0;color:var(--text);user-select:all;}
+.fdMsg button{border:0;border-radius:12px;background:var(--primary);color:#fff;font:inherit;font-weight:700;padding:9px 16px;cursor:pointer;}
+.bottomnav .bnbtn[data-bn="feed"] svg{stroke:currentColor;}
+
+.fdDash{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:14px;margin-bottom:14px;}
+.fdDH{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.fdDH i{width:38px;height:38px;border-radius:12px;background:var(--grad,var(--primary));display:flex;align-items:center;justify-content:center;flex:none;}
+.fdDH i svg{width:21px;height:21px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.fdDH b{display:block;font-size:16px;font-weight:800;color:var(--text);line-height:1.4;}
+.fdDH small{display:block;font-size:12px;color:var(--muted);font-weight:600;line-height:1.5;}
+.fdSt{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.fdSt div{background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:10px 6px;text-align:center;}
+.fdSt b{display:block;font-size:17px;font-weight:800;color:var(--text);line-height:1.3;}
+.fdSt span{display:block;font-size:11.5px;color:var(--muted);font-weight:600;line-height:1.5;margin-top:2px;}
+.fdRk{display:flex;align-items:center;gap:10px;padding:9px 4px;border-top:1px solid var(--border);cursor:pointer;}
+.fdRk:first-of-type{border-top:0;}
+.fdRn{width:28px;height:28px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;background:var(--bg);color:var(--muted);border:1px solid var(--border);}
+.fdRn.r1{background:#f59e0b;color:#fff;border-color:#f59e0b;}
+.fdRn.r2{background:#94a3b8;color:#fff;border-color:#94a3b8;}
+.fdRn.r3{background:#b45309;color:#fff;border-color:#b45309;}
+.fdRk .fdAv{width:36px;height:36px;font-size:15px;}
+.fdRi{flex:1;min-width:0;}
+.fdRi b{display:block;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.5;}
+.fdRi small{display:block;font-size:11.5px;color:var(--muted);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.5;}
+.fdRp{text-align:right;flex:none;}
+.fdRp b{display:block;font-size:15px;font-weight:800;color:var(--primary);line-height:1.4;}
+.fdRp b.ok{color:#16a34a;}
+.fdRp small{display:block;font-size:11px;color:var(--muted);font-weight:600;line-height:1.4;}
+.fdMore{width:100%;height:38px;margin-top:6px;border-radius:12px;border:1px solid var(--border);background:var(--bg);color:var(--text);font:inherit;font-weight:700;font-size:13px;cursor:pointer;}
+
+.fgPf svg{stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.fgPf h4 .fpCnt{margin-left:auto;font-size:12px;font-weight:700;color:var(--muted);}
+.fpRow{padding:12px 0;border-top:1px solid var(--border);}
+.fpRow:first-of-type{border-top:0;padding-top:2px;}
+.fpTop{display:flex;align-items:flex-start;gap:10px;}
+.fpTop .fpS{flex:1;min-width:0;font-weight:800;font-size:14.5px;line-height:1.45;color:var(--text);word-break:break-word;}
+.fpTop .fpS small{display:block;font-weight:600;font-size:11.5px;color:var(--muted);line-height:1.5;}
+.fpTop .fgIcB{width:32px;height:32px;}
+.fpAmt{display:flex;justify-content:space-between;align-items:baseline;margin:8px 0 6px;font-size:12.5px;color:var(--muted);}
+.fpAmt b{font-size:15px;color:var(--text);}
+.fpFoot{display:flex;justify-content:space-between;margin-top:6px;font-size:12px;font-weight:700;color:var(--muted);}
+.fpFoot b{color:var(--primary);}
+.fpFoot b.ok{color:#16a34a;}
+.fpEmpty{text-align:center;color:var(--muted);font-size:13px;line-height:1.6;padding:14px 8px;border:1px dashed var(--border);border-radius:16px;}
+</style>
+<style id="ftDashCss">
+#fdDashOv{position:fixed;inset:0;z-index:9600;background:var(--bg);color:var(--text);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(14px + env(safe-area-inset-top,0px)) 20px calc(40px + env(safe-area-inset-bottom,0px));}
+.dbTop{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.dbTop .dbWho{flex:1;min-width:0;display:flex;align-items:center;gap:9px;}
+.dbTop .fdAv{width:34px;height:34px;font-size:14px;}
+.dbTop .dbWho b{display:block;font-size:13.5px;line-height:1.3;}.dbTop .dbWho small{color:var(--muted);font-size:11.5px;}
+.dbIc{width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;padding:0;}
+.dbIc svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.dbSubj{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:6px 0 4px;word-break:break-word;}
+.dbBig{font-size:68px;font-weight:800;letter-spacing:-.04em;line-height:1.05;}
+.dbLbl{font-size:13px;color:var(--muted);letter-spacing:.08em;margin-top:2px;}
+.dbDay{display:flex;align-items:baseline;justify-content:center;gap:8px;margin:34px 0 6px;}
+.dbDay b{font-size:110px;font-weight:800;letter-spacing:-.05em;line-height:1;}.dbDay span{font-size:17px;color:var(--muted);}
+.dbMeta{display:flex;justify-content:center;gap:16px;font-size:12px;color:var(--muted);font-weight:600;flex-wrap:wrap;margin-bottom:26px;}.dbMeta b{color:var(--text);}
+.dbStrip{display:flex;gap:3px;align-items:flex-end;padding-top:14px;}
+.dbStrip i{flex:1;height:14px;border-radius:2px;background:color-mix(in srgb,var(--text) 9%,var(--bg));position:relative;}
+.dbStrip i.fut{opacity:.45}.dbStrip i.on{background:var(--text);}.dbStrip i.now{outline:2px solid var(--primary);outline-offset:1px;}
+.dbStrip i u{position:absolute;left:0;right:0;top:-9px;text-align:center;font-size:9px;line-height:6px;text-decoration:none;color:var(--text);letter-spacing:1px;}
+.dbBar{height:12px;border-radius:3px;background:color-mix(in srgb,var(--text) 8%,var(--bg));margin-top:10px;overflow:hidden;}.dbBar i{display:block;height:100%;background:var(--text);}
+.dbBar.done i{background:#16a34a;}
+.dbRow{display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-top:8px;letter-spacing:.03em;}.dbRow span{color:var(--muted);}
+.dbH{display:flex;justify-content:space-between;align-items:center;margin:34px 0 10px;font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;}.dbH small{color:var(--muted);font-weight:700;}
+.dbSc{border-left:4px solid var(--text);background:var(--card);padding:12px 12px 12px 14px;margin-bottom:10px;}
+.dbSc.ok{border-left-color:#16a34a;}
+.dbScT{display:flex;gap:8px;align-items:flex-start;}.dbScT b{flex:1;font-size:15px;line-height:1.4;word-break:break-word;}
+.dbScT button{border:0;background:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:0 2px;}
+.dbSc small{display:block;color:var(--muted);font-size:12px;margin-top:3px;}
+.dbSc .dbBar{height:6px;margin-top:8px;}
+.dbSc .dbChk{margin-top:10px;width:100%;height:38px;border-radius:10px;border:1.5px solid var(--text);background:none;color:var(--text);font:inherit;font-weight:700;font-size:13px;cursor:pointer;}
+.dbSc .dbChk.on{background:var(--text);color:var(--bg);}
+.dbHint{margin-top:8px;font-size:12px;font-weight:700;color:var(--primary);text-align:right;}
+</style>
+<script id="ftFeedJs">
+(function(){
+const $=id=>document.getElementById(id), bn=()=>{ try{ return currentLang==='bn'; }catch(e){ return true; } }, L=(b,e)=>bn()?b:e;
+const E=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nb=x=>bn()?String(x).replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]):String(x);
+const tt=m=>{ try{ if(window.toast) window.toast(m); }catch(e){} };
+const S=(p,z)=>'<svg viewBox="0 0 24 24" aria-hidden="true"'+(z?' width="'+z+'" height="'+z+'"':'')+'>'+p+'</svg>';
+const IC={trophy:'<path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7M10 17h4"/>',up:'<path d="M12 15V3M7.5 7.5 12 3l4.5 4.5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/>',flag:'<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',plus:'<path d="M12 5v14M5 12h14"/>',share:'<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.2 10.8 7.6-3.6M8.2 13.2l7.6 3.6"/>',trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',cm:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/>',like:'<path d="M7 11v9H4v-9zM7 11l4-8a2 2 0 0 1 2 2v4h5.5a2 2 0 0 1 2 2.3l-1.3 7A2 2 0 0 1 17.2 20H7"/>',send:'<path d="M21 3 10 14M21 3l-7 18-4-7-7-4z"/>',rss:'<path d="M5 5a14 14 0 0 1 14 14M5 11a8 8 0 0 1 8 8"/><circle cx="6" cy="18" r="1.4"/>',refresh:'<path d="M20 11a8 8 0 0 0-14.5-3M4 4v4h4M4 13a8 8 0 0 0 14.5 3M20 20v-4h-4"/>'};
+const R=()=>{ try{ return window.ftCloud&&ftCloud._raw?ftCloud._raw():null; }catch(e){ return null; } };
+const me=()=>{ try{ const r=R(); return r&&r.ses&&r.ses()?r.ses().uid:''; }catch(e){ return ''; } };
+async function db(path,opt,qs){
+  const r=R(); if(!r||!r.ok()||!r.ses()) throw new Error('LOGIN');
+  const base=String(r.CFG.dbUrl).replace(/\/+$/,''), tk=await r.token();
+  const res=await r.call(base+'/'+path+'.json?'+(qs?qs+'&':'')+'auth='+encodeURIComponent(tk),opt);
+  if(!res.ok){ const e=new Error('HTTP '+res.status); e.status=res.status; throw e; }
+  return res.json();
+}
+const J={'Content-Type':'application/json'};
+const put=(p,v)=>db(p,{method:'PUT',headers:J,body:JSON.stringify(v)});
+const patch=(p,v)=>db(p,{method:'PATCH',headers:J,body:JSON.stringify(v)});
+const del=p=>db(p,{method:'DELETE'});
+const myN=()=>{ try{ return (localStorage.getItem('myName_v1')||'').trim().slice(0,40); }catch(e){ return ''; } };
+const myU=()=>{ try{ return (localStorage.getItem('myUsername_v1')||'').trim().replace(/^@/,'').slice(0,30); }catch(e){ return ''; } };
+const okId=s=>/^[A-Za-z0-9_-]{4,64}$/.test(String(s||''));
+const okPic=s=>typeof s==='string'&&/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/.test(s)&&s.length<60000;
+const RULES='"feed": {\n  ".read": "auth != null",\n  ".indexOn": ["t","uid"],\n  "$pid": { ".write": "auth != null && (!data.exists() || data.child(\'uid\').val() === auth.uid) && (!newData.exists() || newData.child(\'uid\').val() === auth.uid)" }\n},\n"feedComments": {\n  ".read": "auth != null",\n  "$pid": { "$cid": { ".write": "auth != null && (!data.exists() || data.child(\'uid\').val() === auth.uid) && (!newData.exists() || newData.child(\'uid\').val() === auth.uid)" } }\n},\n"feedVotes": {\n  ".read": "auth != null",\n  "$pid": { "$cid": { "$voter": { ".write": "auth != null && auth.uid === $voter" } } }\n}';
+
+/* ---------------- goals (local) ---------------- */
+const goals=()=>{ if(!Array.isArray(data.cgGoals)) data.cgGoals=[]; return data.cgGoals; };
+function progress(g){
+  let s=0;
+  data.transactions.forEach(x=>{
+    if(x.date<g.start) return; const a=+x.amount||0;
+    if(x.account===g.account){ if(x.type==='save_to_account') s+=a; else if(x.type==='use_from_account') s-=a; }
+    if(x.fund===g.account && TYPE_META[x.type] && TYPE_META[x.type].sign<0 && x.type!=='save_to_account') s-=a;
+  });
+  s=Math.max(0,s);
+  return {saved:s,pct:g.target>0?Math.min(100,Math.floor(s/g.target*100)):0};
+}
+const fm=n=>{ try{ return fmt(Math.round(n)); }catch(e){ return '৳'+Math.round(n); } };
+
+/* ---------------- days / sub-challenge stats ---------------- */
+const dDiff=(a,b)=>Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/864e5);
+const dAdd=(a,n)=>{ const d=new Date(a+'T12:00:00'); d.setDate(d.getDate()+n); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); };
+function streakOf(n,f){ let c=0,i=f(n-1)?n-1:n-2; while(i>=0&&f(i)){ c++; i--; } return c; }
+function stats(g){
+  const td=todayStr(), st=g.start, dn=Math.max(1,Math.min(365,+g.days||30)), sv={}, am={}, sp={};
+  data.transactions.forEach(x=>{ if(x.date<st) return; const a=+x.amount||0;
+    if(x.type==='save_to_account'&&x.account===g.account){ sv[x.date]=(sv[x.date]||0)+1; am[x.date]=(am[x.date]||0)+a; }
+    if(isExpenseLike(x)) sp[x.date]=(sp[x.date]||0)+a; });
+  const x0=Math.max(1,dDiff(st,td)+1); let sd='';
+  for(let i=0;i<dn;i++) sd+=Math.min(3,sv[dAdd(st,i)]||0);
+  const act=Object.keys(sv).length, sk=streakOf(x0,i=>!!sv[dAdd(st,i)]);
+  const sc=(g.subs||[]).map(o=>{
+    const e=Math.max(1,dDiff(o.start,td)+1), r=i=>{ const d=dAdd(o.start,i); return o.k==='save'?(am[d]||0)>=o.v:o.k==='limit'?(sp[d]||0)<=o.v:!!(o.log&&o.log[d]); };
+    let ok=0; for(let i=0;i<e;i++) if(r(i)) ok++;
+    return {i:o.id,n:String(o.name||'').slice(0,40),k:o.k,v:Math.round(o.v||0),e:e,ok:ok,st:streakOf(e,r),tf:r(e-1)?1:0};
+  });
+  return {x:x0,dn:dn,sd:sd,ac:act,sk:sk,sc:sc};
+}
+function payload(g){
+  const pr=progress(g), s=stats(g);
+  return {s:String(g.subject).slice(0,60),a:Math.round(g.target),sv:Math.round(pr.saved),p:pr.pct,d:g.done?1:0,ds:g.start,dn:s.dn,sd:s.sd,ac:s.ac,sk:s.sk,sc:s.sc.map(o=>({n:o.n,k:o.k,v:o.v,e:o.e,ok:o.ok,st:o.st,tf:o.tf}))};
+}
+/* ---------------- cloud push ---------------- */
+let pushT=0;
+async function pushGoal(g){
+  const u=me(); if(!u||!okId(g.uid)) return;
+  const pr=progress(g), pl=payload(g);
+  await put('feed/'+g.uid,Object.assign({uid:u,n:myN(),u:myU(),t:g.created||Date.now()},pl));
+  g.lp=pr.pct; g.ld=g.done?1:0; g.lsig=JSON.stringify(pl);
+}
+function pushSoon(){
+  clearTimeout(pushT);
+  pushT=setTimeout(()=>{
+    goals().forEach(g=>{
+      if(!g.share) return; const pr=progress(g);
+      if(JSON.stringify(payload(g))!==g.lsig){ pushGoal(g).catch(()=>{}); }
+    });
+  },1500);
+}
+function checkGoals(){
+  let ch=false;
+  goals().forEach(g=>{
+    if(g.done) return; const pr=progress(g);
+    if(pr.pct>=100){ g.done=true; g.doneAt=Date.now(); ch=true; tt(L('অভিনন্দন! "'+g.subject+'" চ্যালেঞ্জের বাজেট পূর্ণ হয়েছে','Congratulations! The budget for "'+g.subject+'" is complete')); }
+  });
+  if(ch){ try{ localStorage.setItem('moneyAppData_v1',JSON.stringify(data)); }catch(e){} }
+}
+
+/* ---------------- Challenge tab block ---------------- */
+const box=document.createElement('div'); box.id='fgBox';
+function paintGoals(){
+  const gs=goals();
+  let h='<div class="fgHd"><b>'+L('লক্ষ্য চ্যালেঞ্জ','Goal challenges')+'</b><button type="button" class="fgNew" data-a="new">'+S(IC.plus)+L('নিজের চ্যালেঞ্জ','Custom')+'</button></div>';
+  if(!gs.length) h+='<div class="fgEmpty">'+L('যেমন "PS5-এর জন্য চ্যালেঞ্জ" — বিষয়, বাজেট আর সেভিংস একাউন্ট বেছে নিজের চ্যালেঞ্জ শুরু করুন।','E.g. "Challenge for a PS5" — pick a subject, a budget and a savings account to start your own challenge.')+'</div>';
+  gs.forEach(g=>{
+    const pr=progress(g);
+    h+='<div class="fgCard" data-g="'+E(g.uid)+'"><div class="fgTop"><div class="fgS">'+E(g.subject)+'<small>'+E(g.account)+(g.done?' · '+L('সম্পন্ন','Completed'):'')+'</small></div>'
+      +'<button type="button" class="fgIcB'+(g.share?' on':'')+'" data-a="share" aria-label="FinTrack Feeds" title="FinTrack Feeds">'+S(IC.rss)+'</button>'
+      +'<button type="button" class="fgIcB" data-a="phone" aria-label="'+L('ফোন থেকে শেয়ার','Share from phone')+'" title="'+L('ফোন থেকে শেয়ার','Share from phone')+'">'+S(IC.up)+'</button>'
+      +'<button type="button" class="fgIcB" data-a="del" aria-label="Delete">'+S(IC.trash)+'</button></div>'
+      +'<div data-a="open" style="cursor:pointer"><div class="fgAmt"><span>'+L('বাজেট','Budget')+'</span><b>'+nb(fm(pr.saved))+' / '+nb(fm(g.target))+'</b></div>'
+      +'<div class="fgBar'+(g.done?' done':'')+'"><i style="width:'+pr.pct+'%"></i></div>'
+      +'<div class="fgFoot"><span>'+(g.share?L('FinTrack Feeds-এ শেয়ার করা আছে','Shared on FinTrack Feeds'):L('শুধু আপনি দেখছেন','Only visible to you'))+'</span><b>'+nb(pr.pct)+'%</b></div><div class="dbHint">'+L('ড্যাশবোর্ড ও মিশন ›','Dashboard & missions ›')+'</div></div></div>';
+  });
+  box.innerHTML=h;
+}
+box.addEventListener('click',e=>{
+  const b=e.target.closest('[data-a]'); if(!b) return; const a=b.dataset.a, c=b.closest('[data-g]'), g=c&&goals().find(x=>x.uid===c.dataset.g);
+  if(a==='new') openForm();
+  else if(a==='open'&&g) openDash({g:g});
+  else if(a==='del'&&g) askDel(g);
+  else if(a==='share'&&g) toggleShare(g);
+  else if(a==='phone'&&g){ const pr=progress(g); sharePhone({n:myN(),u:myU(),s:g.subject,a:g.target,sv:pr.saved,p:pr.pct,d:g.done?1:0}); }
+});
+function askDel(g){
+  const go=()=>{ data.cgGoals=goals().filter(x=>x.uid!==g.uid); saveData(); if(g.share&&me()) del('feed/'+g.uid).catch(()=>{}); paintGoals(); };
+  try{ appDialog(L('এই চ্যালেঞ্জটি মুছে ফেলবেন? ফিড থেকেও সরে যাবে।','Delete this challenge? It will also be removed from the feed.'),{confirm:true},go); }catch(e){ if(confirm(L('মুছে ফেলবেন?','Delete?'))) go(); }
+}
+function toggleShare(g){
+  if(g.share){ g.share=false; saveData(); if(me()) del('feed/'+g.uid).catch(()=>{}); paintGoals(); tt(L('ফিড থেকে সরানো হয়েছে','Removed from the feed')); return; }
+  if(!me()){ tt(L('শেয়ার করতে আগে অ্যাকাউন্টে লগইন করুন','Sign in first to share')); return; }
+  g.share=true; saveData(); paintGoals();
+  pushGoal(g).then(()=>tt(L('FinTrack Feeds-এ শেয়ার হয়েছে','Shared on FinTrack Feeds'))).catch(e=>{ g.share=false; saveData(); paintGoals(); tt(e&&e.status===401||e&&e.status===403?L('ফিডের রুলস সেট করা নেই — ফিড পেজ দেখুন','Feed rules are not set — see the Feed page'):L('শেয়ার করা যায়নি','Could not share')); });
+}
+const chSec=$('sec-challenge');
+if(chSec){
+  const ensure=()=>{ if(!chSec.contains(box)){ chSec.insertBefore(box,chSec.firstChild); paintGoals(); } };
+  new MutationObserver(ensure).observe(chSec,{childList:true}); ensure();
+}
+
+/* ---------------- create form ---------------- */
+function openForm(){
+  if($('fgOv')) return;
+  const accs=data.accounts||[], bal=calcAccountBalances(); let sel='';
+  const ov=document.createElement('div'); ov.id='fgOv';
+  ov.innerHTML='<div class="fgBd"></div><div class="fgSh"></div>'; document.body.appendChild(ov);
+  const sh=ov.querySelector('.fgSh'), close=()=>ov.remove();
+  ov.querySelector('.fgBd').onclick=close;
+  function step1(keep){
+    const v=keep||{s:'',a:'',dd:'30'};
+    sh.innerHTML='<h3>'+L('নতুন লক্ষ্য চ্যালেঞ্জ','New goal challenge')+'</h3><p class="fgSub">'+L('কিসের জন্য টাকা জমাতে চান, বাজেট কত, আর কোন সেভিংস একাউন্ট থেকে পূরণ করবেন — বেছে নিন।','What are you saving for, how much, and from which savings account.')+'</p>'
+      +'<label>'+L('কিসের জন্য চ্যালেঞ্জ?','What is the challenge for?')+'</label><input id="fgS" maxlength="60" placeholder="'+L('যেমন: PS5-এর জন্য চ্যালেঞ্জ','e.g. Challenge for a PS5')+'" value="'+E(v.s)+'">'
+      +'<label>'+L('চ্যালেঞ্জের বাজেট (টাকা)','Challenge budget (Taka)')+'</label><input id="fgA" type="number" inputmode="decimal" min="1" placeholder="0" value="'+E(v.a)+'">'
+      +'<label>'+L('কত দিনের চ্যালেঞ্জ?','How many days?')+'</label><input id="fgD" type="number" inputmode="numeric" min="1" max="365" value="'+E(v.dd||'30')+'">'
+      +'<label>'+L('কোন সেভিংস একাউন্ট থেকে পূরণ করবেন?','Which savings account will fill it?')+'</label>'
+      +(accs.length?'<div class="fgAcc">'+accs.map(a=>'<button type="button" class="fgAc'+(a===sel?' on':'')+'" data-ac="'+E(a)+'"><b>'+E(a)+'</b><small>'+L('এখন ','Now ')+nb(fm(bal[a]||0))+'</small></button>').join('')+'</div>':'<div class="fgEmpty">'+L('কোনো সেভিংস একাউন্ট নেই — আগে "একাউন্ট" ট্যাবে একটি একাউন্ট যোগ করুন।','No savings account yet — add one in the Accounts tab first.')+'</div>')
+      +'<div class="fgEr"></div><button type="button" class="fgGo" data-go="1">'+L('চালিয়ে যান','Continue')+'</button><button type="button" class="fgGo ghost" data-x="1">'+L('বাতিল','Cancel')+'</button>';
+    sh.querySelectorAll('.fgAc').forEach(b=>b.onclick=()=>{ const k={s:$('fgS').value,a:$('fgA').value,dd:$('fgD').value}; sel=b.dataset.ac; step1(k); });
+    sh.querySelector('[data-x]').onclick=close;
+    sh.querySelector('[data-go]').onclick=()=>{
+      const s=$('fgS').value.trim(), a=parseFloat($('fgA').value), er=sh.querySelector('.fgEr');
+      if(s.length<2){ er.textContent=L('চ্যালেঞ্জের বিষয় লিখুন','Write what the challenge is for'); return; }
+      if(!(a>0)){ er.textContent=L('সঠিক বাজেট দিন','Enter a valid budget'); return; }
+      const dd=parseInt($('fgD').value,10); if(!(dd>=1&&dd<=365)){ er.textContent=L('দিন ১ থেকে ৩৬৫-এর মধ্যে দিন','Days must be 1 to 365'); return; }
+      if(!sel){ er.textContent=L('একটি সেভিংস একাউন্ট বেছে নিন','Pick a savings account'); return; }
+      if(goals().length>=10){ er.textContent=L('সর্বোচ্চ ১০টি লক্ষ্য চ্যালেঞ্জ রাখা যায়','You can keep up to 10 goal challenges'); return; }
+      step2({s:s,a:a,dd:dd});
+    };
+  }
+  function step2(v){
+    sh.innerHTML='<div class="fgCtr"><div class="fgShareIc">'+S(IC.rss)+'</div><h3>'+L('FinTrack Feeds-এ শেয়ার করতে চান?','Share on FinTrack Feeds?')+'</h3>'
+      +'<p class="fgSub">'+L('অনুমতি দিলে ফিডে আপনার প্রোফাইল, কিসের জন্য চ্যালেঞ্জ নিয়েছেন, বাজেটের পরিমাণ আর কত % পূরণ হয়েছে — সবাই দেখতে পারবে। যেকোনো সময় বন্ধ করা যাবে।','If you allow, everyone can see your profile, what the challenge is for, the budget and the % progress on the feed. You can turn it off anytime.')+'</p></div>'
+      +'<button type="button" class="fgGo" data-y="1">'+L('হ্যাঁ, শেয়ার করব','Yes, share')+'</button><button type="button" class="fgGo ghost" data-n="1">'+L('না, শুধু আমার জন্য','No, keep it private')+'</button>';
+    const fin=share=>{
+      if(share&&!me()){ tt(L('শেয়ার করতে লগইন লাগে — চ্যালেঞ্জটি শুধু আপনার জন্য রাখা হলো','Sign in to share — kept private for now')); share=false; }
+      const g={uid:Date.now().toString(36)+Math.random().toString(36).slice(2,7),subject:v.s,target:v.a,account:sel,start:todayStr(),days:v.dd,subs:[],created:Date.now(),share:!!share,done:false,lp:-1,ld:0};
+      goals().push(g); saveData(); close(); paintGoals(); tt(L('লক্ষ্য চ্যালেঞ্জ শুরু!','Goal challenge started!'));
+      if(g.share) pushGoal(g).catch(e=>{ g.share=false; saveData(); paintGoals(); tt((e&&(e.status===401||e.status===403))?L('ফিডের রুলস সেট করা নেই — ফিড পেজ দেখুন','Feed rules are not set — see the Feed page'):L('ফিডে শেয়ার করা যায়নি','Could not share to the feed')); });
+    };
+    sh.querySelector('[data-y]').onclick=()=>fin(true);
+    sh.querySelector('[data-n]').onclick=()=>fin(false);
+  }
+  step1();
+}
+window.fgOpen=openForm;
+
+/* ---------------- Feed page ---------------- */
+const sec=document.createElement('div'); sec.className='section'; sec.id='sec-feed';
+const stg=$('sec-settings'); if(stg) stg.parentNode.insertBefore(sec,stg); else document.body.appendChild(sec);
+let posts=[], FS={err:'',busy:false,loaded:false}; const openC={}, CM={}, VT={}, picC={};
+const ago=t=>{ const s=Math.max(0,(Date.now()-(+t||0))/1000); if(s<60) return L('এইমাত্র','just now'); if(s<3600) return nb(Math.floor(s/60))+L(' মিনিট আগে','m ago'); if(s<86400) return nb(Math.floor(s/3600))+L(' ঘণ্টা আগে','h ago'); return nb(Math.floor(s/86400))+L(' দিন আগে','d ago'); };
+const avH=(uid,name)=>'<div class="fdAv" data-au="'+E(uid)+'">'+(okPic(picC[uid])?'<img alt="" src="'+picC[uid]+'">':E((String(name||'?').trim()[0]||'?').toUpperCase()))+'</div>';
+function loadPics(root){
+  root.querySelectorAll('.fdAv[data-au]').forEach(el=>{
+    const u=el.dataset.au; if(!okId(u)||picC[u]!==undefined) return; picC[u]='';
+    db('profiles/'+u+'/pic').then(p=>{ if(okPic(p)){ picC[u]=p; document.querySelectorAll('.fdAv[data-au="'+u+'"]').forEach(a=>{ a.innerHTML='<img alt="" src="'+p+'">'; }); } }).catch(()=>{});
+  });
+}
+function rulesMsg(){ return '<div class="fdMsg">'+L('ফিড চালু করতে Firebase Realtime Database-এর Rules-এ নিচের অংশটি "rules" এর ভেতরে যোগ করে Publish করুন:','To enable the feed, add this inside "rules" of your Firebase Realtime Database and Publish:')+'<pre id="fdRules">'+E(RULES)+'</pre><button type="button" data-a="copy">'+L('কপি করুন','Copy')+'</button></div>'; }
+function postH(p){
+  const mine=p.uid===me();
+  return '<div class="fdCard" data-p="'+E(p.id)+'"><div class="fdTop" data-a="prof" data-u="'+E(p.uid)+'">'+avH(p.uid,p.n||p.u)+'<div><b>'+E(p.n||p.u||'?')+(mine?' · '+L('আপনি','You'):'')+'</b><small>'+(p.u?'@'+E(p.u)+' · ':'')+ago(p.t)+'</small></div></div>'
+    +'<div data-a="open" style="cursor:pointer"><div class="fdSub">'+S(IC.flag)+'<span>'+E(p.s)+'</span></div>'
+    +'<div class="fdAmtR"><span>'+L('চ্যালেঞ্জের বাজেট','Challenge budget')+'</span><b>'+nb(fm(p.a))+'</b></div>'
+    +'<div class="fdBar'+(p.d?' done':'')+'"><i style="width:'+p.p+'%"></i></div>'
+    +'<div class="fdPct"><span>'+(p.d?L('বাজেট পূর্ণ','Budget completed'):L('জমেছে ','Saved ')+nb(fm(p.sv)))+'</span><b class="'+(p.d?'ok':'')+'">'+nb(p.p)+'% '+L('সম্পন্ন','done')+'</b></div>'
+    +'<div class="dbHint">'+L('ড্যাশবোর্ড খুলুন ›','Open dashboard ›')+'</div></div><div class="fdAct"><button type="button" class="fdCmBtn" data-a="cm">'+S(IC.cm)+L('মন্তব্য','Comments')+(CM[p.id]?' ('+nb(CM[p.id].length)+')':'')+'</button>'
+    +'<button type="button" class="fdShBtn" data-a="phone" aria-label="'+L('শেয়ার','Share')+'">'+S(IC.up)+L('শেয়ার','Share')+'</button></div>'
+    +(openC[p.id]?'<div class="fdCm" id="fdCm_'+E(p.id)+'">'+cmH(p.id)+'</div>':'')+'</div>';
+}
+function cmH(pid){
+  const list=CM[pid], vt=VT[pid]||{}, u=me();
+  let h='';
+  if(list===undefined) h+='<div class="fdMsg" style="padding:12px">'+L('লোড হচ্ছে…','Loading…')+'</div>';
+  else if(list==='ERR') h+='<div class="fdMsg" style="padding:12px">'+L('মন্তব্য লোড করা যায়নি','Could not load comments')+'</div>';
+  else{
+    if(!list.length) h+='<div class="fdMsg" style="padding:12px;margin-bottom:10px">'+L('এখনো কোনো মন্তব্য নেই — প্রথম মন্তব্যটি আপনি করুন।','No comments yet — be the first.')+'</div>';
+    list.forEach(c=>{
+      const v=vt[c.id]||{}, up=Object.keys(v).filter(k=>v[k]===1).length, dn=Object.keys(v).filter(k=>v[k]===-1).length, my=v[u];
+      h+='<div class="fdC" data-c="'+E(c.id)+'">'+avH(c.uid,c.n||c.u)+'<div class="fdCb"><div class="fdCh"><b>'+E(c.n||c.u||'?')+'</b><small>'+ago(c.t)+'</small></div><div class="fdCt">'+E(c.x)+'</div>'
+        +'<div class="fdVt"><button type="button" class="fdV up'+(my===1?' on':'')+'" data-a="vote" data-v="1">'+S(IC.like)+'<span>'+nb(up)+'</span></button><button type="button" class="fdV dn'+(my===-1?' on':'')+'" data-a="vote" data-v="-1">'+S(IC.like)+'<span>'+nb(dn)+'</span></button>'
+        +(c.uid===u?'<button type="button" class="fdDel" data-a="cdel">'+L('মুছুন','Delete')+'</button>':'')+'</div></div></div>';
+    });
+  }
+  h+='<div class="fdIn"><input maxlength="300" placeholder="'+L('মন্তব্য লিখুন…','Write a comment…')+'" data-in="'+E(pid)+'"><button type="button" data-a="send" aria-label="Send">'+S(IC.send)+'</button></div>';
+  return h;
+}
+
+/* ---------------- achievers dashboard (top 10, built from the shared challenges) ---------------- */
+let dashAll=false;
+function achievers(){
+  const m={};
+  posts.forEach(p=>{
+    const o=m[p.uid]||(m[p.uid]={uid:p.uid,n:p.n,u:p.u,wins:0,best:0,sv:0,subj:'',t:0});
+    if(p.d) o.wins++; o.sv+=p.sv; if(p.p>=o.best){ o.best=p.p; o.subj=p.s; } if(p.t>o.t){ o.t=p.t; o.n=p.n||o.n; o.u=p.u||o.u; }
+  });
+  return Object.keys(m).map(k=>m[k]).filter(o=>o.best>0||o.wins>0)
+    .sort((a,b)=>b.wins-a.wins||b.best-a.best||b.sv-a.sv).slice(0,10);
+}
+function dashH(){
+  const list=achievers(), done=posts.filter(p=>p.d).length, people=new Set(posts.map(p=>p.uid)).size, saved=posts.reduce((a,p)=>a+p.sv,0);
+  const show=dashAll?list:list.slice(0,5), me0=me();
+  let h='<div class="fdDash"><div class="fdDH"><i>'+S(IC.trophy)+'</i><div><b>'+L('টপ অ্যাচিভার্স','Top achievers')+'</b><small>'+L('যারা সবচেয়ে এগিয়ে আছে — শীর্ষ ১০','Who is furthest ahead — top 10')+'</small></div></div>'
+    +'<div class="fdSt"><div><b>'+nb(posts.length)+'</b><span>'+L('চ্যালেঞ্জ','Challenges')+'</span></div><div><b>'+nb(done)+'</b><span>'+L('বাজেট পূর্ণ','Completed')+'</span></div><div><b>'+nb(people)+'</b><span>'+L('জন অংশগ্রহণকারী','Participants')+'</span></div></div>';
+  if(!list.length) h+='<div class="fdMsg" style="padding:14px">'+L('এখনো কেউ অগ্রগতি করেনি — প্রথম অ্যাচিভার আপনিই হতে পারেন।','Nobody has made progress yet — you could be the first achiever.')+'</div>';
+  else{
+    show.forEach((o,i)=>{
+      h+='<div class="fdRk" data-a="prof" data-u="'+E(o.uid)+'"><div class="fdRn'+(i<3?' r'+(i+1):'')+'">'+nb(i+1)+'</div>'+avH(o.uid,o.n||o.u)
+        +'<div class="fdRi"><b>'+E(o.n||o.u||'?')+(o.uid===me0?' · '+L('আপনি','You'):'')+'</b><small>'+E(o.subj)+'</small></div>'
+        +'<div class="fdRp"><b class="'+(o.wins?'ok':'')+'">'+(o.wins?nb(o.wins)+' '+L('জয়','won'):nb(o.best)+'%')+'</b><small>'+(o.wins?L('সর্বোচ্চ ','Best ')+nb(o.best)+'%':L('জমেছে ','Saved ')+nb(fm(o.sv)))+'</small></div></div>';
+    });
+    if(list.length>5) h+='<button type="button" class="fdMore" data-a="dashmore">'+(dashAll?L('কম দেখুন','Show less'):L('আরও দেখুন','Show more'))+'</button>';
+  }
+  return h+'</div>';
+}
+function render(){
+  const act=document.activeElement; if(act&&act.closest&&act.closest('#sec-feed')&&act.tagName==='INPUT') return;
+  let h='<div class="fdTitle"><div><h2>FinTrack Feeds</h2><small>'+L('বন্ধুদের লক্ষ্য চ্যালেঞ্জ ও অগ্রগতি','Goal challenges & progress from everyone')+'</small></div><button type="button" class="fgIcB" data-a="reload" aria-label="Refresh">'+S(IC.refresh)+'</button></div>';
+  if(FS.err==='LOGIN') h+='<div class="fdMsg">'+L('ফিড দেখতে ও মন্তব্য করতে অ্যাকাউন্টে লগইন করুন।','Sign in to see the feed and comment.')+'</div>';
+  else if(FS.err==='RULES') h+=rulesMsg();
+  else if(FS.err==='NET') h+='<div class="fdMsg">'+L('ইন্টারনেট সংযোগ পাওয়া যায়নি।','No internet connection.')+'</div>';
+  else if(FS.err) h+='<div class="fdMsg">'+L('ফিড লোড করা যায়নি।','Could not load the feed.')+'</div>';
+  else if(!FS.loaded) h+='<div class="fdMsg">'+L('লোড হচ্ছে…','Loading…')+'</div>';
+  else if(!posts.length) h+='<div class="fdMsg">'+L('এখনো কেউ চ্যালেঞ্জ শেয়ার করেনি। "চ্যালেঞ্জ" ট্যাবে গিয়ে নিজের লক্ষ্য চ্যালেঞ্জ শুরু করুন ও শেয়ার করুন।','Nobody has shared a challenge yet. Start a goal challenge in the Challenge tab and share it.')+'</div>';
+  else h+=dashH()+posts.map(postH).join('');
+  sec.innerHTML=h; loadPics(sec);
+}
+function setErr(e){ const m=String((e&&e.message)||e||''), st=e&&e.status; const n=m==='LOGIN'?'LOGIN':(st===401||st===403)?'RULES':/abort|Failed to fetch|NetworkError/i.test(m)?'NET':'ERR'; FS.err=n; FS.loaded=true; }
+function parse(d){
+  const rows=[]; Object.keys(d||{}).forEach(id=>{ const v=d[id]; if(!okId(id)||!v||typeof v!=='object'||!okId(v.uid)) return;
+    const a=+v.a, p=Math.max(0,Math.min(100,Math.floor(+v.p||0))); if(!(a>0)||!v.s) return;
+    const sc=(Array.isArray(v.sc)?v.sc:[]).slice(0,10).map(o=>({n:String((o&&o.n)||'').slice(0,40),k:['save','limit','check'].indexOf(o&&o.k)<0?'check':o.k,v:Math.max(0,+(o&&o.v)||0),e:Math.max(1,+(o&&o.e)||1),ok:Math.max(0,+(o&&o.ok)||0),st:Math.max(0,+(o&&o.st)||0),tf:(o&&o.tf)?1:0}));
+    rows.push({id,uid:v.uid,n:String(v.n||'').slice(0,40),u:String(v.u||'').slice(0,30),s:String(v.s).slice(0,60),a:a,sv:Math.max(0,+v.sv||0),p:p,d:v.d?1:0,t:+v.t||0,ds:/^\d{4}-\d{2}-\d{2}$/.test(v.ds||'')?v.ds:'',dn:Math.max(1,Math.min(365,+v.dn||30)),sd:/^[0-9]{0,365}$/.test(v.sd||'')?String(v.sd||''):'',ac:Math.max(0,+v.ac||0),sk:Math.max(0,+v.sk||0),sc:sc}); });
+  rows.sort((a,b)=>b.t-a.t); return rows.slice(0,50);
+}
+async function load(){
+  if(FS.busy) return; FS.busy=true;
+  try{
+    let d; try{ d=await db('feed',undefined,'orderBy=%22t%22&limitToLast=50'); }catch(e){ if(e&&e.status===400) d=await db('feed'); else throw e; }
+    posts=parse(d); FS.err=''; FS.loaded=true;
+  }catch(e){ setErr(e); }
+  FS.busy=false; if(active()) render();
+}
+const active=()=>sec.classList.contains('active');
+async function loadCm(pid){
+  try{
+    const c=await db('feedComments/'+pid), v=await db('feedVotes/'+pid);
+    const rows=[]; Object.keys(c||{}).forEach(id=>{ const x=c[id]; if(!okId(id)||!x||typeof x!=='object'||!x.x) return; rows.push({id,uid:String(x.uid||''),n:String(x.n||'').slice(0,40),u:String(x.u||'').slice(0,30),x:String(x.x).slice(0,300),t:+x.t||0}); });
+    rows.sort((a,b)=>a.t-b.t); CM[pid]=rows;
+    const m={}; Object.keys(v||{}).forEach(cid=>{ const o=v[cid]; if(o&&typeof o==='object'){ m[cid]={}; Object.keys(o).forEach(k=>{ if(o[k]===1||o[k]===-1) m[cid][k]=o[k]; }); } }); VT[pid]=m;
+  }catch(e){ CM[pid]='ERR'; }
+  paintCm(pid);
+}
+function paintCm(pid){
+  const el=$('fdCm_'+pid); if(!el){ return; }
+  const inp=el.querySelector('input'), val=inp?inp.value:'', foc=inp&&document.activeElement===inp;
+  el.innerHTML=cmH(pid); loadPics(el);
+  const n=el.querySelector('input'); if(n&&val){ n.value=val; if(foc) n.focus(); }
+  const card=el.closest('.fdCard'); if(card&&Array.isArray(CM[pid])){ const b=card.querySelector('.fdCmBtn'); if(b) b.lastChild.nodeValue=L('মন্তব্য','Comments')+' ('+nb(CM[pid].length)+')'; }
+}
+sec.addEventListener('click',async e=>{
+  const b=e.target.closest('[data-a]'); if(!b) return; const a=b.dataset.a, card=b.closest('[data-p]'), pid=card&&card.dataset.p;
+  if(a==='open'&&pid){ const po=posts.find(x=>x.id===pid); if(po){ const lg=goals().find(x=>x.uid===pid); openDash(lg?{g:lg}:{v:Object.assign({mine:false},po)}); } }
+  else if(a==='reload'){ FS.loaded=false; render(); load(); }
+  else if(a==='dashmore'){ dashAll=!dashAll; render(); }
+  else if(a==='copy'){ try{ await navigator.clipboard.writeText(RULES); tt(L('কপি হয়েছে','Copied')); }catch(x){ const r=$('fdRules'); if(r){ const g=document.createRange(); g.selectNodeContents(r); const s=window.getSelection(); s.removeAllRanges(); s.addRange(g); } } }
+  else if(a==='prof'){ const u=b.dataset.u; try{ if(u===me()||!window.ppView) activateTab('profile'); else ppView(u); }catch(x){} }
+  else if(a==='phone'&&pid){ const po=posts.find(x=>x.id===pid); if(po) sharePhone(po); }
+  else if(a==='cm'&&pid){ openC[pid]=!openC[pid]; if(openC[pid]&&CM[pid]===undefined){ render(); loadCm(pid); } else render(); }
+  else if(a==='send'&&pid){
+    const inp=card.querySelector('input[data-in]'), txt=(inp.value||'').trim().slice(0,300), u=me(); if(!txt||!u) return;
+    const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6), rec={uid:u,n:myN(),u:myU(),x:txt,t:Date.now()};
+    inp.value=''; if(!Array.isArray(CM[pid])) CM[pid]=[]; CM[pid].push(Object.assign({id},rec)); paintCm(pid);
+    try{ await put('feedComments/'+pid+'/'+id,rec); }catch(x){ CM[pid]=CM[pid].filter(c=>c.id!==id); paintCm(pid); tt((x&&(x.status===401||x.status===403))?L('ফিডের রুলস সেট করা নেই','Feed rules are not set'):L('মন্তব্য পাঠানো যায়নি','Could not send')); }
+  }
+  else if(a==='cdel'&&pid){ const cid=b.closest('[data-c]').dataset.c; CM[pid]=CM[pid].filter(c=>c.id!==cid); paintCm(pid); del('feedComments/'+pid+'/'+cid).catch(()=>{}); del('feedVotes/'+pid+'/'+cid).catch(()=>{}); }
+  else if(a==='vote'&&pid){
+    const u=me(); if(!u){ tt(L('ভোট দিতে লগইন করুন','Sign in to vote')); return; }
+    const cid=b.closest('[data-c]').dataset.c, v=+b.dataset.v; VT[pid]=VT[pid]||{}; VT[pid][cid]=VT[pid][cid]||{};
+    const cur=VT[pid][cid][u];
+    if(cur===v){ delete VT[pid][cid][u]; paintCm(pid); del('feedVotes/'+pid+'/'+cid+'/'+u).catch(()=>{}); }
+    else{ VT[pid][cid][u]=v; paintCm(pid); put('feedVotes/'+pid+'/'+cid+'/'+u,v).catch(x=>{ if(cur===undefined) delete VT[pid][cid][u]; else VT[pid][cid][u]=cur; paintCm(pid); tt((x&&(x.status===401||x.status===403))?L('ফিডের রুলস সেট করা নেই','Feed rules are not set'):L('ভোট দেওয়া যায়নি','Could not vote')); }); }
+  }
+});
+sec.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.matches('input[data-in]')){ e.preventDefault(); const b=e.target.parentNode.querySelector('[data-a="send"]'); if(b) b.click(); } });
+
+
+/* ---------------- share from phone (native share sheet + progress card image) ---------------- */
+function wrapLines(x,text,maxW,maxLines){
+  const words=String(text).split(/\s+/), out=[]; let cur='';
+  words.forEach(w=>{ const t=cur?cur+' '+w:w; if(x.measureText(t).width>maxW&&cur){ out.push(cur); cur=w; } else cur=t; });
+  if(cur) out.push(cur);
+  if(out.length>maxLines){ out.length=maxLines; out[maxLines-1]=out[maxLines-1].replace(/.{0,2}$/,'…'); }
+  return out;
+}
+function rrect(x,px,py,w,h,r){ x.beginPath(); x.moveTo(px+r,py); x.arcTo(px+w,py,px+w,py+h,r); x.arcTo(px+w,py+h,px,py+h,r); x.arcTo(px,py+h,px,py,r); x.arcTo(px,py,px+w,py,r); x.closePath(); }
+async function cardBlob(o){
+  try{ if(document.fonts&&document.fonts.ready) await document.fonts.ready; }catch(e){}
+  const W=1080,H=1350,c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d'); if(!x) return null;
+  let pri=(getComputedStyle(document.documentElement).getPropertyValue('--primary')||'').trim();
+  const ff=getComputedStyle(document.body).fontFamily||'sans-serif';
+  const g=x.createLinearGradient(0,0,W,H);
+  try{ g.addColorStop(0,pri); }catch(e){ pri='#2563eb'; g.addColorStop(0,pri); }
+  g.addColorStop(1,'#0f172a'); x.fillStyle=g; x.fillRect(0,0,W,H);
+  x.fillStyle='rgba(255,255,255,.07)'; x.beginPath(); x.arc(W-110,150,250,0,7); x.fill(); x.beginPath(); x.arc(90,H-90,290,0,7); x.fill();
+  x.textBaseline='alphabetic'; x.textAlign='left';
+  x.fillStyle='#fff'; x.font='800 54px '+ff; x.fillText('FinTrack',80,140);
+  x.fillStyle='rgba(255,255,255,.75)'; x.font='600 30px '+ff; x.fillText(L('সঞ্চয় চ্যালেঞ্জ','Savings challenge'),80,190);
+  const cx=70,cy=250,cw=W-140,ch=880;
+  x.save(); x.shadowColor='rgba(0,0,0,.28)'; x.shadowBlur=50; x.shadowOffsetY=18; rrect(x,cx,cy,cw,ch,52); x.fillStyle='#fff'; x.fill(); x.restore();
+  const who=o.n||o.u||'';
+  x.fillStyle=pri; x.beginPath(); x.arc(cx+90,cy+100,48,0,7); x.fill();
+  x.fillStyle='#fff'; x.font='800 48px '+ff; x.textAlign='center'; x.fillText((String(who||'F').trim()[0]||'F').toUpperCase(),cx+90,cy+118); x.textAlign='left';
+  x.fillStyle='#0f172a'; x.font='800 40px '+ff; x.fillText(String(who||'FinTrack').slice(0,26),cx+170,cy+98);
+  if(o.u){ x.fillStyle='#64748b'; x.font='600 29px '+ff; x.fillText('@'+o.u,cx+170,cy+140); }
+  x.fillStyle='#64748b'; x.font='700 28px '+ff; x.fillText(L('চ্যালেঞ্জ','CHALLENGE'),cx+60,cy+250);
+  x.fillStyle='#0f172a'; x.font='800 66px '+ff;
+  const sl=wrapLines(x,o.s,cw-120,3); sl.forEach((t,i)=>x.fillText(t,cx+60,cy+330+i*84));
+  const by=cy+330+Math.max(sl.length,1)*84+30;
+  x.fillStyle='#64748b'; x.font='700 28px '+ff; x.fillText(L('চ্যালেঞ্জের বাজেট','Challenge budget'),cx+60,by+40);
+  x.fillStyle='#0f172a'; x.font='800 80px '+ff; x.fillText(nb(fm(o.a)),cx+60,by+135);
+  const bx=cx+60,bw=cw-120,byy=by+190; rrect(x,bx,byy,bw,34,17); x.fillStyle='#e2e8f0'; x.fill();
+  const fw=Math.max(34,bw*Math.min(100,o.p)/100); if(o.p>0||true){ rrect(x,bx,byy,o.p>0?fw:0.01,34,17); x.fillStyle=o.d?'#16a34a':pri; if(o.p>0) x.fill(); }
+  x.fillStyle='#64748b'; x.font='700 30px '+ff; x.fillText(o.d?L('বাজেট পূর্ণ','Budget completed'):L('জমেছে ','Saved ')+(o.d?'':nb(fm(o.sv))),bx,byy+92);
+  x.textAlign='right'; x.fillStyle=o.d?'#16a34a':pri; x.font='800 44px '+ff; x.fillText(nb(o.p)+'% '+L('সম্পন্ন','done'),bx+bw,byy+94); x.textAlign='left';
+  x.fillStyle='rgba(255,255,255,.9)'; x.font='700 34px '+ff; x.textAlign='center'; x.fillText(L('FinTrack-এ নিজের চ্যালেঞ্জ শুরু করুন','Start your own challenge on FinTrack'),W/2,H-110); x.textAlign='left';
+  return await new Promise(res=>{ try{ c.toBlob(b=>res(b),'image/png'); }catch(e){ res(null); } });
+}
+let shBusy=false;
+async function sharePhone(o){
+  if(!o||shBusy) return; shBusy=true;
+  try{
+    const who=o.n||o.u||'', url=/^https?:$/i.test(location.protocol)?location.href.split('#')[0]:'';
+    const text=L((who||'একজন ইউজার')+' "'+o.s+'"-এর জন্য '+nb(fm(o.a))+' বাজেটের চ্যালেঞ্জ নিয়েছে — '+nb(o.p)+'% পূরণ হয়েছে।\nFinTrack-এ নিজের চ্যালেঞ্জ শুরু করুন।',(who||'Someone')+' took a '+fm(o.a)+' challenge for "'+o.s+'" — '+o.p+'% done.\nStart your own on FinTrack.');
+    const full=text+(url?'\n'+url:'');
+    let files=null; try{ const bl=await cardBlob(o); if(bl) files=[new File([bl],'fintrack-challenge.png',{type:'image/png'})]; }catch(e){}
+    if(navigator.share){
+      const tries=[]; try{ if(files&&navigator.canShare&&navigator.canShare({files})) tries.push({files:files,text:full}); }catch(e){}
+      tries.push({text:full});
+      for(const d of tries){ try{ await navigator.share(d); return; }catch(e){ if(e&&e.name==='AbortError') return; } }
+    }
+    try{ await navigator.clipboard.writeText(full); tt(L('শেয়ারের লেখা কপি হয়েছে — যেকোনো অ্যাপে পেস্ট করুন','Copied — paste it in any app')); }
+    catch(e){ tt(L('শেয়ার করা যায়নি','Could not share')); }
+  } finally { shBusy=false; }
+}
+
+
+/* ---------------- profile: the user's posted / shared challenges (bottom of the profile) ---------------- */
+const PC={};
+async function userPosts(uid){
+  let d;
+  try{ d=await db('feed',undefined,'orderBy=%22uid%22&equalTo=%22'+encodeURIComponent(uid)+'%22'); }
+  catch(e){ if(e&&e.status===400) d=await db('feed',undefined,'orderBy=%22t%22&limitToLast=100'); else throw e; }
+  return parse(d).filter(x=>x.uid===uid);
+}
+function fpRow(o,own,shared,acc){
+  return '<div class="fpRow" data-k="'+E(o.id)+'"><div class="fpTop"><div class="fpS">'+E(o.s)+'<small>'+(own?E(acc||'')+(o.d?' · '+L('সম্পন্ন','Completed'):'')+' · '+(shared?L('ফিডে শেয়ার করা','Shared on the feed'):L('শুধু আপনি দেখছেন','Only visible to you')):(o.d?L('বাজেট পূর্ণ','Budget completed'):ago(o.t)))+'</small></div>'
+    +'<button type="button" class="fgIcB" data-a="pshare" aria-label="'+L('ফোন থেকে শেয়ার','Share from phone')+'">'+S(IC.up)+'</button></div>'
+    +'<div class="fpAmt"><span>'+L('বাজেট','Budget')+'</span><b>'+nb(fm(o.sv))+' / '+nb(fm(o.a))+'</b></div>'
+    +'<div class="fdBar'+(o.d?' done':'')+'"><i style="width:'+o.p+'%"></i></div>'
+    +'<div class="fpFoot"><span>'+L('জমেছে ','Saved ')+nb(fm(o.sv))+'</span><b class="'+(o.d?'ok':'')+'">'+nb(o.p)+'% '+L('সম্পন্ন','done')+'</b></div></div>';
+}
+function pfPaint(box,rows,own,state){
+  let h='<h4>'+S(IC.flag,18)+' '+L('চ্যালেঞ্জ','Challenges')+(Array.isArray(rows)?'<span class="fpCnt">'+nb(rows.length)+'</span>':'')+'</h4>';
+  if(state==='load') h+='<div class="fpEmpty">'+L('লোড হচ্ছে…','Loading…')+'</div>';
+  else if(state==='login') h+='<div class="fpEmpty">'+L('চ্যালেঞ্জ দেখতে অ্যাকাউন্টে লগইন করুন।','Sign in to see challenges.')+'</div>';
+  else if(state==='err') h+='<div class="fpEmpty">'+L('চ্যালেঞ্জ লোড করা যায়নি।','Could not load challenges.')+'</div>';
+  else if(!rows.length) h+='<div class="fpEmpty">'+(own?L('এখনো কোনো চ্যালেঞ্জ নেই — "চ্যালেঞ্জ" ট্যাব থেকে শুরু করুন।','No challenges yet — start one from the Challenge tab.'):L('এই ইউজার এখনো কোনো চ্যালেঞ্জ শেয়ার করেননি।','This user has not shared any challenge yet.'))+'</div>';
+  else h+=rows.map(r=>r.__own?fpRow(r,true,r.__share,r.__acc):fpRow(r,false)).join('');
+  box.innerHTML=h;
+  box._rows=Array.isArray(rows)?rows:[];
+}
+window.fgProfFill=function(root){
+  const box=root&&root.querySelector('#ppCh'); if(!box) return;
+  const uid=box.dataset.u, own=box.dataset.own==='1';
+  if(!box._bound){ box._bound=1; box.addEventListener('click',e=>{ const b=e.target.closest('[data-a="pshare"]'); if(!b) return; const row=b.closest('[data-k]'), o=(box._rows||[]).find(x=>String(x.id)===row.dataset.k); if(o) sharePhone(o); }); }
+  if(own){
+    const rows=goals().slice().sort((a,b)=>(b.created||0)-(a.created||0)).map(g=>{ const pr=progress(g); return {id:g.uid,uid:me(),n:myN(),u:myU(),s:g.subject,a:g.target,sv:pr.saved,p:pr.pct,d:g.done?1:0,t:g.created||0,__own:1,__share:!!g.share,__acc:g.account}; });
+    pfPaint(box,rows,true); return;
+  }
+  if(!okId(uid)){ pfPaint(box,[],false); return; }
+  const c=PC[uid];
+  if(c&&c.rows&&Date.now()-c.t<60000){ pfPaint(box,c.rows,false); return; }
+  pfPaint(box,null,false,'load');
+  userPosts(uid).then(rows=>{ PC[uid]={t:Date.now(),rows:rows}; if(document.body.contains(box)) pfPaint(box,rows,false); })
+    .catch(e=>{ const st=e&&e.message==='LOGIN'?'login':'err'; if(document.body.contains(box)) pfPaint(box,null,false,st); });
+};
+
+/* ---------------- full-screen challenge dashboard + missions (sub-challenges) ---------------- */
+const subLbl=o=>o.n||(o.k==='save'?L('প্রতিদিন কমপক্ষে '+fm(o.v)+' জমা','Save at least '+fm(o.v)+' daily'):o.k==='limit'?(o.v>0?L('দৈনিক খরচ '+fm(o.v)+'-এর নিচে','Daily spend under '+fm(o.v)):L('প্রতিদিন কোনো খরচ নয়','No spending daily')):L('নিজের নিয়ম','My rule'));
+let DC=null;
+function viewOf(c){
+  if(c.g){ const g=c.g, pl=payload(g), s=stats(g), pr=progress(g);
+    return Object.assign({mine:true,uid:me(),n:myN(),u:myU(),x:s.x},pl,{sc:s.sc}); }
+  const v=c.v, x=v.ds?Math.max(1,dDiff(v.ds,todayStr())+1):1; return Object.assign({},v,{x:x});
+}
+function dashRender(){
+  const ov=$('fdDashOv'); if(!ov||!DC) return; const v=viewOf(DC), over=v.x>v.dn, X=Math.min(v.x,v.dn), left=Math.max(0,v.dn-v.x);
+  const cells=Math.min(v.dn,60), per=v.dn/cells; let strip='';
+  for(let c=0;c<cells;c++){ const a=Math.floor(c*per), b=Math.max(a+1,Math.floor((c+1)*per)); let n=0; for(let i=a;i<b;i++) n=Math.max(n,+(v.sd[i]||0));
+    const cls=(n>0?'on':'')+(v.x-1>=a&&v.x-1<b&&!over?' now':'')+(a>v.x-1?' fut':'');
+    strip+='<i class="'+cls+'">'+(per===1&&n>0?'<u>'+'•'.repeat(n)+'</u>':'')+'</i>'; }
+  let h='<div class="dbTop"><button type="button" class="dbIc" data-d="x" aria-label="Back">'+S('<path d="m15 6-6 6 6 6"/>')+'</button><div class="dbWho">'+avH(v.uid,v.n||v.u)+'<div><b>'+E(v.n||v.u||'?')+'</b><small>'+(v.u?'@'+E(v.u):'')+'</small></div></div>'
+    +(v.mine?'<button type="button" class="dbIc" data-d="add" aria-label="Add mission">'+S(IC.plus)+'</button>':'')+'</div>'
+    +'<div class="dbSubj">'+E(v.s)+'</div><div class="dbBig">'+nb(fm(v.sv))+'</div><div class="dbLbl">'+L('এ পর্যন্ত জমেছে','saved so far')+'</div>'
+    +'<div class="dbDay"><b>'+nb(X)+'</b><span>/ '+nb(v.dn)+L(' দিন','&nbsp;days')+'</span></div>'
+    +'<div class="dbMeta"><span>'+(over?L('সময় শেষ','Time is over'):L('বাকি ','Left ')+'<b>'+nb(left)+L(' দিন',' d')+'</b>')+'</span><span>'+L('সক্রিয় ','Active ')+'<b>'+nb(v.ac||0)+L(' দিন',' d')+'</b></span><span>'+L('টানা ','Streak ')+'<b>'+nb(v.sk||0)+L(' দিন',' d')+'</b></span></div>'
+    +'<div class="dbStrip">'+strip+'</div><div class="dbBar'+(v.d?' done':'')+'"><i style="width:'+v.p+'%"></i></div>'
+    +'<div class="dbRow"><b>'+nb(v.p)+'%</b><span>'+L('লক্ষ্য ','TARGET ')+nb(fm(v.a))+'</span></div>'
+    +'<div class="dbH"><span>'+L('মিশন','Missions')+'</span><small>'+nb(v.sc.length)+'/'+nb(10)+'</small></div>';
+  if(!v.sc.length) h+='<div class="fdMsg">'+(v.mine?L('উপরের + চেপে মিশন যোগ করুন — যেমন \"দৈনিক কমপক্ষে ১০০ টাকা জমা\"।','Tap + to add a mission — e.g. \"save at least 100 daily\".'):L('এই চ্যালেঞ্জে এখনো কোনো মিশন নেই।','No missions on this challenge yet.'))+'</div>';
+  v.sc.forEach((o,i)=>{ const pc=Math.min(100,Math.round(o.ok/o.e*100));
+    h+='<div class="dbSc'+(o.tf?' ok':'')+'" data-i="'+i+'"><div class="dbScT"><b>'+E(subLbl(o))+'</b>'+(v.mine?'<button type="button" data-d="rm" aria-label="Delete">&times;</button>':'')+'</div>'
+      +'<small>'+nb(o.ok)+' / '+nb(o.e)+L(' দিন সফল',' days done')+' · '+L('টানা ','streak ')+nb(o.st)+' · '+(o.tf?L('আজ ✓','today ✓'):L('আজ বাকি','today pending'))+'</small><div class="dbBar"><i style="width:'+pc+'%"></i></div>'
+      +(v.mine&&o.k==='check'?'<button type="button" class="dbChk'+(o.tf?' on':'')+'" data-d="tg">'+(o.tf?L('আজ সম্পন্ন ✓','Done today ✓'):L('আজ সম্পন্ন করেছি','Mark done today'))+'</button>':'')+'</div>'; });
+  const keep=ov.scrollTop; ov.innerHTML=h; ov.scrollTop=keep; loadPics(ov);
+}
+function openDash(c){
+  DC=c; let ov=$('fdDashOv'); if(!ov){ ov=document.createElement('div'); ov.id='fdDashOv'; document.body.appendChild(ov);
+    ov.addEventListener('click',e=>{ const b=e.target.closest('[data-d]'); if(!b||!DC||!DC.g) { if(b&&b.dataset.d==='x') closeDash(); return; }
+      const d=b.dataset.d, g=DC.g, i=+((b.closest('[data-i]')||{}).dataset||{}).i, o=(g.subs||[])[i];
+      if(d==='x') closeDash(); else if(d==='add') addSub(g);
+      else if(d==='tg'&&o){ o.log=o.log||{}; const t=todayStr(); if(o.log[t]) delete o.log[t]; else o.log[t]=1; saveData(); dashRender(); }
+      else if(d==='rm'&&o){ const go=()=>{ g.subs=g.subs.filter(x=>x!==o); saveData(); dashRender(); }; try{ appDialog(L('এই মিশনটি মুছে ফেলবেন?','Delete this mission?'),{confirm:true},go); }catch(x){ if(confirm(L('মুছে ফেলবেন?','Delete?'))) go(); } } }); }
+  document.body.style.overflow='hidden'; ov.scrollTop=0; dashRender();
+}
+function closeDash(){ const ov=$('fdDashOv'); if(ov) ov.remove(); DC=null; document.body.style.overflow=''; }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&$('fdDashOv')&&!$('fgOv')) closeDash(); });
+function addSub(g){
+  if((g.subs||[]).length>=10){ tt(L('সর্বোচ্চ ১০টি মিশন রাখা যায়','Up to 10 missions per challenge')); return; }
+  if($('fgOv')) return; g.subs=g.subs||[];
+  const ov=document.createElement('div'); ov.id='fgOv'; ov.style.zIndex=9700; ov.innerHTML='<div class="fgBd"></div><div class="fgSh"></div>'; document.body.appendChild(ov);
+  const sh=ov.querySelector('.fgSh'), close=()=>ov.remove(); ov.querySelector('.fgBd').onclick=close;
+  const PR=[['save',100,''],['limit',0,''],['check',0,L('অর্ধদিন খরচ নয়','Half-day no spend')],['limit',500,'']];
+  let k='save', nm='', am='100';
+  const TY=[['save',L('দৈনিক জমা','Daily save')],['limit',L('দৈনিক খরচ সীমা','Daily spend cap')],['check',L('নিজের নিয়ম','My rule')]];
+  function paint(){
+    sh.innerHTML='<h3>'+L('নতুন মিশন','New mission')+'</h3><p class="fgSub">'+L('এই চ্যালেঞ্জ পূরণের জন্য প্রতিদিনের ছোট লক্ষ্য। জমা ও খরচ নিজে থেকেই হিসাব হবে।','A small daily goal that supports this challenge. Saves and spending are tracked automatically.')+'</p>'
+      +'<div class="fgAcc">'+PR.map((p,j)=>'<button type="button" class="fgAc" data-p="'+j+'"><b>'+E(subLbl({n:p[2],k:p[0],v:p[1]}))+'</b></button>').join('')+'</div>'
+      +'<label>'+L('ধরন','Type')+'</label><div class="fgAcc">'+TY.map(t=>'<button type="button" class="fgAc'+(t[0]===k?' on':'')+'" data-k="'+t[0]+'"><b>'+t[1]+'</b></button>').join('')+'</div>'
+      +(k!=='check'?'<label>'+(k==='save'?L('ন্যূনতম টাকা (প্রতিদিন)','Minimum amount per day'):L('সর্বোচ্চ খরচ (০ = কোনো খরচ নয়)','Max spend per day (0 = none)'))+'</label><input id="smA" type="number" inputmode="decimal" min="0" value="'+E(am)+'">':'')
+      +'<label>'+(k==='check'?L('মিশনের নাম','Mission name'):L('নাম (ঐচ্ছিক)','Name (optional)'))+'</label><input id="smN" maxlength="40" value="'+E(nm)+'">'
+      +'<div class="fgEr"></div><button type="button" class="fgGo" data-ok="1">'+L('মিশন যোগ করুন','Add mission')+'</button><button type="button" class="fgGo ghost" data-x="1">'+L('বাতিল','Cancel')+'</button>';
+    const sv=()=>{ nm=($('smN')||{}).value||''; am=($('smA')||{}).value||am; };
+    sh.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{ const p=PR[+b.dataset.p]; k=p[0]; am=String(p[1]); nm=p[2]; paint(); });
+    sh.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{ sv(); k=b.dataset.k; paint(); });
+    sh.querySelector('[data-x]').onclick=close;
+    sh.querySelector('[data-ok]').onclick=()=>{ sv(); const v=parseFloat(am), er=sh.querySelector('.fgEr');
+      if(k==='check'&&nm.trim().length<2){ er.textContent=L('মিশনের নাম লিখুন','Write a mission name'); return; }
+      if(k==='save'&&!(v>0)){ er.textContent=L('সঠিক টাকা দিন','Enter a valid amount'); return; }
+      if(k==='limit'&&!(v>=0)){ er.textContent=L('সঠিক টাকা দিন','Enter a valid amount'); return; }
+      g.subs.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),k:k,v:k==='check'?0:v,name:nm.trim().slice(0,40),start:todayStr(),log:{}});
+      saveData(); close(); dashRender(); tt(L('মিশন যোগ হয়েছে','Mission added')); };
+  }
+  paint();
+}
+
+/* nav button + tab hooks */
+const nav=$('bottomNav');
+if(nav){
+  const b=document.createElement('button'); b.className='bnbtn'; b.dataset.bn='feed';
+  b.innerHTML=S(IC.rss)+'<span class="dot"></span><span class="lbl">'+L('ফিড','Feed')+'</span>';
+  b.addEventListener('click',()=>activateTab('feed'));
+  const st=nav.querySelector('.bnbtn[data-bn="settings"]'); if(st) nav.insertBefore(b,st); else nav.appendChild(b);
+}
+const _at=window.activateTab;
+window.activateTab=function(n){ const r=_at.apply(this,arguments); if(n==='feed'){ render(); load(); window.scrollTo(0,0); } else if(n==='challenge'){ try{ paintGoals(); }catch(e){} window.scrollTo(0,0); } return r; };
+const _sd=window.saveData;
+window.saveData=function(){ const r=_sd.apply(this,arguments); setTimeout(()=>{ try{ checkGoals(); paintGoals(); pushSoon(); }catch(e){} },0); return r; };
+const _al=window.applyLanguage;
+if(_al) window.applyLanguage=function(){ const r=_al.apply(this,arguments); try{ paintGoals(); const l=document.querySelector('.bnbtn[data-bn="feed"] .lbl'); if(l) l.textContent=L('ফিড','Feed'); if(active()) render(); }catch(e){} return r; };
+setInterval(()=>{ if(active()&&document.visibilityState==='visible') load(); },30000);
+setInterval(()=>{ try{ pushSoon(); }catch(e){} },300000);
+setTimeout(()=>{ try{ checkGoals(); pushSoon(); }catch(e){} },2500);
+})();
+</script>
 </body>
 </html>
