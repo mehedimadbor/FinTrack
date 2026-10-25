@@ -17063,6 +17063,87 @@ html body #sec-profile .ppHead .ppCov{border-radius:20px;overflow:hidden;}
 .ppComp{display:flex;align-items:center;gap:12px;padding:10px 4px 14px;cursor:pointer;color:var(--muted);font-size:15px;border-bottom:1px solid var(--border);margin-bottom:10px;}
 .ppComp .ppFrAv{width:40px;margin:0;flex:none;}.ppComp>span:nth-child(2){flex:1;}.ppComp svg{color:var(--primary);}
 </style>
+<style id="ftRaceX">
+#fgBox .rcCol{width:66px;height:138px;border-radius:20px;}
+/* X-style compact post row */
+.xp{display:flex;gap:10px;padding:11px 2px 3px;border-bottom:1px solid var(--border);}
+.xp:last-child{border-bottom:0;}
+.xpAv{flex:none;cursor:pointer;}
+.xp .fdAv{width:38px;height:38px;font-size:15px;}
+.xpB{flex:1;min-width:0;}
+.xpH{display:flex;align-items:baseline;gap:5px;font-size:14px;line-height:1.4;min-width:0;white-space:nowrap;}
+.xpN{font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;flex:0 1 auto;max-width:48%;cursor:pointer;}
+.xpH em{font-style:normal;flex:none;font-size:10.5px;font-weight:800;color:var(--primary);background:color-mix(in srgb,var(--primary) 14%,var(--bg));padding:1px 7px;border-radius:9px;}
+.xpU{color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto;}
+.xpT{color:var(--muted);font-size:13px;flex:none;}
+.xpS{display:flex;gap:6px;align-items:flex-start;margin-top:1px;font-size:14.5px;font-weight:700;line-height:1.4;word-break:break-word;color:var(--text);}
+.xpS svg{width:15px;height:15px;flex:none;margin-top:3px;stroke:var(--primary);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.xpM{display:flex;gap:8px;align-items:baseline;font-size:12.5px;color:var(--muted);font-weight:600;margin-top:1px;}
+.xpM b{color:var(--primary);font-weight:800;}.xpM b.ok{color:#16a34a;}
+.xpA{display:flex;justify-content:space-between;max-width:230px;margin-top:1px;}
+.xpA button{border:0;background:none;color:var(--muted);display:inline-flex;align-items:center;gap:6px;height:34px;min-width:44px;padding:0;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;}
+.xpA svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.xpA button.on{color:var(--primary);}
+/* inline dashboard */
+.dbIn{margin:8px 0 4px;padding:12px;border:1px solid var(--border);border-radius:16px;background:var(--card);}
+.dbIn.dbTop2{margin:12px 0 0;}
+.dbInH{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:12px;color:var(--muted);font-weight:600;}
+.dbInH b{font-size:14px;color:var(--text);font-weight:800;}
+.dbIn .dbStrip{padding-top:10px;}
+.dbChips{display:flex;gap:5px;margin-top:10px;}
+.dbCh{flex:1;min-width:0;height:30px;border-radius:9px;border:1.5px solid var(--border);background:var(--bg);color:var(--muted);font:inherit;font-size:12.5px;font-weight:800;cursor:pointer;padding:0;}
+.dbCh.ok{background:#16a34a;border-color:#16a34a;color:#fff;}
+.dbCh.sel{outline:2px solid var(--primary);outline-offset:1px;}
+.dbChL{margin-top:8px;font-size:13px;font-weight:600;line-height:1.45;}
+.dbChL small{display:block;color:var(--muted);font-size:11.5px;font-weight:500;}
+.dbMsr{display:flex;align-items:center;gap:8px;margin-top:10px;}
+.dbTog{flex:1;min-width:0;height:34px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text);font:inherit;font-weight:700;font-size:12.5px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:0 12px;}
+.dbTog svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s;}
+.dbTog.open svg{transform:rotate(180deg);}
+.dbAdd{width:34px;height:34px;border-radius:10px;border:0;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;padding:0;}
+.dbAdd svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2.4;stroke-linecap:round;}
+.dbEmp{margin-top:8px;font-size:12.5px;color:var(--muted);text-align:center;}
+.mnR{display:flex;align-items:center;gap:8px;padding:8px 2px;border-top:1px solid var(--border);margin-top:8px;}
+.mnT{flex:1;min-width:0;}.mnT b{display:block;font-size:13px;line-height:1.4;word-break:break-word;}.mnT small{color:var(--muted);font-size:11.5px;}
+.mnC,.mnX{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--border);background:none;color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;padding:0;}
+.mnC svg,.mnX svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+.mnC.on{background:#16a34a;border-color:#16a34a;color:#fff;}
+.mnD{width:12px;height:12px;border-radius:50%;border:2px solid var(--border);flex:none;}.mnD.on{background:#16a34a;border-color:#16a34a;}
+/* comment bottom sheet (Facebook-style thread) */
+#fdCmOv{position:fixed;inset:0;z-index:9650;}
+#fdCmOv .cmBd{position:absolute;inset:0;background:rgba(0,0,0,.55);}
+#fdCmOv .cmSh{position:absolute;left:0;right:0;bottom:0;height:84vh;background:var(--bg);color:var(--text);border-radius:22px 22px 0 0;display:flex;flex-direction:column;box-shadow:0 -10px 40px rgba(0,0,0,.35);overflow:hidden;}
+.cmGrip{width:44px;height:5px;border-radius:3px;background:color-mix(in srgb,var(--text) 25%,var(--bg));margin:8px auto 2px;flex:none;}
+.cmTop{display:flex;align-items:center;gap:10px;padding:6px 16px 10px;flex:none;border-bottom:1px solid var(--border);}
+.cmTop>div{flex:1;min-width:0;}.cmTop b{font-size:16px;font-weight:800;}
+.cmTop small{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.5;}
+.cmX{width:34px;height:34px;border-radius:50%;border:0;background:color-mix(in srgb,var(--text) 8%,var(--bg));color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex:none;}
+.cmX svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;}
+.cmBody{flex:1;min-height:0;display:flex;flex-direction:column;}
+.cmList{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:14px 14px 6px;}
+.cmI{display:flex;gap:10px;margin-bottom:14px;align-items:flex-start;}
+.cmI .fdAv{width:36px;height:36px;font-size:14px;}
+.cmI.rp{margin-left:46px;}.cmI.rp .fdAv{width:28px;height:28px;font-size:12px;}
+.cmBx{flex:1;min-width:0;}
+.cmH{display:flex;align-items:baseline;gap:6px;}.cmH b{font-size:13.5px;font-weight:800;}.cmH small{font-size:12px;color:var(--muted);}
+.cmT{font-size:15px;line-height:1.4;margin-top:1px;word-break:break-word;white-space:pre-wrap;}
+.cmMn{color:#3b82f6;font-weight:700;}
+.cmAc{display:flex;gap:18px;margin-top:2px;}
+.cmAc button{border:0;background:none;padding:3px 0;color:var(--muted);font:inherit;font-size:13px;font-weight:800;cursor:pointer;}
+.cmVt{display:flex;flex-direction:column;gap:0;flex:none;align-items:flex-end;}
+.cmVt .cv{border:0;background:none;color:var(--muted);display:inline-flex;align-items:center;gap:4px;height:27px;padding:0 2px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;}
+.cmVt .cv svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.cmVt .cv.dn svg{transform:rotate(180deg);}
+.cmVt .cv.on{color:var(--primary);}.cmVt .cv.dn.on{color:#dc2626;}
+.cmRb{flex:none;padding:8px 16px;font-size:13px;color:var(--muted);border-top:1px solid var(--border);}
+.cmRb b{color:var(--text);}
+.cmRb button{border:0;background:none;color:var(--primary);font:inherit;font-weight:800;font-size:13px;cursor:pointer;padding:0;}
+.cmIn{flex:none;display:flex;align-items:center;gap:8px;padding:8px 12px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--border);}
+.cmPill{flex:1;min-width:0;display:flex;align-items:center;gap:6px;height:44px;border-radius:22px;background:color-mix(in srgb,var(--text) 8%,var(--bg));padding:0 16px;}
+.cmPill input{flex:1;min-width:0;border:0;background:none;outline:0;color:var(--text);font:inherit;font-size:15px;height:100%;}
+.cmIn>button{width:42px;height:42px;border:0;background:none;color:var(--primary);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;padding:0;}
+.cmIn>button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+</style>
 <script id="ftFeedJs">
 (function(){
 const $=id=>document.getElementById(id), bn=()=>{ try{ return currentLang==='bn'; }catch(e){ return true; } }, L=(b,e)=>bn()?b:e;
@@ -17070,7 +17151,7 @@ const E=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','
 const nb=x=>bn()?String(x).replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]):String(x);
 const tt=m=>{ try{ if(window.toast) window.toast(m); }catch(e){} };
 const S=(p,z)=>'<svg viewBox="0 0 24 24" aria-hidden="true"'+(z?' width="'+z+'" height="'+z+'"':'')+'>'+p+'</svg>';
-const IC={trophy:'<path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7M10 17h4"/>',up:'<path d="M12 15V3M7.5 7.5 12 3l4.5 4.5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/>',flag:'<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',plus:'<path d="M12 5v14M5 12h14"/>',share:'<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.2 10.8 7.6-3.6M8.2 13.2l7.6 3.6"/>',trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',cm:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/>',like:'<path d="M7 11v9H4v-9zM7 11l4-8a2 2 0 0 1 2 2v4h5.5a2 2 0 0 1 2 2.3l-1.3 7A2 2 0 0 1 17.2 20H7"/>',send:'<path d="M21 3 10 14M21 3l-7 18-4-7-7-4z"/>',rss:'<path d="M5 5a14 14 0 0 1 14 14M5 11a8 8 0 0 1 8 8"/><circle cx="6" cy="18" r="1.4"/>',refresh:'<path d="M20 11a8 8 0 0 0-14.5-3M4 4v4h4M4 13a8 8 0 0 0 14.5 3M20 20v-4h-4"/>'};
+const IC={trophy:'<path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7M10 17h4"/>',up:'<path d="M12 15V3M7.5 7.5 12 3l4.5 4.5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/>',flag:'<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',plus:'<path d="M12 5v14M5 12h14"/>',share:'<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.2 10.8 7.6-3.6M8.2 13.2l7.6 3.6"/>',trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',cm:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/>',like:'<path d="M7 11v9H4v-9zM7 11l4-8a2 2 0 0 1 2 2v4h5.5a2 2 0 0 1 2 2.3l-1.3 7A2 2 0 0 1 17.2 20H7"/>',send:'<path d="M21 3 10 14M21 3l-7 18-4-7-7-4z"/>',rss:'<path d="M5 5a14 14 0 0 1 14 14M5 11a8 8 0 0 1 8 8"/><circle cx="6" cy="18" r="1.4"/>',refresh:'<path d="M20 11a8 8 0 0 0-14.5-3M4 4v4h4M4 13a8 8 0 0 0 14.5 3M20 20v-4h-4"/>',stats:'<path d="M6 20v-9M12 20V4M18 20v-6"/>',x:'<path d="M6 6l12 12M18 6 6 18"/>',chev:'<path d="m6 9 6 6 6-6"/>',chk:'<path d="m5 12 5 5 9-10"/>'};
 const R=()=>{ try{ return window.ftCloud&&ftCloud._raw?ftCloud._raw():null; }catch(e){ return null; } };
 const me=()=>{ try{ const r=R(); return r&&r.ses&&r.ses()?r.ses().uid:''; }catch(e){ return ''; } };
 async function db(path,opt,qs){
@@ -17166,15 +17247,16 @@ function checkGoals(){
 
 /* ---------------- Challenge tab block ---------------- */
 const box=document.createElement('div'); box.id='fgBox';
-let RT='feed';
+let RT='feed'; let FG=''; const CH={},MO={},DX={},RP={};
+const featG=gs=>gs.find(x=>x.uid===FG)||gs.find(x=>!x.done)||gs[0];
 const RTABS=[['feed','Race Feeds','রেস ফিড'],['rep','Replies','রিপ্লাই'],['mine','My Races','আমার রেস'],['ms','Missions','মিশন'],['top','Top Racers','সেরা রেসার']];
 function heroH(gs){
-  const g=gs.find(x=>!x.done)||gs[0]; let nR=0,nP=0; try{ nR=new Set(posts.map(p=>p.uid)).size; nP=posts.length; }catch(e){}
+  const g=featG(gs); let nR=0,nP=0; try{ nR=new Set(posts.map(p=>p.uid)).size; nP=posts.length; }catch(e){}
   if(!g) return '<div class="rcHero"><div class="rcCol"><i style="height:0"></i></div><div class="rcHi"><small>'+L('আপনার রেস','YOUR RACE')+'</small><h2>'+L('রেস শুরু করুন','Start a race')+'</h2><p>'+L('টার্গেট দিন, তারপর ১০টি দৈনিক চ্যালেঞ্জ খেলে সেটি পূরণ করুন।','Set a target, then play 10 daily challenges to reach it.')+'</p><button type="button" class="rcGo" data-a="new">'+S(IC.plus)+L('নতুন রেস','New race')+'</button></div></div>';
   const pr=progress(g), s=stats(g), dn=s.sc.slice(0,PRE).filter(o=>o.tf).length;
   return '<div class="rcHero" data-g="'+E(g.uid)+'"><div class="rcCol"><i style="height:'+pr.pct+'%"></i><b>'+nb(pr.pct)+'%</b></div><div class="rcHi"><small>'+L('আপনার রেস','YOUR RACE')+'</small><h2>'+E(g.subject)+'</h2><div class="rcAm">'+nb(fm(pr.saved))+' <span>/ '+nb(fm(g.target))+'</span></div>'
     +'<div class="rcSt"><span><b>'+nb(Math.min(s.x,s.dn))+'/'+nb(s.dn)+'</b>'+L('দিন','days')+'</span><span><b>'+nb(dn)+'/'+nb(PRE)+'</b>'+L('আজকের চ্যালেঞ্জ','today')+'</span><span><b>'+nb(s.sk)+'</b>'+L('টানা','streak')+'</span></div>'
-    +'<button type="button" class="rcGo" data-a="open">'+L('ড্যাশবোর্ড ›','Dashboard ›')+'</button></div></div><div class="rcMeta">'+nb(nP)+L(' রেস · ',' races · ')+nb(nR)+L(' জন রেসার',' racers')+'</div>';
+    +'</div></div><div class="rcMeta">'+nb(nP)+L(' রেস · ',' races · ')+nb(nR)+L(' জন রেসার',' racers')+'</div>';
 }
 function tabsH(){ return '<div class="rcTabs">'+RTABS.map(t=>'<button type="button" data-a="rt" data-rt="'+t[0]+'" class="'+(RT===t[0]?'on':'')+'">'+L(t[2],t[1])+'</button>').join('')+'</div>'; }
 function feedBody(){
@@ -17193,13 +17275,13 @@ function repBody(){
   if(!rows.length) return '<div class="fdMsg">'+L('এখনো কোনো রিপ্লাই নেই — কোনো রেসে রিপ্লাই দিন, অথবা অন্যরা আপনার রেসে রিপ্লাই দিলে এখানে দেখাবে।','No replies yet — reply on a race, or when others reply on yours it shows here.')+'</div>';
   return rows.map(p=>{ const rel=(Array.isArray(CM[p.id])?CM[p.id]:[]).filter(c=>c.uid===u||p.uid===u);
     return '<div class="fdCard" data-p="'+E(p.id)+'"><div class="fdTop" data-a="prof" data-u="'+E(p.uid)+'">'+avH(p.uid,p.n||p.u)+'<div><b>'+E(p.n||p.u||'?')+(p.uid===u?' · '+L('আপনি','You'):'')+'</b><small>'+E(p.s)+' · '+nb(p.p)+'%</small></div></div>'
-      +'<div class="fdBar'+(p.d?' done':'')+'"><i style="width:'+p.p+'%"></i></div>'
+      +'<div class="xpM" style="margin:4px 0 0"><span>'+nb(fm(p.sv))+' / '+nb(fm(p.a))+'</span><b>'+nb(p.p)+'%</b></div>'
       +rel.map(c=>'<div class="rcRep'+(c.uid===u?' me':'')+'">'+avH(c.uid,c.n||c.u)+'<div><b>'+E(c.uid===u?L('আপনি','You'):(c.n||c.u||'?'))+'</b><small>'+ago(c.t)+'</small><p>'+E(c.x)+'</p></div></div>').join('')
       +'<div class="fdAct"><button type="button" class="fdCmBtn rp" data-a="cm">'+S(IC.cm)+L('রিপ্লাই','Reply')+'</button></div>'
-      +(openC[p.id]?'<div class="fdCm" id="fdCm_'+E(p.id)+'">'+cmH(p.id)+'</div>':'')+'</div>'; }).join('');
+      +'</div>'; }).join('');
 }
 function msBody(gs){
-  const g=gs.find(x=>!x.done)||gs[0]; if(!g) return '<div class="fdMsg">'+L('আগে একটি রেস শুরু করুন — তারপর এখানে ১০টি দৈনিক চ্যালেঞ্জ আসবে।','Start a race first — the 10 daily challenges appear here.')+'</div>';
+  const g=featG(gs); if(!g) return '<div class="fdMsg">'+L('আগে একটি রেস শুরু করুন — তারপর এখানে ১০টি দৈনিক চ্যালেঞ্জ আসবে।','Start a race first — the 10 daily challenges appear here.')+'</div>';
   const s=stats(g), lim=+data.dailyLimit||0, bn=bonusOf(g);
   return '<div class="rcNote">'+L('এই ১০টি চ্যালেঞ্জ খেললেই \"'+E(g.subject)+'\" রেসের টার্গেট পূরণ হবে। ','Playing these 10 challenges fills the \"'+E(g.subject)+'\" race target. ')
     +(lim>0?L('অব্যবহৃত দৈনিক বাজেট থেকে এ পর্যন্ত রেসে যোগ হয়েছে ','Unused daily budget added so far: ')+'<b>'+nb(fm(bn))+'</b>':L('দৈনিক বাজেট সেট করলে অব্যবহৃত টাকা রেসে যোগ হবে।','Set a daily budget to have unused money added to your race.'))+'</div>'
@@ -17214,9 +17296,9 @@ function cardsH(gs){
       +'<button type="button" class="fgIcB'+(g.share?' on':'')+'" data-a="share" aria-label="Race Feeds" title="Race Feeds">'+S(IC.rss)+'</button>'
       +'<button type="button" class="fgIcB" data-a="phone" aria-label="'+L('ফোন থেকে শেয়ার','Share from phone')+'" title="'+L('ফোন থেকে শেয়ার','Share from phone')+'">'+S(IC.up)+'</button>'
       +'<button type="button" class="fgIcB" data-a="del" aria-label="Delete">'+S(IC.trash)+'</button></div>'
-      +'<div data-a="open" style="cursor:pointer"><div class="fgAmt"><span>'+L('টার্গেট','Target')+'</span><b>'+nb(fm(pr.saved))+' / '+nb(fm(g.target))+'</b></div>'
+      +'<div data-a="feat" style="cursor:pointer"><div class="fgAmt"><span>'+L('টার্গেট','Target')+'</span><b>'+nb(fm(pr.saved))+' / '+nb(fm(g.target))+'</b></div>'
       +'<div class="fgBar'+(g.done?' done':'')+'"><i style="width:'+pr.pct+'%"></i></div>'
-      +'<div class="fgFoot"><span>'+(g.share?L('Race Feeds-এ শেয়ার করা আছে','Shared on Race Feeds'):L('শুধু আপনি দেখছেন','Only visible to you'))+'</span><b>'+nb(pr.pct)+'%</b></div><div class="dbHint">'+L('ড্যাশবোর্ড ও ১০ চ্যালেঞ্জ ›','Dashboard & 10 challenges ›')+'</div></div></div>';
+      +'<div class="fgFoot"><span>'+(g.share?L('Race Feeds-এ শেয়ার করা আছে','Shared on Race Feeds'):L('শুধু আপনি দেখছেন','Only visible to you'))+'</span><b>'+nb(pr.pct)+'%</b></div><div class="dbHint">'+L('উপরে ড্যাশবোর্ডে দেখুন ›','Show on top dashboard ›')+'</div></div></div>';
   });
   return h;
 }
@@ -17225,14 +17307,16 @@ function paintGoals(){
   const gs=goals(); let body='';
   if(RT==='mine') body=cardsH(gs); else if(RT==='ms') body=msBody(gs);
   else{ try{ body=RT==='feed'?feedBody():RT==='rep'?repBody():dashH(); }catch(e){ body='<div class="fdMsg">'+L('লোড হচ্ছে…','Loading…')+'</div>'; } }
-  box.innerHTML='<div class="rcBack"><button type="button" data-a="back" aria-label="Back">'+S('<path d="m15 6-6 6 6 6"/>')+'</button><b>'+L('রেস','Race')+'</b></div>'+heroH(gs)+tabsH()+body; try{ loadPics(box); }catch(e){}
+  const sc0=$('sec-challenge'), kp=sc0?sc0.scrollTop:0; let db0=''; try{ db0=dashBox(gs); }catch(e){}
+  box.innerHTML='<div class="rcBack"><button type="button" data-a="back" aria-label="Back">'+S('<path d="m15 6-6 6 6 6"/>')+'</button><b>'+L('রেস','Race')+'</b></div>'+heroH(gs)+db0+tabsH()+body; try{ loadPics(box); }catch(e){}
+  if(sc0&&kp) sc0.scrollTop=kp;
 }
 box.addEventListener('click',e=>{
   const b=e.target.closest('[data-a]'); if(!b) return; const a=b.dataset.a, c=b.closest('[data-g]'), g=c&&goals().find(x=>x.uid===c.dataset.g);
   if(a==='back'){ activateTab('dash'); return; }
   if(a==='rt'){ RT=b.dataset.rt; paintGoals(); if(RT==='feed'||RT==='rep') load(); }
   else if(a==='new') openForm();
-  else if(a==='open'&&g) openDash({g:g});
+  else if(a==='feat'&&g){ FG=g.uid; RT='feed'; paintGoals(); const sc0=$('sec-challenge'); if(sc0) sc0.scrollTop=0; }
   else if(a==='del'&&g) askDel(g);
   else if(a==='share'&&g) toggleShare(g);
   else if(a==='phone'&&g){ const pr=progress(g); sharePhone({n:myN(),u:myU(),s:g.subject,a:g.target,sv:pr.saved,p:pr.pct,d:g.done?1:0}); }
@@ -17302,8 +17386,9 @@ window.fgOpen=openForm;
 /* ---------------- Feed page ---------------- */
 const sec=document.createElement('div'); sec.className='section'; sec.id='sec-feed';
 const stg=$('sec-settings'); if(stg) stg.parentNode.insertBefore(sec,stg); else document.body.appendChild(sec);
-let posts=[], FS={err:'',busy:false,loaded:false}; const openC={}, CM={}, VT={}, picC={};
+let posts=[], FS={err:'',busy:false,loaded:false}; const CM={}, VT={}, picC={};
 const ago=t=>{ const s=Math.max(0,(Date.now()-(+t||0))/1000); if(s<60) return L('এইমাত্র','just now'); if(s<3600) return nb(Math.floor(s/60))+L(' মিনিট আগে','m ago'); if(s<86400) return nb(Math.floor(s/3600))+L(' ঘণ্টা আগে','h ago'); return nb(Math.floor(s/86400))+L(' দিন আগে','d ago'); };
+const agoS=t=>{ const s=Math.max(0,(Date.now()-(+t||0))/1000); if(s<60) return L('এইমাত্র','now'); if(s<3600) return nb(Math.floor(s/60))+L('মি','m'); if(s<86400) return nb(Math.floor(s/3600))+L('ঘ','h'); if(s<604800) return nb(Math.floor(s/86400))+L('দি','d'); return nb(Math.floor(s/604800))+L('সপ্তাহ','w'); };
 const avH=(uid,name)=>'<div class="fdAv" data-au="'+E(uid)+'">'+(okPic(picC[uid])?'<img alt="" src="'+picC[uid]+'">':E((String(name||'?').trim()[0]||'?').toUpperCase()))+'</div>';
 function loadPics(root){
   root.querySelectorAll('.fdAv[data-au]').forEach(el=>{
@@ -17313,33 +17398,57 @@ function loadPics(root){
 }
 function rulesMsg(){ return '<div class="fdMsg">'+L('ফিড চালু করতে Firebase Realtime Database-এর Rules-এ নিচের অংশটি "rules" এর ভেতরে যোগ করে Publish করুন:','To enable the feed, add this inside "rules" of your Firebase Realtime Database and Publish:')+'<pre id="fdRules">'+E(RULES)+'</pre><button type="button" data-a="copy">'+L('কপি করুন','Copy')+'</button></div>'; }
 function postH(p){
-  const mine=p.uid===me();
-  return '<div class="fdCard" data-p="'+E(p.id)+'"><div class="fdTop" data-a="prof" data-u="'+E(p.uid)+'">'+avH(p.uid,p.n||p.u)+'<div><b>'+E(p.n||p.u||'?')+(mine?' · '+L('আপনি','You'):'')+'</b><small>'+(p.u?'@'+E(p.u)+' · ':'')+ago(p.t)+'</small></div></div>'
-    +'<div data-a="open" style="cursor:pointer"><div class="fdSub">'+S(IC.flag)+'<span>'+E(p.s)+'</span></div>'
-    +'<div class="fdAmtR"><span>'+L('চ্যালেঞ্জের বাজেট','Challenge budget')+'</span><b>'+nb(fm(p.a))+'</b></div>'
-    +'<div class="fdBar'+(p.d?' done':'')+'"><i style="width:'+p.p+'%"></i></div>'
-    +'<div class="fdPct"><span>'+(p.d?L('বাজেট পূর্ণ','Budget completed'):L('জমেছে ','Saved ')+nb(fm(p.sv)))+'</span><b class="'+(p.d?'ok':'')+'">'+nb(p.p)+'% '+L('সম্পন্ন','done')+'</b></div>'
-    +'<div class="dbHint">'+L('ড্যাশবোর্ড খুলুন ›','Open dashboard ›')+'</div></div><div class="fdAct"><button type="button" class="fdCmBtn" data-a="cm">'+S(IC.cm)+L('মন্তব্য','Comments')+(CM[p.id]?' ('+nb(CM[p.id].length)+')':'')+'</button>'
-    +'<button type="button" class="fdShBtn" data-a="phone" aria-label="'+L('শেয়ার','Share')+'">'+S(IC.up)+L('শেয়ার','Share')+'</button></div>'
-    +(openC[p.id]?'<div class="fdCm" id="fdCm_'+E(p.id)+'">'+cmH(p.id)+'</div>':'')+'</div>';
+  const mine=p.uid===me(), n=CM[p.id], cnt=Array.isArray(n)?n.length:0, open=!!DX[p.id];
+  let dh=''; if(open){ try{ const lg=goals().find(x=>x.uid===p.id); dh='<div class="dbIn">'+dashInner(viewOf(lg?{g:lg}:{v:Object.assign({mine:false},p)}),!!lg,p.id)+'</div>'; }catch(e){} }
+  return '<div class="xp" data-p="'+E(p.id)+'"><div class="xpAv" data-a="prof" data-u="'+E(p.uid)+'">'+avH(p.uid,p.n||p.u)+'</div><div class="xpB">'
+    +'<div class="xpH"><span class="xpN" data-a="prof" data-u="'+E(p.uid)+'">'+E(p.n||p.u||'?')+'</span>'+(mine?'<em>'+L('আপনি','You')+'</em>':'')+(p.u?'<span class="xpU">@'+E(p.u)+'</span>':'')+'<span class="xpT">· '+agoS(p.t)+'</span></div>'
+    +'<div class="xpS">'+S(IC.flag)+'<span>'+E(p.s)+'</span></div>'
+    +'<div class="xpM"><span>'+(p.d?L('বাজেট পূর্ণ · ','Completed · '):L('জমেছে ','Saved ')+nb(fm(p.sv))+' / ')+nb(fm(p.a))+'</span><b class="'+(p.d?'ok':'')+'">'+nb(p.p)+'%</b></div>'
+    +dh
+    +'<div class="xpA"><button type="button" data-a="cm" aria-label="'+L('মন্তব্য','Comments')+'">'+S(IC.cm)+'<span class="cmCnt">'+(cnt?nb(cnt):'')+'</span></button>'
+    +'<button type="button" class="'+(open?'on':'')+'" data-a="open" aria-label="'+L('ড্যাশবোর্ড','Dashboard')+'">'+S(IC.stats)+'</button>'
+    +'<button type="button" data-a="phone" aria-label="'+L('শেয়ার','Share')+'">'+S(IC.up)+'</button></div></div></div>';
+}
+function cmItem(c,vt,u,isRp){
+  const v=vt[c.id]||{}, up=Object.keys(v).filter(k=>v[k]===1).length, dn=Object.keys(v).filter(k=>v[k]===-1).length, my=v[u];
+  return '<div class="cmI'+(isRp?' rp':'')+'" data-c="'+E(c.id)+'">'+avH(c.uid,c.n||c.u)+'<div class="cmBx"><div class="cmH"><b>'+E(c.n||c.u||'?')+'</b><small>'+agoS(c.t)+'</small></div>'
+    +'<div class="cmT">'+(c.to?'<span class="cmMn">'+E(c.to)+'</span> ':'')+E(c.x)+'</div>'
+    +'<div class="cmAc"><button type="button" data-a="reply">'+L('রিপ্লাই','Reply')+'</button>'+(c.uid===u?'<button type="button" data-a="cdel">'+L('মুছুন','Delete')+'</button>':'')+'</div></div>'
+    +'<div class="cmVt"><button type="button" class="cv up'+(my===1?' on':'')+'" data-a="vote" data-v="1" aria-label="Like">'+S(IC.like)+'<span>'+(up?nb(up):'')+'</span></button>'
+    +'<button type="button" class="cv dn'+(my===-1?' on':'')+'" data-a="vote" data-v="-1" aria-label="Dislike">'+S(IC.like)+'<span>'+(dn?nb(dn):'')+'</span></button></div></div>';
 }
 function cmH(pid){
-  const list=CM[pid], vt=VT[pid]||{}, u=me();
-  let h='';
-  if(list===undefined) h+='<div class="fdMsg" style="padding:12px">'+L('লোড হচ্ছে…','Loading…')+'</div>';
-  else if(list==='ERR') h+='<div class="fdMsg" style="padding:12px">'+L('মন্তব্য লোড করা যায়নি','Could not load comments')+'</div>';
+  const list=CM[pid], vt=VT[pid]||{}, u=me(), rp=RP[pid];
+  let h='<div class="cmList">';
+  if(list===undefined) h+='<div class="fdMsg" style="padding:14px">'+L('লোড হচ্ছে…','Loading…')+'</div>';
+  else if(list==='ERR') h+='<div class="fdMsg" style="padding:14px">'+L('মন্তব্য লোড করা যায়নি','Could not load comments')+'</div>';
   else{
-    if(!list.length) h+='<div class="fdMsg" style="padding:12px;margin-bottom:10px">'+L('এখনো কোনো মন্তব্য নেই — প্রথম মন্তব্যটি আপনি করুন।','No comments yet — be the first.')+'</div>';
-    list.forEach(c=>{
-      const v=vt[c.id]||{}, up=Object.keys(v).filter(k=>v[k]===1).length, dn=Object.keys(v).filter(k=>v[k]===-1).length, my=v[u];
-      h+='<div class="fdC" data-c="'+E(c.id)+'">'+avH(c.uid,c.n||c.u)+'<div class="fdCb"><div class="fdCh"><b>'+E(c.n||c.u||'?')+'</b><small>'+ago(c.t)+'</small></div><div class="fdCt">'+E(c.x)+'</div>'
-        +'<div class="fdVt"><button type="button" class="fdV up'+(my===1?' on':'')+'" data-a="vote" data-v="1">'+S(IC.like)+'<span>'+nb(up)+'</span></button><button type="button" class="fdV dn'+(my===-1?' on':'')+'" data-a="vote" data-v="-1">'+S(IC.like)+'<span>'+nb(dn)+'</span></button>'
-        +(c.uid===u?'<button type="button" class="fdDel" data-a="cdel">'+L('মুছুন','Delete')+'</button>':'')+'</div></div></div>';
-    });
+    if(!list.length) h+='<div class="fdMsg" style="padding:18px">'+L('এখনো কোনো মন্তব্য নেই — প্রথম মন্তব্যটি আপনি করুন।','No comments yet — be the first.')+'</div>';
+    const ids={}; list.forEach(c=>{ ids[c.id]=1; });
+    list.filter(c=>!c.r||!ids[c.r]).forEach(c=>{ h+=cmItem(c,vt,u,false); list.filter(x=>x.r===c.id).forEach(r=>{ h+=cmItem(r,vt,u,true); }); });
   }
-  h+='<div class="fdIn"><input maxlength="300" placeholder="'+L('মন্তব্য লিখুন…','Write a comment…')+'" data-in="'+E(pid)+'"><button type="button" data-a="send" aria-label="Send">'+S(IC.send)+'</button></div>';
+  h+='</div>';
+  if(rp) h+='<div class="cmRb"><span>'+L('উত্তর দিচ্ছেন ','Replying to ')+'<b>'+E(rp.to)+'</b> · </span><button type="button" data-a="rcancel">'+L('বাতিল','Cancel')+'</button></div>';
+  h+='<div class="cmIn"><div class="cmPill">'+(rp?'<span class="cmMn">'+E(rp.to)+'</span>':'')+'<input maxlength="300" placeholder="'+(rp?L('রিপ্লাই লিখুন…','Write a reply…'):L('মন্তব্য লিখুন…','Write a comment…'))+'" data-in="'+E(pid)+'"></div><button type="button" data-a="send" aria-label="Send">'+S(IC.send)+'</button></div>';
   return h;
 }
+function closeSheet(){ const ov=$('fdCmOv'); if(ov) ov.remove(); }
+function kbFit(){
+  const ov=$('fdCmOv'); if(!ov) return; const sh=ov.querySelector('.cmSh'), vv=window.visualViewport; if(!sh||!vv) return;
+  const kb=Math.max(0,window.innerHeight-vv.height-vv.offsetTop);
+  sh.style.bottom=kb+'px'; sh.style.height=Math.round(Math.min(window.innerHeight*0.84,vv.height*0.94))+'px';
+}
+if(window.visualViewport){ visualViewport.addEventListener('resize',kbFit); visualViewport.addEventListener('scroll',kbFit); }
+function openSheet(pid){
+  closeSheet(); const po=posts.find(x=>x.id===pid); if(!po) return;
+  const ov=document.createElement('div'); ov.id='fdCmOv'; ov.dataset.p=pid;
+  ov.innerHTML='<div class="cmBd"></div><div class="cmSh"><div class="cmGrip"></div><div class="cmTop"><div><b>'+L('মন্তব্য','Comments')+'<span id="cmN"></span></b><small>'+E(po.s)+'</small></div><button type="button" class="cmX" data-a="cclose" aria-label="Close">'+S(IC.x)+'</button></div><div class="cmBody" id="fdCm_'+E(pid)+'"></div></div>';
+  document.body.appendChild(ov);
+  ov.querySelector('.cmBd').onclick=closeSheet;
+  ov.addEventListener('click',feedClick); ov.addEventListener('keydown',cmKey);
+  kbFit(); paintCm(pid); loadCm(pid);
+}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeSheet(); });
 
 /* ---------------- achievers dashboard (top 10, built from the shared challenges) ---------------- */
 let dashAll=false;
@@ -17399,7 +17508,7 @@ async function load(){
 }
 async function loadAllCm(){
   try{ const c=(await db('feedComments'))||{};
-    posts.forEach(p=>{ const o=c[p.id]||{}, rows=[]; Object.keys(o).forEach(id=>{ const x=o[id]; if(!okId(id)||!x||typeof x!=='object'||!x.x) return; rows.push({id,uid:String(x.uid||''),n:String(x.n||'').slice(0,40),u:String(x.u||'').slice(0,30),x:String(x.x).slice(0,300),t:+x.t||0}); }); rows.sort((a,b)=>a.t-b.t); CM[p.id]=rows; });
+    posts.forEach(p=>{ const o=c[p.id]||{}, rows=[]; Object.keys(o).forEach(id=>{ const x=o[id]; if(!okId(id)||!x||typeof x!=='object'||!x.x) return; rows.push({id,uid:String(x.uid||''),n:String(x.n||'').slice(0,40),u:String(x.u||'').slice(0,30),x:String(x.x).slice(0,300),t:+x.t||0,r:okId(x.r)?x.r:'',to:String(x.to||'').slice(0,40)}); }); rows.sort((a,b)=>a.t-b.t); CM[p.id]=rows; });
   }catch(e){}
   try{ paintGoals(); }catch(e){}
 }
@@ -17407,32 +17516,49 @@ const active=()=>sec.classList.contains('active');
 async function loadCm(pid){
   try{
     const c=await db('feedComments/'+pid), v=await db('feedVotes/'+pid);
-    const rows=[]; Object.keys(c||{}).forEach(id=>{ const x=c[id]; if(!okId(id)||!x||typeof x!=='object'||!x.x) return; rows.push({id,uid:String(x.uid||''),n:String(x.n||'').slice(0,40),u:String(x.u||'').slice(0,30),x:String(x.x).slice(0,300),t:+x.t||0}); });
+    const rows=[]; Object.keys(c||{}).forEach(id=>{ const x=c[id]; if(!okId(id)||!x||typeof x!=='object'||!x.x) return; rows.push({id,uid:String(x.uid||''),n:String(x.n||'').slice(0,40),u:String(x.u||'').slice(0,30),x:String(x.x).slice(0,300),t:+x.t||0,r:okId(x.r)?x.r:'',to:String(x.to||'').slice(0,40)}); });
     rows.sort((a,b)=>a.t-b.t); CM[pid]=rows;
     const m={}; Object.keys(v||{}).forEach(cid=>{ const o=v[cid]; if(o&&typeof o==='object'){ m[cid]={}; Object.keys(o).forEach(k=>{ if(o[k]===1||o[k]===-1) m[cid][k]=o[k]; }); } }); VT[pid]=m;
   }catch(e){ CM[pid]='ERR'; }
   paintCm(pid);
 }
-function paintCm(pid){ document.querySelectorAll('[id="fdCm_'+pid+'"]').forEach(el=>paintCm1(el,pid)); try{ if(RT==='rep') paintGoals(); }catch(e){} }
+function paintCm(pid){
+  document.querySelectorAll('[id="fdCm_'+pid+'"]').forEach(el=>paintCm1(el,pid));
+  const n=Array.isArray(CM[pid])?CM[pid].length:0;
+  document.querySelectorAll('[data-p="'+pid+'"] .cmCnt').forEach(x=>{ x.textContent=n?nb(n):''; });
+  const cn=$('cmN'); if(cn) cn.textContent=n?' ('+nb(n)+')':'';
+  try{ if(RT==='rep') paintGoals(); }catch(e){}
+}
 function paintCm1(el,pid){
-  const inp=el.querySelector('input'), val=inp?inp.value:'', foc=inp&&document.activeElement===inp;
+  const inp=el.querySelector('input'), val=inp?inp.value:'', foc=inp&&document.activeElement===inp, ls=el.querySelector('.cmList'), st=ls?ls.scrollTop:0;
   el.innerHTML=cmH(pid); loadPics(el);
-  const n=el.querySelector('input'); if(n&&val){ n.value=val; if(foc) n.focus(); }
-  const card=el.closest('.fdCard'); if(card&&Array.isArray(CM[pid])){ const b=card.querySelector('.fdCmBtn:not(.rp)'); if(b) b.lastChild.nodeValue=L('মন্তব্য','Comments')+' ('+nb(CM[pid].length)+')'; }
+  const n=el.querySelector('input'), l2=el.querySelector('.cmList'); if(l2) l2.scrollTop=st;
+  if(n){ if(val) n.value=val; if(foc) n.focus(); }
 }
 const feedClick=async e=>{
   const b=e.target.closest('[data-a]'); if(!b) return; const a=b.dataset.a, card=b.closest('[data-p]'), pid=card&&card.dataset.p;
-  if(a==='open'&&pid){ const po=posts.find(x=>x.id===pid); if(po){ const lg=goals().find(x=>x.uid===pid); openDash(lg?{g:lg}:{v:Object.assign({mine:false},po)}); } }
+  if(a==='open'&&pid){ DX[pid]=!DX[pid]; repaintAll(); }
   else if(a==='reload'){ FS.loaded=false; render(); load(); }
   else if(a==='dashmore'){ dashAll=!dashAll; render(); }
   else if(a==='copy'){ try{ await navigator.clipboard.writeText(RULES); tt(L('কপি হয়েছে','Copied')); }catch(x){ const r=$('fdRules'); if(r){ const g=document.createRange(); g.selectNodeContents(r); const s=window.getSelection(); s.removeAllRanges(); s.addRange(g); } } }
   else if(a==='prof'){ const u=b.dataset.u; try{ if(u===me()||!window.ppView) activateTab('profile'); else ppView(u); }catch(x){} }
   else if(a==='phone'&&pid){ const po=posts.find(x=>x.id===pid); if(po) sharePhone(po); }
-  else if(a==='cm'&&pid){ openC[pid]=!openC[pid]; if(openC[pid]){ render(); loadCm(pid); } else render(); }
+  else if(a==='cm'&&pid){ openSheet(pid); }
+  else if(a==='cclose'){ closeSheet(); }
+  else if(a==='rcancel'&&pid){ delete RP[pid]; paintCm(pid); }
+  else if(a==='reply'&&pid){
+    if(!me()){ tt(L('রিপ্লাই দিতে লগইন করুন','Sign in to reply')); return; }
+    const cid=b.closest('[data-c]').dataset.c, list=Array.isArray(CM[pid])?CM[pid]:[], c=list.find(x=>x.id===cid); if(!c) return;
+    RP[pid]={id:(c.r&&list.some(x=>x.id===c.r))?c.r:c.id,to:c.n||c.u||'?'}; paintCm(pid);
+    const ii=document.querySelector('#fdCmOv input[data-in]'); if(ii) ii.focus();
+  }
   else if(a==='send'&&pid){
-    const inp=card.querySelector('input[data-in]'), txt=(inp.value||'').trim().slice(0,300), u=me(); if(!txt||!u) return;
-    const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6), rec={uid:u,n:myN(),u:myU(),x:txt,t:Date.now()};
-    inp.value=''; if(!Array.isArray(CM[pid])) CM[pid]=[]; CM[pid].push(Object.assign({id},rec)); paintCm(pid);
+    const inp=card.querySelector('input[data-in]'), txt=(inp.value||'').trim().slice(0,300), u=me(); if(!txt) return;
+    if(!u){ tt(L('মন্তব্য করতে লগইন করুন','Sign in to comment')); return; }
+    const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6), rp=RP[pid], rec={uid:u,n:myN(),u:myU(),x:txt,t:Date.now()};
+    if(rp){ rec.r=rp.id; rec.to=rp.to; }
+    inp.value=''; delete RP[pid]; if(!Array.isArray(CM[pid])) CM[pid]=[]; CM[pid].push(Object.assign({id:id,r:'',to:''},rec)); paintCm(pid);
+    const it=document.querySelector('#fdCmOv [data-c="'+id+'"]'); if(it) it.scrollIntoView({block:'nearest'});
     try{ await put('feedComments/'+pid+'/'+id,rec); }catch(x){ CM[pid]=CM[pid].filter(c=>c.id!==id); paintCm(pid); tt((x&&(x.status===401||x.status===403))?L('ফিডের রুলস সেট করা নেই','Feed rules are not set'):L('মন্তব্য পাঠানো যায়নি','Could not send')); }
   }
   else if(a==='cdel'&&pid){ const cid=b.closest('[data-c]').dataset.c; CM[pid]=CM[pid].filter(c=>c.id!==cid); paintCm(pid); del('feedComments/'+pid+'/'+cid).catch(()=>{}); del('feedVotes/'+pid+'/'+cid).catch(()=>{}); }
@@ -17445,7 +17571,7 @@ const feedClick=async e=>{
   }
 };
 sec.addEventListener('click',feedClick); box.addEventListener('click',feedClick);
-const cmKey=e=>{ if(e.key==='Enter'&&e.target.matches('input[data-in]')){ e.preventDefault(); const b=e.target.parentNode.querySelector('[data-a="send"]'); if(b) b.click(); } };
+const cmKey=e=>{ if(e.key==='Enter'&&e.target.matches('input[data-in]')){ e.preventDefault(); const r=e.target.closest('[data-p]'), b=r&&r.querySelector('[data-a="send"]'); if(b) b.click(); } };
 sec.addEventListener('keydown',cmKey); box.addEventListener('keydown',cmKey);
 
 
@@ -17552,44 +17678,47 @@ window.fgProfFill=function(root){
 
 /* ---------------- full-screen challenge dashboard + missions (sub-challenges) ---------------- */
 const subLbl=o=>o.k==='pre'?PRL(o.v):o.n||(o.k==='save'?L('প্রতিদিন কমপক্ষে '+fm(o.v)+' জমা','Save at least '+fm(o.v)+' daily'):o.k==='limit'?(o.v>0?L('দৈনিক খরচ '+fm(o.v)+'-এর নিচে','Daily spend under '+fm(o.v)):L('প্রতিদিন কোনো খরচ নয়','No spending daily')):L('নিজের নিয়ম','My rule'));
-let DC=null;
-function viewOf(c){
-  if(c.g){ const g=c.g, pl=payload(g), s=stats(g), pr=progress(g);
-    return Object.assign({mine:true,uid:me(),n:myN(),u:myU(),x:s.x},pl,{sc:s.sc}); }
-  const v=c.v, x=v.ds?Math.max(1,dDiff(v.ds,todayStr())+1):1; return Object.assign({},v,{x:x});
-}
-function dashRender(){
-  const ov=$('fdDashOv'); if(!ov||!DC) return; const v=viewOf(DC), NP=v.sc.filter(o=>o.k==='pre').length, over=v.x>v.dn, X=Math.min(v.x,v.dn), left=Math.max(0,v.dn-v.x);
+function repaintAll(){ try{ paintGoals(); }catch(e){} try{ if(active()) render(); }catch(e){} }
+function dashInner(v,mine,key){
+  const pre=v.sc.filter(o=>o.k==='pre'), my=v.sc.filter(o=>o.k!=='pre'), over=v.x>v.dn, left=Math.max(0,v.dn-v.x);
   const cells=Math.min(v.dn,60), per=v.dn/cells; let strip='';
   for(let c=0;c<cells;c++){ const a=Math.floor(c*per), b=Math.max(a+1,Math.floor((c+1)*per)); let n=0; for(let i=a;i<b;i++) n=Math.max(n,+(v.sd[i]||0));
     const cls=(n>0?'on':'')+(v.x-1>=a&&v.x-1<b&&!over?' now':'')+(a>v.x-1?' fut':'');
-    strip+='<i class="'+cls+'">'+(per===1&&n>0?'<u>'+'•'.repeat(n)+'</u>':'')+'</i>'; }
-  let h='<div class="dbTop"><button type="button" class="dbIc" data-d="x" aria-label="Back">'+S('<path d="m15 6-6 6 6 6"/>')+'</button><div class="dbWho">'+avH(v.uid,v.n||v.u)+'<div><b>'+E(v.n||v.u||'?')+'</b><small>'+(v.u?'@'+E(v.u):'')+'</small></div></div>'
-    +(v.mine?'<button type="button" class="dbIc" data-d="add" aria-label="Add mission">'+S(IC.plus)+'</button>':'')+'</div>'
-    +'<div class="dbSubj">'+E(v.s)+'</div><div class="dbBig">'+nb(fm(v.sv))+'</div><div class="dbLbl">'+L('এ পর্যন্ত জমেছে','saved so far')+'</div>'
-    +'<div class="dbDay"><b>'+nb(X)+'</b><span>/ '+nb(v.dn)+L(' দিন','&nbsp;days')+'</span></div>'
-    +'<div class="dbMeta"><span>'+(over?L('সময় শেষ','Time is over'):L('বাকি ','Left ')+'<b>'+nb(left)+L(' দিন',' d')+'</b>')+'</span><span>'+L('সক্রিয় ','Active ')+'<b>'+nb(v.ac||0)+L(' দিন',' d')+'</b></span><span>'+L('টানা ','Streak ')+'<b>'+nb(v.sk||0)+L(' দিন',' d')+'</b></span></div>'
-    +'<div class="dbStrip">'+strip+'</div><div class="dbBar'+(v.d?' done':'')+'"><i style="width:'+v.p+'%"></i></div>'
-    +'<div class="dbRow"><b>'+nb(v.p)+'%</b><span>'+L('লক্ষ্য ','TARGET ')+nb(fm(v.a))+'</span></div>'
-    +(NP?'<div class="dbH"><span>'+L('রেসের ১০ চ্যালেঞ্জ','Race challenges')+'</span><small>'+nb(v.sc.filter(o=>o.k==='pre'&&o.tf).length)+'/'+nb(NP)+' '+L('আজ','today')+'</small></div>':'');
-  if(v.sc.length<=NP) h+='<div class="dbH"><span>'+L('নিজের মিশন','My missions')+'</span><small>'+nb(0)+'/'+nb(10)+'</small></div><div class="fdMsg">'+(v.mine?L('উপরের + চেপে মিশন যোগ করুন — যেমন \"দৈনিক কমপক্ষে ১০০ টাকা জমা\"।','Tap + to add a mission — e.g. \"save at least 100 daily\".'):L('এই চ্যালেঞ্জে এখনো কোনো মিশন নেই।','No missions on this challenge yet.'))+'</div>';
-  v.sc.forEach((o,i)=>{ if(i===NP&&NP) h+='<div class="dbH"><span>'+L('নিজের মিশন','My missions')+'</span><small>'+nb(v.sc.length-NP)+'/'+nb(10)+'</small></div>'; const pc=Math.min(100,Math.round(o.ok/o.e*100));
-    h+='<div class="dbSc'+(o.tf?' ok':'')+'" data-i="'+(i-NP)+'"><div class="dbScT"><b>'+E(subLbl(o))+'</b>'+(v.mine&&o.k!=='pre'?'<button type="button" data-d="rm" aria-label="Delete">&times;</button>':'')+'</div>'
-      +'<small>'+nb(o.ok)+' / '+nb(o.e)+L(' দিন সফল',' days done')+' · '+L('টানা ','streak ')+nb(o.st)+' · '+(o.tf?L('আজ ✓','today ✓'):L('আজ বাকি','today pending'))+'</small><div class="dbBar"><i style="width:'+pc+'%"></i></div>'
-      +(v.mine&&o.k==='check'?'<button type="button" class="dbChk'+(o.tf?' on':'')+'" data-d="tg">'+(o.tf?L('আজ সম্পন্ন ✓','Done today ✓'):L('আজ সম্পন্ন করেছি','Mark done today'))+'</button>':'')+'</div>'; });
-  const keep=ov.scrollTop; ov.innerHTML=h; ov.scrollTop=keep; loadPics(ov);
+    strip+='<i class="'+cls+'"></i>'; }
+  const k=E(key), ci=Math.min(CH[key]||0,Math.max(0,pre.length-1)), cur=pre[ci];
+  let h='<div class="dbInH"><b>'+L('ড্যাশবোর্ড','Dashboard')+'</b><span>'+(over?L('সময় শেষ','Time is over'):L('বাকি ','Left ')+nb(left)+L(' দিন',' d'))+' · '+L('সক্রিয় ','Active ')+nb(v.ac||0)+L(' দিন',' d')+'</span></div><div class="dbStrip">'+strip+'</div>';
+  if(cur){
+    h+='<div class="dbChips">'+pre.map((o,i)=>'<button type="button" class="dbCh'+(o.tf?' ok':'')+(i===ci?' sel':'')+'" data-d="chip" data-k="'+k+'" data-i="'+i+'">'+nb(i+1)+'</button>').join('')+'</div>'
+      +'<div class="dbChL">'+nb(ci+1)+'. '+E(PRL(cur.v))+'<small>'+nb(cur.ok)+' / '+nb(cur.e)+L(' দিন সফল',' days done')+' · '+L('টানা ','streak ')+nb(cur.st)+' · '+(cur.tf?L('আজ সম্পন্ন','done today'):L('আজ বাকি','pending today'))+'</small></div>';
+  }
+  if(mine||my.length){
+    h+='<div class="dbMsr"><button type="button" class="dbTog'+(MO[key]?' open':'')+'" data-d="ms" data-k="'+k+'"><span>'+L('নিজের মিশন','My missions')+' ('+nb(my.length)+')</span>'+S(IC.chev)+'</button>'
+      +(mine?'<button type="button" class="dbAdd" data-d="add" data-k="'+k+'" aria-label="Add mission">'+S(IC.plus)+'</button>':'')+'</div>';
+    if(MO[key]){
+      if(!my.length) h+='<div class="dbEmp">'+L('এখনো কোনো মিশন নেই — + চেপে যোগ করুন।','No missions yet — tap + to add one.')+'</div>';
+      h+=my.map((o,j)=>'<div class="mnR'+(o.tf?' ok':'')+'" data-si="'+j+'"><div class="mnT"><b>'+E(subLbl(o))+'</b><small>'+nb(o.ok)+' / '+nb(o.e)+L(' দিন সফল',' days done')+' · '+L('টানা ','streak ')+nb(o.st)+'</small></div>'
+        +(mine&&o.k==='check'?'<button type="button" class="mnC'+(o.tf?' on':'')+'" data-d="tg" data-k="'+k+'" aria-label="Done today">'+S(IC.chk)+'</button>':'<span class="mnD'+(o.tf?' on':'')+'"></span>')
+        +(mine?'<button type="button" class="mnX" data-d="rm" data-k="'+k+'" aria-label="Delete">'+S(IC.x)+'</button>':'')+'</div>').join('');
+    }
+  }
+  return h;
 }
-function openDash(c){
-  DC=c; let ov=$('fdDashOv'); if(!ov){ ov=document.createElement('div'); ov.id='fdDashOv'; document.body.appendChild(ov);
-    ov.addEventListener('click',e=>{ const b=e.target.closest('[data-d]'); if(!b||!DC||!DC.g) { if(b&&b.dataset.d==='x') closeDash(); return; }
-      const d=b.dataset.d, g=DC.g, i=+((b.closest('[data-i]')||{}).dataset||{}).i, o=(g.subs||[])[i];
-      if(d==='x') closeDash(); else if(d==='add') addSub(g);
-      else if(d==='tg'&&o){ o.log=o.log||{}; const t=todayStr(); if(o.log[t]) delete o.log[t]; else o.log[t]=1; saveData(); dashRender(); }
-      else if(d==='rm'&&o){ const go=()=>{ g.subs=g.subs.filter(x=>x!==o); saveData(); dashRender(); }; try{ appDialog(L('এই মিশনটি মুছে ফেলবেন?','Delete this mission?'),{confirm:true},go); }catch(x){ if(confirm(L('মুছে ফেলবেন?','Delete?'))) go(); } } }); }
-  document.body.style.overflow='hidden'; ov.scrollTop=0; dashRender();
+function dashBox(gs){ const g=featG(gs); if(!g) return ''; return '<div class="dbIn dbTop2">'+dashInner(viewOf({g:g}),true,'top')+'</div>'; }
+function viewOf(c){
+  if(c.g){ const g=c.g, pl=payload(g), s=stats(g); return Object.assign({mine:true,uid:me(),n:myN(),u:myU(),x:s.x},pl,{sc:s.sc}); }
+  const v=c.v, x=v.ds?Math.max(1,dDiff(v.ds,todayStr())+1):1; return Object.assign({},v,{x:x});
 }
-function closeDash(){ const ov=$('fdDashOv'); if(ov) ov.remove(); DC=null; document.body.style.overflow=''; }
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&$('fdDashOv')&&!$('fgOv')) closeDash(); });
+function dashClick(e){
+  const b=e.target.closest('[data-d]'); if(!b) return; const d=b.dataset.d, k=b.dataset.k||'top';
+  if(d==='chip'){ CH[k]=+b.dataset.i||0; repaintAll(); return; }
+  if(d==='ms'){ MO[k]=!MO[k]; repaintAll(); return; }
+  const g=k==='top'?featG(goals()):goals().find(x=>x.uid===k); if(!g) return;
+  if(d==='add'){ addSub(g); return; }
+  const row=b.closest('[data-si]'), o=row&&(g.subs||[])[+row.dataset.si]; if(!o) return;
+  if(d==='tg'){ o.log=o.log||{}; const t=todayStr(); if(o.log[t]) delete o.log[t]; else o.log[t]=1; saveData(); repaintAll(); }
+  else if(d==='rm'){ const go=()=>{ g.subs=g.subs.filter(x=>x!==o); saveData(); repaintAll(); }; try{ appDialog(L('এই মিশনটি মুছে ফেলবেন?','Delete this mission?'),{confirm:true},go); }catch(x){ if(confirm(L('মুছে ফেলবেন?','Delete?'))) go(); } }
+}
+sec.addEventListener('click',dashClick); box.addEventListener('click',dashClick);
 function addSub(g){
   if((g.subs||[]).length>=10){ tt(L('সর্বোচ্চ ১০টি মিশন রাখা যায়','Up to 10 missions per challenge')); return; }
   if($('fgOv')) return; g.subs=g.subs||[];
@@ -17614,7 +17743,7 @@ function addSub(g){
       if(k==='save'&&!(v>0)){ er.textContent=L('সঠিক টাকা দিন','Enter a valid amount'); return; }
       if(k==='limit'&&!(v>=0)){ er.textContent=L('সঠিক টাকা দিন','Enter a valid amount'); return; }
       g.subs.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),k:k,v:k==='check'?0:v,name:nm.trim().slice(0,40),start:todayStr(),log:{}});
-      saveData(); close(); dashRender(); tt(L('মিশন যোগ হয়েছে','Mission added')); };
+      saveData(); close(); repaintAll(); tt(L('মিশন যোগ হয়েছে','Mission added')); };
   }
   paint();
 }
