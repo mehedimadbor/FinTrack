@@ -1196,6 +1196,24 @@ html.locked #sec-notes,html.locked #nsSheet,html.locked #nsRem,html.locked #nsTo
 #fbWelcome .fbwGo{display:block;margin:44px auto 0;border:0;border-radius:6px;background:var(--primary);color:#fff;font:inherit;font-size:13.5px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;padding:20px 38px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s;}
 #fbWelcome .fbwGo:active{transform:scale(.96);}
 </style>
+<style id="ftRaceSpy">
+.fgDd{border:1px solid var(--border);border-radius:14px;background:var(--card);padding:4px 12px;margin-bottom:8px}.fgDd summary{padding:11px 0;font-weight:700;font-size:14px;cursor:pointer}
+.fgCk{display:flex;align-items:center;gap:10px;padding:9px 0;font-size:14px}.fgCk input{width:18px;height:18px;accent-color:var(--primary)}.fgTg{justify-content:space-between;border-top:1px solid var(--border)}
+.xpA button svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.spyTop{display:flex;align-items:center;gap:12px;margin-bottom:14px}.spyTop>b{flex:1;font-size:16px}
+.spyRing{width:64px;height:64px;border-radius:50%;background:conic-gradient(var(--primary) var(--d),var(--border) 0);display:flex;align-items:center;justify-content:center;position:relative}
+.spyRing:before{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--bg)}.spyRing span{position:relative;font-weight:800;font-size:13px}
+.spyFeedH{display:flex;align-items:center;gap:8px;margin:6px 0 8px}.spyFeedH svg{width:18px;height:18px;fill:none;stroke:var(--primary);stroke-width:1.8}
+.spyRow{display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:6px;border-radius:14px;background:var(--card);border:1px solid var(--border);font-size:13.5px}.spyRow i{font-style:normal;font-weight:800;color:var(--primary)}.spyRow span{flex:1}.spyRow b{color:var(--primary)}
+</style>
+<style id="ftRaceTop">
+.rhWho{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.rhWho b{font-size:15px;font-weight:800}
+.rhPlus{width:38px;height:38px;border:0;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}.rhPlus svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round}
+.rhRing{position:relative}.rhRing em{position:absolute;left:0;right:0;bottom:19%;text-align:center;font-style:normal;font-size:9px;font-weight:700;opacity:.75;line-height:1}.rhRing b{padding-bottom:8px}
+#ppRaces{margin:14px 0}.ppRh{display:flex;align-items:center;gap:8px;margin-bottom:8px}.ppRh svg{width:18px;height:18px;fill:none;stroke:var(--primary);stroke-width:1.8}
+.ppRc{padding:12px;margin-bottom:8px;border-radius:16px;background:var(--card);border:1px solid var(--border)}.ppRt{display:flex;justify-content:space-between;font-size:14px}.ppRt span{font-weight:800;color:var(--primary)}
+.ppRb{height:6px;border-radius:6px;background:var(--border);margin:8px 0 6px;overflow:hidden}.ppRb i{display:block;height:100%;background:var(--primary);border-radius:6px}.ppRc small{color:var(--muted);font-size:12px}
+</style>
 </head>
 <body>
 <style id="rsStyle">
@@ -3383,15 +3401,15 @@ html[data-theme*="yellow"] .cPad button.op{color:#000}
     <span class="fabcircle"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
     <span class="lbl" data-i18n="bn_deposit">যোগ করুন</span>
   </button>
+  <button class="bnbtn" data-bn="challenge" aria-label="Challenge">
+    <svg viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="3.4" ry="9.8" stroke-opacity=".6"/><ellipse cx="12" cy="12" rx="3.4" ry="9.8" transform="rotate(60 12 12)" stroke-opacity=".6"/><ellipse cx="12" cy="12" rx="3.4" ry="9.8" transform="rotate(120 12 12)" stroke-opacity=".6"/><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="6.4" cy="6.2" r="1.4" fill="currentColor" stroke="none"/><circle cx="20.2" cy="9.4" r="1.4" fill="currentColor" stroke="none"/><circle cx="9.7" cy="19.4" r="1.4" fill="currentColor" stroke="none"/></svg>
+    <span class="dot"></span>
+    <span class="lbl" data-i18n="bn_challenge">চ্যালেঞ্জ</span>
+  </button>
   <button class="bnbtn" data-bn="tx">
     <svg viewBox="0 0 24 24"><path d="M6 3h12a1 1 0 0 1 1 1v17l-3-2-2 2-2-2-2 2-2-2-3 2V4a1 1 0 0 1 1-1Z"/><path d="M9 8h6M9 12h6"/></svg>
     <span class="dot"></span>
     <span class="lbl" data-i18n="bn_tx">লেনদেন</span>
-  </button>
-  <button class="bnbtn" data-bn="challenge">
-    <svg class="bnAtom" viewBox="0 0 1024 1024" aria-hidden="true"><path stroke="none" fill="currentColor" d="M512 960c-92.8 0-160-200-160-448S419.2 64 512 64s160 200 160 448-67.2 448-160 448z m0-32c65.6 0 128-185.6 128-416S577.6 96 512 96s-128 185.6-128 416 62.4 416 128 416z"/><path stroke="none" fill="currentColor" d="M124.8 736c-48-80 92.8-238.4 307.2-363.2S852.8 208 899.2 288 806.4 526.4 592 651.2 171.2 816 124.8 736z m27.2-16c33.6 57.6 225.6 17.6 424-97.6S905.6 361.6 872 304 646.4 286.4 448 401.6 118.4 662.4 152 720z"/><path stroke="none" fill="currentColor" d="M899.2 736c-46.4 80-254.4 38.4-467.2-84.8S76.8 368 124.8 288s254.4-38.4 467.2 84.8S947.2 656 899.2 736z m-27.2-16c33.6-57.6-97.6-203.2-296-318.4S184 246.4 152 304 249.6 507.2 448 622.4s392 155.2 424 97.6z"/><path stroke="none" style="fill:var(--primary)" d="M512 592c-44.8 0-80-35.2-80-80s35.2-80 80-80 80 35.2 80 80-35.2 80-80 80zM272 312c-27.2 0-48-20.8-48-48s20.8-48 48-48 48 20.8 48 48-20.8 48-48 48zM416 880c-27.2 0-48-20.8-48-48s20.8-48 48-48 48 20.8 48 48-20.8 48-48 48z m448-432c-27.2 0-48-20.8-48-48s20.8-48 48-48 48 20.8 48 48-20.8 48-48 48z"/></svg>
-    <span class="dot"></span>
-    <span class="lbl" data-i18n="bn_challenge">চ্যালেঞ্জ</span>
   </button>
     <button class="bnbtn" data-bn="settings">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -3400,6 +3418,18 @@ html[data-theme*="yellow"] .cPad button.op{color:#000}
   </button>
 </nav>
 
+<script id="ftChNavJs">
+(function(){
+  function tick(){
+    try{
+      var b=document.querySelector('#bottomNav .bnbtn[data-bn="challenge"]'); if(!b||typeof data==='undefined') return;
+      var run=Array.isArray(data.cgGoals)&&data.cgGoals.some(function(g){ return g&&!g.done; });
+      b.classList.toggle('cgRunning',run);
+    }catch(e){}
+  }
+  setInterval(tick,3000); setTimeout(tick,800);
+})();
+</script>
 <script>
 const I18N = {
   bn:{
@@ -11305,7 +11335,7 @@ window.ftPicThumb=function(){ return new Promise(function(res){ try{
 <symbol id="cg-noexp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6.5" width="18" height="12.5" rx="3.2" fill="currentColor" fill-opacity=".18"/><path d="M3 10.5h18M16.3 14.8h1.9"/><path d="M5 21 19.5 4"/></symbol>
 <symbol id="cg-under" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 17a7.5 7.5 0 1 1 15 0Z" fill="currentColor" fill-opacity=".18"/><path d="m12 17 3.6-4.8"/><circle cx="12" cy="17" r="1.2" fill="currentColor"/></symbol>
 <symbol id="cg-log" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="3.5" width="12" height="17" rx="2.6" fill="currentColor" fill-opacity=".18"/><path d="M8.5 8.5h4M8.5 12h4"/><path d="m15 18 5.2-5.2 1.8 1.8L16.8 19.8 14.4 20.4Z" fill="currentColor" fill-opacity=".25"/></symbol>
-<symbol id="cg-trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3.8h8v5.4a4 4 0 0 1-8 0Z" fill="currentColor" fill-opacity=".2"/><path d="M8 5.8H5.2a3 3 0 0 0 3 4.2M16 5.8h2.8a3 3 0 0 1-3 4.2"/><path d="M12 13.2v3.4M9.6 16.6h4.8l.9 3.6H8.7ZM7.6 20.4h8.8"/></symbol>
+<symbol id="cg-trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="12" rx="3.4" ry="9.8" stroke-opacity=".6"/><ellipse cx="12" cy="12" rx="3.4" ry="9.8" transform="rotate(60 12 12)" stroke-opacity=".6"/><ellipse cx="12" cy="12" rx="3.4" ry="9.8" transform="rotate(120 12 12)" stroke-opacity=".6"/><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="6.4" cy="6.2" r="1.4" fill="currentColor" stroke="none"/><circle cx="20.2" cy="9.4" r="1.4" fill="currentColor" stroke="none"/><circle cx="9.7" cy="19.4" r="1.4" fill="currentColor" stroke="none"/></symbol>
 <symbol id="cg-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6" fill="currentColor" fill-opacity=".18"/><path d="m8.2 12.4 2.6 2.6 5-5.5"/></symbol>
 <symbol id="cg-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6" fill="currentColor" fill-opacity=".18"/><path d="m9 9 6 6M15 9l-6 6"/></symbol>
 <symbol id="cg-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6.5 6.5 11 11M17.5 6.5l-11 11"/></symbol>
@@ -16861,6 +16891,76 @@ document.addEventListener('click',()=>setTimeout(upd,50),true);
   };
 })();
 </script>
+<style id="ftRaceGuardCss">
+#ftWarnOv .ftRgIc{background:color-mix(in srgb,var(--primary,#6366f1) 14%,#fff)!important;color:var(--primary,#6366f1)!important;}
+#ftWarnOv .ftRgIc svg{stroke:var(--primary,#6366f1);}
+#ftWarnOv .ftRgBox{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 12px;}
+#ftWarnOv .ftRgBox div{background:#f3f4f6;border-radius:12px;padding:8px 4px;}
+#ftWarnOv .ftRgBox small{display:block;font-size:11px;color:#6b7280;font-weight:600;}
+#ftWarnOv .ftRgBox b{display:block;font-size:14px;color:#1a1c1e;margin-top:2px;word-break:break-word;}
+#ftWarnOv .ftRgBox div.g b{color:#16a34a;}
+</style>
+<script id="ftRaceGuardJs">
+/* Race (challenge) guard: if the expense category is one the user chose to skip in an active Race that has Popup SMS on,
+   ask first. Accept = the amount is deposited into the Race account instead (no expense). Reject = normal expense is saved. */
+(function(){
+  var T=function(b,e){ return currentLang==='bn'?b:e; };
+  var IC='<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg>';
+  var esc=function(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+  var dayDiff=function(a,b){ return Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/864e5); };
+  function findRace(tx){
+    var list=Array.isArray(data.cgGoals)?data.cgGoals:[], td=todayStr();
+    for(var i=0;i<list.length;i++){
+      var g=list[i];
+      if(!g||g.done||!g.sms||!g.account||!g.cats||g.cats.indexOf(tx.category)<0) continue;
+      if(!data.accounts||data.accounts.indexOf(g.account)<0) continue;
+      if(g.start&&td<g.start) continue;
+      if(g.start&&dayDiff(g.start,td)>=(+g.days||30)) continue;
+      return g;
+    }
+    return null;
+  }
+  function refresh(){
+    ['renderDash','renderAccounts','renderHistory','renderLoans','updateHome'].forEach(function(f){ try{ if(typeof window[f]==='function') window[f](); }catch(e){} });
+    try{ if(window.paintGoals) window.paintGoals(); }catch(e){}
+  }
+  var prev=window.ftSpendGuard;
+  window.ftSpendGuard=function(tx,go){
+    try{
+      if(tx&&tx.type==='expense'&&typeof go==='function'&&(+tx.amount>0)&&tx.category){
+        var g=findRace(tx);
+        if(g){
+          var amt=+tx.amount, F=function(n){ return fmt(Math.round(n)); };
+          var old=document.getElementById('ftWarnOv'); if(old) old.remove();
+          var ov=document.createElement('div'); ov.id='ftWarnOv';
+          var box=document.createElement('div'); box.className='ftWarnBox'; box.setAttribute('role','alertdialog'); ov.appendChild(box);
+          box.innerHTML='<div class="ftWarnIc ftRgIc">'+IC+'</div><h4>'+esc(g.subject)+'</h4>'
+            +'<div class="ftRgBox"><div><small>'+T('ক্যাটাগরি','Category')+'</small><b>'+esc(tx.category)+'</b></div><div class="g"><small>'+T('জমা হবে','Will be saved')+'</small><b>'+F(amt)+'</b></div></div>'
+            +'<p class="ftSgP">'+T('এই ক্যাটাগরিতে খরচ না করার চ্যালেঞ্জ নিয়েছেন। খরচ না করে এই '+F(amt)+' কি "'+esc(g.account)+'" একাউন্টে জমা করবেন?','You chose to skip this category in your Race. Save this '+F(amt)+' into "'+esc(g.account)+'" instead of spending it?')+'</p>'
+            +'<div class="ftSgBtns"><button type="button" class="ftWarnOk ftRgYes">'+T('হ্যাঁ, জমা করুন','Yes, save it')+'</button><button type="button" class="ftWarnOk ghost ftRgNo">'+T('না, খরচই করব','No, spend it')+'</button></div>';
+          document.body.appendChild(ov);
+          box.querySelector('.ftRgYes').onclick=function(){
+            var dep={id:Date.now()+'-'+Math.random().toString(36).slice(2,7),type:'save_to_account',amount:amt,category:null,source:null,due:null,person:null,account:g.account,fund:null,note:(tx.note?tx.note+' · ':'')+'Race: '+g.subject,date:tx.date||todayStr(),time:tx.time||nowTime()};
+            var bad=''; try{ bad=validateTxSet(data.transactions.concat([dep])); }catch(e){}
+            if(bad){ ov.remove(); try{ ftAlertBad(bad); }catch(e){ alert(bad); } return; }
+            data.transactions.push(dep); saveData();
+            ['inAmount','inNote','wgAmt','wgNote'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; });
+            ov.remove(); refresh();
+            try{ window.toast(T(F(amt)+' "'+g.account+'" একাউন্টে জমা হয়েছে','Saved '+F(amt)+' to "'+g.account+'"')); }catch(e){}
+          };
+          box.querySelector('.ftRgNo').onclick=function(){
+            ov.remove();
+            var shown=false; try{ shown=prev?prev(tx,go):false; }catch(e){}
+            if(!shown) go();
+          };
+          return true;
+        }
+      }
+    }catch(e){}
+    return prev?prev(tx,go):false;
+  };
+})();
+</script>
 <style id="ftFeedCss">
 /* ===== Goal challenges (Challenge tab) + FinTrack Feeds ===== */
 #fgBox{margin:0 0 14px;}
@@ -17054,6 +17154,64 @@ body.chFull #bottomNav,body.chFull .bottomnav{display:none !important;}
 .rcBack button{width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;}
 .rcBack button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .rcBack b{font-size:17px;font-weight:800;letter-spacing:-.01em;}
+</style>
+<style id="ftBp">
+.bpBan{border-radius:24px;padding:18px;background:var(--grad,var(--primary));color:#fff;box-shadow:0 14px 30px -16px color-mix(in srgb,var(--primary) 60%,transparent);margin-bottom:6px;}
+.bpTop{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;}
+.bpTop small{display:block;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.8;}
+.bpTop h1{margin:2px 0 0;font-size:21px;font-weight:800;line-height:1.3;word-break:break-word;}
+.bpPlus{width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.2);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;padding:0;}
+.bpPlus svg{width:24px;height:24px;fill:none;stroke:#fff;stroke-width:2.6;stroke-linecap:round;}
+.bpStat{display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:14px;}
+.bpStat small{display:block;font-size:12px;opacity:.85;font-weight:600;}
+.bpStat b{display:block;font-size:26px;font-weight:800;letter-spacing:-.02em;margin:2px 0;}
+.bpRing{position:relative;flex:none;background:#fff;border-radius:20px;padding:6px;box-sizing:border-box;}
+.bpRing svg{width:100%;height:100%;display:block;}
+.bpRing b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#0f172a;}
+.bpFh{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 2px 12px;}
+.bpFh h2{margin:0;font-size:19px;font-weight:800;line-height:1.35;}
+.bpFh p{margin:2px 0 0;font-size:12px;color:var(--muted);font-weight:600;line-height:1.5;}
+.bpBadge{flex:none;font-size:12px;font-weight:800;padding:5px 11px;border-radius:999px;background:color-mix(in srgb,var(--primary) 14%,var(--bg));color:var(--primary);}
+.bpCard{padding:14px;}
+.bpCH{display:flex;align-items:center;gap:10px;padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--border);}
+.bpCH .xpWho{flex:1;min-width:0;}
+.bpSh{width:14px;height:14px;fill:none;stroke:var(--muted);stroke-width:2;stroke-linejoin:round;flex:none;}
+.bpLbl{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+.bpPur{margin:3px 0 10px;font-size:15px;font-weight:800;line-height:1.4;word-break:break-word;}
+.bpTg{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--muted);font-weight:600;margin-bottom:6px;}
+.bpTg b{color:var(--text);}
+.bpLogBtn,.bpLogB{width:100%;height:40px;margin:10px 0 2px;border-radius:12px;border:1px dashed var(--primary);background:color-mix(in srgb,var(--primary) 8%,var(--card));color:var(--primary);font:inherit;font-weight:800;font-size:13.5px;cursor:pointer;}
+.bpLogB{margin:0 0 10px;}
+.bpSpyTop{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.bpSpyTop .fdAv{width:52px;height:52px;font-size:20px;}
+.bpSpyN{flex:1;min-width:0;}.bpSpyN b{display:block;font-size:17px;font-weight:800;}.bpSpyN small{display:block;color:var(--muted);font-size:12.5px;font-weight:600;line-height:1.4;word-break:break-word;}
+.spyRow span small{display:block;color:var(--muted);font-size:11px;font-weight:600;margin-top:1px;}
+#bpForm{position:fixed;inset:0;z-index:9500;background:var(--bg);color:var(--text);overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.bpFhd{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:var(--bg);border-bottom:1px solid var(--border);}
+.bpFhd b{font-size:17px;font-weight:800;}
+.bpBk{width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;}
+.bpBk svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.bpBody{padding:14px 16px calc(40px + env(safe-area-inset-bottom,0px));max-width:520px;margin:0 auto;}
+.bpStep{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px;margin-bottom:12px;}
+.bpSt{display:flex;align-items:center;gap:10px;margin-bottom:10px;}.bpSt b{font-size:14.5px;font-weight:800;line-height:1.4;}
+.bpN{width:24px;height:24px;border-radius:50%;flex:none;background:var(--grad,var(--primary));color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+.bpLb{display:block;font-size:12.5px;font-weight:700;margin:12px 0 6px;}
+#bpForm input[type=text],#bpForm input[type=number],#bpForm input:not([type]),#bpForm select,#bpLogOv input,#bpLogOv select{width:100%;box-sizing:border-box;height:46px;border-radius:14px;border:1px solid var(--border);background:var(--bg);color:var(--text);padding:0 14px;font:inherit;font-size:15px;}
+.bpSw{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;}
+.bpSw span{min-width:0;}.bpSw b{display:block;font-size:14px;}.bpSw small{display:block;color:var(--muted);font-size:12px;font-weight:600;line-height:1.45;}
+.bpSw input{position:absolute;opacity:0;width:1px;height:1px;}
+.bpSw i{flex:none;width:48px;height:28px;border-radius:14px;background:var(--border);position:relative;transition:background .2s;}
+.bpSw i:after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s;}
+.bpSw input:checked+i{background:var(--primary);}.bpSw input:checked+i:after{transform:translateX(20px);}
+.bpPub{width:100%;height:50px;border:0;border-radius:15px;background:var(--grad,var(--primary));color:#fff;font:inherit;font-weight:800;font-size:15.5px;cursor:pointer;margin-top:6px;}
+.bpGhost{width:100%;height:46px;border-radius:15px;border:1px solid var(--border);background:var(--card);color:var(--text);font:inherit;font-weight:700;margin-top:10px;cursor:pointer;}
+#bpLogOv{position:fixed;inset:0;z-index:9750;}#bpLogOv .fgBd{position:absolute;inset:0;background:rgba(0,0,0,.5);}
+.bpLogSh{position:absolute;left:0;right:0;bottom:0;max-height:90vh;overflow-y:auto;background:var(--bg);color:var(--text);border-radius:24px 24px 0 0;padding:18px 16px calc(20px + env(safe-area-inset-bottom,0px));}
+.bpLogSh h3{margin:0 0 4px;font-size:18px;}.bpLogSh label{display:block;font-size:12.5px;font-weight:700;margin:12px 0 6px;}
+</style>
+<style id="ftChNav">
+body.chFull #bottomNav,body.chFull .bottomnav{display:flex !important;z-index:9100;}
+body.chFull #sec-challenge{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px));}
 </style>
 <style id="ftProfFb">
 html body #sec-profile .ppHead{border:0;box-shadow:none;background:none;overflow:visible;border-radius:0;}
@@ -17291,7 +17449,7 @@ const E=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','
 const nb=x=>bn()?String(x).replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]):String(x);
 const tt=m=>{ try{ if(window.toast) window.toast(m); }catch(e){} };
 const S=(p,z)=>'<svg viewBox="0 0 24 24" aria-hidden="true"'+(z?' width="'+z+'" height="'+z+'"':'')+'>'+p+'</svg>';
-const IC={trophy:'<path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7M10 17h4"/>',up:'<path d="M12 15V3M7.5 7.5 12 3l4.5 4.5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/>',flag:'<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',plus:'<path d="M12 5v14M5 12h14"/>',share:'<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.2 10.8 7.6-3.6M8.2 13.2l7.6 3.6"/>',trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',cm:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/>',like:'<path d="M7 11v9H4v-9zM7 11l4-8a2 2 0 0 1 2 2v4h5.5a2 2 0 0 1 2 2.3l-1.3 7A2 2 0 0 1 17.2 20H7"/>',send:'<path d="M21 3 10 14M21 3l-7 18-4-7-7-4z"/>',rss:'<path d="M5 5a14 14 0 0 1 14 14M5 11a8 8 0 0 1 8 8"/><circle cx="6" cy="18" r="1.4"/>',refresh:'<path d="M20 11a8 8 0 0 0-14.5-3M4 4v4h4M4 13a8 8 0 0 0 14.5 3M20 20v-4h-4"/>',stats:'<path d="M6 20v-9M12 20V4M18 20v-6"/>',x:'<path d="M6 6l12 12M18 6 6 18"/>',chev:'<path d="m6 9 6 6 6-6"/>',chk:'<path d="m5 12 5 5 9-10"/>',dots:'<circle cx="12" cy="5" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.7" fill="currentColor" stroke="none"/>',eye:'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',pen:'<path d="M4 20h4L19 9l-4-4L4 16z"/>'};
+const IC={trophy:'<ellipse cx="12" cy="12" rx="3.4" ry="9.8" stroke-opacity=".6"/><ellipse cx="12" cy="12" rx="3.4" ry="9.8" transform="rotate(60 12 12)" stroke-opacity=".6"/><ellipse cx="12" cy="12" rx="3.4" ry="9.8" transform="rotate(120 12 12)" stroke-opacity=".6"/><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="6.4" cy="6.2" r="1.4" fill="currentColor" stroke="none"/><circle cx="20.2" cy="9.4" r="1.4" fill="currentColor" stroke="none"/><circle cx="9.7" cy="19.4" r="1.4" fill="currentColor" stroke="none"/>',up:'<path d="M12 15V3M7.5 7.5 12 3l4.5 4.5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/>',flag:'<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',plus:'<path d="M12 5v14M5 12h14"/>',share:'<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.2 10.8 7.6-3.6M8.2 13.2l7.6 3.6"/>',trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',cm:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/>',like:'<path d="M7 11v9H4v-9zM7 11l4-8a2 2 0 0 1 2 2v4h5.5a2 2 0 0 1 2 2.3l-1.3 7A2 2 0 0 1 17.2 20H7"/>',send:'<path d="M21 3 10 14M21 3l-7 18-4-7-7-4z"/>',rss:'<path d="M5 5a14 14 0 0 1 14 14M5 11a8 8 0 0 1 8 8"/><circle cx="6" cy="18" r="1.4"/>',refresh:'<path d="M20 11a8 8 0 0 0-14.5-3M4 4v4h4M4 13a8 8 0 0 0 14.5 3M20 20v-4h-4"/>',stats:'<path d="M6 20v-9M12 20V4M18 20v-6"/>',x:'<path d="M6 6l12 12M18 6 6 18"/>',chev:'<path d="m6 9 6 6 6-6"/>',chk:'<path d="m5 12 5 5 9-10"/>',dots:'<circle cx="12" cy="5" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.7" fill="currentColor" stroke="none"/>',eye:'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',pen:'<path d="M4 20h4L19 9l-4-4L4 16z"/>'};
 const R=()=>{ try{ return window.ftCloud&&ftCloud._raw?ftCloud._raw():null; }catch(e){ return null; } };
 const me=()=>{ try{ const r=R(); return r&&r.ses&&r.ses()?r.ses().uid:''; }catch(e){ return ''; } };
 async function db(path,opt,qs){
@@ -17363,16 +17521,22 @@ function evOf(g){
   return ev;
 }
 function evStamp(g){ const ev=evOf(g), sig=JSON.stringify(ev)+todayStr(); if(g.evSig!==sig){ g.evSig=sig; if(ev.length) g.et=Date.now(); } }
+function spyLog(g){
+  const t=+g.target||0; if(!(t>0)) return [];
+  return data.transactions.filter(x=>x.type==='save_to_account'&&x.account===g.account&&x.date>=g.start&&(+x.amount||0)>0).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0).slice(-40)
+    .map(x=>({d:x.date,p:Math.round((+x.amount)/t*1000)/10,c:String(x.category||x.cat||'').slice(0,30),n:x.spy?String(x.note||'').slice(0,60):''}));
+}
 function payload(g){
   const pr=progress(g), s=stats(g);
-  return {s:String(g.subject).slice(0,60),a:Math.round(g.target),sv:Math.round(pr.saved),p:pr.pct,d:g.done?1:0,ds:g.start,dn:s.dn,sd:s.sd,ac:s.ac,sk:s.sk,sc:s.sc.map(o=>({n:o.n,k:o.k,v:o.v,e:o.e,ok:o.ok,st:o.st,tf:o.tf})),ev:evOf(g),evd:todayStr(),et:g.et||0};
+  return {s:String(g.subject).slice(0,60),a:Math.round(g.target),sv:Math.round(pr.saved),p:pr.pct,d:g.done?1:0,ds:g.start,dn:s.dn,sd:s.sd,ac:s.ac,sk:s.sk,sc:s.sc.map(o=>({n:o.n,k:o.k,v:o.v,e:o.e,ok:o.ok,st:o.st,tf:o.tf})),ev:evOf(g),evd:todayStr(),et:g.et||0,an:g.anon?1:0,al:g.anon?String(g.alias||'').slice(0,30):'',ns:g.nospy?1:0,cs:(g.cats||[]).slice(0,8),sf:g.nospy?[]:spyLog(g)};
 }
 /* ---------------- cloud push ---------------- */
 let pushT=0;
 async function pushGoal(g){
   const u=me(); if(!u||!okId(g.uid)) return;
   evStamp(g); const pr=progress(g), pl=payload(g);
-  await put('feed/'+g.uid,Object.assign({uid:u,n:myN(),u:myU(),t:g.created||Date.now()},pl));
+  await put('feed/'+g.uid,Object.assign({uid:u,n:g.anon?'':myN(),u:g.anon?'':myU(),t:g.created||Date.now()},pl));
+  if(g.sms&&pr.pct>(g.lp>0?g.lp:0)){ try{ tt(L('রেস "'+g.subject+'": '+nb(pr.pct)+'% পূর্ণ','Race "'+g.subject+'": '+pr.pct+'% complete')); }catch(e){} }
   g.lp=pr.pct; g.ld=g.done?1:0; g.lsig=JSON.stringify(pl);
 }
 function pushSoon(){
@@ -17399,19 +17563,35 @@ let RT='feed'; let FG=''; const CH={},MO={},DX={},RP={},EDT={},MF={},MN={}; let 
 const featG=gs=>gs.find(x=>x.uid===FG)||gs.find(x=>!x.done)||gs[0];
 const RTABS=[['feed','Race Feeds','রেস ফিড'],['rep','Replies','রিপ্লাই'],['mine','My Races','আমার রেস'],['ms','Missions','মিশন'],['top','Top Racers','সেরা রেসার']];
 function heroH(gs){
-  const g=featG(gs); let nR=0,nP=0; try{ nR=new Set(posts.map(p=>p.uid)).size; nP=posts.length; }catch(e){}
+  const g=featG(gs); let nR=0,nP=0; let nm=''; try{ nm=myN()||myU()||''; }catch(e){}
+  const who=()=>'<div class="rhWho"><b>'+E(nm||L('আপনি','You'))+'</b><button type="button" class="rhPlus" data-a="new" aria-label="'+L('নতুন রেস','New race')+'">'+S(IC.plus)+'</button></div>'; try{ nR=new Set(posts.map(p=>p.uid)).size; nP=posts.length; }catch(e){}
   const meta='<div class="rcMeta">'+nb(nP)+L(' রেস · ',' races · ')+nb(nR)+L(' জন রেসার',' racers')+'</div>';
-  const C=213.6, ring=pct=>'<div class="rhRing"><svg viewBox="0 0 80 80" aria-hidden="true"><circle class="bg" cx="40" cy="40" r="34"/><circle class="fg" cx="40" cy="40" r="34" stroke-dasharray="'+C+'" stroke-dashoffset="'+(C*(1-pct/100)).toFixed(1)+'" transform="rotate(-90 40 40)"/></svg><b>'+nb(pct)+'<small>%</small></b></div>';
-  if(!g) return '<div class="rcHero2 empty"><div class="rhTop"><span class="rhTag">'+S(IC.flag,14)+L('আপনার রেস','YOUR RACE')+'</span></div><div class="rhMain"><div class="rhL"><h2>'+L('রেস শুরু করুন','Start a race')+'</h2><p>'+L('টার্গেট দিন, তারপর ১০টি দৈনিক চ্যালেঞ্জ খেলে সেটি পূরণ করুন।','Set a target, then play 10 daily challenges to reach it.')+'</p></div>'+ring(0)+'</div><button type="button" class="rhGo" data-a="new">'+S(IC.plus)+L('নতুন রেস','New race')+'</button></div>'+meta;
+  const C=213.6, ring=(pct,bal)=>'<div class="rhRing"><svg viewBox="0 0 80 80" aria-hidden="true"><circle class="bg" cx="40" cy="40" r="34"/><circle class="fg" cx="40" cy="40" r="34" stroke-dasharray="'+C+'" stroke-dashoffset="'+(C*(1-pct/100)).toFixed(1)+'" transform="rotate(-90 40 40)"/></svg><b>'+nb(pct)+'<small>%</small>'+(bal?'<em>'+bal+'</em>':'')+'</b></div>';
+  if(!g) return '<div class="rcHero2 empty">'+who()+'<div class="rhTop"><span class="rhTag">'+S(IC.flag,14)+L('আপনার রেস','YOUR RACE')+'</span></div><div class="rhMain"><div class="rhL"><h2>'+L('রেস শুরু করুন','Start a race')+'</h2><p>'+L('টার্গেট দিন, তারপর ১০টি দৈনিক চ্যালেঞ্জ খেলে সেটি পূরণ করুন।','Set a target, then play 10 daily challenges to reach it.')+'</p></div>'+ring(0)+'</div><button type="button" class="rhGo" data-a="new">'+S(IC.plus)+L('নতুন রেস','New race')+'</button></div>'+meta;
   const pr=progress(g), s=stats(g), dn=s.sc.slice(0,PRE).filter(o=>o.tf).length;
   const left=Math.max(0,s.dn-s.x), rem=Math.max(0,g.target-pr.saved), per=left>0?Math.ceil(rem/left):rem;
   const ic={cal:'<rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/>',ok:'<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',fire:'<path d="M12 3c1 4 5 5.5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-5 1-9z"/>'};
   const st=(i,v,l)=>'<div><i>'+S(ic[i])+'</i><b>'+v+'</b><span>'+l+'</span></div>';
-  return '<div class="rcHero2" data-g="'+E(g.uid)+'"><div class="rhTop"><span class="rhTag">'+S(IC.flag,14)+L('আপনার রেস','YOUR RACE')+'</span><span class="rhSt'+(g.done?' ok':'')+'">'+(g.done?L('সম্পন্ন','Completed'):L('চলছে','Active'))+'</span></div>'
+  return '<div class="rcHero2" data-g="'+E(g.uid)+'">'+who()+'<div class="rhTop"><span class="rhTag">'+S(IC.flag,14)+L('আপনার রেস','YOUR RACE')+'</span><span class="rhSt'+(g.done?' ok':'')+'">'+(g.done?L('সম্পন্ন','Completed'):L('চলছে','Active'))+'</span></div>'
     +'<div class="rhMain"><div class="rhL"><h2>'+E(g.subject)+'</h2><div class="rcAm">'+nb(fm(pr.saved))+' <span>/ '+nb(fm(g.target))+'</span></div>'
-    +'<div class="rhSub">'+(g.done?L('টার্গেট পূর্ণ হয়েছে','Target reached'):L('বাকি ','Left ')+'<b>'+nb(fm(rem))+'</b>'+(left>0?' · '+L('প্রতিদিন ','per day ')+'<b>'+nb(fm(per))+'</b>':''))+'</div></div>'+ring(pr.pct)+'</div>'
+    +'<div class="rhSub">'+(g.done?L('টার্গেট পূর্ণ হয়েছে','Target reached'):L('বাকি ','Left ')+'<b>'+nb(fm(rem))+'</b>'+(left>0?' · '+L('প্রতিদিন ','per day ')+'<b>'+nb(fm(per))+'</b>':''))+'</div></div>'+ring(pr.pct,nb(fm(pr.saved)))+'</div>'
     +'<div class="rhStats">'+st('cal',nb(Math.min(s.x,s.dn))+'/'+nb(s.dn),L('দিন','Days'))+st('ok',nb(dn)+'/'+nb(PRE),L('আজকের চ্যালেঞ্জ','Today'))+st('fire',nb(s.sk),L('টানা','Streak'))+'</div>'
     +'<div class="rhDash">'+(function(){ try{ return dashInner(viewOf({g:g}),true,'top'); }catch(e){ return ''; } })()+'</div></div>'+meta;
+}
+function bpRing(pct,size){
+  const r=34,C=2*Math.PI*r;
+  return '<div class="bpRing" style="width:'+size+'px;height:'+size+'px"><svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="34" fill="none" stroke="#e2e8f0" stroke-width="8"/><circle cx="40" cy="40" r="34" fill="none" stroke="var(--primary)" stroke-width="8" stroke-linecap="round" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+(C*(1-Math.max(0,Math.min(100,pct))/100)).toFixed(1)+'" transform="rotate(-90 40 40)"/></svg><b>'+nb(pct)+'%</b></div>';
+}
+function bpBanner(gs){
+  let nm=''; try{ nm=myN()||myU()||''; }catch(e){}
+  let sv=0,tg=0; gs.forEach(g=>{ sv+=progress(g).saved; tg+=(+g.target||0); });
+  const pct=tg>0?Math.min(100,Math.round(sv/tg*100)):0;
+  return '<div class="bpBan"><div class="bpTop"><div><small>'+L('চ্যালেঞ্জ সেন্টার','Challenge Center')+'</small><h1>'+E(nm||L('আপনি','You'))+'</h1></div>'
+    +'<button type="button" class="bpPlus" data-a="new" aria-label="'+L('নতুন রেস','Create new race')+'">'+S(IC.plus)+'</button></div>'
+    +'<div class="bpStat"><div><small>'+L('রেসের মোট ব্যালেন্স','Races balance')+'</small><b>'+nb(fm(sv))+'</b><small>'+L('টার্গেট: ','Target goal: ')+nb(fm(tg))+'</small></div>'+bpRing(pct,84)+'</div></div>';
+}
+function bpFh(){
+  return '<div class="bpFh"><div><h2>FinTrack Feed</h2><p>'+L('কমিউনিটির সেভিংস রেস','Savings races from the community')+'</p></div><span class="bpBadge">'+nb(posts.length)+' '+L('রেস','Active')+'</span></div>';
 }
 function tabsH(){ return '<div class="rcTabs">'+RTABS.map(t=>'<button type="button" data-a="rt" data-rt="'+t[0]+'" class="'+(RT===t[0]?'on':'')+'">'+L(t[2],t[1])+'</button>').join('')+'</div>'; }
 function feedBody(){
@@ -17451,7 +17631,7 @@ function cardsH(gs){
       +'<button type="button" class="fgIcB'+(g.share?' on':'')+'" data-a="share" aria-label="Race Feeds" title="Race Feeds">'+S(IC.rss)+'</button>'
       +'<button type="button" class="fgIcB" data-a="phone" aria-label="'+L('ফোন থেকে শেয়ার','Share from phone')+'" title="'+L('ফোন থেকে শেয়ার','Share from phone')+'">'+S(IC.up)+'</button>'
       +'<button type="button" class="fgIcB" data-a="del" aria-label="Delete">'+S(IC.trash)+'</button></div>'
-      +'<div data-a="feat" style="cursor:pointer"><div class="fgAmt"><span>'+L('টার্গেট','Target')+'</span><b>'+nb(fm(pr.saved))+' / '+nb(fm(g.target))+'</b></div>'
+      +'<button type="button" class="bpLogBtn" data-a="bplog">'+L('সেভিং অ্যাক্টিভিটি যোগ করুন','Log saved activity')+'</button>'+'<div data-a="feat" style="cursor:pointer"><div class="fgAmt"><span>'+L('টার্গেট','Target')+'</span><b>'+nb(fm(pr.saved))+' / '+nb(fm(g.target))+'</b></div>'
       +'<div class="fgBar'+(g.done?' done':'')+'"><i style="width:'+pr.pct+'%"></i></div>'
       +'<div class="fgFoot"><span>'+(g.share?L('Race Feeds-এ শেয়ার করা আছে','Shared on Race Feeds'):L('শুধু আপনি দেখছেন','Only visible to you'))+'</span><b>'+nb(pr.pct)+'%</b></div><div class="dbHint">'+L('উপরে ড্যাশবোর্ডে দেখুন ›','Show on top dashboard ›')+'</div></div></div>';
   });
@@ -17461,9 +17641,9 @@ function paintGoals(){
   const a0=document.activeElement; if(a0&&a0.tagName==='INPUT'&&box.contains(a0)) return;
   const gs=goals(); let body='';
   if(RT==='mine') body=cardsH(gs); else if(RT==='ms') body=msBody(gs);
-  else{ try{ body=RT==='feed'?feedBody():RT==='rep'?repBody():dashH(); }catch(e){ body='<div class="fdMsg">'+L('লোড হচ্ছে…','Loading…')+'</div>'; } }
+  else{ try{ body=RT==='feed'?bpFh()+feedBody():RT==='rep'?repBody():dashH(); }catch(e){ body='<div class="fdMsg">'+L('লোড হচ্ছে…','Loading…')+'</div>'; } }
   const sc0=$('sec-challenge'), kp=sc0?sc0.scrollTop:0; let db0='';
-  box.innerHTML='<div class="rcBack"><button type="button" data-a="back" aria-label="Back">'+S('<path d="m15 6-6 6 6 6"/>')+'</button><b>'+L('রেস','Race')+'</b></div>'+heroH(gs)+db0+tabsH()+body; try{ loadPics(box); }catch(e){}
+  box.innerHTML='<div class="rcBack"><button type="button" data-a="back" aria-label="Back">'+S('<path d="m15 6-6 6 6 6"/>')+'</button><b>'+L('রেস','Race')+'</b></div>'+bpBanner(gs)+db0+tabsH()+body; try{ loadPics(box); }catch(e){}
   if(sc0&&kp) sc0.scrollTop=kp;
   try{ paintSheet(); }catch(e){}
 }
@@ -17474,6 +17654,7 @@ box.addEventListener('click',e=>{
   else if(a==='new') openForm();
   else if(a==='feat'&&g){ FG=g.uid; RT='feed'; paintGoals(); const sc0=$('sec-challenge'); if(sc0) sc0.scrollTop=0; }
   else if(a==='del'&&g) askDel(g);
+  else if(a==='bplog'&&g) bpLog(g.uid);
   else if(a==='share'&&g) toggleShare(g);
   else if(a==='phone'&&g){ const pr=progress(g); sharePhone({n:myN(),u:myU(),s:g.subject,a:g.target,sv:pr.saved,p:pr.pct,d:g.done?1:0}); }
 });
@@ -17495,49 +17676,64 @@ if(chSec){
 
 /* ---------------- create form ---------------- */
 function openForm(){
-  if($('fgOv')) return;
-  const accs=data.accounts||[], bal=calcAccountBalances(); let sel='';
-  const ov=document.createElement('div'); ov.id='fgOv';
-  ov.innerHTML='<div class="fgBd"></div><div class="fgSh"></div>'; document.body.appendChild(ov);
-  const sh=ov.querySelector('.fgSh'), close=()=>ov.remove();
-  ov.querySelector('.fgBd').onclick=close;
-  function step1(keep){
-    const v=keep||{s:'',a:'',dd:'30'};
-    sh.innerHTML='<h3>'+L('নতুন লক্ষ্য চ্যালেঞ্জ','New goal challenge')+'</h3><p class="fgSub">'+L('কিসের জন্য টাকা জমাতে চান, বাজেট কত, আর কোন সেভিংস একাউন্ট থেকে পূরণ করবেন — বেছে নিন।','What are you saving for, how much, and from which savings account.')+'</p>'
-      +'<label>'+L('কিসের জন্য চ্যালেঞ্জ?','What is the challenge for?')+'</label><input id="fgS" maxlength="60" placeholder="'+L('যেমন: PS5-এর জন্য চ্যালেঞ্জ','e.g. Challenge for a PS5')+'" value="'+E(v.s)+'">'
-      +'<label>'+L('চ্যালেঞ্জের বাজেট (টাকা)','Challenge budget (Taka)')+'</label><input id="fgA" type="number" inputmode="decimal" min="1" placeholder="0" value="'+E(v.a)+'">'
-      +'<label>'+L('কত দিনের চ্যালেঞ্জ?','How many days?')+'</label><input id="fgD" type="number" inputmode="numeric" min="1" max="365" value="'+E(v.dd||'30')+'">'
-      +'<label>'+L('কোন সেভিংস একাউন্ট থেকে পূরণ করবেন?','Which savings account will fill it?')+'</label>'
-      +(accs.length?'<div class="fgAcc">'+accs.map(a=>'<button type="button" class="fgAc'+(a===sel?' on':'')+'" data-ac="'+E(a)+'"><b>'+E(a)+'</b><small>'+L('এখন ','Now ')+nb(fm(bal[a]||0))+'</small></button>').join('')+'</div>':'<div class="fgEmpty">'+L('কোনো সেভিংস একাউন্ট নেই — আগে "একাউন্ট" ট্যাবে একটি একাউন্ট যোগ করুন।','No savings account yet — add one in the Accounts tab first.')+'</div>')
-      +'<div class="fgEr"></div><button type="button" class="fgGo" data-go="1">'+L('চালিয়ে যান','Continue')+'</button><button type="button" class="fgGo ghost" data-x="1">'+L('বাতিল','Cancel')+'</button>';
-    sh.querySelectorAll('.fgAc').forEach(b=>b.onclick=()=>{ const k={s:$('fgS').value,a:$('fgA').value,dd:$('fgD').value}; sel=b.dataset.ac; step1(k); });
-    sh.querySelector('[data-x]').onclick=close;
-    sh.querySelector('[data-go]').onclick=()=>{
-      const s=$('fgS').value.trim(), a=parseFloat($('fgA').value), er=sh.querySelector('.fgEr');
-      if(s.length<2){ er.textContent=L('চ্যালেঞ্জের বিষয় লিখুন','Write what the challenge is for'); return; }
-      if(!(a>0)){ er.textContent=L('সঠিক বাজেট দিন','Enter a valid budget'); return; }
-      const dd=parseInt($('fgD').value,10); if(!(dd>=1&&dd<=365)){ er.textContent=L('দিন ১ থেকে ৩৬৫-এর মধ্যে দিন','Days must be 1 to 365'); return; }
-      if(!sel){ er.textContent=L('একটি সেভিংস একাউন্ট বেছে নিন','Pick a savings account'); return; }
-      if(goals().length>=10){ er.textContent=L('সর্বোচ্চ ১০টি লক্ষ্য চ্যালেঞ্জ রাখা যায়','You can keep up to 10 goal challenges'); return; }
-      step2({s:s,a:a,dd:dd});
-    };
-  }
-  function step2(v){
-    sh.innerHTML='<div class="fgCtr"><div class="fgShareIc">'+S(IC.rss)+'</div><h3>'+L('FinTrack Feeds-এ শেয়ার করতে চান?','Share on FinTrack Feeds?')+'</h3>'
-      +'<p class="fgSub">'+L('অনুমতি দিলে ফিডে আপনার প্রোফাইল, কিসের জন্য চ্যালেঞ্জ নিয়েছেন, বাজেটের পরিমাণ আর কত % পূরণ হয়েছে — সবাই দেখতে পারবে। যেকোনো সময় বন্ধ করা যাবে।','If you allow, everyone can see your profile, what the challenge is for, the budget and the % progress on the feed. You can turn it off anytime.')+'</p></div>'
-      +'<button type="button" class="fgGo" data-y="1">'+L('হ্যাঁ, শেয়ার করব','Yes, share')+'</button><button type="button" class="fgGo ghost" data-n="1">'+L('না, শুধু আমার জন্য','No, keep it private')+'</button>';
-    const fin=share=>{
-      if(share&&!me()){ tt(L('শেয়ার করতে লগইন লাগে — চ্যালেঞ্জটি শুধু আপনার জন্য রাখা হলো','Sign in to share — kept private for now')); share=false; }
-      const g={uid:Date.now().toString(36)+Math.random().toString(36).slice(2,7),subject:v.s,target:v.a,account:sel,start:todayStr(),days:v.dd,subs:[],created:Date.now(),share:!!share,done:false,lp:-1,ld:0};
-      goals().push(g); saveData(); close(); paintGoals(); tt(L('লক্ষ্য চ্যালেঞ্জ শুরু!','Goal challenge started!'));
-      if(g.share) pushGoal(g).catch(e=>{ g.share=false; saveData(); paintGoals(); tt((e&&(e.status===401||e.status===403))?L('ফিডের রুলস সেট করা নেই — ফিড পেজ দেখুন','Feed rules are not set — see the Feed page'):L('ফিডে শেয়ার করা যায়নি','Could not share to the feed')); });
-    };
-    sh.querySelector('[data-y]').onclick=()=>fin(true);
-    sh.querySelector('[data-n]').onclick=()=>fin(false);
-  }
-  step1();
+  if($('bpForm')) return;
+  const accs=data.accounts||[], bal=calcAccountBalances(), cats=data.categories||[];
+  const ALI=['Anonymous Racer','Silent Saver','Mystery Racer','Shadow Saver','Hidden Hero'];
+  const ov=document.createElement('div'); ov.id='bpForm';
+  const st=(n,t,body)=>'<div class="bpStep"><div class="bpSt"><span class="bpN">'+n+'</span><b>'+t+'</b></div>'+body+'</div>';
+  const sw=(id,t,d,on)=>'<label class="bpSw"><span><b>'+t+'</b><small>'+d+'</small></span><input type="checkbox" id="'+id+'"'+(on?' checked':'')+'><i></i></label>';
+  ov.innerHTML='<div class="bpFhd"><button type="button" class="bpBk" data-x="1" aria-label="Back">'+S('<path d="m15 6-6 6 6 6"/>')+'</button><b>'+L('নতুন রেস তৈরি করুন','Create New Race')+'</b></div><div class="bpBody">'
+    +st(1,L('কিসের জন্য রেস?','What is the Race for?'),'<input id="bpS" maxlength="60" placeholder="'+L('যেমন: PS5 কেনা','e.g. New PS5')+'">')
+    +st(2,L('কত টাকা জমাতে চান?','How much do you want to save?'),'<input id="bpA" type="number" inputmode="decimal" min="1" placeholder="0">')
+    +st(3,L('কত দিনের রেস?','How many days?'),'<input id="bpD" type="number" inputmode="numeric" min="1" max="365" value="30">')
+    +st(4,L('কোন একাউন্টে জমা হবে?','Which account will hold the savings?'),accs.length?'<select id="bpAc">'+accs.map(a=>'<option value="'+E(a)+'">'+E(a)+' — '+nb(fm(bal[a]||0))+'</option>').join('')+'</select>':'<div class="fgEmpty">'+L('কোনো একাউন্ট নেই — আগে "একাউন্ট" ট্যাবে যোগ করুন।','No account yet — add one in the Accounts tab first.')+'</div>')
+    +st(5,L('কোন খরচের ক্যাটাগরি এড়াবেন?','Which spending categories will you skip?'),'<details class="fgDd" id="bpCats"><summary id="bpCatS">'+L('ক্যাটাগরি বেছে নিন','Select categories')+'</summary>'+cats.map(c=>'<label class="fgCk"><input type="checkbox" data-cat="'+E(c)+'"><span>'+E(c)+'</span></label>').join('')+'</details>')
+    +st(6,L('পপআপ SMS','Popup SMS'),sw('bpSms',L('পপআপ SMS চালু','Enable Popup SMS'),L('অগ্রগতি বাড়লে নোটিফিকেশন পাবেন','Get notified when your progress grows'),true))
+    +st(7,L('FinTrack Feed-এ দেখাবেন?','Show in FinTrack Feed?'),sw('bpShare',L('ফিডে দেখান','Visible in the feed'),L('বন্ধ করলে রেসটি শুধু আপনি দেখবেন','Turn off to keep the Race hidden'),true))
+    +st(8,L('বেনামি রেস','Anonymous Race'),sw('bpAnon',L('বেনামে পাবলিশ করুন','Publish anonymously'),L('আপনার নাম ও ছবি লুকানো থাকবে','Your name and picture stay hidden'),false)+'<div id="bpAliW" style="display:none"><label class="bpLb">'+L('বেনামি পরিচয় বেছে নিন','Choose an anonymous identity')+'</label><select id="bpAli">'+ALI.map(a=>'<option>'+a+'</option>').join('')+'</select></div>')
+    +st(9,L('Spy Eye','Spy Eye'),sw('bpNoSpy',L('Spy Eye বন্ধ রাখুন','Disable Spy Eye'),L('বন্ধ করলে অন্যরা আপনার Spy Eye Feed দেখতে পাবে না','Others will not see your Spy Eye Feed'),false))
+    +st(10,L('পাবলিশ','Publish'),'<div class="fgEr bpEr"></div><button type="button" class="bpPub" data-y="1">'+L('রেস পাবলিশ করুন','Publish Race')+'</button>')
+    +'</div>';
+  document.body.appendChild(ov);
+  const close=()=>ov.remove(), q=id=>ov.querySelector('#'+id);
+  ov.querySelector('[data-x]').onclick=close;
+  q('bpAnon').onchange=()=>{ q('bpAliW').style.display=q('bpAnon').checked?'block':'none'; };
+  ov.querySelectorAll('[data-cat]').forEach(c=>c.onchange=()=>{ const on=[...ov.querySelectorAll('[data-cat]:checked')].map(e=>e.dataset.cat); q('bpCatS').textContent=on.length?nb(on.length)+L('টি ক্যাটাগরি: ',' selected: ')+on.join(', '):L('ক্যাটাগরি বেছে নিন','Select categories'); });
+  ov.querySelector('[data-y]').onclick=()=>{
+    const er=ov.querySelector('.bpEr'), sub=q('bpS').value.trim(), a=parseFloat(q('bpA').value), dd=parseInt(q('bpD').value,10), ac=q('bpAc')?q('bpAc').value:'';
+    const cs=[...ov.querySelectorAll('[data-cat]:checked')].map(e=>e.dataset.cat);
+    if(sub.length<2){ er.textContent=L('রেসের উদ্দেশ্য লিখুন','Write what the Race is for'); return; }
+    if(!(a>0)){ er.textContent=L('সঠিক বাজেট দিন','Enter a valid budget'); return; }
+    if(!(dd>=1&&dd<=365)){ er.textContent=L('দিন ১ থেকে ৩৬৫-এর মধ্যে দিন','Days must be 1 to 365'); return; }
+    if(!ac){ er.textContent=L('একটি একাউন্ট বেছে নিন','Pick an account'); return; }
+    if(!cs.length){ er.textContent=L('কমপক্ষে একটি খরচের ক্যাটাগরি বেছে নিন','Select at least one category to skip'); return; }
+    if(goals().length>=10){ er.textContent=L('সর্বোচ্চ ১০টি রেস রাখা যায়','You can keep up to 10 Races'); return; }
+    let share=q('bpShare').checked; const anon=q('bpAnon').checked;
+    if(share&&!me()){ tt(L('শেয়ার করতে লগইন লাগে — রেসটি শুধু আপনার জন্য রাখা হলো','Sign in to share — kept private for now')); share=false; }
+    const g={uid:Date.now().toString(36)+Math.random().toString(36).slice(2,7),subject:sub,target:a,account:ac,start:todayStr(),days:dd,subs:[],cats:cs,sms:q('bpSms').checked,anon:anon,alias:anon?q('bpAli').value:'',nospy:q('bpNoSpy').checked,created:Date.now(),share:!!share,done:false,lp:-1,ld:0};
+    goals().push(g); saveData(); close(); RT='feed'; paintGoals(); tt(L('রেস পাবলিশ হয়েছে!','Race published!'));
+    if(g.share) pushGoal(g).catch(e=>{ g.share=false; saveData(); paintGoals(); tt((e&&(e.status===401||e.status===403))?L('ফিডের রুলস সেট করা নেই — ফিড পেজ দেখুন','Feed rules are not set — see the Feed page'):L('ফিডে শেয়ার করা যায়নি','Could not share to the feed')); });
+  };
 }
 window.fgOpen=openForm;
+function racesH(uid){
+  const own=!window.__ppUid||uid===me(); let rows=[];
+  if(own) rows=goals().map(g=>{ const pr=progress(g); return {s:g.subject,a:g.target,sv:pr.saved,p:pr.pct,d:g.done,pv:!g.share,an:g.anon}; });
+  else rows=posts.filter(p=>p.uid===uid&&!p.an).map(p=>({s:p.s,a:p.a,sv:p.sv,p:p.p,d:p.d}));
+  if(!rows.length) return '';
+  return '<div id="ppRaces"><div class="ppRh">'+S(IC.flag)+'<b>'+L('রেস','Races')+'</b></div>'+rows.map(r=>'<div class="ppRc"><div class="ppRt"><b>'+E(r.s)+'</b><span>'+nb(r.p)+'%</span></div><div class="ppRb"><i style="width:'+r.p+'%"></i></div><small>'+(r.d?L('সম্পন্ন · ','Completed · '):'')+L('জমেছে ','Saved ')+nb(fm(r.sv))+' / '+nb(fm(r.a))+(r.pv?' · '+L('শুধু আপনি দেখছেন','Only you'):'')+(r.an?' · '+L('বেনামি','Anonymous'):'')+'</small></div>').join('')+'</div>';
+}
+let ppSig=''; const ppObs=new MutationObserver(()=>injRaces());
+function injRaces(){
+  const el=$('sec-profile'); if(!el||!el.classList.contains('active')) return;
+  const uid=window.__ppUid||me()||'__me';
+  if(!FS.loaded&&!FS.busy){ try{ load(); }catch(e){} }
+  const h=racesH(uid), old=$('ppRaces'), sig=uid+'|'+h;
+  if(old&&sig===ppSig) return; ppObs.disconnect();
+  if(old) old.remove(); if(h) el.insertAdjacentHTML('beforeend',h); ppSig=sig; ppObs.observe(el,{childList:true,subtree:true});
+}
+(function(){ const el=$('sec-profile'); if(el){ ppObs.observe(el,{childList:true,subtree:true}); new MutationObserver(()=>injRaces()).observe(el,{attributes:true,attributeFilter:['class']}); }
+  const pv=window.ppView; if(pv) window.ppView=function(uid){ window.__ppUid=uid; return pv.apply(this,arguments); }; })();
 
 /* ---------------- Feed page ---------------- */
 const sec=document.createElement('div'); sec.className='section'; sec.id='sec-feed';
@@ -17554,15 +17750,23 @@ function loadPics(root){
 }
 function rulesMsg(){ return '<div class="fdMsg">'+L('ফিড চালু করতে Firebase Realtime Database-এর Rules-এ নিচের অংশটি "rules" এর ভেতরে যোগ করে Publish করুন:','To enable the feed, add this inside "rules" of your Firebase Realtime Database and Publish:')+'<pre id="fdRules">'+E(RULES)+'</pre><button type="button" data-a="copy">'+L('কপি করুন','Copy')+'</button></div>'; }
 function postH(p){
-  const mine=p.uid===me(), n=CM[p.id], cnt=Array.isArray(n)?n.length:0;
-  return '<div class="xp" data-p="'+E(p.id)+'">'
-    +'<div class="xpTop"><div class="xpAv" data-a="prof" data-u="'+E(p.uid)+'">'+avH(p.uid,p.n||p.u)+'</div>'
-    +'<div class="xpWho" data-a="prof" data-u="'+E(p.uid)+'"><div class="xpN">'+E(p.n||p.u||'?')+(mine?'<em>'+L('আপনি','You')+'</em>':'')+'</div><div class="xpU">'+(p.u?'@'+E(p.u)+' · ':'')+agoS(p.t)+'</div></div>'
-    +'<span class="xpPc'+(p.d?' ok':'')+'">'+nb(p.p)+'%</span></div>'
-    +'<div class="xpS"><i>'+S(IC.flag)+'</i><div><b>'+E(p.s)+'</b><small>'+(p.d?L('বাজেট পূর্ণ · ','Completed · ')+nb(fm(p.a)):L('জমেছে ','Saved ')+nb(fm(p.sv))+' / '+nb(fm(p.a)))+'</small></div></div>'
-    +'<div class="xpA"><button type="button" data-a="cm" aria-label="'+L('মন্তব্য','Comments')+'">'+S(IC.cm)+'<span class="cmCnt">'+(cnt?nb(cnt):'')+'</span></button>'
-    +'<button type="button" data-a="phone" aria-label="'+L('শেয়ার','Share')+'">'+S(IC.up)+'</button>'
-    +'<button type="button" class="xpPg" data-a="open">'+S(IC.stats)+'<span>'+L('প্রগ্রেস স্ট্যাটাস','Progress status')+'</span></button></div></div>';
+  const h=postH0(p); return p.an?h.replace(/data-a="prof" data-u="[^"]*"/g,'').replace(/<div class="fdAv".*?<\/div>/,'<div class="fdAv"><b>?</b></div>'):h;
+}
+function postH0(p){
+  const mine=p.uid===me()&&!p.an, n=CM[p.id], cnt=Array.isArray(n)?n.length:0;
+  const nm=p.an?(p.al||L('বেনামি রেসার','Anonymous Racer')):(p.n||p.u||'?');
+  let dt=''; try{ dt=p.t?new Date(p.t).toISOString().slice(0,10):''; }catch(e){}
+  const sh=p.an?'<svg class="bpSh" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg>':'';
+  return '<div class="xp bpCard" data-p="'+E(p.id)+'">'
+    +'<div class="bpCH"><div class="xpAv" data-a="prof" data-u="'+E(p.uid)+'">'+avH(p.uid,nm)+'</div>'
+    +'<div class="xpWho" data-a="prof" data-u="'+E(p.uid)+'"><div class="xpN">'+E(nm)+sh+(mine?'<em>'+L('আপনি','You')+'</em>':'')+'</div><div class="xpU">'+L('তৈরি ','Created ')+dt+'</div></div>'
+    +'<span class="xpPc'+(p.d?' ok':'')+'">'+nb(p.p)+'% '+L('সম্পন্ন','Done')+'</span></div>'
+    +'<div class="bpLbl">'+L('রেসের উদ্দেশ্য','Race purpose')+'</div><p class="bpPur">'+E(p.s)+'</p>'
+    +'<div class="bpTg"><span>'+L('টার্গেট: ','Target: ')+'<b>'+nb(fm(p.a))+'</b></span><span>'+nb(p.dn)+L(' দিনের রেস',' days duration')+'</span></div>'
+    +'<div class="fdBar'+(p.d?' done':'')+'"><i style="width:'+p.p+'%"></i></div>'
+    +'<div class="xpA"><button type="button" data-a="cm" aria-label="'+L('মন্তব্য','Comment')+'">'+S(IC.cm)+'<span class="cmCnt">'+(cnt?nb(cnt):'')+'</span></button>'
+    +'<button type="button" data-a="open" aria-label="'+L('রেসের বিস্তারিত ও Spy Eye','Race details & Spy Eye')+'">'+S(IC.eye)+'</button><span style="flex:1"></span>'
+    +'<button type="button" data-a="cm" aria-label="'+L('রিপ্লাই','Reply')+'"><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 6 6v3"/></svg></button></div></div>';
 }
 function cmItem(c,vt,u,isRp){
   const v=vt[c.id]||{}, up=Object.keys(v).filter(k=>v[k]===1).length, dn=Object.keys(v).filter(k=>v[k]===-1).length, my=v[u], own=c.uid===u, mn=CMM&&CMM.cid===c.id;
@@ -17608,6 +17812,45 @@ function openSheet(pid){
   kbFit(); paintCm(pid); loadCm(pid);
 }
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeSheet(); closeProg(); } });
+function addSpy(){
+  const ov=$('fdPgOv'); if(!ov) return; const po=posts.find(x=>x.id===ov.dataset.p), bd=ov.querySelector('.pgBody'); if(!po||!bd) return;
+  const a0=document.activeElement; if(a0&&a0.tagName==='INPUT'&&bd.contains(a0)) return;
+  const lg=goals().find(x=>x.uid===po.id), nm=po.an?(po.al||L('বেনামি রেসার','Anonymous Racer')):(po.n||po.u||'?');
+  let h='<div class="bpSpyTop">'+(po.an?'<div class="fdAv"><b>?</b></div>':avH(po.uid,nm))+'<div class="bpSpyN"><b>'+E(nm)+'</b><small>'+E(po.s)+'</small></div>'+bpRing(po.p,76)+'</div>';
+  h+='<div class="spyFeedH">'+S(IC.eye)+'<b>Spy Eye Feed</b></div>';
+  if(lg) h+='<button type="button" class="bpLogB" data-a="bplog">+ '+L('সেভিং অ্যাক্টিভিটি যোগ করুন','Log saved activity')+'</button>';
+  if(po.ns&&!lg) h+='<div class="fdMsg">'+L('এই রেসারের Spy Eye বন্ধ আছে।','This racer turned Spy Eye off.')+'</div>';
+  else if(!po.sf.length) h+='<div class="fdMsg">'+L('এখনো কোনো সেভিং অ্যাকশন নেই।','No saving actions yet.')+'</div>';
+  else po.sf.forEach((e,i)=>{ const sk=e.c&&po.cs.indexOf(e.c)>=0;
+    const tx=e.n?E(e.n):(sk?L('এড়িয়ে গেছেন: ','Skipped: ')+E(e.c):L('সেভিং করেছেন','Saved money')+(e.c?' · '+E(e.c):''));
+    h+='<div class="spyRow"><i>#'+nb(i+1)+'</i><span>'+tx+'<small>'+(e.n&&e.c?E(e.c)+' · ':'')+E(e.d)+'</small></span><b>+'+nb(e.p)+'%</b></div>'; });
+  let dh=''; try{ if(lg) dh='<div class="dbIn" style="margin-top:14px">'+dashInner(viewOf({g:lg}),true,po.id)+'</div>'; }catch(e){}
+  const st=bd.scrollTop; bd.innerHTML=h+dh; bd.scrollTop=st; try{ loadPics(bd); }catch(e){}
+  if(!ov._bp){ ov._bp=1; ov.addEventListener('click',e=>{ if(e.target.closest('[data-a="bplog"]')) bpLog(ov.dataset.p); }); }
+}
+function bpLog(gid){
+  const g=goals().find(x=>x.uid===gid); if(!g||$('bpLogOv')) return;
+  const cs=(g.cats&&g.cats.length?g.cats:(data.categories||[]));
+  const ov=document.createElement('div'); ov.id='bpLogOv';
+  ov.innerHTML='<div class="fgBd"></div><div class="bpLogSh"><h3>'+L('সেভিং অ্যাক্টিভিটি','Log saved activity')+'</h3><p class="fgSub">'+L('কোন খরচ এড়িয়ে গেলেন? টাকার অঙ্ক অন্যদের দেখানো হবে না — শুধু রেসের শতাংশ দেখাবে।','What did you skip? Others only see the % of the target, never the amount.')+'</p>'
+    +'<label>'+L('কোন অ্যাক্টিভিটি এড়িয়ে গেলেন?','Activity you skipped')+'</label><input id="bpLd" maxlength="60" placeholder="'+L('যেমন: রেস্টুরেন্টে ডিনার','e.g. Restaurant dinner')+'">'
+    +'<label>'+L('ক্যাটাগরি','Category')+'</label><select id="bpLc">'+cs.map(c=>'<option>'+E(c)+'</option>').join('')+'</select>'
+    +'<label>'+L('কত টাকা বাঁচালেন?','Amount saved')+'</label><input id="bpLa" type="number" inputmode="decimal" min="1" placeholder="0">'
+    +'<div class="fgEr bpLe"></div><button type="button" class="bpPub" data-y="1">'+L('সেভ করুন','Save')+'</button><button type="button" class="bpGhost" data-x="1">'+L('বাতিল','Cancel')+'</button></div>';
+  document.body.appendChild(ov);
+  const close=()=>ov.remove(), er=ov.querySelector('.bpLe'); ov.querySelector('.fgBd').onclick=close; ov.querySelector('[data-x]').onclick=close;
+  ov.querySelector('[data-y]').onclick=()=>{
+    const d=$('bpLd').value.trim(), c=$('bpLc').value, a=parseFloat($('bpLa').value);
+    if(d.length<2){ er.textContent=L('কী এড়িয়ে গেলেন লিখুন','Write what you skipped'); return; }
+    if(!(a>0)){ er.textContent=L('সঠিক অঙ্ক দিন','Enter a valid amount'); return; }
+    const tx={id:Date.now()+'-'+Math.random().toString(36).slice(2,7),type:'save_to_account',amount:a,category:c||null,source:null,person:null,account:g.account,due:null,note:d,date:todayStr(),time:nowTime(),spy:1};
+    try{ tx.fund=ftFundFor(tx.type); if(tx.fund){ const fb=calcAccountBalances()[tx.fund]||0; if(a>fb){ er.textContent=tx.fund+' '+L('এ পর্যাপ্ত ব্যালেন্স নেই','has insufficient balance')+': '+fm(fb); return; } } const nb0=ftNeedBal(tx.type,a,tx.fund); if(nb0){ er.textContent=String(nb0); return; } }catch(e){}
+    data.transactions.push(tx); saveData(); try{ checkGoals(); }catch(e){}
+    try{ renderDash(); renderAccounts(); renderHistory(); }catch(e){}
+    close(); paintGoals(); if(g.share) pushSoon(); try{ paintProg(); }catch(e){}
+    tt(L('সেভিং যোগ হয়েছে — শতাংশ হিসাব হয়েছে','Saved activity logged — percentage updated'));
+  };
+}
 function closeProg(){ const ov=$('fdPgOv'); if(ov) ov.remove(); }
 function spyList(){
   const out=[], now=Date.now();
@@ -17632,6 +17875,7 @@ function paintProg(){
   try{ const lg=goals().find(x=>x.uid===pid); dh='<div class="dbIn" style="margin-top:0">'+dashInner(viewOf(lg?{g:lg}:{v:Object.assign({mine:false},po)}),!!lg,pid)+'</div>'; }catch(e){}
   body.innerHTML=dh+spyH(); loadPics(body); body.scrollTop=st;
 }
+const _pp0=paintProg; paintProg=function(){ _pp0.apply(this,arguments); try{ addSpy(); }catch(e){} try{ ppSig=''; injRaces(); }catch(e){} };
 function openProg(pid){
   closeProg(); closeSheet(); const po=posts.find(x=>x.id===pid); if(!po) return;
   const ov=document.createElement('div'); ov.id='fdPgOv'; ov.dataset.p=pid;
@@ -17687,7 +17931,7 @@ function parse(d){
   const rows=[]; Object.keys(d||{}).forEach(id=>{ const v=d[id]; if(!okId(id)||!v||typeof v!=='object'||!okId(v.uid)) return;
     const a=+v.a, p=Math.max(0,Math.min(100,Math.floor(+v.p||0))); if(!(a>0)||!v.s) return;
     const sc=(Array.isArray(v.sc)?v.sc:[]).slice(0,20).map(o=>({n:String((o&&o.n)||'').slice(0,40),k:['save','limit','check','pre'].indexOf(o&&o.k)<0?'check':o.k,v:Math.max(0,+(o&&o.v)||0),e:Math.max(1,+(o&&o.e)||1),ok:Math.max(0,+(o&&o.ok)||0),st:Math.max(0,+(o&&o.st)||0),tf:(o&&o.tf)?1:0}));
-    rows.push({id,uid:v.uid,n:String(v.n||'').slice(0,40),u:String(v.u||'').slice(0,30),s:String(v.s).slice(0,60),a:a,sv:Math.max(0,+v.sv||0),p:p,d:v.d?1:0,t:+v.t||0,ds:/^\d{4}-\d{2}-\d{2}$/.test(v.ds||'')?v.ds:'',dn:Math.max(1,Math.min(365,+v.dn||30)),sd:/^[0-9]{0,365}$/.test(v.sd||'')?String(v.sd||''):'',ac:Math.max(0,+v.ac||0),sk:Math.max(0,+v.sk||0),sc:sc,ev:(Array.isArray(v.ev)?v.ev:[]).slice(0,4).map(o=>({k:['save','nospend','done'].indexOf(o&&o.k)<0?'':o.k,a:Math.max(0,+(o&&o.a)||0)})).filter(o=>o.k),evd:/^\d{4}-\d{2}-\d{2}$/.test(v.evd||'')?v.evd:'',et:+v.et||0}); });
+    const an=v.an?1:0; rows.push({id,an:an,ns:v.ns?1:0,cs:(Array.isArray(v.cs)?v.cs:[]).slice(0,8).map(x=>String(x).slice(0,30)),sf:(Array.isArray(v.sf)?v.sf:[]).slice(0,40).map(o=>({d:String((o&&o.d)||'').slice(0,10),p:Math.max(0,+(o&&o.p)||0),c:String((o&&o.c)||'').slice(0,30),n:String((o&&o.n)||'').slice(0,60)})),uid:v.uid,n:an?(String(v.al||'').slice(0,30)||'Anonymous'):String(v.n||'').slice(0,40),al:an?String(v.al||'').slice(0,30):'',u:an?'':String(v.u||'').slice(0,30),s:String(v.s).slice(0,60),a:a,sv:Math.max(0,+v.sv||0),p:p,d:v.d?1:0,t:+v.t||0,ds:/^\d{4}-\d{2}-\d{2}$/.test(v.ds||'')?v.ds:'',dn:Math.max(1,Math.min(365,+v.dn||30)),sd:/^[0-9]{0,365}$/.test(v.sd||'')?String(v.sd||''):'',ac:Math.max(0,+v.ac||0),sk:Math.max(0,+v.sk||0),sc:sc,ev:(Array.isArray(v.ev)?v.ev:[]).slice(0,4).map(o=>({k:['save','nospend','done'].indexOf(o&&o.k)<0?'':o.k,a:Math.max(0,+(o&&o.a)||0)})).filter(o=>o.k),evd:/^\d{4}-\d{2}-\d{2}$/.test(v.evd||'')?v.evd:'',et:+v.et||0}); });
   rows.sort((a,b)=>b.t-a.t); return rows.slice(0,50);
 }
 async function load(){
@@ -17970,7 +18214,7 @@ box.addEventListener('input',onMf);
 sec.addEventListener('click',dashClick); box.addEventListener('click',dashClick);
 /* nav button + tab hooks */
 const _at=window.activateTab;
-window.activateTab=function(n){ const r=_at.apply(this,arguments); document.body.classList.toggle('chFull',n==='challenge'); if(n!=='challenge'&&MN.top){ MN.top=false; try{ paintSheet(); }catch(e){} } if(n==='challenge') chSec.scrollTop=0; if(n==='feed'){ render(); load(); window.scrollTo(0,0); } else if(n==='challenge'){ try{ paintGoals(); load(); }catch(e){} window.scrollTo(0,0); } return r; };
+window.activateTab=function(n){ const r=_at.apply(this,arguments); document.body.classList.toggle('chFull',n==='challenge'); if(n!=='profile') window.__ppUid=null; if(n!=='challenge'&&MN.top){ MN.top=false; try{ paintSheet(); }catch(e){} } if(n==='challenge') chSec.scrollTop=0; if(n==='feed'){ render(); load(); window.scrollTo(0,0); } else if(n==='challenge'){ try{ paintGoals(); load(); }catch(e){} window.scrollTo(0,0); } return r; };
 const _sd=window.saveData;
 window.saveData=function(){ const r=_sd.apply(this,arguments); setTimeout(()=>{ try{ checkGoals(); paintGoals(); pushSoon(); }catch(e){} },0); return r; };
 const _al=window.applyLanguage;
