@@ -49,7 +49,7 @@ function mi(n){return '<i class="mi" style="--m:var(--ic-'+n+')"></i>';}
 function noteFmt(n){n=String(n||'');var R='\u{1F501}';if(n.indexOf(R)===0){return mi('repeat')+' '+esc(n.slice(R.length).trim());}return esc(n);}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#f4f5f7; --card:#ffffff; --text:#1a1c1e; --muted:#6b7280; --border:#e5e7eb;
@@ -1183,6 +1183,18 @@ html body #sec-friends .frAv{border-radius:16px;background:linear-gradient(135de
 .nsTo .row{display:flex;gap:8px}.nsTo button{border:0;border-radius:14px;padding:9px 14px;font-weight:700;font-size:13px;cursor:pointer;background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--text)}
 .nsTo button.p{background:var(--primary);color:#fff}
 html.locked #sec-notes,html.locked #nsSheet,html.locked #nsRem,html.locked #nsToast{display:none!important}
+</style>
+<style id="ftFbWelcomeCss">
+#bottomNav .bnbtn .bnAtom{fill:none;stroke:none;}
+#fbWelcome{position:fixed;inset:0;z-index:9100;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 26px calc(28px + env(safe-area-inset-bottom,0px));background:var(--bg);color:var(--text);transition:opacity .35s ease,transform .35s ease;}
+#fbWelcome.out{opacity:0;transform:scale(1.02);pointer-events:none;}
+#fbWelcome .fbwIn{width:100%;max-width:420px;}
+#fbWelcome .fbwTag{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--primary);margin-bottom:14px;}
+#fbWelcome .fbwTag:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--primary);box-shadow:0 0 0 4px color-mix(in srgb,var(--primary) 22%,transparent);}
+#fbWelcome .fbwQ{font-family:'Caveat','Segoe Script','Bradley Hand','Comic Sans MS',cursive;font-size:30px;line-height:1.3;font-weight:600;margin:0;color:var(--text);}
+#fbWelcome .fbwBy{margin-top:18px;text-align:right;font-family:'Caveat','Segoe Script','Bradley Hand','Comic Sans MS',cursive;font-size:19px;font-weight:500;color:var(--muted);}
+#fbWelcome .fbwGo{display:block;margin:44px auto 0;border:0;border-radius:6px;background:var(--primary);color:#fff;font:inherit;font-size:13.5px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;padding:20px 38px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s;}
+#fbWelcome .fbwGo:active{transform:scale(.96);}
 </style>
 </head>
 <body>
@@ -3377,7 +3389,7 @@ html[data-theme*="yellow"] .cPad button.op{color:#000}
     <span class="lbl" data-i18n="bn_tx">লেনদেন</span>
   </button>
   <button class="bnbtn" data-bn="challenge">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/></svg>
+    <svg class="bnAtom" viewBox="0 0 1024 1024" aria-hidden="true"><path stroke="none" fill="currentColor" d="M512 960c-92.8 0-160-200-160-448S419.2 64 512 64s160 200 160 448-67.2 448-160 448z m0-32c65.6 0 128-185.6 128-416S577.6 96 512 96s-128 185.6-128 416 62.4 416 128 416z"/><path stroke="none" fill="currentColor" d="M124.8 736c-48-80 92.8-238.4 307.2-363.2S852.8 208 899.2 288 806.4 526.4 592 651.2 171.2 816 124.8 736z m27.2-16c33.6 57.6 225.6 17.6 424-97.6S905.6 361.6 872 304 646.4 286.4 448 401.6 118.4 662.4 152 720z"/><path stroke="none" fill="currentColor" d="M899.2 736c-46.4 80-254.4 38.4-467.2-84.8S76.8 368 124.8 288s254.4-38.4 467.2 84.8S947.2 656 899.2 736z m-27.2-16c33.6-57.6-97.6-203.2-296-318.4S184 246.4 152 304 249.6 507.2 448 622.4s392 155.2 424 97.6z"/><path stroke="none" style="fill:var(--primary)" d="M512 592c-44.8 0-80-35.2-80-80s35.2-80 80-80 80 35.2 80 80-35.2 80-80 80zM272 312c-27.2 0-48-20.8-48-48s20.8-48 48-48 48 20.8 48 48-20.8 48-48 48zM416 880c-27.2 0-48-20.8-48-48s20.8-48 48-48 48 20.8 48 48-20.8 48-48 48z m448-432c-27.2 0-48-20.8-48-48s20.8-48 48-48 48 20.8 48 48-20.8 48-48 48z"/></svg>
     <span class="dot"></span>
     <span class="lbl" data-i18n="bn_challenge">চ্যালেঞ্জ</span>
   </button>
@@ -17144,6 +17156,131 @@ html body #sec-profile .ppHead .ppCov{border-radius:20px;overflow:hidden;}
 .cmIn>button{width:42px;height:42px;border:0;background:none;color:var(--primary);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;padding:0;}
 .cmIn>button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 </style>
+<style id="ftRaceX2">
+/* post card v2 */
+.xp{display:block;padding:12px 12px 8px;margin-bottom:10px;border:1px solid var(--border);border-radius:18px;background:var(--card);}
+.xp:last-child{border-bottom:1px solid var(--border);}
+.xpTop{display:flex;align-items:center;gap:10px;}
+.xpWho{flex:1;min-width:0;cursor:pointer;}
+.xpWho .xpN{display:flex;align-items:center;gap:6px;max-width:none;font-size:14.5px;line-height:1.35;}
+.xpWho .xpN em{font-style:normal;font-size:10.5px;font-weight:800;color:var(--primary);background:color-mix(in srgb,var(--primary) 14%,var(--bg));padding:1px 7px;border-radius:9px;flex:none;}
+.xpWho .xpU{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;}
+.xpPc{flex:none;font-weight:800;font-size:13px;padding:4px 11px;border-radius:999px;background:color-mix(in srgb,var(--primary) 14%,var(--bg));color:var(--primary);}
+.xpPc.ok{background:color-mix(in srgb,#16a34a 16%,var(--bg));color:#16a34a;}
+.xpS{display:flex;gap:10px;align-items:center;margin-top:10px;}
+.xpS i{width:32px;height:32px;border-radius:10px;background:color-mix(in srgb,var(--primary) 12%,var(--bg));display:flex;align-items:center;justify-content:center;flex:none;}
+.xpS i svg{width:17px;height:17px;margin-top:0;}
+.xpS>div{min-width:0;}
+.xpS b{display:block;font-size:15px;font-weight:800;line-height:1.35;word-break:break-word;}
+.xpS small{display:block;color:var(--muted);font-size:12.5px;font-weight:600;line-height:1.4;}
+.xpA{max-width:none;display:flex;align-items:center;justify-content:flex-start;gap:2px;margin-top:8px;padding-top:4px;border-top:1px solid var(--border);}
+.xpA button{min-width:40px;}
+.xpA .xpPg{margin-left:auto;height:32px;min-width:0;padding:0 12px;border:1px solid color-mix(in srgb,var(--primary) 40%,var(--border));background:color-mix(in srgb,var(--primary) 10%,var(--bg));color:var(--primary);border-radius:999px;font-weight:700;font-size:12.5px;gap:6px;}
+.xpA .xpPg svg{width:16px;height:16px;}
+/* comments v2 */
+.cmList{padding-bottom:90px;}
+.cmI .fdAv{width:40px;height:40px;font-size:15px;}
+.cmI.rp{margin-left:50px;}.cmI.rp .fdAv{width:32px;height:32px;font-size:13px;}
+.cmH b{font-size:14.5px;}.cmH small{font-size:11.5px;}
+.cmT{font-size:16.5px;line-height:1.45;margin-top:2px;}
+.cmAc{display:flex;align-items:center;gap:16px;margin-top:5px;}
+.cmAc button{padding:0;font-size:12px;font-weight:700;color:var(--muted);}
+.cmAc .cv{display:inline-flex;align-items:center;gap:4px;height:26px;border:0;background:none;color:var(--muted);font:inherit;font-size:12px;font-weight:700;cursor:pointer;}
+.cmAc .cv svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.cmAc .cv.dn svg{transform:rotate(180deg);}
+.cmAc .cv.on{color:var(--primary);}.cmAc .cv.dn.on{color:#dc2626;}
+.cmMw{position:relative;display:inline-flex;}
+.cmDt{width:26px;height:26px;border:0;background:none;color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:-6px;}
+.cmDt svg{width:17px;height:17px;fill:none;stroke:none;}
+.cmMenu{position:absolute;left:0;top:100%;z-index:6;min-width:158px;background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.28);padding:4px;}
+.cmMenu button{display:flex;align-items:center;gap:9px;width:100%;height:38px;padding:0 10px;border:0;background:none;border-radius:8px;color:var(--text);font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;text-align:left;}
+.cmMenu button svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
+.cmMenu button.dl{color:#dc2626;}
+/* progress sheet + SPY EYE */
+#fdPgOv{position:fixed;inset:0;z-index:9650;}
+#fdPgOv .cmBd{position:absolute;inset:0;background:rgba(0,0,0,.55);}
+#fdPgOv .cmSh{position:absolute;left:0;right:0;bottom:0;height:86vh;background:var(--bg);color:var(--text);border-radius:22px 22px 0 0;display:flex;flex-direction:column;box-shadow:0 -10px 40px rgba(0,0,0,.35);overflow:hidden;}
+.pgBody{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:14px 14px calc(24px + env(safe-area-inset-bottom,0px));}
+.spyH{display:flex;align-items:center;gap:10px;margin:20px 2px 8px;}
+.spyH i{width:36px;height:36px;border-radius:11px;background:var(--grad,var(--primary));display:flex;align-items:center;justify-content:center;flex:none;}
+.spyH i svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.spyH b{display:block;font-size:16px;font-weight:800;letter-spacing:.02em;}
+.spyH small{display:block;font-size:12px;color:var(--muted);font-weight:600;line-height:1.5;}
+.spy{display:flex;gap:10px;padding:11px 2px;border-top:1px solid var(--border);cursor:pointer;}
+.spN{flex:none;min-width:28px;font-weight:800;font-size:13px;color:var(--muted);padding-top:1px;}
+.spB{flex:1;min-width:0;}
+.spT1{display:flex;align-items:baseline;gap:8px;}
+.spU{font-weight:800;font-size:14px;color:#3b82f6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.spT1 small{color:var(--muted);font-size:11.5px;flex:none;}
+.spT2{font-size:14px;line-height:1.5;margin-top:1px;}
+</style>
+<style id="ftRaceHero">
+.rcHero2{position:relative;overflow:hidden;padding:16px;border-radius:24px;border:1px solid color-mix(in srgb,var(--primary) 30%,var(--border));background:radial-gradient(120% 90% at 100% 0%,color-mix(in srgb,var(--primary) 26%,transparent),transparent 60%),linear-gradient(160deg,color-mix(in srgb,var(--primary) 10%,var(--card)),var(--card));}
+.rhTop{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.rhTag{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.1em;color:var(--primary);background:color-mix(in srgb,var(--primary) 14%,var(--bg));padding:5px 10px;border-radius:999px;}
+.rhTag svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.rhSt{font-size:11.5px;font-weight:800;color:var(--primary);display:inline-flex;align-items:center;gap:6px;}
+.rhSt:before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 0 3px color-mix(in srgb,currentColor 25%,transparent);}
+.rhSt.ok{color:#16a34a;}
+.rhMain{display:flex;align-items:center;gap:12px;margin-top:12px;}
+.rhL{flex:1;min-width:0;}
+.rhL h2{margin:0 0 6px;font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1.3;word-break:break-word;}
+.rhL p{margin:0;font-size:13px;color:var(--muted);line-height:1.55;}
+.rcHero2 .rcAm{font-size:30px;font-weight:800;letter-spacing:-.03em;line-height:1.2;}
+.rcHero2 .rcAm span{font-size:13px;color:var(--muted);font-weight:700;letter-spacing:0;}
+.rhSub{margin-top:4px;font-size:12.5px;color:var(--muted);font-weight:600;line-height:1.5;}
+.rhSub b{color:var(--text);font-weight:800;}
+.rhRing{position:relative;width:92px;height:92px;flex:none;}
+.rhRing svg{width:100%;height:100%;display:block;}
+.rhRing circle{fill:none;stroke-width:7;}
+.rhRing .bg{stroke:color-mix(in srgb,var(--text) 10%,var(--bg));}
+.rhRing .fg{stroke:var(--primary);stroke-linecap:round;transition:stroke-dashoffset .7s;}
+.rhRing b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:800;letter-spacing:-.02em;}
+.rhRing b small{font-size:11px;margin-left:1px;color:var(--muted);}
+.rhStats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;}
+.rhStats>div{background:color-mix(in srgb,var(--text) 5%,var(--card));border:1px solid var(--border);border-radius:14px;padding:10px 6px 9px;text-align:center;}
+.rhStats i{display:flex;justify-content:center;margin-bottom:3px;color:var(--primary);}
+.rhStats i svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
+.rhStats b{display:block;font-size:16px;font-weight:800;line-height:1.3;}
+.rhStats span{display:block;font-size:11px;color:var(--muted);font-weight:600;line-height:1.4;}
+.rhGo{margin-top:14px;width:100%;height:44px;border:0;border-radius:14px;background:var(--grad,var(--primary));color:#fff;font:inherit;font-weight:800;font-size:14.5px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;}
+.rhGo svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2.4;stroke-linecap:round;}
+</style>
+<style id="ftRaceDashMerge">
+.rhDash{margin-top:16px;padding-top:14px;border-top:1px solid color-mix(in srgb,var(--text) 12%,transparent);}
+.rhDash .dbInH b{font-size:15px;}
+.rhDash .dbPl.open{transform:none;background:var(--primary);}
+.rhDash .mnR{border-top:1px solid color-mix(in srgb,var(--text) 10%,transparent);}
+#mnSheet{position:fixed;inset:0;z-index:9470;}
+#mnSheet .mnBd{position:absolute;inset:0;background:rgba(0,0,0,.5);}
+#mnSheet .mnSh{position:absolute;left:0;right:0;bottom:0;max-height:90vh;overflow-y:auto;background:var(--bg);color:var(--text);border-radius:24px 24px 0 0;padding:18px 16px calc(20px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 40px rgba(0,0,0,.3);}
+#mnSheet h3{margin:0 0 4px;font-size:18px;font-weight:800;}
+#mnSheet .mnSub{font-size:12.5px;color:var(--muted);margin:0 0 14px;line-height:1.5;}
+#mnSheet .mnFlat{margin:0;padding:0;border:0;background:none;}
+#mnSheet .mnCancel{width:100%;height:46px;margin-top:10px;border-radius:14px;border:1px solid var(--border);background:var(--card);color:var(--text);font:inherit;font-weight:700;font-size:14px;cursor:pointer;}
+</style>
+<style id="ftRaceMn">
+.dbInH{align-items:center;}
+.dbInH>div{display:flex;flex-direction:column;gap:1px;min-width:0;}
+.dbInH>div span{font-size:12px;color:var(--muted);font-weight:600;}
+.dbPl{width:34px;height:34px;border-radius:50%;border:0;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;padding:0;transition:transform .2s;}
+.dbPl svg{width:19px;height:19px;stroke:#fff;fill:none;stroke-width:2.4;stroke-linecap:round;}
+.dbPl.open{transform:rotate(45deg);background:color-mix(in srgb,var(--text) 22%,var(--bg));}
+.mnHd{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);}
+.mnHd b{font-size:13.5px;font-weight:800;}.mnHd small{color:var(--muted);font-weight:700;font-size:12px;}
+.mnNew{margin-top:8px;padding:12px;border-radius:14px;background:var(--bg);border:1px solid var(--border);}
+.mnSec{font-size:11.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:2px 0 8px;}
+.mnSec:not(:first-child){margin-top:14px;}
+.mnPre{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:42px;padding:8px 12px;margin-bottom:6px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--text);font:inherit;font-size:13.5px;font-weight:600;text-align:left;cursor:pointer;}
+.mnPre svg{width:18px;height:18px;flex:none;stroke:var(--primary);fill:none;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round;}
+.mnPre.on{border-color:#16a34a;background:color-mix(in srgb,#16a34a 10%,var(--card));}.mnPre.on svg{stroke:#16a34a;}
+.mnTy{display:flex;gap:6px;flex-wrap:wrap;}
+.mnTy button{flex:1;min-width:0;height:38px;padding:0 8px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;}
+.mnTy button.on{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 12%,var(--card));color:var(--primary);}
+.mnNew label{display:block;font-size:12px;font-weight:700;margin:10px 0 5px;}
+.mnNew input{width:100%;box-sizing:border-box;height:42px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--text);padding:0 12px;font:inherit;font-size:14px;}
+.mnAdd{width:100%;height:44px;margin-top:12px;border:0;border-radius:12px;background:var(--grad,var(--primary));color:#fff;font:inherit;font-weight:800;font-size:14px;cursor:pointer;}
+</style>
 <script id="ftFeedJs">
 (function(){
 const $=id=>document.getElementById(id), bn=()=>{ try{ return currentLang==='bn'; }catch(e){ return true; } }, L=(b,e)=>bn()?b:e;
@@ -17151,7 +17288,7 @@ const E=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','
 const nb=x=>bn()?String(x).replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]):String(x);
 const tt=m=>{ try{ if(window.toast) window.toast(m); }catch(e){} };
 const S=(p,z)=>'<svg viewBox="0 0 24 24" aria-hidden="true"'+(z?' width="'+z+'" height="'+z+'"':'')+'>'+p+'</svg>';
-const IC={trophy:'<path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7M10 17h4"/>',up:'<path d="M12 15V3M7.5 7.5 12 3l4.5 4.5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/>',flag:'<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',plus:'<path d="M12 5v14M5 12h14"/>',share:'<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.2 10.8 7.6-3.6M8.2 13.2l7.6 3.6"/>',trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',cm:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/>',like:'<path d="M7 11v9H4v-9zM7 11l4-8a2 2 0 0 1 2 2v4h5.5a2 2 0 0 1 2 2.3l-1.3 7A2 2 0 0 1 17.2 20H7"/>',send:'<path d="M21 3 10 14M21 3l-7 18-4-7-7-4z"/>',rss:'<path d="M5 5a14 14 0 0 1 14 14M5 11a8 8 0 0 1 8 8"/><circle cx="6" cy="18" r="1.4"/>',refresh:'<path d="M20 11a8 8 0 0 0-14.5-3M4 4v4h4M4 13a8 8 0 0 0 14.5 3M20 20v-4h-4"/>',stats:'<path d="M6 20v-9M12 20V4M18 20v-6"/>',x:'<path d="M6 6l12 12M18 6 6 18"/>',chev:'<path d="m6 9 6 6 6-6"/>',chk:'<path d="m5 12 5 5 9-10"/>'};
+const IC={trophy:'<path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7M10 17h4"/>',up:'<path d="M12 15V3M7.5 7.5 12 3l4.5 4.5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/>',flag:'<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',plus:'<path d="M12 5v14M5 12h14"/>',share:'<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.2 10.8 7.6-3.6M8.2 13.2l7.6 3.6"/>',trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',cm:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/>',like:'<path d="M7 11v9H4v-9zM7 11l4-8a2 2 0 0 1 2 2v4h5.5a2 2 0 0 1 2 2.3l-1.3 7A2 2 0 0 1 17.2 20H7"/>',send:'<path d="M21 3 10 14M21 3l-7 18-4-7-7-4z"/>',rss:'<path d="M5 5a14 14 0 0 1 14 14M5 11a8 8 0 0 1 8 8"/><circle cx="6" cy="18" r="1.4"/>',refresh:'<path d="M20 11a8 8 0 0 0-14.5-3M4 4v4h4M4 13a8 8 0 0 0 14.5 3M20 20v-4h-4"/>',stats:'<path d="M6 20v-9M12 20V4M18 20v-6"/>',x:'<path d="M6 6l12 12M18 6 6 18"/>',chev:'<path d="m6 9 6 6 6-6"/>',chk:'<path d="m5 12 5 5 9-10"/>',dots:'<circle cx="12" cy="5" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.7" fill="currentColor" stroke="none"/>',eye:'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',pen:'<path d="M4 20h4L19 9l-4-4L4 16z"/>'};
 const R=()=>{ try{ return window.ftCloud&&ftCloud._raw?ftCloud._raw():null; }catch(e){ return null; } };
 const me=()=>{ try{ const r=R(); return r&&r.ses&&r.ses()?r.ses().uid:''; }catch(e){ return ''; } };
 async function db(path,opt,qs){
@@ -17215,15 +17352,23 @@ function stats(g){
   });
   return {x:x0,dn:dn,sd:sd,ac:act,sk:sk,sc:presetsOf(g,x0).concat(sc)};
 }
+function evOf(g){
+  const c=dayCtx(g), d=todayStr(), ev=[];
+  if(g.done&&g.doneAt&&new Date(g.doneAt).toDateString()===new Date().toDateString()) ev.push({k:'done',a:0});
+  const sv=c.am[d]||0; if(sv>0) ev.push({k:'save',a:Math.round(sv)});
+  if((c.tc[d]||0)>0&&!((c.sp[d]||0)>0)) ev.push({k:'nospend',a:0});
+  return ev;
+}
+function evStamp(g){ const ev=evOf(g), sig=JSON.stringify(ev)+todayStr(); if(g.evSig!==sig){ g.evSig=sig; if(ev.length) g.et=Date.now(); } }
 function payload(g){
   const pr=progress(g), s=stats(g);
-  return {s:String(g.subject).slice(0,60),a:Math.round(g.target),sv:Math.round(pr.saved),p:pr.pct,d:g.done?1:0,ds:g.start,dn:s.dn,sd:s.sd,ac:s.ac,sk:s.sk,sc:s.sc.map(o=>({n:o.n,k:o.k,v:o.v,e:o.e,ok:o.ok,st:o.st,tf:o.tf}))};
+  return {s:String(g.subject).slice(0,60),a:Math.round(g.target),sv:Math.round(pr.saved),p:pr.pct,d:g.done?1:0,ds:g.start,dn:s.dn,sd:s.sd,ac:s.ac,sk:s.sk,sc:s.sc.map(o=>({n:o.n,k:o.k,v:o.v,e:o.e,ok:o.ok,st:o.st,tf:o.tf})),ev:evOf(g),evd:todayStr(),et:g.et||0};
 }
 /* ---------------- cloud push ---------------- */
 let pushT=0;
 async function pushGoal(g){
   const u=me(); if(!u||!okId(g.uid)) return;
-  const pr=progress(g), pl=payload(g);
+  evStamp(g); const pr=progress(g), pl=payload(g);
   await put('feed/'+g.uid,Object.assign({uid:u,n:myN(),u:myU(),t:g.created||Date.now()},pl));
   g.lp=pr.pct; g.ld=g.done?1:0; g.lsig=JSON.stringify(pl);
 }
@@ -17231,7 +17376,7 @@ function pushSoon(){
   clearTimeout(pushT);
   pushT=setTimeout(()=>{
     goals().forEach(g=>{
-      if(!g.share) return; const pr=progress(g);
+      if(!g.share) return; evStamp(g); const pr=progress(g);
       if(JSON.stringify(payload(g))!==g.lsig){ pushGoal(g).catch(()=>{}); }
     });
   },1500);
@@ -17247,16 +17392,23 @@ function checkGoals(){
 
 /* ---------------- Challenge tab block ---------------- */
 const box=document.createElement('div'); box.id='fgBox';
-let RT='feed'; let FG=''; const CH={},MO={},DX={},RP={};
+let RT='feed'; let FG=''; const CH={},MO={},DX={},RP={},EDT={},MF={},MN={}; let CMM=null;
 const featG=gs=>gs.find(x=>x.uid===FG)||gs.find(x=>!x.done)||gs[0];
 const RTABS=[['feed','Race Feeds','রেস ফিড'],['rep','Replies','রিপ্লাই'],['mine','My Races','আমার রেস'],['ms','Missions','মিশন'],['top','Top Racers','সেরা রেসার']];
 function heroH(gs){
   const g=featG(gs); let nR=0,nP=0; try{ nR=new Set(posts.map(p=>p.uid)).size; nP=posts.length; }catch(e){}
-  if(!g) return '<div class="rcHero"><div class="rcCol"><i style="height:0"></i></div><div class="rcHi"><small>'+L('আপনার রেস','YOUR RACE')+'</small><h2>'+L('রেস শুরু করুন','Start a race')+'</h2><p>'+L('টার্গেট দিন, তারপর ১০টি দৈনিক চ্যালেঞ্জ খেলে সেটি পূরণ করুন।','Set a target, then play 10 daily challenges to reach it.')+'</p><button type="button" class="rcGo" data-a="new">'+S(IC.plus)+L('নতুন রেস','New race')+'</button></div></div>';
+  const meta='<div class="rcMeta">'+nb(nP)+L(' রেস · ',' races · ')+nb(nR)+L(' জন রেসার',' racers')+'</div>';
+  const C=213.6, ring=pct=>'<div class="rhRing"><svg viewBox="0 0 80 80" aria-hidden="true"><circle class="bg" cx="40" cy="40" r="34"/><circle class="fg" cx="40" cy="40" r="34" stroke-dasharray="'+C+'" stroke-dashoffset="'+(C*(1-pct/100)).toFixed(1)+'" transform="rotate(-90 40 40)"/></svg><b>'+nb(pct)+'<small>%</small></b></div>';
+  if(!g) return '<div class="rcHero2 empty"><div class="rhTop"><span class="rhTag">'+S(IC.flag,14)+L('আপনার রেস','YOUR RACE')+'</span></div><div class="rhMain"><div class="rhL"><h2>'+L('রেস শুরু করুন','Start a race')+'</h2><p>'+L('টার্গেট দিন, তারপর ১০টি দৈনিক চ্যালেঞ্জ খেলে সেটি পূরণ করুন।','Set a target, then play 10 daily challenges to reach it.')+'</p></div>'+ring(0)+'</div><button type="button" class="rhGo" data-a="new">'+S(IC.plus)+L('নতুন রেস','New race')+'</button></div>'+meta;
   const pr=progress(g), s=stats(g), dn=s.sc.slice(0,PRE).filter(o=>o.tf).length;
-  return '<div class="rcHero" data-g="'+E(g.uid)+'"><div class="rcCol"><i style="height:'+pr.pct+'%"></i><b>'+nb(pr.pct)+'%</b></div><div class="rcHi"><small>'+L('আপনার রেস','YOUR RACE')+'</small><h2>'+E(g.subject)+'</h2><div class="rcAm">'+nb(fm(pr.saved))+' <span>/ '+nb(fm(g.target))+'</span></div>'
-    +'<div class="rcSt"><span><b>'+nb(Math.min(s.x,s.dn))+'/'+nb(s.dn)+'</b>'+L('দিন','days')+'</span><span><b>'+nb(dn)+'/'+nb(PRE)+'</b>'+L('আজকের চ্যালেঞ্জ','today')+'</span><span><b>'+nb(s.sk)+'</b>'+L('টানা','streak')+'</span></div>'
-    +'</div></div><div class="rcMeta">'+nb(nP)+L(' রেস · ',' races · ')+nb(nR)+L(' জন রেসার',' racers')+'</div>';
+  const left=Math.max(0,s.dn-s.x), rem=Math.max(0,g.target-pr.saved), per=left>0?Math.ceil(rem/left):rem;
+  const ic={cal:'<rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/>',ok:'<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',fire:'<path d="M12 3c1 4 5 5.5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-5 1-9z"/>'};
+  const st=(i,v,l)=>'<div><i>'+S(ic[i])+'</i><b>'+v+'</b><span>'+l+'</span></div>';
+  return '<div class="rcHero2" data-g="'+E(g.uid)+'"><div class="rhTop"><span class="rhTag">'+S(IC.flag,14)+L('আপনার রেস','YOUR RACE')+'</span><span class="rhSt'+(g.done?' ok':'')+'">'+(g.done?L('সম্পন্ন','Completed'):L('চলছে','Active'))+'</span></div>'
+    +'<div class="rhMain"><div class="rhL"><h2>'+E(g.subject)+'</h2><div class="rcAm">'+nb(fm(pr.saved))+' <span>/ '+nb(fm(g.target))+'</span></div>'
+    +'<div class="rhSub">'+(g.done?L('টার্গেট পূর্ণ হয়েছে','Target reached'):L('বাকি ','Left ')+'<b>'+nb(fm(rem))+'</b>'+(left>0?' · '+L('প্রতিদিন ','per day ')+'<b>'+nb(fm(per))+'</b>':''))+'</div></div>'+ring(pr.pct)+'</div>'
+    +'<div class="rhStats">'+st('cal',nb(Math.min(s.x,s.dn))+'/'+nb(s.dn),L('দিন','Days'))+st('ok',nb(dn)+'/'+nb(PRE),L('আজকের চ্যালেঞ্জ','Today'))+st('fire',nb(s.sk),L('টানা','Streak'))+'</div>'
+    +'<div class="rhDash">'+dashInner(viewOf({g:g}),true,'top')+'</div></div>'+meta;
 }
 function tabsH(){ return '<div class="rcTabs">'+RTABS.map(t=>'<button type="button" data-a="rt" data-rt="'+t[0]+'" class="'+(RT===t[0]?'on':'')+'">'+L(t[2],t[1])+'</button>').join('')+'</div>'; }
 function feedBody(){
@@ -17307,9 +17459,10 @@ function paintGoals(){
   const gs=goals(); let body='';
   if(RT==='mine') body=cardsH(gs); else if(RT==='ms') body=msBody(gs);
   else{ try{ body=RT==='feed'?feedBody():RT==='rep'?repBody():dashH(); }catch(e){ body='<div class="fdMsg">'+L('লোড হচ্ছে…','Loading…')+'</div>'; } }
-  const sc0=$('sec-challenge'), kp=sc0?sc0.scrollTop:0; let db0=''; try{ db0=dashBox(gs); }catch(e){}
+  const sc0=$('sec-challenge'), kp=sc0?sc0.scrollTop:0; let db0='';
   box.innerHTML='<div class="rcBack"><button type="button" data-a="back" aria-label="Back">'+S('<path d="m15 6-6 6 6 6"/>')+'</button><b>'+L('রেস','Race')+'</b></div>'+heroH(gs)+db0+tabsH()+body; try{ loadPics(box); }catch(e){}
   if(sc0&&kp) sc0.scrollTop=kp;
+  try{ paintSheet(); }catch(e){}
 }
 box.addEventListener('click',e=>{
   const b=e.target.closest('[data-a]'); if(!b) return; const a=b.dataset.a, c=b.closest('[data-g]'), g=c&&goals().find(x=>x.uid===c.dataset.g);
@@ -17398,24 +17551,26 @@ function loadPics(root){
 }
 function rulesMsg(){ return '<div class="fdMsg">'+L('ফিড চালু করতে Firebase Realtime Database-এর Rules-এ নিচের অংশটি "rules" এর ভেতরে যোগ করে Publish করুন:','To enable the feed, add this inside "rules" of your Firebase Realtime Database and Publish:')+'<pre id="fdRules">'+E(RULES)+'</pre><button type="button" data-a="copy">'+L('কপি করুন','Copy')+'</button></div>'; }
 function postH(p){
-  const mine=p.uid===me(), n=CM[p.id], cnt=Array.isArray(n)?n.length:0, open=!!DX[p.id];
-  let dh=''; if(open){ try{ const lg=goals().find(x=>x.uid===p.id); dh='<div class="dbIn">'+dashInner(viewOf(lg?{g:lg}:{v:Object.assign({mine:false},p)}),!!lg,p.id)+'</div>'; }catch(e){} }
-  return '<div class="xp" data-p="'+E(p.id)+'"><div class="xpAv" data-a="prof" data-u="'+E(p.uid)+'">'+avH(p.uid,p.n||p.u)+'</div><div class="xpB">'
-    +'<div class="xpH"><span class="xpN" data-a="prof" data-u="'+E(p.uid)+'">'+E(p.n||p.u||'?')+'</span>'+(mine?'<em>'+L('আপনি','You')+'</em>':'')+(p.u?'<span class="xpU">@'+E(p.u)+'</span>':'')+'<span class="xpT">· '+agoS(p.t)+'</span></div>'
-    +'<div class="xpS">'+S(IC.flag)+'<span>'+E(p.s)+'</span></div>'
-    +'<div class="xpM"><span>'+(p.d?L('বাজেট পূর্ণ · ','Completed · '):L('জমেছে ','Saved ')+nb(fm(p.sv))+' / ')+nb(fm(p.a))+'</span><b class="'+(p.d?'ok':'')+'">'+nb(p.p)+'%</b></div>'
-    +dh
+  const mine=p.uid===me(), n=CM[p.id], cnt=Array.isArray(n)?n.length:0;
+  return '<div class="xp" data-p="'+E(p.id)+'">'
+    +'<div class="xpTop"><div class="xpAv" data-a="prof" data-u="'+E(p.uid)+'">'+avH(p.uid,p.n||p.u)+'</div>'
+    +'<div class="xpWho" data-a="prof" data-u="'+E(p.uid)+'"><div class="xpN">'+E(p.n||p.u||'?')+(mine?'<em>'+L('আপনি','You')+'</em>':'')+'</div><div class="xpU">'+(p.u?'@'+E(p.u)+' · ':'')+agoS(p.t)+'</div></div>'
+    +'<span class="xpPc'+(p.d?' ok':'')+'">'+nb(p.p)+'%</span></div>'
+    +'<div class="xpS"><i>'+S(IC.flag)+'</i><div><b>'+E(p.s)+'</b><small>'+(p.d?L('বাজেট পূর্ণ · ','Completed · ')+nb(fm(p.a)):L('জমেছে ','Saved ')+nb(fm(p.sv))+' / '+nb(fm(p.a)))+'</small></div></div>'
     +'<div class="xpA"><button type="button" data-a="cm" aria-label="'+L('মন্তব্য','Comments')+'">'+S(IC.cm)+'<span class="cmCnt">'+(cnt?nb(cnt):'')+'</span></button>'
-    +'<button type="button" class="'+(open?'on':'')+'" data-a="open" aria-label="'+L('ড্যাশবোর্ড','Dashboard')+'">'+S(IC.stats)+'</button>'
-    +'<button type="button" data-a="phone" aria-label="'+L('শেয়ার','Share')+'">'+S(IC.up)+'</button></div></div></div>';
+    +'<button type="button" data-a="phone" aria-label="'+L('শেয়ার','Share')+'">'+S(IC.up)+'</button>'
+    +'<button type="button" class="xpPg" data-a="open">'+S(IC.stats)+'<span>'+L('প্রগ্রেস স্ট্যাটাস','Progress status')+'</span></button></div></div>';
 }
 function cmItem(c,vt,u,isRp){
-  const v=vt[c.id]||{}, up=Object.keys(v).filter(k=>v[k]===1).length, dn=Object.keys(v).filter(k=>v[k]===-1).length, my=v[u];
-  return '<div class="cmI'+(isRp?' rp':'')+'" data-c="'+E(c.id)+'">'+avH(c.uid,c.n||c.u)+'<div class="cmBx"><div class="cmH"><b>'+E(c.n||c.u||'?')+'</b><small>'+agoS(c.t)+'</small></div>'
+  const v=vt[c.id]||{}, up=Object.keys(v).filter(k=>v[k]===1).length, dn=Object.keys(v).filter(k=>v[k]===-1).length, my=v[u], own=c.uid===u, mn=CMM&&CMM.cid===c.id;
+  return '<div class="cmI'+(isRp?' rp':'')+'" data-c="'+E(c.id)+'">'+avH(c.uid,c.n||c.u)+'<div class="cmBx"><div class="cmH"><b>'+E(c.n||c.u||'?')+'</b><small>'+agoS(c.t)+(c.ed?' · '+L('এডিটেড','edited'):'')+'</small></div>'
     +'<div class="cmT">'+(c.to?'<span class="cmMn">'+E(c.to)+'</span> ':'')+E(c.x)+'</div>'
-    +'<div class="cmAc"><button type="button" data-a="reply">'+L('রিপ্লাই','Reply')+'</button>'+(c.uid===u?'<button type="button" data-a="cdel">'+L('মুছুন','Delete')+'</button>':'')+'</div></div>'
-    +'<div class="cmVt"><button type="button" class="cv up'+(my===1?' on':'')+'" data-a="vote" data-v="1" aria-label="Like">'+S(IC.like)+'<span>'+(up?nb(up):'')+'</span></button>'
-    +'<button type="button" class="cv dn'+(my===-1?' on':'')+'" data-a="vote" data-v="-1" aria-label="Dislike">'+S(IC.like)+'<span>'+(dn?nb(dn):'')+'</span></button></div></div>';
+    +'<div class="cmAc">'
+    +(own?'<span class="cmMw"><button type="button" class="cmDt" data-a="cmenu" aria-label="More">'+S(IC.dots)+'</button>'+(mn?'<div class="cmMenu"><button type="button" data-a="cedit">'+S(IC.pen)+L('পরিবর্তন করুন','Edit')+'</button><button type="button" class="dl" data-a="cdel">'+S(IC.trash)+L('মুছুন','Delete')+'</button></div>':'')+'</span>':'')
+    +'<button type="button" class="cmRp" data-a="reply">'+L('রিপ্লাই','Reply')+'</button>'
+    +'<button type="button" class="cv up'+(my===1?' on':'')+'" data-a="vote" data-v="1" aria-label="Like">'+S(IC.like)+'<span>'+(up?nb(up):'')+'</span></button>'
+    +'<button type="button" class="cv dn'+(my===-1?' on':'')+'" data-a="vote" data-v="-1" aria-label="Dislike">'+S(IC.like)+'<span>'+(dn?nb(dn):'')+'</span></button>'
+    +'</div></div></div>';
 }
 function cmH(pid){
   const list=CM[pid], vt=VT[pid]||{}, u=me(), rp=RP[pid];
@@ -17428,7 +17583,7 @@ function cmH(pid){
     list.filter(c=>!c.r||!ids[c.r]).forEach(c=>{ h+=cmItem(c,vt,u,false); list.filter(x=>x.r===c.id).forEach(r=>{ h+=cmItem(r,vt,u,true); }); });
   }
   h+='</div>';
-  if(rp) h+='<div class="cmRb"><span>'+L('উত্তর দিচ্ছেন ','Replying to ')+'<b>'+E(rp.to)+'</b> · </span><button type="button" data-a="rcancel">'+L('বাতিল','Cancel')+'</button></div>';
+  if(EDT[pid]) h+='<div class="cmRb"><span>'+L('মন্তব্য পরিবর্তন করছেন','Editing comment')+' · </span><button type="button" data-a="rcancel">'+L('বাতিল','Cancel')+'</button></div>'; else if(rp) h+='<div class="cmRb"><span>'+L('উত্তর দিচ্ছেন ','Replying to ')+'<b>'+E(rp.to)+'</b> · </span><button type="button" data-a="rcancel">'+L('বাতিল','Cancel')+'</button></div>';
   h+='<div class="cmIn"><div class="cmPill">'+(rp?'<span class="cmMn">'+E(rp.to)+'</span>':'')+'<input maxlength="300" placeholder="'+(rp?L('রিপ্লাই লিখুন…','Write a reply…'):L('মন্তব্য লিখুন…','Write a comment…'))+'" data-in="'+E(pid)+'"></div><button type="button" data-a="send" aria-label="Send">'+S(IC.send)+'</button></div>';
   return h;
 }
@@ -17446,9 +17601,44 @@ function openSheet(pid){
   document.body.appendChild(ov);
   ov.querySelector('.cmBd').onclick=closeSheet;
   ov.addEventListener('click',feedClick); ov.addEventListener('keydown',cmKey);
+  ov.addEventListener('click',e=>{ if(CMM&&!e.target.closest('[data-a="cmenu"],.cmMenu')){ const q=CMM.pid; CMM=null; setTimeout(()=>paintCm(q),0); } });
   kbFit(); paintCm(pid); loadCm(pid);
 }
-document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeSheet(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeSheet(); closeProg(); } });
+function closeProg(){ const ov=$('fdPgOv'); if(ov) ov.remove(); }
+function spyList(){
+  const out=[], now=Date.now();
+  posts.forEach(p=>{ if(!p.ev||!p.ev.length||!p.et||now-p.et>864e5) return; p.ev.forEach(e=>out.push({p:p,e:e,t:p.et})); });
+  out.sort((a,b)=>b.t-a.t); return out.slice(0,30);
+}
+function spyTxt(e){
+  if(e.k==='save') return L('আজ এই রেসের জন্য '+nb(fm(e.a))+' সেভ করেছেন।','Today they saved '+fm(e.a)+' for this Race.');
+  if(e.k==='done') return L('আজ এই রেসের বাজেট পূর্ণ করেছেন!','Today they completed the budget for this Race!');
+  return L('আজ এই রেসের জন্য কোনো টাকা খরচ করেননি।','Today they spent no money for this Race.');
+}
+function spyH(){
+  const l=spyList();
+  let h='<div class="spyH"><i>'+S(IC.eye)+'</i><div><b>FinTrack SPY EYE</b><small>'+L('রেসারদের আজকের অগ্রগতির স্বয়ংক্রিয় আপডেট','Automatic progress updates from racers today')+'</small></div></div>';
+  if(!l.length) return h+'<div class="fdMsg" style="padding:16px">'+L('আজ এখনো কোনো আপডেট নেই — কেউ সেভ করলে বা খরচ ছাড়া দিন কাটালে এখানে আসবে।','No updates yet today — saves and no-spend days show up here.')+'</div>';
+  return h+l.map((o,i)=>'<div class="spy" data-a="prof" data-u="'+E(o.p.uid)+'"><span class="spN">#'+nb(i+1)+'</span><div class="spB"><div class="spT1"><span class="spU">'+(o.p.u?'@'+E(o.p.u):E(o.p.n||'?'))+'</span><small>'+agoS(o.t)+'</small></div><div class="spT2">'+spyTxt(o.e)+'</div></div></div>').join('');
+}
+function paintProg(){
+  const ov=$('fdPgOv'); if(!ov) return; const pid=ov.dataset.p, po=posts.find(x=>x.id===pid), body=ov.querySelector('.pgBody'); if(!po||!body) return;
+  const a0=document.activeElement; if(a0&&a0.tagName==='INPUT'&&body.contains(a0)) return;
+  const st=body.scrollTop; let dh='';
+  try{ const lg=goals().find(x=>x.uid===pid); dh='<div class="dbIn" style="margin-top:0">'+dashInner(viewOf(lg?{g:lg}:{v:Object.assign({mine:false},po)}),!!lg,pid)+'</div>'; }catch(e){}
+  body.innerHTML=dh+spyH(); loadPics(body); body.scrollTop=st;
+}
+function openProg(pid){
+  closeProg(); closeSheet(); const po=posts.find(x=>x.id===pid); if(!po) return;
+  const ov=document.createElement('div'); ov.id='fdPgOv'; ov.dataset.p=pid;
+  ov.innerHTML='<div class="cmBd"></div><div class="cmSh"><div class="cmGrip"></div><div class="cmTop"><div><b>'+L('প্রগ্রেস স্ট্যাটাস','Progress status')+'</b><small>'+E(po.s)+' · '+nb(po.p)+'%</small></div><button type="button" class="cmX" data-a="cclose" aria-label="Close">'+S(IC.x)+'</button></div><div class="pgBody"></div></div>';
+  document.body.appendChild(ov);
+  ov.querySelector('.cmBd').onclick=closeProg;
+  ov.addEventListener('click',e=>{ if(e.target.closest('[data-a="cclose"]')){ closeProg(); return; } });
+  ov.addEventListener('click',feedClick); ov.addEventListener('click',dashClick); ov.addEventListener('input',onMf);
+  paintProg();
+}
 
 /* ---------------- achievers dashboard (top 10, built from the shared challenges) ---------------- */
 let dashAll=false;
@@ -17494,7 +17684,7 @@ function parse(d){
   const rows=[]; Object.keys(d||{}).forEach(id=>{ const v=d[id]; if(!okId(id)||!v||typeof v!=='object'||!okId(v.uid)) return;
     const a=+v.a, p=Math.max(0,Math.min(100,Math.floor(+v.p||0))); if(!(a>0)||!v.s) return;
     const sc=(Array.isArray(v.sc)?v.sc:[]).slice(0,20).map(o=>({n:String((o&&o.n)||'').slice(0,40),k:['save','limit','check','pre'].indexOf(o&&o.k)<0?'check':o.k,v:Math.max(0,+(o&&o.v)||0),e:Math.max(1,+(o&&o.e)||1),ok:Math.max(0,+(o&&o.ok)||0),st:Math.max(0,+(o&&o.st)||0),tf:(o&&o.tf)?1:0}));
-    rows.push({id,uid:v.uid,n:String(v.n||'').slice(0,40),u:String(v.u||'').slice(0,30),s:String(v.s).slice(0,60),a:a,sv:Math.max(0,+v.sv||0),p:p,d:v.d?1:0,t:+v.t||0,ds:/^\d{4}-\d{2}-\d{2}$/.test(v.ds||'')?v.ds:'',dn:Math.max(1,Math.min(365,+v.dn||30)),sd:/^[0-9]{0,365}$/.test(v.sd||'')?String(v.sd||''):'',ac:Math.max(0,+v.ac||0),sk:Math.max(0,+v.sk||0),sc:sc}); });
+    rows.push({id,uid:v.uid,n:String(v.n||'').slice(0,40),u:String(v.u||'').slice(0,30),s:String(v.s).slice(0,60),a:a,sv:Math.max(0,+v.sv||0),p:p,d:v.d?1:0,t:+v.t||0,ds:/^\d{4}-\d{2}-\d{2}$/.test(v.ds||'')?v.ds:'',dn:Math.max(1,Math.min(365,+v.dn||30)),sd:/^[0-9]{0,365}$/.test(v.sd||'')?String(v.sd||''):'',ac:Math.max(0,+v.ac||0),sk:Math.max(0,+v.sk||0),sc:sc,ev:(Array.isArray(v.ev)?v.ev:[]).slice(0,4).map(o=>({k:['save','nospend','done'].indexOf(o&&o.k)<0?'':o.k,a:Math.max(0,+(o&&o.a)||0)})).filter(o=>o.k),evd:/^\d{4}-\d{2}-\d{2}$/.test(v.evd||'')?v.evd:'',et:+v.et||0}); });
   rows.sort((a,b)=>b.t-a.t); return rows.slice(0,50);
 }
 async function load(){
@@ -17504,11 +17694,12 @@ async function load(){
     posts=parse(d); FS.err=''; FS.loaded=true;
   }catch(e){ setErr(e); }
   FS.busy=false; if(active()) render(); else try{ paintGoals(); }catch(e){}
+  try{ paintProg(); }catch(e){}
   if(me()&&!FS.err) loadAllCm();
 }
 async function loadAllCm(){
   try{ const c=(await db('feedComments'))||{};
-    posts.forEach(p=>{ const o=c[p.id]||{}, rows=[]; Object.keys(o).forEach(id=>{ const x=o[id]; if(!okId(id)||!x||typeof x!=='object'||!x.x) return; rows.push({id,uid:String(x.uid||''),n:String(x.n||'').slice(0,40),u:String(x.u||'').slice(0,30),x:String(x.x).slice(0,300),t:+x.t||0,r:okId(x.r)?x.r:'',to:String(x.to||'').slice(0,40)}); }); rows.sort((a,b)=>a.t-b.t); CM[p.id]=rows; });
+    posts.forEach(p=>{ const o=c[p.id]||{}, rows=[]; Object.keys(o).forEach(id=>{ const x=o[id]; if(!okId(id)||!x||typeof x!=='object'||!x.x) return; rows.push({id,uid:String(x.uid||''),n:String(x.n||'').slice(0,40),u:String(x.u||'').slice(0,30),x:String(x.x).slice(0,300),t:+x.t||0,r:okId(x.r)?x.r:'',to:String(x.to||'').slice(0,40),ed:x.ed?1:0}); }); rows.sort((a,b)=>a.t-b.t); CM[p.id]=rows; });
   }catch(e){}
   try{ paintGoals(); }catch(e){}
 }
@@ -17516,7 +17707,7 @@ const active=()=>sec.classList.contains('active');
 async function loadCm(pid){
   try{
     const c=await db('feedComments/'+pid), v=await db('feedVotes/'+pid);
-    const rows=[]; Object.keys(c||{}).forEach(id=>{ const x=c[id]; if(!okId(id)||!x||typeof x!=='object'||!x.x) return; rows.push({id,uid:String(x.uid||''),n:String(x.n||'').slice(0,40),u:String(x.u||'').slice(0,30),x:String(x.x).slice(0,300),t:+x.t||0,r:okId(x.r)?x.r:'',to:String(x.to||'').slice(0,40)}); });
+    const rows=[]; Object.keys(c||{}).forEach(id=>{ const x=c[id]; if(!okId(id)||!x||typeof x!=='object'||!x.x) return; rows.push({id,uid:String(x.uid||''),n:String(x.n||'').slice(0,40),u:String(x.u||'').slice(0,30),x:String(x.x).slice(0,300),t:+x.t||0,r:okId(x.r)?x.r:'',to:String(x.to||'').slice(0,40),ed:x.ed?1:0}); });
     rows.sort((a,b)=>a.t-b.t); CM[pid]=rows;
     const m={}; Object.keys(v||{}).forEach(cid=>{ const o=v[cid]; if(o&&typeof o==='object'){ m[cid]={}; Object.keys(o).forEach(k=>{ if(o[k]===1||o[k]===-1) m[cid][k]=o[k]; }); } }); VT[pid]=m;
   }catch(e){ CM[pid]='ERR'; }
@@ -17537,31 +17728,44 @@ function paintCm1(el,pid){
 }
 const feedClick=async e=>{
   const b=e.target.closest('[data-a]'); if(!b) return; const a=b.dataset.a, card=b.closest('[data-p]'), pid=card&&card.dataset.p;
-  if(a==='open'&&pid){ DX[pid]=!DX[pid]; repaintAll(); }
+  if(a==='open'&&pid){ openProg(pid); }
   else if(a==='reload'){ FS.loaded=false; render(); load(); }
   else if(a==='dashmore'){ dashAll=!dashAll; render(); }
   else if(a==='copy'){ try{ await navigator.clipboard.writeText(RULES); tt(L('কপি হয়েছে','Copied')); }catch(x){ const r=$('fdRules'); if(r){ const g=document.createRange(); g.selectNodeContents(r); const s=window.getSelection(); s.removeAllRanges(); s.addRange(g); } } }
-  else if(a==='prof'){ const u=b.dataset.u; try{ if(u===me()||!window.ppView) activateTab('profile'); else ppView(u); }catch(x){} }
+  else if(a==='prof'){ closeProg(); closeSheet(); const u=b.dataset.u; try{ if(u===me()||!window.ppView) activateTab('profile'); else ppView(u); }catch(x){} }
   else if(a==='phone'&&pid){ const po=posts.find(x=>x.id===pid); if(po) sharePhone(po); }
   else if(a==='cm'&&pid){ openSheet(pid); }
   else if(a==='cclose'){ closeSheet(); }
-  else if(a==='rcancel'&&pid){ delete RP[pid]; paintCm(pid); }
+  else if(a==='cmenu'&&pid){ const cid=b.closest('[data-c]').dataset.c; CMM=(CMM&&CMM.cid===cid)?null:{pid:pid,cid:cid}; paintCm(pid); }
+  else if(a==='cedit'&&pid){
+    const cid=b.closest('[data-c]').dataset.c, c=(CM[pid]||[]).find(x=>x.id===cid); CMM=null; if(!c) return;
+    delete RP[pid]; EDT[pid]={id:cid}; paintCm(pid);
+    const ii=document.querySelector('#fdCmOv input[data-in]'); if(ii){ ii.value=c.x; ii.focus(); }
+  }
+  else if(a==='rcancel'&&pid){ const wasEd=!!EDT[pid]; delete RP[pid]; delete EDT[pid]; paintCm(pid); if(wasEd){ const ii=document.querySelector('#fdCmOv input[data-in]'); if(ii) ii.value=''; } }
   else if(a==='reply'&&pid){
     if(!me()){ tt(L('রিপ্লাই দিতে লগইন করুন','Sign in to reply')); return; }
     const cid=b.closest('[data-c]').dataset.c, list=Array.isArray(CM[pid])?CM[pid]:[], c=list.find(x=>x.id===cid); if(!c) return;
-    RP[pid]={id:(c.r&&list.some(x=>x.id===c.r))?c.r:c.id,to:c.n||c.u||'?'}; paintCm(pid);
+    delete EDT[pid]; CMM=null; RP[pid]={id:(c.r&&list.some(x=>x.id===c.r))?c.r:c.id,to:c.n||c.u||'?'}; paintCm(pid);
     const ii=document.querySelector('#fdCmOv input[data-in]'); if(ii) ii.focus();
   }
   else if(a==='send'&&pid){
     const inp=card.querySelector('input[data-in]'), txt=(inp.value||'').trim().slice(0,300), u=me(); if(!txt) return;
     if(!u){ tt(L('মন্তব্য করতে লগইন করুন','Sign in to comment')); return; }
+    const ed=EDT[pid];
+    if(ed){ const c0=(CM[pid]||[]).find(x=>x.id===ed.id); delete EDT[pid];
+      if(c0){ const ox=c0.x, oe=c0.ed; c0.x=txt; c0.ed=1; inp.value=''; paintCm(pid);
+        try{ await patch('feedComments/'+pid+'/'+c0.id,{x:txt,ed:1}); }catch(x){ c0.x=ox; c0.ed=oe; paintCm(pid); tt(L('পরিবর্তন করা যায়নি','Could not edit')); }
+        return; } }
     const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6), rp=RP[pid], rec={uid:u,n:myN(),u:myU(),x:txt,t:Date.now()};
     if(rp){ rec.r=rp.id; rec.to=rp.to; }
     inp.value=''; delete RP[pid]; if(!Array.isArray(CM[pid])) CM[pid]=[]; CM[pid].push(Object.assign({id:id,r:'',to:''},rec)); paintCm(pid);
     const it=document.querySelector('#fdCmOv [data-c="'+id+'"]'); if(it) it.scrollIntoView({block:'nearest'});
     try{ await put('feedComments/'+pid+'/'+id,rec); }catch(x){ CM[pid]=CM[pid].filter(c=>c.id!==id); paintCm(pid); tt((x&&(x.status===401||x.status===403))?L('ফিডের রুলস সেট করা নেই','Feed rules are not set'):L('মন্তব্য পাঠানো যায়নি','Could not send')); }
   }
-  else if(a==='cdel'&&pid){ const cid=b.closest('[data-c]').dataset.c; CM[pid]=CM[pid].filter(c=>c.id!==cid); paintCm(pid); del('feedComments/'+pid+'/'+cid).catch(()=>{}); del('feedVotes/'+pid+'/'+cid).catch(()=>{}); }
+  else if(a==='cdel'&&pid){ const cid=b.closest('[data-c]').dataset.c; CMM=null;
+    const go=()=>{ CM[pid]=CM[pid].filter(c=>c.id!==cid); paintCm(pid); del('feedComments/'+pid+'/'+cid).catch(()=>{}); del('feedVotes/'+pid+'/'+cid).catch(()=>{}); };
+    try{ appDialog(L('এই মন্তব্যটি মুছে ফেলবেন?','Delete this comment?'),{confirm:true},go); }catch(x){ go(); } }
   else if(a==='vote'&&pid){
     const u=me(); if(!u){ tt(L('ভোট দিতে লগইন করুন','Sign in to vote')); return; }
     const cid=b.closest('[data-c]').dataset.c, v=+b.dataset.v; VT[pid]=VT[pid]||{}; VT[pid][cid]=VT[pid][cid]||{};
@@ -17678,79 +17882,92 @@ window.fgProfFill=function(root){
 
 /* ---------------- full-screen challenge dashboard + missions (sub-challenges) ---------------- */
 const subLbl=o=>o.k==='pre'?PRL(o.v):o.n||(o.k==='save'?L('প্রতিদিন কমপক্ষে '+fm(o.v)+' জমা','Save at least '+fm(o.v)+' daily'):o.k==='limit'?(o.v>0?L('দৈনিক খরচ '+fm(o.v)+'-এর নিচে','Daily spend under '+fm(o.v)):L('প্রতিদিন কোনো খরচ নয়','No spending daily')):L('নিজের নিয়ম','My rule'));
-function repaintAll(){ try{ paintGoals(); }catch(e){} try{ if(active()) render(); }catch(e){} }
+function repaintAll(){ try{ paintGoals(); }catch(e){} try{ if(active()) render(); }catch(e){} try{ paintProg(); }catch(e){} }
+function mfOf(k){ return MF[k]||(MF[k]={k:'save',am:'100',nm:''}); }
+const MPR=()=>[['save',100,''],['limit',0,''],['check',0,L('অর্ধদিন খরচ নয়','Half-day no spend')],['limit',500,'']];
 function dashInner(v,mine,key){
   const pre=v.sc.filter(o=>o.k==='pre'), my=v.sc.filter(o=>o.k!=='pre'), over=v.x>v.dn, left=Math.max(0,v.dn-v.x);
   const cells=Math.min(v.dn,60), per=v.dn/cells; let strip='';
   for(let c=0;c<cells;c++){ const a=Math.floor(c*per), b=Math.max(a+1,Math.floor((c+1)*per)); let n=0; for(let i=a;i<b;i++) n=Math.max(n,+(v.sd[i]||0));
     const cls=(n>0?'on':'')+(v.x-1>=a&&v.x-1<b&&!over?' now':'')+(a>v.x-1?' fut':'');
     strip+='<i class="'+cls+'"></i>'; }
-  const k=E(key), ci=Math.min(CH[key]||0,Math.max(0,pre.length-1)), cur=pre[ci];
-  let h='<div class="dbInH"><b>'+L('ড্যাশবোর্ড','Dashboard')+'</b><span>'+(over?L('সময় শেষ','Time is over'):L('বাকি ','Left ')+nb(left)+L(' দিন',' d'))+' · '+L('সক্রিয় ','Active ')+nb(v.ac||0)+L(' দিন',' d')+'</span></div><div class="dbStrip">'+strip+'</div>';
+  const k=E(key), ci=Math.min(CH[key]||0,Math.max(0,pre.length-1)), cur=pre[ci], open=!!MN[key];
+  let h='<div class="dbInH"><div><b>'+L('ড্যাশবোর্ড','Dashboard')+'</b><span>'+(over?L('সময় শেষ','Time is over'):L('বাকি ','Left ')+nb(left)+L(' দিন',' d'))+' · '+L('সক্রিয় ','Active ')+nb(v.ac||0)+L(' দিন',' d')+'</span></div>'
+    +(mine?'<button type="button" class="dbPl'+(open?' open':'')+'" data-d="mnew" data-k="'+k+'" aria-label="'+L('মিশন যোগ করুন','Add mission')+'">'+S(IC.plus)+'</button>':'')+'</div><div class="dbStrip">'+strip+'</div>';
   if(cur){
     h+='<div class="dbChips">'+pre.map((o,i)=>'<button type="button" class="dbCh'+(o.tf?' ok':'')+(i===ci?' sel':'')+'" data-d="chip" data-k="'+k+'" data-i="'+i+'">'+nb(i+1)+'</button>').join('')+'</div>'
       +'<div class="dbChL">'+nb(ci+1)+'. '+E(PRL(cur.v))+'<small>'+nb(cur.ok)+' / '+nb(cur.e)+L(' দিন সফল',' days done')+' · '+L('টানা ','streak ')+nb(cur.st)+' · '+(cur.tf?L('আজ সম্পন্ন','done today'):L('আজ বাকি','pending today'))+'</small></div>';
   }
   if(mine||my.length){
-    h+='<div class="dbMsr"><button type="button" class="dbTog'+(MO[key]?' open':'')+'" data-d="ms" data-k="'+k+'"><span>'+L('নিজের মিশন','My missions')+' ('+nb(my.length)+')</span>'+S(IC.chev)+'</button>'
-      +(mine?'<button type="button" class="dbAdd" data-d="add" data-k="'+k+'" aria-label="Add mission">'+S(IC.plus)+'</button>':'')+'</div>';
-    if(MO[key]){
-      if(!my.length) h+='<div class="dbEmp">'+L('এখনো কোনো মিশন নেই — + চেপে যোগ করুন।','No missions yet — tap + to add one.')+'</div>';
-      h+=my.map((o,j)=>'<div class="mnR'+(o.tf?' ok':'')+'" data-si="'+j+'"><div class="mnT"><b>'+E(subLbl(o))+'</b><small>'+nb(o.ok)+' / '+nb(o.e)+L(' দিন সফল',' days done')+' · '+L('টানা ','streak ')+nb(o.st)+'</small></div>'
-        +(mine&&o.k==='check'?'<button type="button" class="mnC'+(o.tf?' on':'')+'" data-d="tg" data-k="'+k+'" aria-label="Done today">'+S(IC.chk)+'</button>':'<span class="mnD'+(o.tf?' on':'')+'"></span>')
-        +(mine?'<button type="button" class="mnX" data-d="rm" data-k="'+k+'" aria-label="Delete">'+S(IC.x)+'</button>':'')+'</div>').join('');
-    }
+    h+='<div class="mnHd"><b>'+L('মিশন','Missions')+'</b><small>'+nb(my.length)+'/'+nb(10)+'</small></div>';
+    if(!my.length) h+='<div class="dbEmp">'+L('এখনো কোনো মিশন নেই — উপরের + চেপে যোগ করুন।','No missions yet — tap + above to add one.')+'</div>';
+    h+=my.map((o,j)=>'<div class="mnR'+(o.tf?' ok':'')+'" data-si="'+j+'"><div class="mnT"><b>'+E(subLbl(o))+'</b><small>'+nb(o.ok)+' / '+nb(o.e)+L(' দিন সফল',' days done')+' · '+L('টানা ','streak ')+nb(o.st)+'</small></div>'
+      +(mine&&o.k==='check'?'<button type="button" class="mnC'+(o.tf?' on':'')+'" data-d="tg" data-k="'+k+'" aria-label="Done today">'+S(IC.chk)+'</button>':'<span class="mnD'+(o.tf?' on':'')+'"></span>')
+      +(mine?'<button type="button" class="mnX" data-d="rm" data-k="'+k+'" aria-label="Delete">'+S(IC.x)+'</button>':'')+'</div>').join('');
   }
   return h;
+}
+
+function sheetH(){
+  const g=featG(goals()); if(!g||!MN.top) return '';
+  const v=viewOf({g:g}), my=v.sc.filter(o=>o.k!=='pre'), k='top', f=mfOf(k);
+  const has=(p)=>my.some(o=>o.k===p[0]&&Math.round(o.v)===p[1]&&(p[0]!=='check'||o.n===p[2]));
+  const TY=[['save',L('দৈনিক জমা','Daily save')],['limit',L('দৈনিক খরচ সীমা','Daily spend cap')],['check',L('নিজের নিয়ম','My rule')]];
+  return '<div class="mnBd" data-d="mnew" data-k="'+k+'"></div><div class="mnSh"><h3>'+L('নতুন মিশন','New mission')+'</h3>'
+    +'<p class="mnSub">'+L('এই চ্যালেঞ্জ পূরণের জন্য প্রতিদিনের ছোট লক্ষ্য। জমা ও খরচ নিজে থেকেই হিসাব হবে।','Small daily goals to reach this challenge. Saving and spending are tracked automatically.')+'</p>'
+    +'<div class="mnNew mnFlat"><div class="mnSec">'+L('দ্রুত মিশন','Quick missions')+'</div>'
+    +MPR().map((p,j)=>{ const hv=has(p); return '<button type="button" class="mnPre'+(hv?' on':'')+'" data-d="mpre" data-k="'+k+'" data-p="'+j+'"><span>'+E(subLbl({n:p[2],k:p[0],v:p[1]}))+'</span>'+S(hv?IC.chk:IC.plus)+'</button>'; }).join('')
+    +'<div class="mnSec">'+L('নিজের মিশন তৈরি করুন','Create your own')+'</div>'
+    +'<div class="mnTy">'+TY.map(t=>'<button type="button" class="'+(t[0]===f.k?'on':'')+'" data-d="mtype" data-k="'+k+'" data-t="'+t[0]+'">'+t[1]+'</button>').join('')+'</div>'
+    +(f.k!=='check'?'<label>'+(f.k==='save'?L('ন্যূনতম টাকা (প্রতিদিন)','Minimum amount per day'):L('সর্বোচ্চ খরচ (০ = কোনো খরচ নয়)','Max spend per day (0 = none)'))+'</label><input type="number" inputmode="decimal" min="0" data-mf="am" data-k="'+k+'" value="'+E(f.am)+'">':'')
+    +'<label>'+(f.k==='check'?L('মিশনের নাম','Mission name'):L('নাম (ঐচ্ছিক)','Name (optional)'))+'</label><input maxlength="40" data-mf="nm" data-k="'+k+'" value="'+E(f.nm)+'">'
+    +'<button type="button" class="mnAdd" data-d="madd" data-k="'+k+'">'+L('মিশন যোগ করুন','Add mission')+'</button>'
+    +'<button type="button" class="mnCancel" data-d="mnew" data-k="'+k+'">'+L('বাতিল','Cancel')+'</button></div></div>';
+}
+function paintSheet(){
+  let el=document.getElementById('mnSheet'); const h=sheetH();
+  if(!h){ if(el) el.remove(); return; }
+  if(!el){ el=document.createElement('div'); el.id='mnSheet'; el.addEventListener('click',dashClick); el.addEventListener('input',onMf); document.body.appendChild(el); }
+  const a=document.activeElement; if(a&&a.tagName==='INPUT'&&el.contains(a)) return;
+  const old=el.querySelector('.mnSh'), st=old?old.scrollTop:0;
+  el.innerHTML=h; const nw=el.querySelector('.mnSh'); if(nw&&st) nw.scrollTop=st;
 }
 function dashBox(gs){ const g=featG(gs); if(!g) return ''; return '<div class="dbIn dbTop2">'+dashInner(viewOf({g:g}),true,'top')+'</div>'; }
 function viewOf(c){
   if(c.g){ const g=c.g, pl=payload(g), s=stats(g); return Object.assign({mine:true,uid:me(),n:myN(),u:myU(),x:s.x},pl,{sc:s.sc}); }
   const v=c.v, x=v.ds?Math.max(1,dDiff(v.ds,todayStr())+1):1; return Object.assign({},v,{x:x});
 }
+function onMf(e){ const t=e.target; if(!t||!t.dataset||!t.dataset.mf) return; mfOf(t.dataset.k)[t.dataset.mf]=t.value; }
 function dashClick(e){
   const b=e.target.closest('[data-d]'); if(!b) return; const d=b.dataset.d, k=b.dataset.k||'top';
   if(d==='chip'){ CH[k]=+b.dataset.i||0; repaintAll(); return; }
-  if(d==='ms'){ MO[k]=!MO[k]; repaintAll(); return; }
+  if(d==='mnew'){ MN[k]=!MN[k]; repaintAll(); return; }
+  if(d==='mtype'){ mfOf(k).k=b.dataset.t; repaintAll(); return; }
   const g=k==='top'?featG(goals()):goals().find(x=>x.uid===k); if(!g) return;
-  if(d==='add'){ addSub(g); return; }
+  const mk=(kk,v,name)=>({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),k:kk,v:kk==='check'?0:v,name:(name||'').trim().slice(0,40),start:todayStr(),log:{}});
+  if(d==='mpre'){
+    g.subs=g.subs||[]; if(g.subs.length>=10){ tt(L('সর্বোচ্চ ১০টি মিশন রাখা যায়','Up to 10 missions per challenge')); return; }
+    const pr=MPR()[+b.dataset.p]; if(!pr) return;
+    if(g.subs.some(o=>o.k===pr[0]&&Math.round(o.v)===pr[1]&&(pr[0]!=='check'||(o.name||'')===pr[2]))){ tt(L('এই মিশন আগে থেকেই আছে','Mission already added')); return; }
+    g.subs.push(mk(pr[0],pr[1],pr[2])); saveData(); repaintAll(); tt(L('মিশন যোগ হয়েছে','Mission added')); return;
+  }
+  if(d==='madd'){
+    const f=mfOf(k), v=parseFloat(f.am); g.subs=g.subs||[];
+    if(g.subs.length>=10){ tt(L('সর্বোচ্চ ১০টি মিশন রাখা যায়','Up to 10 missions per challenge')); return; }
+    if(f.k==='check'&&f.nm.trim().length<2){ tt(L('মিশনের নাম লিখুন','Write a mission name')); return; }
+    if(f.k==='save'&&!(v>0)){ tt(L('সঠিক টাকা দিন','Enter a valid amount')); return; }
+    if(f.k==='limit'&&!(v>=0)){ tt(L('সঠিক টাকা দিন','Enter a valid amount')); return; }
+    g.subs.push(mk(f.k,f.k==='check'?0:v,f.nm)); delete MF[k]; MN[k]=false; saveData(); repaintAll(); tt(L('মিশন যোগ হয়েছে','Mission added')); return;
+  }
   const row=b.closest('[data-si]'), o=row&&(g.subs||[])[+row.dataset.si]; if(!o) return;
   if(d==='tg'){ o.log=o.log||{}; const t=todayStr(); if(o.log[t]) delete o.log[t]; else o.log[t]=1; saveData(); repaintAll(); }
   else if(d==='rm'){ const go=()=>{ g.subs=g.subs.filter(x=>x!==o); saveData(); repaintAll(); }; try{ appDialog(L('এই মিশনটি মুছে ফেলবেন?','Delete this mission?'),{confirm:true},go); }catch(x){ if(confirm(L('মুছে ফেলবেন?','Delete?'))) go(); } }
 }
+box.addEventListener('input',onMf);
 sec.addEventListener('click',dashClick); box.addEventListener('click',dashClick);
-function addSub(g){
-  if((g.subs||[]).length>=10){ tt(L('সর্বোচ্চ ১০টি মিশন রাখা যায়','Up to 10 missions per challenge')); return; }
-  if($('fgOv')) return; g.subs=g.subs||[];
-  const ov=document.createElement('div'); ov.id='fgOv'; ov.style.zIndex=9700; ov.innerHTML='<div class="fgBd"></div><div class="fgSh"></div>'; document.body.appendChild(ov);
-  const sh=ov.querySelector('.fgSh'), close=()=>ov.remove(); ov.querySelector('.fgBd').onclick=close;
-  const PR=[['save',100,''],['limit',0,''],['check',0,L('অর্ধদিন খরচ নয়','Half-day no spend')],['limit',500,'']];
-  let k='save', nm='', am='100';
-  const TY=[['save',L('দৈনিক জমা','Daily save')],['limit',L('দৈনিক খরচ সীমা','Daily spend cap')],['check',L('নিজের নিয়ম','My rule')]];
-  function paint(){
-    sh.innerHTML='<h3>'+L('নতুন মিশন','New mission')+'</h3><p class="fgSub">'+L('এই চ্যালেঞ্জ পূরণের জন্য প্রতিদিনের ছোট লক্ষ্য। জমা ও খরচ নিজে থেকেই হিসাব হবে।','A small daily goal that supports this challenge. Saves and spending are tracked automatically.')+'</p>'
-      +'<div class="fgAcc">'+PR.map((p,j)=>'<button type="button" class="fgAc" data-p="'+j+'"><b>'+E(subLbl({n:p[2],k:p[0],v:p[1]}))+'</b></button>').join('')+'</div>'
-      +'<label>'+L('ধরন','Type')+'</label><div class="fgAcc">'+TY.map(t=>'<button type="button" class="fgAc'+(t[0]===k?' on':'')+'" data-k="'+t[0]+'"><b>'+t[1]+'</b></button>').join('')+'</div>'
-      +(k!=='check'?'<label>'+(k==='save'?L('ন্যূনতম টাকা (প্রতিদিন)','Minimum amount per day'):L('সর্বোচ্চ খরচ (০ = কোনো খরচ নয়)','Max spend per day (0 = none)'))+'</label><input id="smA" type="number" inputmode="decimal" min="0" value="'+E(am)+'">':'')
-      +'<label>'+(k==='check'?L('মিশনের নাম','Mission name'):L('নাম (ঐচ্ছিক)','Name (optional)'))+'</label><input id="smN" maxlength="40" value="'+E(nm)+'">'
-      +'<div class="fgEr"></div><button type="button" class="fgGo" data-ok="1">'+L('মিশন যোগ করুন','Add mission')+'</button><button type="button" class="fgGo ghost" data-x="1">'+L('বাতিল','Cancel')+'</button>';
-    const sv=()=>{ nm=($('smN')||{}).value||''; am=($('smA')||{}).value||am; };
-    sh.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{ const p=PR[+b.dataset.p]; k=p[0]; am=String(p[1]); nm=p[2]; paint(); });
-    sh.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{ sv(); k=b.dataset.k; paint(); });
-    sh.querySelector('[data-x]').onclick=close;
-    sh.querySelector('[data-ok]').onclick=()=>{ sv(); const v=parseFloat(am), er=sh.querySelector('.fgEr');
-      if(k==='check'&&nm.trim().length<2){ er.textContent=L('মিশনের নাম লিখুন','Write a mission name'); return; }
-      if(k==='save'&&!(v>0)){ er.textContent=L('সঠিক টাকা দিন','Enter a valid amount'); return; }
-      if(k==='limit'&&!(v>=0)){ er.textContent=L('সঠিক টাকা দিন','Enter a valid amount'); return; }
-      g.subs.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),k:k,v:k==='check'?0:v,name:nm.trim().slice(0,40),start:todayStr(),log:{}});
-      saveData(); close(); repaintAll(); tt(L('মিশন যোগ হয়েছে','Mission added')); };
-  }
-  paint();
-}
-
 /* nav button + tab hooks */
 const _at=window.activateTab;
-window.activateTab=function(n){ const r=_at.apply(this,arguments); document.body.classList.toggle('chFull',n==='challenge'); if(n==='challenge') chSec.scrollTop=0; if(n==='feed'){ render(); load(); window.scrollTo(0,0); } else if(n==='challenge'){ try{ paintGoals(); load(); }catch(e){} window.scrollTo(0,0); } return r; };
+window.activateTab=function(n){ const r=_at.apply(this,arguments); document.body.classList.toggle('chFull',n==='challenge'); if(n!=='challenge'&&MN.top){ MN.top=false; try{ paintSheet(); }catch(e){} } if(n==='challenge') chSec.scrollTop=0; if(n==='feed'){ render(); load(); window.scrollTo(0,0); } else if(n==='challenge'){ try{ paintGoals(); load(); }catch(e){} window.scrollTo(0,0); } return r; };
 const _sd=window.saveData;
 window.saveData=function(){ const r=_sd.apply(this,arguments); setTimeout(()=>{ try{ checkGoals(); paintGoals(); pushSoon(); }catch(e){} },0); return r; };
 const _al=window.applyLanguage;
@@ -17758,6 +17975,26 @@ if(_al) window.applyLanguage=function(){ const r=_al.apply(this,arguments); try{
 setInterval(()=>{ if((active()||chSec.classList.contains('active'))&&document.visibilityState==='visible') load(); },30000);
 setInterval(()=>{ try{ pushSoon(); }catch(e){} },300000);
 setTimeout(()=>{ try{ checkGoals(); pushSoon(); }catch(e){} },2500);
+})();
+</script>
+<script id="ftFbWelcome">
+(function(){
+  function flag(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  if(flag('fbWelcome_v1')==='1'||flag('loginDone_v1')==='true') return;
+  function show(){
+    if(document.getElementById('fbWelcome')) return;
+    var el=document.createElement('div'); el.id='fbWelcome'; el.setAttribute('role','dialog'); el.setAttribute('aria-label','Finbuddy says');
+    el.innerHTML='<div class="fbwIn"><div class="fbwTag">Finbuddy says</div>'
+      +'<p class="fbwQ">&ldquo;hey,<br>I built this to help you to track and save your money because I have that exact problem. maybe in the process we will hurt your feelings, but we love you &lt;3&rdquo;</p>'
+      +'<div class="fbwBy">- Finbuddy says</div></div>'
+      +'<button type="button" class="fbwGo">[ Get started ]</button>';
+    el.querySelector('.fbwGo').addEventListener('click',function(){
+      try{ localStorage.setItem('fbWelcome_v1','1'); }catch(e){}
+      el.classList.add('out'); setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); },380);
+    });
+    document.body.appendChild(el);
+  }
+  if(document.body) show(); else document.addEventListener('DOMContentLoaded',show);
 })();
 </script>
 </body>
