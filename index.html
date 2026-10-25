@@ -1184,7 +1184,6 @@ html body #sec-friends .frAv{border-radius:16px;background:linear-gradient(135de
 .nsTo button.p{background:var(--primary);color:#fff}
 html.locked #sec-notes,html.locked #nsSheet,html.locked #nsRem,html.locked #nsToast{display:none!important}
 </style>
-<style id="ftHideSetNav">.bottomnav .bnbtn[data-bn="settings"],#bottomNav .bnbtn[data-bn="settings"]{display:none !important;}</style>
 </head>
 <body>
 <style id="rsStyle">
@@ -3210,7 +3209,8 @@ html[data-theme*="yellow"] .cPad button.op{color:#000}
       <option value="deposit" data-i18n="type_deposit">জমা / ডিপোজিট</option>
       <option value="save_to_account" data-i18n="type_save_to_account">একাউন্টে জমা রাখলাম</option>
     </select>
-    <div id="recAccWrap" style="display:none;"><label data-i18n="lbl_account">একাউন্ট</label><select id="recAcc"></select></div>
+    <div id="recAccWrap" style="display:none;"><label data-i18n="lbl_account">একাউন্ট</label><select id="recAcc" onchange="recFromFill()"></select></div>
+    <div id="recFromWrap"><label id="recFromLbl">কোন ব্যালেন্স থেকে নেবেন?</label><select id="recFrom"></select><div id="recFromNote" style="font-size:12px;color:var(--muted);margin:4px 2px 0;"></div></div>
     <div id="recCatWrap"><label data-i18n="lbl_category">খাত</label><select id="recCat"></select></div>
     <div id="recSrcWrap" style="display:none;"><label data-i18n="lbl_source">আয়ের উৎস</label><select id="recSrc"></select></div>
     <label data-i18n="lbl_rec_amount">পরিমাণ (টাকা)</label>
@@ -5503,6 +5503,17 @@ function recTypeChange(){
   document.getElementById('recCatWrap').style.display = ty==='expense' ? 'block' : 'none';
   document.getElementById('recSrcWrap').style.display = ty==='deposit' ? 'block' : 'none';
   document.getElementById('recAccWrap').style.display = ty==='save_to_account' ? 'block' : 'none';
+  document.getElementById('recFromWrap').style.display = ty==='deposit' ? 'none' : 'block';
+  recFromFill();
+}
+function recFromFill(){
+  const sel=document.getElementById('recFrom'); if(!sel) return;
+  const bn=currentLang==='bn', ty=document.getElementById('recType').value, dest=(document.getElementById('recAcc')||{}).value;
+  const keep=sel.value, bals=calcAccountBalances();
+  document.getElementById('recFromLbl').textContent=bn?'কোন ব্যালেন্স থেকে নেবেন?':'Take the money from';
+  sel.innerHTML=`<option value="">${bn?'মূল ব্যালেন্স':'Main balance'} (${fmt(calcBalance())})</option>`+(data.accounts||[]).filter(a=>!(ty==='save_to_account'&&a===dest)).map(a=>`<option value="${esc(a)}">${esc(a)} (${fmt(bals[a]||0)})</option>`).join('');
+  if(keep&&[...sel.options].some(o=>o.value===keep)) sel.value=keep;
+  document.getElementById('recFromNote').textContent=bn?'নির্বাচিত ব্যালেন্সে টাকা কম থাকলে মূল ব্যালেন্স থেকে কাটা হবে।':'If the chosen balance is short, the main balance is used.';
 }
 function recTimeLbl(tm){ const p=String(tm||'').split(':'), h=+p[0], m=+p[1]; if(!isFinite(h)||!isFinite(m)) return ''; return ((h%12)||12)+':'+String(m).padStart(2,'0')+' '+(h<12?'AM':'PM'); }
 function nowHM(){ return nowTime(); }
@@ -5516,10 +5527,11 @@ function refreshRecurringUI(){
   fill('recCat', data.categories);
   fill('recSrc', data.incomeSources);
   fill('recAcc', data.accounts);
+  recFromFill();
   const box = document.getElementById('recList');
   if(!data.recurring.length){ box.innerHTML = `<div class="empty">${t('rec_empty')}</div>`; return; }
   box.innerHTML = data.recurring.map(r=>{
-    const lbl = `${t(TYPE_META[r.type].label)} ${fmt(r.amount)} · ${esc(r.category||r.source||r.account||'')} · ${t('rec_every')} ${r.day} ${t('rec_day_suffix')}${r.time?' · '+recTimeLbl(r.time):''}${r.note?' · '+esc(r.note):''}`;
+    const lbl = `${t(TYPE_META[r.type].label)} ${fmt(r.amount)} · ${esc(r.category||r.source||r.account||'')} · ${t('rec_every')} ${r.day} ${t('rec_day_suffix')}${r.time?' · '+recTimeLbl(r.time):''}${r.from?' · ← '+esc(r.from):''}${r.note?' · '+esc(r.note):''}`;
     return `<div class="kv"><span>${lbl}</span><button class="del" onclick="deleteRecurring('${r.id}')" aria-label="Delete">${mi('x')}</button></div>`;
   }).join('');
 }
@@ -5535,6 +5547,7 @@ function addRecurring(){
     category: type==='expense' ? document.getElementById('recCat').value : null,
     source: type==='deposit' ? document.getElementById('recSrc').value : null,
     account: type==='save_to_account' ? document.getElementById('recAcc').value : null,
+    from: (type!=='deposit' && document.getElementById('recFrom').value && !(type==='save_to_account' && document.getElementById('recFrom').value===document.getElementById('recAcc').value)) ? document.getElementById('recFrom').value : null,
     note: document.getElementById('recNote').value.trim(),
     lastMonth: null
   };
@@ -5560,8 +5573,13 @@ function applyRecurring(){
       const cur=y+'-'+String(m).padStart(2,'0'); if(cur>mk) break;
       const eff=Math.min(r.day,new Date(y,m,0).getDate());
       if(cur===mk && (dNow<eff || (dNow===eff && nowHM()<(r.time||'00:00')))) break;
-      if(!data.transactions.some(t0=>t0.id==='rc-'+r.id+'-'+cur)) data.transactions.push({id:'rc-'+r.id+'-'+cur, type:r.type, amount:r.amount, category:r.category||null, source:r.source||null,
-        person:null, account:r.account||null, due:null, note:('\u{1F501} '+(r.note||'')).trim(), date:cur+'-'+String(eff).padStart(2,'0'), time:r.time||'09:00'});
+      if(!data.transactions.some(t0=>t0.id==='rc-'+r.id+'-'+cur)){
+        const dt=cur+'-'+String(eff).padStart(2,'0'), tm=r.time||'09:00', nt=('\u{1F501} '+(r.note||'')).trim();
+        const srcA=(r.from&&r.type!=='deposit'&&(data.accounts||[]).includes(r.from)&&!(r.type==='save_to_account'&&r.from===r.account)&&((calcAccountBalances()[r.from]||0)+0.005>=r.amount))?r.from:null;
+        if(srcA&&r.type==='save_to_account') data.transactions.push({id:'rc-'+r.id+'-'+cur+'-src', type:'use_from_account', amount:r.amount, category:null, source:null, person:null, account:srcA, due:null, note:nt+' → '+r.account, date:dt, time:tm});
+        data.transactions.push({id:'rc-'+r.id+'-'+cur, type:r.type, amount:r.amount, category:r.category||null, source:r.source||null,
+          person:null, account:r.account||null, due:null, note:nt, date:dt, time:tm, fund:(srcA&&r.type==='expense')?srcA:null});
+      }
       r.lastMonth=cur; changed=true; added++;
       if(++m>12){m=1;y++;}
     }
@@ -11599,7 +11617,7 @@ function fcHtml(info,own){
 function hdr(info,own,col,chips){
   const cv=(okPic(info.cv)||(own&&okLoc(info.cv)))?info.cv:'', lk=!!info.lk&&!own&&!info.rq;
   const cb=own?'<div class="ppCovBtns"><button type="button" aria-label="cover" onclick="document.getElementById(\'ppCvIn\').click()">'+ic('pp-cam',17)+'</button>'+(cv?'<button type="button" aria-label="remove" onclick="ppCvDel()">'+ic('pp-x',16)+'</button>':'')+'</div><input type="file" id="ppCvIn" accept="image/*" style="display:none" onchange="ppCover(this)">':'';
-  const act=own?'<button type="button" class="ppAct" onclick="ftSetOpen(\'settings_profile\',\'profile\')">'+ic('pp-user',16)+' '+L('এডিট','Edit')+'</button>':frAct(info);
+  const act=own?'':frAct(info);
   const txt=lk?'':'<div class="ppNm">'+esc(info.name||L('নাম নেই','No name'))+'</div>'+(info.un?'<div class="ppUn">@'+esc(info.un)+'</div>':'')+fcHtml(info,own)+socHtml(info.soc)+aboutHtml(info.ab)+(chips?'<div class="ppChips">'+chips+'</div>':'');
   return '<div class="ppHead" style="--r:'+col+'"><div class="ppCov"'+(cv?' style="background-image:url(\''+cv+'\')"':'')+'>'+cb+'</div><div class="ppBody"><div class="ppTop"><div class="ppAv" data-su="'+esc(info.uid||'')+'" data-own="'+(own?1:0)+'">'+avatar(lk?'':info.name,info.pic,own)+'</div>'+act+'</div>'+txt+'</div></div>';
 }
@@ -11612,13 +11630,25 @@ function renderSet(){ const b=$('ppSetBox'); if(!b) return; const a=document.act
 
 /* ---------- profile view ---------- */
 function avatar(name,pic,own){ return '<div>'+((okPic(pic)||(own&&okLoc(pic)))?'<img alt="" src="'+pic+'">':esc((String(name||'?').trim()[0]||'?').toUpperCase()))+'</div>'; }
+let PT='all';
+window.ppTab=k=>{ PT=k; try{ renderTab(); }catch(e){} };
+window.ppNewRace=()=>{ try{ activateTab('challenge'); }catch(e){} setTimeout(()=>{ const x=document.querySelector('#fgBox [data-a="new"]'); if(x) x.click(); },400); };
 function profHtml(info){
-  const p=info.p, s=skOf(p.skill);
-  const rk=SK.map((k,j)=>`<div class="ppRkS${j<=s.i?' on':''}${j===s.i?' cur':''}" style="--c:${k[3]}"><span class="d">${ic('cg-lv'+(j+1),18)}</span><span class="n">${L(k[1],k[2])}</span></div>`).join('');
+  const own=!info.uid, p=info.p, s=skOf(p.skill), N=x=>typeof nb==='function'?nb(x):x;
   const chp=`<span>${ic('cg-target',16)} ${L('স্কিল','Skill')}: ${esc(s.name)}</span>`;
-  return hdr(info,!info.uid,s.c,chp)+`
-  ${skillCard(p,s,!info.uid,rk)}
-  <div class="ppCard fgPf" id="ppCh" data-u="${esc(info.uid||'')}" data-own="${info.uid?0:1}"></div>`;
+  const btns=own?`<div class="ppAcRow"><button type="button" class="ppPri" onclick="ppNewRace()">${ic('pp-user',17)} ${L('নতুন রেস','New race')}</button><button type="button" class="ppSecB" onclick="ftSetOpen('settings_profile','profile')">${L('এডিট প্রোফাইল','Edit profile')}</button></div>`:'';
+  const tabs=[['all',L('সব','All')],['races',L('রেস','Races')],['info',L('তথ্য','Info')]];
+  const tb='<div class="ppTabs">'+tabs.map(t=>`<button type="button" class="${PT===t[0]?'on':''}" onclick="ppTab('${t[0]}')">${t[1]}</button>`).join('')+'</div>';
+  const fc=own?(window.ftFrCount?ftFrCount():null):(info.fc==null?null:info.fc);
+  const stats=`<div class="ppSt3"><div><b>${N(p.skill)}<small>/${N(100)}</small></b><span>${L('স্কোর','Score')}</span></div><div><b style="color:${s.c}">${esc(s.name)}</b><span>${L('র‍্যাঙ্ক','Rank')}</span></div><div><b>${fc==null?'–':N(fc)}</b><span>${L('বন্ধু','Friends')}</span></div></div>`;
+  let fr='';
+  if(own&&window.ftFr&&ftFr.list){ const l=ftFr.list().slice(0,4);
+    fr=`<div class="ppSecH"><b>${L('বন্ধু','Friends')}</b><a onclick="try{activateTab('friends')}catch(e){}">${L('সব দেখুন','See all')}</a></div>`
+      +(l.length?'<div class="ppFrRow">'+l.map(f=>`<div onclick="ftFr.profile('${esc(f.uid)}')"><span class="ppFrAv">${avatar(f.n||f.u,f.pic,false)}</span><b>${esc(f.n||f.u||'?')}</b></div>`).join('')+'</div>':`<div class="ppNote">${L('এখনো কোনো বন্ধু নেই।','No friends yet.')}</div>`); }
+  const comp=own?`<div class="ppComp" onclick="ppNewRace()"><span class="ppFrAv">${avatar(info.name,info.pic,true)}</span><span>${L('আপনার রেসের আপডেট কী?','What\'s your race update?')}</span>${ic('cg-target',22)}</div>`:'';
+  const posts=`<div class="ppSecH"><b>${L('সব পোস্ট','All posts')}</b></div>${comp}<div class="ppCard fgPf" id="ppCh" data-u="${esc(info.uid||'')}" data-own="${own?1:0}"></div>`;
+  const body=PT==='races'?posts:PT==='info'?stats+fr:stats+fr+posts;
+  return hdr(info,own,s.c,chp)+btns+tb+body;
 }
 /* ---------- state ---------- */
 let keepPane=false, seeds={}, fromFr=false, pane='me', viewed=null, results=[], found={}, q='', msg='', msgBad=false, busy=false, sel='', pubSt={k:'',t:''}, lastSig='', timer=null;
@@ -12244,6 +12274,7 @@ const NAMES={};
 function nameOf(u){ if(NAMES[u]&&!(window.ppViewed&&ppViewed()&&ppViewed().uid===u)){ const k=NAMES[u]; return {n:String(k.n||'').slice(0,60),u:String(k.u||'').slice(0,40),pic:okp(k.pic)?k.pic:''}; } try{ const v=window.ppViewed&&ppViewed(); if(v&&v.uid===u) return {n:v.name||'',u:v.un||'',pic:okp(v.pic)?v.pic:''}; }catch(e){} return {n:'',u:'',pic:''}; }
 async function run(fn,okMsg){ try{ await fn(); if(okMsg&&window.toast) toast(okMsg); }catch(e){ if(window.toast) toast(/HTTP 40[13]/.test(String(e.message))?L('Firebase Rules-এ অনুমতি নেই, বন্ধু ট্যাবে দেখুন','Firebase rules refused, see Friends tab'):L('হয়নি, আবার চেষ্টা করুন','Failed, try again')); if(/HTTP 40[13]/.test(String(e&&e.message))){ err='rules'; } } render(); fire(); setBlink(); }
 const API={
+  list:()=>Object.keys(S.fr).map(u=>({uid:u,n:S.fr[u].n||'',u:S.fr[u].u||'',pic:S.fr[u].pic||''})),
   state:u=>S.fr[u]?'friend':S.inc[u]?'in':S.out[u]?'sent':'none',
   known:(u,o)=>{ if(uidOk(u)&&o) NAMES[u]={n:o.n||'',u:o.u||'',pic:o.pic||''}; },
   add:u=>run(async()=>{ const m=me(); if(!m||u===m) throw new Error('x'); const o=nameOf(u), t=Date.now(), mp=await myPic(); await put('friendReq/'+u+'/'+m,{n:myN(),u:myU(),pic:mp,t}); await put('friendSent/'+m+'/'+u,{n:o.n,u:o.u,pic:o.pic,t}); S.out[u]={n:o.n,u:o.u,pic:o.pic,t}; },L('বন্ধুর অনুরোধ পাঠানো হয়েছে','Friend request sent')),
@@ -16979,6 +17010,59 @@ document.addEventListener('click',()=>setTimeout(upd,50),true);
 .dbSc .dbChk.on{background:var(--text);color:var(--bg);}
 .dbHint{margin-top:8px;font-size:12px;font-weight:700;color:var(--primary);text-align:right;}
 </style>
+<style id="ftRaceCss">
+#fgBox .rcHero{display:flex;gap:16px;align-items:center;padding:6px 2px 4px;}
+.rcCol{width:74px;height:168px;border-radius:22px;background:color-mix(in srgb,var(--text) 8%,var(--bg));position:relative;overflow:hidden;flex:none;display:flex;align-items:flex-end;justify-content:center;}
+.rcCol i{position:absolute;left:0;right:0;bottom:0;background:var(--grad,var(--primary));transition:height .6s;}
+.rcCol b{position:relative;margin-bottom:10px;font-size:15px;font-weight:800;color:#fff;mix-blend-mode:normal;text-shadow:0 1px 4px rgba(0,0,0,.35);}
+.rcHi{flex:1;min-width:0;}.rcHi small{font-size:11px;font-weight:800;letter-spacing:.12em;color:var(--muted);}
+.rcHi h2{margin:2px 0 4px;font-size:22px;font-weight:800;letter-spacing:-.02em;word-break:break-word;}
+.rcAm{font-size:26px;font-weight:800;letter-spacing:-.03em;}.rcAm span{font-size:13px;color:var(--muted);font-weight:700;letter-spacing:0;}
+.rcHi p{margin:4px 0 10px;font-size:13px;color:var(--muted);line-height:1.5;}
+.rcSt{display:flex;gap:14px;margin:8px 0 12px;}.rcSt span{font-size:11px;color:var(--muted);font-weight:600;}.rcSt b{display:block;font-size:15px;color:var(--text);}
+.rcGo{height:38px;padding:0 16px;border-radius:999px;border:0;background:var(--text);color:var(--bg);font:inherit;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+.rcGo svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;}
+.rcMeta{margin:12px 2px 0;font-size:12.5px;color:var(--muted);font-weight:600;}
+.rcTabs{display:flex;gap:8px;overflow-x:auto;margin:14px -2px 14px;padding:2px;scrollbar-width:none;}.rcTabs::-webkit-scrollbar{display:none}
+.rcTabs button{flex:none;height:38px;padding:0 16px;border-radius:999px;border:1px solid var(--border);background:var(--card);color:var(--text);font:inherit;font-weight:600;font-size:13.5px;cursor:pointer;}
+.rcTabs button.on{background:var(--text);color:var(--bg);border-color:var(--text);}
+.rcRep{display:flex;gap:9px;padding:9px 10px;margin-top:8px;border-radius:12px;background:color-mix(in srgb,var(--text) 5%,var(--card));}
+.rcRep.me{background:color-mix(in srgb,var(--primary) 14%,var(--card));border-left:3px solid var(--primary);}
+.rcRep .fdAv{width:28px;height:28px;font-size:12px;flex:none;}.rcRep b{font-size:13px;}.rcRep small{color:var(--muted);font-size:11px;margin-left:6px;}.rcRep p{margin:2px 0 0;font-size:13.5px;line-height:1.45;word-break:break-word;}
+.rcMs{display:flex;gap:10px;align-items:center;padding:12px 12px;margin-bottom:8px;border-radius:14px;background:var(--card);border:1px solid var(--border);}
+.rcMs i{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);flex:none;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:13px;color:#fff;}
+.rcMs.ok i{background:#16a34a;border-color:#16a34a;}.rcMs div{flex:1;min-width:0;font-size:14px;font-weight:600;line-height:1.4;}.rcMs small{display:block;color:var(--muted);font-weight:500;font-size:11.5px;}
+.rcNote{padding:12px 14px;border-radius:14px;background:color-mix(in srgb,var(--primary) 10%,var(--card));font-size:13px;line-height:1.55;margin-bottom:12px;}
+</style>
+<style id="ftChFull">
+body.chFull{overflow:hidden;}
+body.chFull #sec-challenge{position:fixed;inset:0;z-index:9000;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(10px + env(safe-area-inset-top,0px)) 18px calc(34px + env(safe-area-inset-bottom,0px));}
+body.chFull #bottomNav,body.chFull .bottomnav{display:none !important;}
+.rcBack{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.rcBack button{width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;}
+.rcBack button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.rcBack b{font-size:17px;font-weight:800;letter-spacing:-.01em;}
+</style>
+<style id="ftProfFb">
+html body #sec-profile .ppHead{border:0;box-shadow:none;background:none;overflow:visible;border-radius:0;}
+html body #sec-profile .ppHead .ppCov{border-radius:20px;overflow:hidden;}
+.ppAcRow{display:flex;gap:10px;margin:14px 0 4px;}
+.ppAcRow button{flex:1;height:44px;border-radius:12px;border:0;font:inherit;font-weight:700;font-size:14.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;}
+.ppPri{background:var(--primary);color:#fff;}.ppSecB{background:color-mix(in srgb,var(--text) 10%,var(--card));color:var(--text);}
+.ppTabs{display:flex;gap:8px;margin:14px 0 6px;overflow-x:auto;scrollbar-width:none;}
+.ppTabs button{flex:none;height:38px;padding:0 20px;border-radius:999px;border:0;background:none;color:var(--muted);font:inherit;font-weight:700;font-size:14px;cursor:pointer;}
+.ppTabs button.on{background:color-mix(in srgb,var(--primary) 18%,var(--card));color:var(--primary);}
+.ppSt3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0 4px;}
+.ppSt3>div{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 6px;text-align:center;}
+.ppSt3 b{display:block;font-size:17px;font-weight:800;}.ppSt3 b small{font-size:11px;color:var(--muted);}.ppSt3 span{font-size:11.5px;color:var(--muted);font-weight:600;}
+.ppSecH{display:flex;justify-content:space-between;align-items:center;margin:20px 0 10px;}.ppSecH b{font-size:18px;font-weight:800;}.ppSecH a{color:var(--primary);font-size:13.5px;font-weight:600;cursor:pointer;}
+.ppFrRow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.ppFrRow>div{text-align:center;cursor:pointer;min-width:0;}.ppFrRow b{display:block;font-size:12px;font-weight:600;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ppFrAv{display:block;width:100%;aspect-ratio:1;max-width:76px;margin:0 auto;border-radius:50%;overflow:hidden;background:color-mix(in srgb,var(--primary) 20%,var(--card));}
+.ppFrAv>div{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:24px;color:var(--primary);}.ppFrAv img{width:100%;height:100%;object-fit:cover;display:block;}
+.ppComp{display:flex;align-items:center;gap:12px;padding:10px 4px 14px;cursor:pointer;color:var(--muted);font-size:15px;border-bottom:1px solid var(--border);margin-bottom:10px;}
+.ppComp .ppFrAv{width:40px;margin:0;flex:none;}.ppComp>span:nth-child(2){flex:1;}.ppComp svg{color:var(--primary);}
+</style>
 <script id="ftFeedJs">
 (function(){
 const $=id=>document.getElementById(id), bn=()=>{ try{ return currentLang==='bn'; }catch(e){ return true; } }, L=(b,e)=>bn()?b:e;
@@ -17015,7 +17099,7 @@ function progress(g){
     if(x.account===g.account){ if(x.type==='save_to_account') s+=a; else if(x.type==='use_from_account') s-=a; }
     if(x.fund===g.account && TYPE_META[x.type] && TYPE_META[x.type].sign<0 && x.type!=='save_to_account') s-=a;
   });
-  s=Math.max(0,s);
+  s+=bonusOf(g); s=Math.max(0,s);
   return {saved:s,pct:g.target>0?Math.min(100,Math.floor(s/g.target*100)):0};
 }
 const fm=n=>{ try{ return fmt(Math.round(n)); }catch(e){ return '৳'+Math.round(n); } };
@@ -17024,6 +17108,17 @@ const fm=n=>{ try{ return fmt(Math.round(n)); }catch(e){ return '৳'+Math.round
 const dDiff=(a,b)=>Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/864e5);
 const dAdd=(a,n)=>{ const d=new Date(a+'T12:00:00'); d.setDate(d.getDate()+n); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); };
 function streakOf(n,f){ let c=0,i=f(n-1)?n-1:n-2; while(i>=0&&f(i)){ c++; i--; } return c; }
+const PRE=10;
+const PRL=n=>[L('আজ খরচ নয় — অব্যবহৃত দৈনিক বাজেট রেসে যোগ হবে','No spend today — unused daily budget joins your race'),L('আজ যেকোনো অঙ্ক সেভ করুন','Save any amount today'),L('আজ '+nb(fm(1000))+' সেভ করুন','Save '+fm(1000)+' today'),L('আজ '+nb(fm(500))+' সেভ করুন','Save '+fm(500)+' today'),L('দৈনিক বাজেটের অর্ধেকের কম খরচ করুন','Spend under half your daily budget'),L('দৈনিক বাজেটের মধ্যে থাকুন','Stay within your daily budget'),L('আজ অন্তত একটি লেনদেন লিখুন','Log at least one transaction today'),L('টানা ৩ দিন সেভ করুন','Save 3 days in a row'),L('আজ রেস টার্গেটের ৫% সেভ করুন','Save 5% of the race target today'),L('গত ৭ দিনে ৫ দিন সেভ করুন','Save on 5 of the last 7 days')][n-1]||'';
+function dayCtx(g){ const st=g.start,sv={},am={},sp={},tc={};
+  data.transactions.forEach(x=>{ if(x.date<st) return; const a=+x.amount||0; tc[x.date]=(tc[x.date]||0)+1;
+    if(x.type==='save_to_account'&&x.account===g.account){ sv[x.date]=1; am[x.date]=(am[x.date]||0)+a; }
+    if(isExpenseLike(x)) sp[x.date]=(sp[x.date]||0)+a; });
+  return {st:st,am:am,sp:sp,tc:tc,lim:+data.dailyLimit||0,tg:+g.target||0}; }
+function preOk(n,c,i){ const d=dAdd(c.st,i), A=k=>c.am[dAdd(c.st,k)]||0, S0=c.sp[d]||0;
+  switch(n){ case 1:return S0===0; case 2:return A(i)>0; case 3:return A(i)>=1000; case 4:return A(i)>=500; case 5:return c.lim>0&&S0<=c.lim/2; case 6:return c.lim>0&&S0<=c.lim; case 7:return !!c.tc[d]; case 8:return i>=2&&A(i)>0&&A(i-1)>0&&A(i-2)>0; case 9:return c.tg>0&&A(i)>=c.tg*0.05; case 10:{ let k=0; for(let j=Math.max(0,i-6);j<=i;j++) if(A(j)>0) k++; return k>=5; } } return false; }
+function bonusOf(g,c){ c=c||dayCtx(g); if(!(c.lim>0)) return 0; const e=dDiff(c.st,todayStr()); let b=0; for(let i=0;i<e;i++) b+=Math.max(0,c.lim-(c.sp[dAdd(c.st,i)]||0)); return b; }
+function presetsOf(g,x0){ const c=dayCtx(g), out=[]; for(let n=1;n<=PRE;n++){ let ok=0; for(let i=0;i<x0;i++) if(preOk(n,c,i)) ok++; out.push({i:'',n:'',k:'pre',v:n,e:x0,ok:ok,st:streakOf(x0,i=>preOk(n,c,i)),tf:preOk(n,c,x0-1)?1:0}); } return out; }
 function stats(g){
   const td=todayStr(), st=g.start, dn=Math.max(1,Math.min(365,+g.days||30)), sv={}, am={}, sp={};
   data.transactions.forEach(x=>{ if(x.date<st) return; const a=+x.amount||0;
@@ -17037,7 +17132,7 @@ function stats(g){
     let ok=0; for(let i=0;i<e;i++) if(r(i)) ok++;
     return {i:o.id,n:String(o.name||'').slice(0,40),k:o.k,v:Math.round(o.v||0),e:e,ok:ok,st:streakOf(e,r),tf:r(e-1)?1:0};
   });
-  return {x:x0,dn:dn,sd:sd,ac:act,sk:sk,sc:sc};
+  return {x:x0,dn:dn,sd:sd,ac:act,sk:sk,sc:presetsOf(g,x0).concat(sc)};
 }
 function payload(g){
   const pr=progress(g), s=stats(g);
@@ -17071,25 +17166,72 @@ function checkGoals(){
 
 /* ---------------- Challenge tab block ---------------- */
 const box=document.createElement('div'); box.id='fgBox';
-function paintGoals(){
-  const gs=goals();
-  let h='<div class="fgHd"><b>'+L('লক্ষ্য চ্যালেঞ্জ','Goal challenges')+'</b><button type="button" class="fgNew" data-a="new">'+S(IC.plus)+L('নিজের চ্যালেঞ্জ','Custom')+'</button></div>';
-  if(!gs.length) h+='<div class="fgEmpty">'+L('যেমন "PS5-এর জন্য চ্যালেঞ্জ" — বিষয়, বাজেট আর সেভিংস একাউন্ট বেছে নিজের চ্যালেঞ্জ শুরু করুন।','E.g. "Challenge for a PS5" — pick a subject, a budget and a savings account to start your own challenge.')+'</div>';
+let RT='feed';
+const RTABS=[['feed','Race Feeds','রেস ফিড'],['rep','Replies','রিপ্লাই'],['mine','My Races','আমার রেস'],['ms','Missions','মিশন'],['top','Top Racers','সেরা রেসার']];
+function heroH(gs){
+  const g=gs.find(x=>!x.done)||gs[0]; let nR=0,nP=0; try{ nR=new Set(posts.map(p=>p.uid)).size; nP=posts.length; }catch(e){}
+  if(!g) return '<div class="rcHero"><div class="rcCol"><i style="height:0"></i></div><div class="rcHi"><small>'+L('আপনার রেস','YOUR RACE')+'</small><h2>'+L('রেস শুরু করুন','Start a race')+'</h2><p>'+L('টার্গেট দিন, তারপর ১০টি দৈনিক চ্যালেঞ্জ খেলে সেটি পূরণ করুন।','Set a target, then play 10 daily challenges to reach it.')+'</p><button type="button" class="rcGo" data-a="new">'+S(IC.plus)+L('নতুন রেস','New race')+'</button></div></div>';
+  const pr=progress(g), s=stats(g), dn=s.sc.slice(0,PRE).filter(o=>o.tf).length;
+  return '<div class="rcHero" data-g="'+E(g.uid)+'"><div class="rcCol"><i style="height:'+pr.pct+'%"></i><b>'+nb(pr.pct)+'%</b></div><div class="rcHi"><small>'+L('আপনার রেস','YOUR RACE')+'</small><h2>'+E(g.subject)+'</h2><div class="rcAm">'+nb(fm(pr.saved))+' <span>/ '+nb(fm(g.target))+'</span></div>'
+    +'<div class="rcSt"><span><b>'+nb(Math.min(s.x,s.dn))+'/'+nb(s.dn)+'</b>'+L('দিন','days')+'</span><span><b>'+nb(dn)+'/'+nb(PRE)+'</b>'+L('আজকের চ্যালেঞ্জ','today')+'</span><span><b>'+nb(s.sk)+'</b>'+L('টানা','streak')+'</span></div>'
+    +'<button type="button" class="rcGo" data-a="open">'+L('ড্যাশবোর্ড ›','Dashboard ›')+'</button></div></div><div class="rcMeta">'+nb(nP)+L(' রেস · ',' races · ')+nb(nR)+L(' জন রেসার',' racers')+'</div>';
+}
+function tabsH(){ return '<div class="rcTabs">'+RTABS.map(t=>'<button type="button" data-a="rt" data-rt="'+t[0]+'" class="'+(RT===t[0]?'on':'')+'">'+L(t[2],t[1])+'</button>').join('')+'</div>'; }
+function feedBody(){
+  if(FS.err==='LOGIN') return '<div class="fdMsg">'+L('রেস ফিড দেখতে ও রিপ্লাই দিতে অ্যাকাউন্টে লগইন করুন।','Sign in to see Race Feeds and reply.')+'</div>';
+  if(FS.err==='RULES') return rulesMsg();
+  if(FS.err==='NET') return '<div class="fdMsg">'+L('ইন্টারনেট সংযোগ পাওয়া যায়নি।','No internet connection.')+'</div>';
+  if(FS.err) return '<div class="fdMsg">'+L('ফিড লোড করা যায়নি।','Could not load the feed.')+'</div>';
+  if(!FS.loaded) return '<div class="fdMsg">'+L('লোড হচ্ছে…','Loading…')+'</div>';
+  if(!posts.length) return '<div class="fdMsg">'+L('এখনো কেউ রেস শেয়ার করেনি। \"আমার রেস\" থেকে শুরু করে শেয়ার করুন।','Nobody has shared a race yet. Start one in My Races and share it.')+'</div>';
+  return posts.map(postH).join('');
+}
+function repBody(){
+  const u=me(); if(!u) return '<div class="fdMsg">'+L('রিপ্লাই দেখতে লগইন করুন।','Sign in to see replies.')+'</div>';
+  if(!FS.loaded) return '<div class="fdMsg">'+L('লোড হচ্ছে…','Loading…')+'</div>';
+  const rows=posts.filter(p=>p.uid===u||(Array.isArray(CM[p.id])&&CM[p.id].some(c=>c.uid===u)));
+  if(!rows.length) return '<div class="fdMsg">'+L('এখনো কোনো রিপ্লাই নেই — কোনো রেসে রিপ্লাই দিন, অথবা অন্যরা আপনার রেসে রিপ্লাই দিলে এখানে দেখাবে।','No replies yet — reply on a race, or when others reply on yours it shows here.')+'</div>';
+  return rows.map(p=>{ const rel=(Array.isArray(CM[p.id])?CM[p.id]:[]).filter(c=>c.uid===u||p.uid===u);
+    return '<div class="fdCard" data-p="'+E(p.id)+'"><div class="fdTop" data-a="prof" data-u="'+E(p.uid)+'">'+avH(p.uid,p.n||p.u)+'<div><b>'+E(p.n||p.u||'?')+(p.uid===u?' · '+L('আপনি','You'):'')+'</b><small>'+E(p.s)+' · '+nb(p.p)+'%</small></div></div>'
+      +'<div class="fdBar'+(p.d?' done':'')+'"><i style="width:'+p.p+'%"></i></div>'
+      +rel.map(c=>'<div class="rcRep'+(c.uid===u?' me':'')+'">'+avH(c.uid,c.n||c.u)+'<div><b>'+E(c.uid===u?L('আপনি','You'):(c.n||c.u||'?'))+'</b><small>'+ago(c.t)+'</small><p>'+E(c.x)+'</p></div></div>').join('')
+      +'<div class="fdAct"><button type="button" class="fdCmBtn rp" data-a="cm">'+S(IC.cm)+L('রিপ্লাই','Reply')+'</button></div>'
+      +(openC[p.id]?'<div class="fdCm" id="fdCm_'+E(p.id)+'">'+cmH(p.id)+'</div>':'')+'</div>'; }).join('');
+}
+function msBody(gs){
+  const g=gs.find(x=>!x.done)||gs[0]; if(!g) return '<div class="fdMsg">'+L('আগে একটি রেস শুরু করুন — তারপর এখানে ১০টি দৈনিক চ্যালেঞ্জ আসবে।','Start a race first — the 10 daily challenges appear here.')+'</div>';
+  const s=stats(g), lim=+data.dailyLimit||0, bn=bonusOf(g);
+  return '<div class="rcNote">'+L('এই ১০টি চ্যালেঞ্জ খেললেই \"'+E(g.subject)+'\" রেসের টার্গেট পূরণ হবে। ','Playing these 10 challenges fills the \"'+E(g.subject)+'\" race target. ')
+    +(lim>0?L('অব্যবহৃত দৈনিক বাজেট থেকে এ পর্যন্ত রেসে যোগ হয়েছে ','Unused daily budget added so far: ')+'<b>'+nb(fm(bn))+'</b>':L('দৈনিক বাজেট সেট করলে অব্যবহৃত টাকা রেসে যোগ হবে।','Set a daily budget to have unused money added to your race.'))+'</div>'
+    +s.sc.slice(0,PRE).map((o,i)=>'<div class="rcMs'+(o.tf?' ok':'')+'"><i>'+(o.tf?'✓':'')+'</i><div>'+nb(i+1)+'. '+E(PRL(o.v))+'<small>'+nb(o.ok)+' / '+nb(o.e)+L(' দিন সফল',' days done')+' · '+L('টানা ','streak ')+nb(o.st)+'</small></div></div>').join('');
+}
+function cardsH(gs){
+  let h='<div class="fgHd"><b>'+L('আমার রেস','My races')+'</b><button type="button" class="fgNew" data-a="new">'+S(IC.plus)+L('নতুন রেস','New race')+'</button></div>';
+  if(!gs.length) h+='<div class="fgEmpty">'+L('যেমন \"PS5-এর জন্য রেস\" — বিষয়, টার্গেট, দিন আর সেভিংস একাউন্ট বেছে রেস শুরু করুন।','E.g. \"Race for a PS5\" — pick a subject, target, days and a savings account.')+'</div>';
   gs.forEach(g=>{
     const pr=progress(g);
     h+='<div class="fgCard" data-g="'+E(g.uid)+'"><div class="fgTop"><div class="fgS">'+E(g.subject)+'<small>'+E(g.account)+(g.done?' · '+L('সম্পন্ন','Completed'):'')+'</small></div>'
-      +'<button type="button" class="fgIcB'+(g.share?' on':'')+'" data-a="share" aria-label="FinTrack Feeds" title="FinTrack Feeds">'+S(IC.rss)+'</button>'
+      +'<button type="button" class="fgIcB'+(g.share?' on':'')+'" data-a="share" aria-label="Race Feeds" title="Race Feeds">'+S(IC.rss)+'</button>'
       +'<button type="button" class="fgIcB" data-a="phone" aria-label="'+L('ফোন থেকে শেয়ার','Share from phone')+'" title="'+L('ফোন থেকে শেয়ার','Share from phone')+'">'+S(IC.up)+'</button>'
       +'<button type="button" class="fgIcB" data-a="del" aria-label="Delete">'+S(IC.trash)+'</button></div>'
-      +'<div data-a="open" style="cursor:pointer"><div class="fgAmt"><span>'+L('বাজেট','Budget')+'</span><b>'+nb(fm(pr.saved))+' / '+nb(fm(g.target))+'</b></div>'
+      +'<div data-a="open" style="cursor:pointer"><div class="fgAmt"><span>'+L('টার্গেট','Target')+'</span><b>'+nb(fm(pr.saved))+' / '+nb(fm(g.target))+'</b></div>'
       +'<div class="fgBar'+(g.done?' done':'')+'"><i style="width:'+pr.pct+'%"></i></div>'
-      +'<div class="fgFoot"><span>'+(g.share?L('FinTrack Feeds-এ শেয়ার করা আছে','Shared on FinTrack Feeds'):L('শুধু আপনি দেখছেন','Only visible to you'))+'</span><b>'+nb(pr.pct)+'%</b></div><div class="dbHint">'+L('ড্যাশবোর্ড ও মিশন ›','Dashboard & missions ›')+'</div></div></div>';
+      +'<div class="fgFoot"><span>'+(g.share?L('Race Feeds-এ শেয়ার করা আছে','Shared on Race Feeds'):L('শুধু আপনি দেখছেন','Only visible to you'))+'</span><b>'+nb(pr.pct)+'%</b></div><div class="dbHint">'+L('ড্যাশবোর্ড ও ১০ চ্যালেঞ্জ ›','Dashboard & 10 challenges ›')+'</div></div></div>';
   });
-  box.innerHTML=h;
+  return h;
+}
+function paintGoals(){
+  const a0=document.activeElement; if(a0&&a0.tagName==='INPUT'&&box.contains(a0)) return;
+  const gs=goals(); let body='';
+  if(RT==='mine') body=cardsH(gs); else if(RT==='ms') body=msBody(gs);
+  else{ try{ body=RT==='feed'?feedBody():RT==='rep'?repBody():dashH(); }catch(e){ body='<div class="fdMsg">'+L('লোড হচ্ছে…','Loading…')+'</div>'; } }
+  box.innerHTML='<div class="rcBack"><button type="button" data-a="back" aria-label="Back">'+S('<path d="m15 6-6 6 6 6"/>')+'</button><b>'+L('রেস','Race')+'</b></div>'+heroH(gs)+tabsH()+body; try{ loadPics(box); }catch(e){}
 }
 box.addEventListener('click',e=>{
   const b=e.target.closest('[data-a]'); if(!b) return; const a=b.dataset.a, c=b.closest('[data-g]'), g=c&&goals().find(x=>x.uid===c.dataset.g);
-  if(a==='new') openForm();
+  if(a==='back'){ activateTab('dash'); return; }
+  if(a==='rt'){ RT=b.dataset.rt; paintGoals(); if(RT==='feed'||RT==='rep') load(); }
+  else if(a==='new') openForm();
   else if(a==='open'&&g) openDash({g:g});
   else if(a==='del'&&g) askDel(g);
   else if(a==='share'&&g) toggleShare(g);
@@ -17236,13 +17378,13 @@ function render(){
   else if(!FS.loaded) h+='<div class="fdMsg">'+L('লোড হচ্ছে…','Loading…')+'</div>';
   else if(!posts.length) h+='<div class="fdMsg">'+L('এখনো কেউ চ্যালেঞ্জ শেয়ার করেনি। "চ্যালেঞ্জ" ট্যাবে গিয়ে নিজের লক্ষ্য চ্যালেঞ্জ শুরু করুন ও শেয়ার করুন।','Nobody has shared a challenge yet. Start a goal challenge in the Challenge tab and share it.')+'</div>';
   else h+=dashH()+posts.map(postH).join('');
-  sec.innerHTML=h; loadPics(sec);
+  sec.innerHTML=h; loadPics(sec); try{ paintGoals(); }catch(e){}
 }
 function setErr(e){ const m=String((e&&e.message)||e||''), st=e&&e.status; const n=m==='LOGIN'?'LOGIN':(st===401||st===403)?'RULES':/abort|Failed to fetch|NetworkError/i.test(m)?'NET':'ERR'; FS.err=n; FS.loaded=true; }
 function parse(d){
   const rows=[]; Object.keys(d||{}).forEach(id=>{ const v=d[id]; if(!okId(id)||!v||typeof v!=='object'||!okId(v.uid)) return;
     const a=+v.a, p=Math.max(0,Math.min(100,Math.floor(+v.p||0))); if(!(a>0)||!v.s) return;
-    const sc=(Array.isArray(v.sc)?v.sc:[]).slice(0,10).map(o=>({n:String((o&&o.n)||'').slice(0,40),k:['save','limit','check'].indexOf(o&&o.k)<0?'check':o.k,v:Math.max(0,+(o&&o.v)||0),e:Math.max(1,+(o&&o.e)||1),ok:Math.max(0,+(o&&o.ok)||0),st:Math.max(0,+(o&&o.st)||0),tf:(o&&o.tf)?1:0}));
+    const sc=(Array.isArray(v.sc)?v.sc:[]).slice(0,20).map(o=>({n:String((o&&o.n)||'').slice(0,40),k:['save','limit','check','pre'].indexOf(o&&o.k)<0?'check':o.k,v:Math.max(0,+(o&&o.v)||0),e:Math.max(1,+(o&&o.e)||1),ok:Math.max(0,+(o&&o.ok)||0),st:Math.max(0,+(o&&o.st)||0),tf:(o&&o.tf)?1:0}));
     rows.push({id,uid:v.uid,n:String(v.n||'').slice(0,40),u:String(v.u||'').slice(0,30),s:String(v.s).slice(0,60),a:a,sv:Math.max(0,+v.sv||0),p:p,d:v.d?1:0,t:+v.t||0,ds:/^\d{4}-\d{2}-\d{2}$/.test(v.ds||'')?v.ds:'',dn:Math.max(1,Math.min(365,+v.dn||30)),sd:/^[0-9]{0,365}$/.test(v.sd||'')?String(v.sd||''):'',ac:Math.max(0,+v.ac||0),sk:Math.max(0,+v.sk||0),sc:sc}); });
   rows.sort((a,b)=>b.t-a.t); return rows.slice(0,50);
 }
@@ -17252,7 +17394,14 @@ async function load(){
     let d; try{ d=await db('feed',undefined,'orderBy=%22t%22&limitToLast=50'); }catch(e){ if(e&&e.status===400) d=await db('feed'); else throw e; }
     posts=parse(d); FS.err=''; FS.loaded=true;
   }catch(e){ setErr(e); }
-  FS.busy=false; if(active()) render();
+  FS.busy=false; if(active()) render(); else try{ paintGoals(); }catch(e){}
+  if(me()&&!FS.err) loadAllCm();
+}
+async function loadAllCm(){
+  try{ const c=(await db('feedComments'))||{};
+    posts.forEach(p=>{ const o=c[p.id]||{}, rows=[]; Object.keys(o).forEach(id=>{ const x=o[id]; if(!okId(id)||!x||typeof x!=='object'||!x.x) return; rows.push({id,uid:String(x.uid||''),n:String(x.n||'').slice(0,40),u:String(x.u||'').slice(0,30),x:String(x.x).slice(0,300),t:+x.t||0}); }); rows.sort((a,b)=>a.t-b.t); CM[p.id]=rows; });
+  }catch(e){}
+  try{ paintGoals(); }catch(e){}
 }
 const active=()=>sec.classList.contains('active');
 async function loadCm(pid){
@@ -17264,14 +17413,14 @@ async function loadCm(pid){
   }catch(e){ CM[pid]='ERR'; }
   paintCm(pid);
 }
-function paintCm(pid){
-  const el=$('fdCm_'+pid); if(!el){ return; }
+function paintCm(pid){ document.querySelectorAll('[id="fdCm_'+pid+'"]').forEach(el=>paintCm1(el,pid)); try{ if(RT==='rep') paintGoals(); }catch(e){} }
+function paintCm1(el,pid){
   const inp=el.querySelector('input'), val=inp?inp.value:'', foc=inp&&document.activeElement===inp;
   el.innerHTML=cmH(pid); loadPics(el);
   const n=el.querySelector('input'); if(n&&val){ n.value=val; if(foc) n.focus(); }
-  const card=el.closest('.fdCard'); if(card&&Array.isArray(CM[pid])){ const b=card.querySelector('.fdCmBtn'); if(b) b.lastChild.nodeValue=L('মন্তব্য','Comments')+' ('+nb(CM[pid].length)+')'; }
+  const card=el.closest('.fdCard'); if(card&&Array.isArray(CM[pid])){ const b=card.querySelector('.fdCmBtn:not(.rp)'); if(b) b.lastChild.nodeValue=L('মন্তব্য','Comments')+' ('+nb(CM[pid].length)+')'; }
 }
-sec.addEventListener('click',async e=>{
+const feedClick=async e=>{
   const b=e.target.closest('[data-a]'); if(!b) return; const a=b.dataset.a, card=b.closest('[data-p]'), pid=card&&card.dataset.p;
   if(a==='open'&&pid){ const po=posts.find(x=>x.id===pid); if(po){ const lg=goals().find(x=>x.uid===pid); openDash(lg?{g:lg}:{v:Object.assign({mine:false},po)}); } }
   else if(a==='reload'){ FS.loaded=false; render(); load(); }
@@ -17279,7 +17428,7 @@ sec.addEventListener('click',async e=>{
   else if(a==='copy'){ try{ await navigator.clipboard.writeText(RULES); tt(L('কপি হয়েছে','Copied')); }catch(x){ const r=$('fdRules'); if(r){ const g=document.createRange(); g.selectNodeContents(r); const s=window.getSelection(); s.removeAllRanges(); s.addRange(g); } } }
   else if(a==='prof'){ const u=b.dataset.u; try{ if(u===me()||!window.ppView) activateTab('profile'); else ppView(u); }catch(x){} }
   else if(a==='phone'&&pid){ const po=posts.find(x=>x.id===pid); if(po) sharePhone(po); }
-  else if(a==='cm'&&pid){ openC[pid]=!openC[pid]; if(openC[pid]&&CM[pid]===undefined){ render(); loadCm(pid); } else render(); }
+  else if(a==='cm'&&pid){ openC[pid]=!openC[pid]; if(openC[pid]){ render(); loadCm(pid); } else render(); }
   else if(a==='send'&&pid){
     const inp=card.querySelector('input[data-in]'), txt=(inp.value||'').trim().slice(0,300), u=me(); if(!txt||!u) return;
     const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6), rec={uid:u,n:myN(),u:myU(),x:txt,t:Date.now()};
@@ -17294,8 +17443,10 @@ sec.addEventListener('click',async e=>{
     if(cur===v){ delete VT[pid][cid][u]; paintCm(pid); del('feedVotes/'+pid+'/'+cid+'/'+u).catch(()=>{}); }
     else{ VT[pid][cid][u]=v; paintCm(pid); put('feedVotes/'+pid+'/'+cid+'/'+u,v).catch(x=>{ if(cur===undefined) delete VT[pid][cid][u]; else VT[pid][cid][u]=cur; paintCm(pid); tt((x&&(x.status===401||x.status===403))?L('ফিডের রুলস সেট করা নেই','Feed rules are not set'):L('ভোট দেওয়া যায়নি','Could not vote')); }); }
   }
-});
-sec.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.matches('input[data-in]')){ e.preventDefault(); const b=e.target.parentNode.querySelector('[data-a="send"]'); if(b) b.click(); } });
+};
+sec.addEventListener('click',feedClick); box.addEventListener('click',feedClick);
+const cmKey=e=>{ if(e.key==='Enter'&&e.target.matches('input[data-in]')){ e.preventDefault(); const b=e.target.parentNode.querySelector('[data-a="send"]'); if(b) b.click(); } };
+sec.addEventListener('keydown',cmKey); box.addEventListener('keydown',cmKey);
 
 
 /* ---------------- share from phone (native share sheet + progress card image) ---------------- */
@@ -17400,7 +17551,7 @@ window.fgProfFill=function(root){
 };
 
 /* ---------------- full-screen challenge dashboard + missions (sub-challenges) ---------------- */
-const subLbl=o=>o.n||(o.k==='save'?L('প্রতিদিন কমপক্ষে '+fm(o.v)+' জমা','Save at least '+fm(o.v)+' daily'):o.k==='limit'?(o.v>0?L('দৈনিক খরচ '+fm(o.v)+'-এর নিচে','Daily spend under '+fm(o.v)):L('প্রতিদিন কোনো খরচ নয়','No spending daily')):L('নিজের নিয়ম','My rule'));
+const subLbl=o=>o.k==='pre'?PRL(o.v):o.n||(o.k==='save'?L('প্রতিদিন কমপক্ষে '+fm(o.v)+' জমা','Save at least '+fm(o.v)+' daily'):o.k==='limit'?(o.v>0?L('দৈনিক খরচ '+fm(o.v)+'-এর নিচে','Daily spend under '+fm(o.v)):L('প্রতিদিন কোনো খরচ নয়','No spending daily')):L('নিজের নিয়ম','My rule'));
 let DC=null;
 function viewOf(c){
   if(c.g){ const g=c.g, pl=payload(g), s=stats(g), pr=progress(g);
@@ -17408,7 +17559,7 @@ function viewOf(c){
   const v=c.v, x=v.ds?Math.max(1,dDiff(v.ds,todayStr())+1):1; return Object.assign({},v,{x:x});
 }
 function dashRender(){
-  const ov=$('fdDashOv'); if(!ov||!DC) return; const v=viewOf(DC), over=v.x>v.dn, X=Math.min(v.x,v.dn), left=Math.max(0,v.dn-v.x);
+  const ov=$('fdDashOv'); if(!ov||!DC) return; const v=viewOf(DC), NP=v.sc.filter(o=>o.k==='pre').length, over=v.x>v.dn, X=Math.min(v.x,v.dn), left=Math.max(0,v.dn-v.x);
   const cells=Math.min(v.dn,60), per=v.dn/cells; let strip='';
   for(let c=0;c<cells;c++){ const a=Math.floor(c*per), b=Math.max(a+1,Math.floor((c+1)*per)); let n=0; for(let i=a;i<b;i++) n=Math.max(n,+(v.sd[i]||0));
     const cls=(n>0?'on':'')+(v.x-1>=a&&v.x-1<b&&!over?' now':'')+(a>v.x-1?' fut':'');
@@ -17420,10 +17571,10 @@ function dashRender(){
     +'<div class="dbMeta"><span>'+(over?L('সময় শেষ','Time is over'):L('বাকি ','Left ')+'<b>'+nb(left)+L(' দিন',' d')+'</b>')+'</span><span>'+L('সক্রিয় ','Active ')+'<b>'+nb(v.ac||0)+L(' দিন',' d')+'</b></span><span>'+L('টানা ','Streak ')+'<b>'+nb(v.sk||0)+L(' দিন',' d')+'</b></span></div>'
     +'<div class="dbStrip">'+strip+'</div><div class="dbBar'+(v.d?' done':'')+'"><i style="width:'+v.p+'%"></i></div>'
     +'<div class="dbRow"><b>'+nb(v.p)+'%</b><span>'+L('লক্ষ্য ','TARGET ')+nb(fm(v.a))+'</span></div>'
-    +'<div class="dbH"><span>'+L('মিশন','Missions')+'</span><small>'+nb(v.sc.length)+'/'+nb(10)+'</small></div>';
-  if(!v.sc.length) h+='<div class="fdMsg">'+(v.mine?L('উপরের + চেপে মিশন যোগ করুন — যেমন \"দৈনিক কমপক্ষে ১০০ টাকা জমা\"।','Tap + to add a mission — e.g. \"save at least 100 daily\".'):L('এই চ্যালেঞ্জে এখনো কোনো মিশন নেই।','No missions on this challenge yet.'))+'</div>';
-  v.sc.forEach((o,i)=>{ const pc=Math.min(100,Math.round(o.ok/o.e*100));
-    h+='<div class="dbSc'+(o.tf?' ok':'')+'" data-i="'+i+'"><div class="dbScT"><b>'+E(subLbl(o))+'</b>'+(v.mine?'<button type="button" data-d="rm" aria-label="Delete">&times;</button>':'')+'</div>'
+    +(NP?'<div class="dbH"><span>'+L('রেসের ১০ চ্যালেঞ্জ','Race challenges')+'</span><small>'+nb(v.sc.filter(o=>o.k==='pre'&&o.tf).length)+'/'+nb(NP)+' '+L('আজ','today')+'</small></div>':'');
+  if(v.sc.length<=NP) h+='<div class="dbH"><span>'+L('নিজের মিশন','My missions')+'</span><small>'+nb(0)+'/'+nb(10)+'</small></div><div class="fdMsg">'+(v.mine?L('উপরের + চেপে মিশন যোগ করুন — যেমন \"দৈনিক কমপক্ষে ১০০ টাকা জমা\"।','Tap + to add a mission — e.g. \"save at least 100 daily\".'):L('এই চ্যালেঞ্জে এখনো কোনো মিশন নেই।','No missions on this challenge yet.'))+'</div>';
+  v.sc.forEach((o,i)=>{ if(i===NP&&NP) h+='<div class="dbH"><span>'+L('নিজের মিশন','My missions')+'</span><small>'+nb(v.sc.length-NP)+'/'+nb(10)+'</small></div>'; const pc=Math.min(100,Math.round(o.ok/o.e*100));
+    h+='<div class="dbSc'+(o.tf?' ok':'')+'" data-i="'+(i-NP)+'"><div class="dbScT"><b>'+E(subLbl(o))+'</b>'+(v.mine&&o.k!=='pre'?'<button type="button" data-d="rm" aria-label="Delete">&times;</button>':'')+'</div>'
       +'<small>'+nb(o.ok)+' / '+nb(o.e)+L(' দিন সফল',' days done')+' · '+L('টানা ','streak ')+nb(o.st)+' · '+(o.tf?L('আজ ✓','today ✓'):L('আজ বাকি','today pending'))+'</small><div class="dbBar"><i style="width:'+pc+'%"></i></div>'
       +(v.mine&&o.k==='check'?'<button type="button" class="dbChk'+(o.tf?' on':'')+'" data-d="tg">'+(o.tf?L('আজ সম্পন্ন ✓','Done today ✓'):L('আজ সম্পন্ন করেছি','Mark done today'))+'</button>':'')+'</div>'; });
   const keep=ov.scrollTop; ov.innerHTML=h; ov.scrollTop=keep; loadPics(ov);
@@ -17469,20 +17620,13 @@ function addSub(g){
 }
 
 /* nav button + tab hooks */
-const nav=$('bottomNav');
-if(nav){
-  const b=document.createElement('button'); b.className='bnbtn'; b.dataset.bn='feed';
-  b.innerHTML=S(IC.rss)+'<span class="dot"></span><span class="lbl">'+L('ফিড','Feed')+'</span>';
-  b.addEventListener('click',()=>activateTab('feed'));
-  const st=nav.querySelector('.bnbtn[data-bn="settings"]'); if(st) nav.insertBefore(b,st); else nav.appendChild(b);
-}
 const _at=window.activateTab;
-window.activateTab=function(n){ const r=_at.apply(this,arguments); if(n==='feed'){ render(); load(); window.scrollTo(0,0); } else if(n==='challenge'){ try{ paintGoals(); }catch(e){} window.scrollTo(0,0); } return r; };
+window.activateTab=function(n){ const r=_at.apply(this,arguments); document.body.classList.toggle('chFull',n==='challenge'); if(n==='challenge') chSec.scrollTop=0; if(n==='feed'){ render(); load(); window.scrollTo(0,0); } else if(n==='challenge'){ try{ paintGoals(); load(); }catch(e){} window.scrollTo(0,0); } return r; };
 const _sd=window.saveData;
 window.saveData=function(){ const r=_sd.apply(this,arguments); setTimeout(()=>{ try{ checkGoals(); paintGoals(); pushSoon(); }catch(e){} },0); return r; };
 const _al=window.applyLanguage;
 if(_al) window.applyLanguage=function(){ const r=_al.apply(this,arguments); try{ paintGoals(); const l=document.querySelector('.bnbtn[data-bn="feed"] .lbl'); if(l) l.textContent=L('ফিড','Feed'); if(active()) render(); }catch(e){} return r; };
-setInterval(()=>{ if(active()&&document.visibilityState==='visible') load(); },30000);
+setInterval(()=>{ if((active()||chSec.classList.contains('active'))&&document.visibilityState==='visible') load(); },30000);
 setInterval(()=>{ try{ pushSoon(); }catch(e){} },300000);
 setTimeout(()=>{ try{ checkGoals(); pushSoon(); }catch(e){} },2500);
 })();
