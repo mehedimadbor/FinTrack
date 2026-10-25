@@ -17251,6 +17251,9 @@ html body #sec-profile .ppHead .ppCov{border-radius:20px;overflow:hidden;}
 .rhDash .dbInH b{font-size:15px;}
 .rhDash .dbPl.open{transform:none;background:var(--primary);}
 .rhDash .mnR{border-top:1px solid color-mix(in srgb,var(--text) 10%,transparent);}
+.rhDash .mnHd{padding:12px 2px 6px;margin-top:12px;}
+.rhDash .mnR{padding:9px 2px;width:auto;margin-top:0;}
+.rhDash .mnR .mnT b{font-size:13px;}
 #mnSheet{position:fixed;inset:0;z-index:9470;}
 #mnSheet .mnBd{position:absolute;inset:0;background:rgba(0,0,0,.5);}
 #mnSheet .mnSh{position:absolute;left:0;right:0;bottom:0;max-height:90vh;overflow-y:auto;background:var(--bg);color:var(--text);border-radius:24px 24px 0 0;padding:18px 16px calc(20px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 40px rgba(0,0,0,.3);}
@@ -17408,7 +17411,7 @@ function heroH(gs){
     +'<div class="rhMain"><div class="rhL"><h2>'+E(g.subject)+'</h2><div class="rcAm">'+nb(fm(pr.saved))+' <span>/ '+nb(fm(g.target))+'</span></div>'
     +'<div class="rhSub">'+(g.done?L('টার্গেট পূর্ণ হয়েছে','Target reached'):L('বাকি ','Left ')+'<b>'+nb(fm(rem))+'</b>'+(left>0?' · '+L('প্রতিদিন ','per day ')+'<b>'+nb(fm(per))+'</b>':''))+'</div></div>'+ring(pr.pct)+'</div>'
     +'<div class="rhStats">'+st('cal',nb(Math.min(s.x,s.dn))+'/'+nb(s.dn),L('দিন','Days'))+st('ok',nb(dn)+'/'+nb(PRE),L('আজকের চ্যালেঞ্জ','Today'))+st('fire',nb(s.sk),L('টানা','Streak'))+'</div>'
-    +'<div class="rhDash">'+dashInner(viewOf({g:g}),true,'top')+'</div></div>'+meta;
+    +'<div class="rhDash">'+(function(){ try{ return dashInner(viewOf({g:g}),true,'top'); }catch(e){ return ''; } })()+'</div></div>'+meta;
 }
 function tabsH(){ return '<div class="rcTabs">'+RTABS.map(t=>'<button type="button" data-a="rt" data-rt="'+t[0]+'" class="'+(RT===t[0]?'on':'')+'">'+L(t[2],t[1])+'</button>').join('')+'</div>'; }
 function feedBody(){
@@ -17487,7 +17490,7 @@ function toggleShare(g){
 const chSec=$('sec-challenge');
 if(chSec){
   const ensure=()=>{ if(!chSec.contains(box)){ chSec.insertBefore(box,chSec.firstChild); paintGoals(); } };
-  new MutationObserver(ensure).observe(chSec,{childList:true}); ensure();
+  new MutationObserver(function(){ try{ ensure(); }catch(e){} }).observe(chSec,{childList:true}); try{ ensure(); }catch(e){}
 }
 
 /* ---------------- create form ---------------- */
