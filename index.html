@@ -581,7 +581,9 @@ h1 [data-i18n="app_title"]{background:var(--grad); -webkit-background-clip:text;
 .tabs{position:sticky; top:calc(6px + env(safe-area-inset-top,0px)); z-index:8; background:color-mix(in srgb,var(--card) 84%,transparent); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); margin:10px 0 12px;}
 
 /* Quick actions + month card */
-.quick{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:12px;}
+.quick{display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:7px; margin-bottom:12px;}
+.quick button{min-width:0;padding-left:1px!important;padding-right:1px!important;font-size:10.5px!important;}
+.quick button span:not(.qi){max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .quick button{display:flex; flex-direction:column; align-items:center; gap:7px; padding:12px 4px 10px; border:none; border-radius:20px; background:var(--card); color:var(--text); font-family:inherit; font-size:12px; font-weight:700; cursor:pointer; box-shadow:var(--sh); transition:transform .12s;}
 .quick button:active{transform:scale(.94);}
 .qi{width:44px; height:44px; border-radius:15px; display:flex; align-items:center; justify-content:center; font-size:21px; background:color-mix(in srgb,var(--c) 16%,transparent); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 22%,transparent);}
@@ -2425,6 +2427,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
     <button onclick="quickAdd('deposit')"><span class="qi" style="--c:#22c55e"><i class="mi" style="--m:var(--ic-arrow-in)"></i></span><span class="bn">জমা</span><span class="en">Income</span></button>
     <button onclick="calcOpen()"><span class="qi" style="--c:#f59e0b"><i class="mi" style="--m:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%224.5%22 y=%222.5%22 width=%2215%22 height=%2219%22 rx=%223%22/%3E%3Cpath d=%22M8 7h8M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 16h.01M12 16h.01M15.5 16h.01%22/%3E%3C/svg%3E')"></i></span><span class="bn">ক্যালকুলেটর</span><span class="en">Calculator</span></button>
     <button onclick="NS.openPage();NS.mode('n')"><span class="qi" style="--c:#8b5cf6"><i class="mi" style="--m:var(--ic-clipboard)"></i></span><span class="bn">নোট</span><span class="en">Notes</span></button>
+    <button onclick="window.ftPlannerOpen&&ftPlannerOpen()"><span class="qi" style="--c:#14b8a6"><i class="mi" style="--m:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%223.5%22 y=%225%22 width=%2217%22 height=%2215.5%22 rx=%223%22/%3E%3Cpath d=%22M3.5 10h17M8 3v4M16 3v4M8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01%22/%3E%3C/svg%3E')"></i></span><span class="bn">ক্যালেন্ডার</span><span class="en">Calendar</span></button>
   </div>
   <div class="box monthBox">
     <h3><span class="bn">এই মাসের সারসংক্ষেপ</span><span class="en">This month at a glance</span><span class="mDelta" id="mDelta"></span></h3>
@@ -11348,6 +11351,7 @@ window.ftPicThumb=function(){ return new Promise(function(res){ try{
 <symbol id="cg-log" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="3.5" width="12" height="17" rx="2.6" fill="currentColor" fill-opacity=".18"/><path d="M8.5 8.5h4M8.5 12h4"/><path d="m15 18 5.2-5.2 1.8 1.8L16.8 19.8 14.4 20.4Z" fill="currentColor" fill-opacity=".25"/></symbol>
 <symbol id="cg-trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="12" rx="3.4" ry="9.8" stroke-opacity=".6"/><ellipse cx="12" cy="12" rx="3.4" ry="9.8" transform="rotate(60 12 12)" stroke-opacity=".6"/><ellipse cx="12" cy="12" rx="3.4" ry="9.8" transform="rotate(120 12 12)" stroke-opacity=".6"/><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="6.4" cy="6.2" r="1.4" fill="currentColor" stroke="none"/><circle cx="20.2" cy="9.4" r="1.4" fill="currentColor" stroke="none"/><circle cx="9.7" cy="19.4" r="1.4" fill="currentColor" stroke="none"/></symbol>
 <symbol id="cg-txswap" viewBox="-3 -3 30 30" fill="currentColor" stroke="none"><path transform="rotate(-45 12 12)" fill="currentColor" stroke="none" d="M17.0020048,13 C17.5542895,13 18.0020048,13.4477153 18.0020048,14 C18.0020048,14.5128358 17.6159646,14.9355072 17.1186259,14.9932723 L17.0020048,15 L5.41700475,15 L8.70911154,18.2928932 C9.0695955,18.6533772 9.09732503,19.2206082 8.79230014,19.6128994 L8.70911154,19.7071068 C8.34862757,20.0675907 7.78139652,20.0953203 7.38910531,19.7902954 L7.29489797,19.7071068 L2.29489797,14.7071068 C1.69232289,14.1045317 2.07433707,13.0928192 2.88837381,13.0059833 L3.00200475,13 L17.0020048,13 Z M16.6128994,4.20970461 L16.7071068,4.29289322 L21.7071068,9.29289322 C22.3096819,9.8954683 21.9276677,10.9071808 21.1136309,10.9940167 L21,11 L7,11 C6.44771525,11 6,10.5522847 6,10 C6,9.48716416 6.38604019,9.06449284 6.88337887,9.00672773 L7,9 L18.585,9 L15.2928932,5.70710678 C14.9324093,5.34662282 14.9046797,4.77939176 15.2097046,4.38710056 L15.2928932,4.29289322 C15.6533772,3.93240926 16.2206082,3.90467972 16.6128994,4.20970461 Z"/></symbol>
+<symbol id="cg-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01"/></symbol>
 <symbol id="cg-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6" fill="currentColor" fill-opacity=".18"/><path d="m8.2 12.4 2.6 2.6 5-5.5"/></symbol>
 <symbol id="cg-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6" fill="currentColor" fill-opacity=".18"/><path d="m9 9 6 6M15 9l-6 6"/></symbol>
 <symbol id="cg-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6.5 6.5 11 11M17.5 6.5l-11 11"/></symbol>
@@ -12108,7 +12112,7 @@ const TABS=[
  ['money','অর্থ ও লক্ষ্য','Money & goals',[['loan','লোন','Loans','bank','#ef4444'],['challenge','চ্যালেঞ্জ','Challenges','svg:cg-trophy','#f59e0b'],['zakat','যাকাত','Zakat','coin','#22c55e']]],
  ['insight','ইনসাইট','Insights',[['report','রিপোর্ট','Reports','bars','#6366f1'],['chat','AI চ্যাট','AI Chat','bot','#8b5cf6']]],
  ['social','কমিউনিটি ও যোগাযোগ','Community & contact',[['friends','বন্ধু','Friends','user','#0ea5e9'],['@inbox','মেসেজ','Messages','message','#10b981'],['profile','প্রোফাইল','Profile','user','#ec4899'],['@search','ইউজার খুঁজুন','Find users','search','#0ea5e9'],['@blood','ইমারজেন্সি হেল্প','Emergency help','drop','#e11d48']]],
- ['tools','টুলস','Tools',[['@tour','ট্যুর বাজেট','Tour budget','bus','#f59e0b'],['notes','নোট ও টাস্ক','Notes & tasks','clipboard','#a78bfa']]]
+ ['tools','টুলস','Tools',[['@tour','ট্যুর বাজেট','Tour budget','bus','#f59e0b'],['notes','নোট ও টাস্ক','Notes & tasks','clipboard','#a78bfa'],['@planner','ক্যালেন্ডার','Calendar','svg:cg-cal','#14b8a6']]]
 ];
 const icon=n=>n.indexOf('svg:')===0?'<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#'+n.slice(4)+'"/></svg>':'<i class="mi" style="--m:var(--ic-'+n+')"></i>';
 const cur=()=>{ const s=document.querySelector('.section.active'); return s?s.id.replace('sec-',''):''; };
@@ -12120,9 +12124,9 @@ function scSet(a){ try{ localStorage.setItem(SCK,JSON.stringify(a)); }catch(e){}
 function scItems(){
   const out=[], seen={}, add=o=>{ if(!seen[o.id]){ seen[o.id]=1; out.push(o); } };
   TABS.forEach(g=>g[3].forEach(x=>{
-    const k=x[0], ok=k==='@search'?!!window.ppGoSearch:k==='@blood'?!!window.ftBlood:k==='@inbox'?!!window.ftOpenInbox:k==='@tour'?!!window.ftTour:(!!$('sec-'+k)||k==='tx');
+    const k=x[0], ok=k==='@search'?!!window.ppGoSearch:k==='@blood'?!!window.ftBlood:k==='@inbox'?!!window.ftOpenInbox:k==='@tour'?!!window.ftTour:k==='@planner'?!!window.ftPlannerOpen:(!!$('sec-'+k)||k==='tx');
     if(!ok) return;
-    const a=k==='@search'?'search':k==='@blood'?'blood':k==='@inbox'?'inbox':k==='@tour'?'tour':'tab';
+    const a=k==='@search'?'search':k==='@blood'?'blood':k==='@inbox'?'inbox':k==='@tour'?'tour':k==='@planner'?'planner':'tab';
     add({id:'f:'+k,g:'f',a:a,k:k,c:x[4],ic:icon(x[3]),lb:L(x[1],x[2])});
   }));
   [['expense','খরচ যোগ করুন','Add expense','arrow-out','#ef4444',()=>!!window.quickAdd],['deposit','জমা যোগ করুন','Add income','arrow-in','#22c55e',()=>!!window.quickAdd],['calc','ক্যালকুলেটর','Calculator','sheet','#f59e0b',()=>!!window.calcOpen]].forEach(x=>{
@@ -12172,7 +12176,7 @@ function fillMenu(){
   const mv=dets().filter(isMoved).map(d=>{ const ch=chipOf(d), k=kOf(d); return R('mset',k,ch.c,ch.i,titleHtml(d),det&&det===k); });
   TABS.forEach(g=>{
     if(g[0]==='everyday') return;
-    const rows=g[3].filter(x=>x[0]==='@search'?!!window.ppGoSearch:x[0]==='@blood'?!!window.ftBlood:x[0]==='@inbox'?!!window.ftOpenInbox:x[0]==='@tour'?!!window.ftTour:(!!$('sec-'+x[0])||x[0]==='tx')).map(x=>R(x[0]==='@search'?'search':x[0]==='@blood'?'blood':x[0]==='@inbox'?'inbox':x[0]==='@tour'?'tour':'tab',x[0],x[4],icon(x[3]),L(x[1],x[2]),x[0]===c&&c!=='settings'));
+    const rows=g[3].filter(x=>x[0]==='@search'?!!window.ppGoSearch:x[0]==='@blood'?!!window.ftBlood:x[0]==='@inbox'?!!window.ftOpenInbox:x[0]==='@tour'?!!window.ftTour:x[0]==='@planner'?!!window.ftPlannerOpen:(!!$('sec-'+x[0])||x[0]==='tx')).map(x=>R(x[0]==='@search'?'search':x[0]==='@blood'?'blood':x[0]==='@inbox'?'inbox':x[0]==='@tour'?'tour':x[0]==='@planner'?'planner':'tab',x[0],x[4],icon(x[3]),L(x[1],x[2]),x[0]===c&&c!=='settings'));
     h+=sect(L(g[1],g[2]),g[0]==='money'?rows.concat(mv):rows);
   });
   h+='<div class="mnCard" style="margin-top:16px">'+R('tab','settings','#64748b',icon('settings'),L('সেটিংস','Settings'),c==='settings'&&!det)+'</div>';
@@ -12198,6 +12202,7 @@ function onMenu(e){
     else if(a==='blood'&&window.ftBlood) window.ftBlood.open('');
     else if(a==='inbox'&&window.ftOpenInbox) window.ftOpenInbox();
     else if(a==='tour'&&window.ftTour) window.ftTour.open();
+    else if(a==='planner'&&window.ftPlannerOpen) window.ftPlannerOpen();
  else if(a==='fn'){ if(k==='expense'&&window.quickAdd) quickAdd('expense'); else if(k==='deposit'&&window.quickAdd) quickAdd('deposit'); else if(k==='calc'&&window.calcOpen) calcOpen(); }
     else if(a==='about'&&window.ftAbout) window.ftAbout();
     else if(a==='install'&&window.ftInstall) window.ftInstall.open();
@@ -17004,6 +17009,408 @@ html body #bottomNav .bnbtn::before{top:50%!important;margin-top:-16px}
   lab(); var nav=document.getElementById('bottomNav'); if(nav) new MutationObserver(lab).observe(nav,{childList:true,subtree:true,characterData:true});
 })();
 </script>
+<style id="ftPlCss">
+body.ftPlOpen #bottomNav{display:none!important}
+#ftPlanner{position:fixed;inset:0;z-index:9300;display:none;flex-direction:column;background:var(--bg);color:var(--text);--pl:color-mix(in srgb,var(--primary) 20%,var(--card));--pl2:color-mix(in srgb,var(--primary) 8%,var(--card));padding-top:env(safe-area-inset-top,0px);}
+#ftPlanner.on{display:flex;animation:ftPlIn .2s ease both;}
+@keyframes ftPlIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+:where(#ftPlanner button){font:inherit;color:inherit;}
+#ftPlanner button{-webkit-tap-highlight-color:transparent;}
+:where(#ftPlanner svg){width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none;}
+.plHd{display:flex;align-items:center;gap:8px;padding:10px 12px 6px;}
+.plIb{width:40px;height:40px;border-radius:13px;border:1px solid var(--border);background:var(--card);display:grid;place-items:center;cursor:pointer;position:relative;flex:none;}
+.plIb:active{transform:scale(.94);}
+.plIb.dim{opacity:.4;}
+.plIb.ok{color:var(--green);border-color:var(--green);}
+.plIb.has::after{content:"";position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--primary);box-shadow:0 0 0 2px var(--card);}
+.plTt{flex:1;min-width:0;font-weight:900;font-size:19px;line-height:1.1;letter-spacing:-.2px;}
+.plScroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 14px calc(26px + env(safe-area-inset-bottom,0px));}
+.plNav{display:flex;align-items:center;gap:8px;margin:6px 0 8px;}
+.plMo{flex:1;height:40px;border-radius:999px;border:1px solid var(--border);background:var(--pl);font-weight:800;font-size:14.5px;letter-spacing:.3px;cursor:pointer;}
+.plStat{margin:0 2px 10px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px;}
+.plStat i{flex:1;height:5px;border-radius:9px;background:var(--pl2);overflow:hidden;display:block;}
+.plStat i b{display:block;height:100%;background:var(--green);border-radius:9px;transition:width .25s;}
+.plWk,.plGrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;}
+.plWk span{height:24px;border-radius:999px;background:var(--pl);display:grid;place-items:center;font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--text);}
+.plGrid{margin-top:6px;touch-action:pan-y;}
+.plc{position:relative;aspect-ratio:1/1.2;min-height:60px;min-width:0;border:1px solid var(--border);border-radius:12px;background:var(--card);padding:4px 4px 3px;text-align:left;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;gap:0;}
+.plc.out{background:transparent;opacity:.4;border-style:dashed;cursor:default;}
+.plc.on{box-shadow:0 0 0 2px var(--primary) inset;background:color-mix(in srgb,var(--primary) 7%,var(--card));}
+.plc:active:not(.out){transform:scale(.96);}
+.plN{display:block;font-size:19px;font-weight:800;line-height:1.1;color:var(--text);margin-bottom:2px;}
+.plc.out .plN{font-weight:600;}
+.plc.td{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 10%,var(--card));}
+.plc.td .plN{color:var(--primary);}
+.plN.all{color:var(--green)!important;}
+.plTk{display:block;font-size:8.5px;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+.plTk.dn{text-decoration:line-through;opacity:.5;}
+.plc em{font-style:normal;font-size:8.5px;font-weight:800;color:var(--primary);}
+.plNt{position:absolute;right:5px;bottom:5px;width:7px;height:7px;border-radius:50%;background:var(--primary);}
+.plBoxes{display:grid;grid-template-columns:1.15fr 1fr;gap:12px;margin-top:20px;}
+@media(max-width:340px){.plBoxes{grid-template-columns:1fr;}}
+.plBox{position:relative;border:1px solid var(--border);border-radius:14px;padding:22px 10px 10px;min-height:196px;cursor:pointer;background:var(--card);min-width:0;}
+.plBox.nt{background:var(--pl);border-color:transparent;}
+.plBoxT{position:absolute;top:-12px;left:50%;transform:translateX(-50%);max-width:92%;padding:4px 14px;border-radius:999px;border:1px solid var(--border);background:var(--card);font-size:10.5px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.plLn{display:flex;align-items:flex-end;gap:7px;height:25px;border-bottom:1px solid var(--border);font-size:12px;}
+.plLn:last-child{border-bottom:0;}
+.plLn span{font-size:9.5px;font-weight:700;width:11px;flex:none;padding-bottom:3px;}
+.plLn p{margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-bottom:3px;font-weight:600;}
+.plLn p.dn{text-decoration:line-through;opacity:.5;}
+.plLn.more p{color:var(--primary);font-weight:800;}
+.plNtTx{font-size:13px;line-height:1.55;white-space:pre-wrap;word-break:break-word;display:-webkit-box;-webkit-line-clamp:8;-webkit-box-orient:vertical;overflow:hidden;}
+.plPh{color:var(--muted);font-size:12.5px;line-height:1.5;}
+.plBox.nt .plPh{color:color-mix(in srgb,var(--text) 62%,transparent);}
+#plCf{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.45);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
+.plCfBx{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:22px;padding:22px 18px 16px;max-width:320px;width:100%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.35);animation:ftPlIn .18s ease both;}
+.plCfIc{width:52px;height:52px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;background:var(--pl);color:var(--primary);}
+.plCfIc svg{width:24px;height:24px;}
+.plCfBx b{font-size:16.5px;}
+.plCfBx p{font-size:13.5px;line-height:1.6;color:var(--muted);margin:8px 0 0;}
+.plCfBt{display:flex;gap:8px;margin-top:16px;}
+.plCfBt button{flex:1;padding:12px;border:0;border-radius:12px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;background:var(--bg);color:var(--text);}
+.plCfBt button.ok{background:var(--primary);color:#fff;}
+:root[data-theme$="black-white"] .plCfBt button.ok{color:#111;}
+#plSheet{position:absolute;inset:0;display:none;z-index:2;}
+#plSheet.on{display:block;}
+#plSheet .plBd{position:absolute;inset:0;background:rgba(0,0,0,.5);}
+#plSheet .plSh{position:absolute;left:0;right:0;bottom:0;max-height:88%;display:flex;flex-direction:column;background:var(--bg);border-radius:24px 24px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.3);animation:ftPlUp .22s ease both;}
+@keyframes ftPlUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.plShHd{display:flex;align-items:center;gap:6px;padding:14px 12px 8px;}
+.plShT{flex:1;min-width:0;text-align:center;line-height:1.2;}
+.plShT b{display:block;font-size:16.5px;}
+.plShT span{font-size:12px;color:var(--muted);}
+.plShBody{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 14px calc(18px + env(safe-area-inset-bottom,0px));}
+.plAdd{display:flex;gap:8px;}
+.plAdd input{flex:1;min-width:0;height:44px;border-radius:13px;border:1px solid var(--border);background:var(--card);color:var(--text);padding:0 12px;font:inherit;font-size:14.5px;}
+.plAdd button{width:44px;height:44px;border-radius:13px;border:0;background:var(--primary);color:#fff;display:grid;place-items:center;cursor:pointer;}
+.plRep{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:8px 0 4px;}
+.plRep::-webkit-scrollbar{display:none;}
+.plRep button{flex:none;height:30px;padding:0 11px;border-radius:999px;border:1px solid var(--border);background:var(--card);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.plRep button.on{background:var(--pl);border-color:var(--primary);font-weight:800;}
+.plTr{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);}
+.plCk{width:26px;height:26px;border-radius:50%;border:2px solid var(--border);background:transparent;display:grid;place-items:center;cursor:pointer;flex:none;padding:0;color:transparent;}
+.plCk svg{width:14px;height:14px;stroke-width:3;}
+.plTr.dn .plCk{background:var(--green);border-color:var(--green);color:#fff;}
+.plTx{flex:1;min-width:0;border:0;background:transparent;color:var(--text);font:inherit;font-size:14.5px;padding:6px 2px;}
+.plTx:focus{outline:none;background:color-mix(in srgb,var(--primary) 6%,transparent);border-radius:8px;}
+.plTr.dn .plTx{text-decoration:line-through;opacity:.5;}
+.plDl{width:32px;height:32px;border:0;background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer;border-radius:10px;}
+.plEmpty{padding:18px 4px;text-align:center;color:var(--muted);font-size:13px;}
+.plLb{display:flex;align-items:center;justify-content:space-between;margin:14px 2px 6px;font-size:12px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);}
+.plLb em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:600;color:var(--green);opacity:0;transition:opacity .2s;}
+.plLb em.on{opacity:1;}
+.plPen{border-radius:50%!important;}
+.plPen.hl{background:var(--primary);border-color:var(--primary);color:#fff;animation:plPulse 1.6s ease-in-out infinite;}
+@keyframes plPulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--primary) 45%,transparent)}50%{box-shadow:0 0 0 7px color-mix(in srgb,var(--primary) 0%,transparent)}}
+.plRem{display:flex;align-items:center;gap:8px;margin:6px 0 2px;}
+.plRb{height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--border);background:var(--card);display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;cursor:pointer;}
+.plRb svg{width:16px;height:16px;}
+.plRb.on{background:var(--pl);border-color:var(--primary);color:var(--primary);}
+#plRT{height:34px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);font:inherit;font-size:13px;padding:0 8px;}
+.plRh{font-size:11.5px;color:var(--muted);margin:2px 2px 0;}
+.plBl{height:30px;min-width:30px;padding:0 7px;border:0;border-radius:10px;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:4px;cursor:pointer;font-size:11px;font-weight:700;flex:none;}
+.plBl svg{width:17px;height:17px;}
+.plBl.on{color:var(--primary);background:var(--pl2);}
+#plNote{width:100%;min-height:92px;resize:vertical;border-radius:14px;border:1px solid var(--border);background:var(--pl2);color:var(--text);padding:10px 12px;font:inherit;font-size:14px;line-height:1.5;box-sizing:border-box;}
+:root[data-theme$="black-white"] .plAdd button,:root[data-theme$="black-white"] .plPen.hl{color:#111!important;}
+</style>
+<div id="ftPlanner" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="plHd">
+    <button type="button" class="plIb" id="plBack" aria-label="Back"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></button>
+    <div class="plTt" id="plTitle"></div>
+    <button type="button" class="plIb" id="plCopy" aria-label="Copy month plan"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V6.5A2.5 2.5 0 0 1 7.5 4H15"/></svg></button>
+    <button type="button" class="plIb" id="plPaste" aria-label="Paste month plan"><svg viewBox="0 0 24 24"><rect x="6" y="5" width="12" height="16" rx="2.5"/><path d="M9 5V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1M9.5 12h5M9.5 16h3"/></svg></button>
+  </div>
+  <div class="plScroll" id="plScroll">
+    <div class="plNav">
+      <button type="button" class="plIb" id="plPrev" aria-label="Previous month"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></button>
+      <button type="button" class="plMo" id="plMonth" aria-label="Today"></button>
+      <button type="button" class="plIb" id="plNext" aria-label="Next month"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
+      <button type="button" class="plIb plPen" id="plPen" aria-label="Add or edit task and note"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+    </div>
+    <div class="plStat" id="plStat"></div>
+    <div class="plWk" id="plWk"></div>
+    <div class="plGrid" id="plGrid"></div>
+    <div class="plBoxes">
+      <div class="plBox" id="plBoxT" role="button" tabindex="0"></div>
+      <div class="plBox nt" id="plBoxN" role="button" tabindex="0"></div>
+    </div>
+  </div>
+  <div id="plSheet"><div class="plBd" id="plBd"></div>
+    <div class="plSh" role="dialog">
+      <div class="plShHd">
+        <button type="button" class="plIb" id="plDPrev" aria-label="Previous day"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></button>
+        <div class="plShT"><b id="plShB"></b><span id="plShS"></span></div>
+        <button type="button" class="plIb" id="plDNext" aria-label="Next day"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
+        <button type="button" class="plIb" id="plShX" aria-label="Close"><svg viewBox="0 0 24 24"><path d="m6.5 6.5 11 11M17.5 6.5l-11 11"/></svg></button>
+      </div>
+      <div class="plShBody">
+        <div class="plAdd"><input id="plIn" type="text" maxlength="200" autocomplete="off"><button type="button" id="plAddB" aria-label="Add"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div>
+        <div class="plRep" id="plRep"></div>
+        <div class="plRem"><button type="button" class="plRb" id="plRemB"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span id="plRemL"></span></button><input type="time" id="plRT" aria-label="Reminder time"></div>
+        <div class="plRh" id="plRemH"></div>
+        <div id="plList"></div>
+        <div class="plLb"><span id="plNoteL"></span><em id="plSaved"></em></div>
+        <textarea id="plNote" maxlength="1000"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+<script id="ftPlJs">
+(function(){
+'use strict';
+var $=function(id){ return document.getElementById(id); };
+function bn(){ try{ return currentLang==='bn'; }catch(e){ return true; } }
+function L(b,e){ return bn()?b:e; }
+function LOC(){ return bn()?'bn-BD':'en-GB'; }
+function num(n){ try{ return (+n).toLocaleString(LOC(),{useGrouping:false}); }catch(e){ return String(n); } }
+function E(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function p2(n){ return (n<10?'0':'')+n; }
+function keyOf(d){ return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate()); }
+function parse(k){ var a=String(k).split('-'); return {y:+a[0],m:+a[1]-1,d:+a[2]}; }
+function dateOf(k){ var o=parse(k); return new Date(o.y,o.m,o.d); }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+var WK_BN=['সোম','মঙ্গল','বুধ','বৃহ','শুক্র','শনি','রবি'], WK_EN=['MON','TUE','WED','THU','FRI','SAT','SUN'];
+var IC={
+  check:'<svg viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></svg>',
+  trash:'<svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>',
+  copy:'<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V6.5A2.5 2.5 0 0 1 7.5 4H15"/></svg>'
+};
+/* ---------- data (stored inside the app data so it is backed up / synced like everything else) ---------- */
+function P(){ if(!data.planner||typeof data.planner!=='object'||Array.isArray(data.planner)) data.planner={}; return data.planner; }
+function rec(k){ var o=P()[k]; return (o&&typeof o==='object')?o:null; }
+function ensure(k){ var o=rec(k); if(!o){ o={t:[],n:''}; P()[k]=o; } if(!Array.isArray(o.t)) o.t=[]; if(typeof o.n!=='string') o.n=''; return o; }
+function tasksOf(k){ var o=rec(k); return o&&Array.isArray(o.t)?o.t.filter(function(t){ return t&&typeof t.x==='string'&&t.x; }):[]; }
+function noteOf(k){ var o=rec(k); return o&&typeof o.n==='string'?o.n:''; }
+function tidy(k){ var o=rec(k); if(o&&!(o.t&&o.t.length)&&!o.n) delete P()[k]; }
+function today(){ try{ return todayStr(); }catch(e){ return keyOf(new Date()); } }
+/* ---------- state ---------- */
+var pushed=false, V={y:0,m:0}, sel='', rep=0, noteT=0, noteDirty=false, picked=false, remOn=false;
+var BELL='<svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>';
+/* ---------- reminders: a task can create a real reminder in the app's Reminders ---------- */
+function RL(){ if(!Array.isArray(data.reminders)) data.reminders=[]; return data.reminders; }
+function remOf(t){ if(!t||!t.rid) return null; return RL().find(function(x){ return x.id===t.rid; })||null; }
+function isPast(date,time){ var td=todayStr(); return date<td||(date===td&&time<=nowTime()); }
+function mkRem(title,date,time){ var r={id:Date.now()+'-'+Math.random().toString(36).slice(2,7)+'p',title:title,kind:'other',date:date,time:time,repeat:'none',done:false,snz:0}; RL().push(r); return r.id; }
+function dropRem(t){ if(!t||!t.rid) return; data.reminders=RL().filter(function(x){ return x.id!==t.rid; }); delete t.rid; }
+function fT(t){ var h=+String(t).slice(0,2); return num(h%12||12)+':'+String(t).slice(3,5).replace(/\d/g,function(c){ return num(c); })+' '+(h>=12?'PM':'AM'); }
+function remTime(){ var e=$('plRT'), v=e&&e.value; return /^\d{2}:\d{2}$/.test(v||'')?v:'09:00'; }
+function refreshApp(){ try{ if(window.updateHome) window.updateHome(); }catch(e){} }
+function setView(y,m){ var d=new Date(y,m,1); V.y=d.getFullYear(); V.m=d.getMonth(); }
+function monthLabel(){ try{ return new Date(V.y,V.m,1).toLocaleDateString(LOC(),{month:'long',year:'numeric'}); }catch(e){ return (V.m+1)+'/'+V.y; } }
+function dim(){ return new Date(V.y,V.m+1,0).getDate(); }
+function monthStats(){ var t=0,dn=0,days=0, n=dim(); for(var d=1;d<=n;d++){ var k=V.y+'-'+p2(V.m+1)+'-'+p2(d), ts=tasksOf(k); if(ts.length||noteOf(k)) days++; t+=ts.length; ts.forEach(function(x){ if(x.d) dn++; }); } return {t:t,dn:dn,days:days}; }
+/* ---------- main view ---------- */
+function gridHtml(){
+  var n=dim(), off=(new Date(V.y,V.m,1).getDay()+6)%7, rows=Math.ceil((off+n)/7), td=today(), h='';
+  for(var i=0;i<rows*7;i++){
+    var d=i-off+1, dt=new Date(V.y,V.m,d);
+    if(d<1||d>n){ h+='<div class="plc out"><span class="plN">'+num(dt.getDate())+'</span></div>'; continue; }
+    var k=keyOf(dt), ts=tasksOf(k), all=ts.length&&ts.every(function(t){ return t.d; });
+    h+='<button type="button" class="plc'+(k===sel&&picked?' on':'')+(k===td?' td':'')+'" data-k="'+k+'" aria-label="'+E(dt.toLocaleDateString(LOC(),{day:'numeric',month:'long'}))+'"><span class="plN'+(all?' all':'')+'">'+num(d)+'</span>'
+      +ts.slice(0,2).map(function(t){ return '<b class="plTk'+(t.d?' dn':'')+'">'+E(t.x)+'</b>'; }).join('')
+      +(ts.length>2?'<em>+'+num(ts.length-2)+'</em>':'')+(noteOf(k)?'<i class="plNt"></i>':'')+'</button>';
+  }
+  return h;
+}
+function shortDate(k){ try{ return dateOf(k).toLocaleDateString(LOC(),{day:'numeric',month:'short'}); }catch(e){ return k; } }
+function boxesHtml(){
+  var ts=tasksOf(sel), ln='';
+  for(var i=0;i<6;i++){
+    if(i===5&&ts.length>6){ ln+='<div class="plLn more"><span></span><p>+'+num(ts.length-5)+' '+L('আরও','more')+'</p></div>'; break; }
+    var t=ts[i]; ln+='<div class="plLn"><span>'+num(i+1)+'</span><p'+(t&&t.d?' class="dn"':'')+'>'+(t?E(t.x):'')+'</p></div>';
+  }
+  var nt=noteOf(sel);
+  $('plBoxT').innerHTML='<span class="plBoxT">'+L('গুরুত্বপূর্ণ কাজ','Top priorities')+' · '+E(shortDate(sel))+'</span>'+ln;
+  $('plBoxN').innerHTML='<span class="plBoxT">'+L('বিশেষ নোট','Notes')+'</span>'+(nt?'<div class="plNtTx">'+E(nt)+'</div>':'<div class="plPh">'+L('এই দিনের বিশেষ কিছু মনে রাখতে চাইলে এখানে ট্যাপ করে লিখুন।','Tap here to jot down anything special about this day.')+'</div>');
+}
+function render(){
+  if(!sel||sel.slice(0,7)!==V.y+'-'+p2(V.m+1)) sel=(today().slice(0,7)===V.y+'-'+p2(V.m+1))?today():V.y+'-'+p2(V.m+1)+'-01';
+  $('plTitle').textContent=L('মাসিক প্ল্যানার','Monthly Planner');
+  $('plMonth').textContent=monthLabel();
+  $('plWk').innerHTML=(bn()?WK_BN:WK_EN).map(function(w){ return '<span>'+w+'</span>'; }).join('');
+  $('plGrid').innerHTML=gridHtml();
+  var s=monthStats(), pct=s.t?Math.round(s.dn*100/s.t):0;
+  $('plStat').innerHTML=s.t?'<span>'+num(s.t)+' '+L('কাজ','tasks')+' · '+num(s.dn)+' '+L('সম্পন্ন','done')+'</span><i><b style="width:'+pct+'%"></b></i>':'<span>'+L('এই মাসের প্ল্যান ফাঁকা — যেকোনো তারিখে ট্যাপ করে শুরু করুন','Nothing planned yet — tap any date to start')+'</span>';
+  boxesHtml();
+  $('plPen').classList.toggle('hl',picked);
+  var c=clip(); $('plPaste').classList.toggle('dim',!c); $('plPaste').classList.toggle('has',!!c&&!(c.y===V.y&&c.m===V.m));
+  $('plCopy').classList.toggle('dim',!s.days);
+}
+/* ---------- day sheet ---------- */
+function listHtml(k){
+  var ts=tasksOf(k); if(!ts.length) return '<div class="plEmpty">'+L('এই দিনে এখনো কোনো কাজ নেই','No tasks for this day yet')+'</div>';
+  return ts.map(function(t){ var rm=remOf(t); return '<div class="plTr'+(t.d?' dn':'')+'" data-id="'+E(t.id)+'"><button type="button" class="plCk" data-a="tog" aria-label="Done">'+IC.check+'</button><input class="plTx" data-a="edit" maxlength="200" value="'+E(t.x)+'"><button type="button" class="plBl'+(rm?' on':'')+'" data-a="bell" aria-label="Reminder">'+BELL+(rm?'<span>'+fT(rm.time||'09:00')+'</span>':'')+'</button><button type="button" class="plDl" data-a="del" aria-label="Delete">'+IC.trash+'</button></div>'; }).join('');
+}
+function repHtml(){
+  var wd=(bn()?['রবি','সোম','মঙ্গল','বুধ','বৃহস্পতি','শুক্র','শনি']:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'])[dateOf(sel).getDay()];
+  var o=[[0,L('শুধু এই দিন','Only this day')],[1,L('প্রতি '+wd+' (এই মাস)','Every '+wd+' this month')],[2,L('প্রতিদিন (এই মাস)','Daily this month')]];
+  return o.map(function(x){ return '<button type="button" data-r="'+x[0]+'" class="'+(rep===x[0]?'on':'')+'">'+x[1]+'</button>'; }).join('');
+}
+function sheetFill(){
+  var d=dateOf(sel);
+  $('plShB').textContent=d.toLocaleDateString(LOC(),{weekday:'long'});
+  $('plShS').textContent=d.toLocaleDateString(LOC(),{day:'numeric',month:'long',year:'numeric'})+(sel===today()?' · '+L('আজ','Today'):'');
+  $('plIn').placeholder=L('নতুন কাজ লিখুন…','Write a new task…');
+  $('plNoteL').textContent=L('বিশেষ নোট','Special note');
+  $('plRemL').textContent=L('রিমাইন্ডার','Remind me'); $('plRemB').classList.toggle('on',remOn);
+  $('plRemH').textContent=remOn?L('নতুন কাজ যোগ করলে অ্যাপের রিমাইন্ডারে নিজে থেকে সেট হবে। কাজের পাশের ঘণ্টা দিয়ে আগের কাজেও দিতে পারবেন।','New tasks are added to the app Reminders automatically. Use the bell on a task to add one to older tasks.'):'';
+  $('plRep').innerHTML=repHtml();
+  $('plList').innerHTML=listHtml(sel);
+  $('plNote').value=noteOf(sel); $('plNote').placeholder=L('এই দিনের জন্য বিশেষ কিছু…','Anything special for this day…');
+}
+function flushNote(){
+  clearTimeout(noteT); if(!noteDirty) return; noteDirty=false;
+  var v=$('plNote').value.slice(0,1000), k=sel;
+  if(v||rec(k)){ var o=ensure(k); o.n=v; tidy(k); saveData(); }
+  render(); var e=$('plSaved'); e.textContent=L('সংরক্ষিত','Saved'); e.classList.add('on'); setTimeout(function(){ e.classList.remove('on'); },1200);
+}
+function openSheet(k,focus){
+  if(!$('ftPlanner').classList.contains('on')) return;
+  if(k){ sel=k; var o=parse(k); if(o.y!==V.y||o.m!==V.m) setView(o.y,o.m); }
+  rep=0; picked=true; render(); sheetFill(); $('plSheet').classList.add('on');
+  if(focus==='note') setTimeout(function(){ try{ $('plNote').focus(); }catch(e){} },120);
+  else if(focus==='task') setTimeout(function(){ try{ $('plIn').focus(); }catch(e){} },120);
+}
+function closeSheet(){ flushNote(); $('plSheet').classList.remove('on'); render(); }
+function gotoDay(delta){ flushNote(); var d=dateOf(sel); d.setDate(d.getDate()+delta); sel=keyOf(d); setView(d.getFullYear(),d.getMonth()); rep=0; picked=true; render(); sheetFill(); }
+function addTask(k,text,r,remT){
+  text=String(text||'').trim().slice(0,200); if(!text) return null;
+  var d=parse(k), keys=[k], rc=0, sk=0;
+  if(r){ var step=r===1?7:1, cur=new Date(d.y,d.m,d.d+step); while(cur.getMonth()===d.m&&cur.getFullYear()===d.y){ keys.push(keyOf(cur)); cur=new Date(cur.getFullYear(),cur.getMonth(),cur.getDate()+step); } }
+  keys.forEach(function(kk){ var t={id:uid(),x:text,d:0};
+    if(remT){ if(isPast(kk,remT)) sk++; else { t.rid=mkRem(text,kk,remT); rc++; } }
+    ensure(kk).t.push(t); });
+  saveData(); if(rc) refreshApp(); return {n:keys.length,rc:rc,sk:sk};
+}
+function doAdd(){
+  var inp=$('plIn'), res=addTask(sel,inp.value,rep,remOn?remTime():null); if(!res) return;
+  inp.value=''; var r=rep; rep=0; $('plRep').innerHTML=repHtml(); $('plList').innerHTML=listHtml(sel); render();
+  if(window.toast){
+    if(remOn&&res.rc) toast(L(num(res.rc)+'টি রিমাইন্ডার অ্যাপের রিমাইন্ডারে সেট হয়েছে'+(res.sk?' · '+num(res.sk)+'টির সময় পেরিয়ে গেছে':''),num(res.rc)+' reminder(s) set in the app Reminders'+(res.sk?' · '+num(res.sk)+' time(s) already passed':'')));
+    else if(remOn&&res.sk) toast(L('সময় পেরিয়ে গেছে, তাই রিমাইন্ডার সেট হয়নি','That time has passed, so no reminder was set'));
+    else if(r) toast(L(num(res.n)+' দিনে কাজটি যোগ হয়েছে',num(res.n)+' days got this task'));
+  }
+  try{ inp.focus(); }catch(e){}
+}
+function onList(e){
+  var row=e.target.closest('.plTr'); if(!row) return; var b=e.target.closest('[data-a]'); if(!b) return;
+  var id=row.dataset.id, o=rec(sel); if(!o) return;
+  var i=o.t.findIndex(function(t){ return t.id===id; }); if(i<0) return;
+  var t=o.t[i], rm=remOf(t), rch=false;
+  if(b.dataset.a==='tog'){ t.d=t.d?0:1; if(rm){ if(t.d) rm.done=true; else if(!isPast(rm.date,rm.time||'09:00')) rm.done=false; rch=true; } try{ if(navigator.vibrate) navigator.vibrate(10); }catch(x){} }
+  else if(b.dataset.a==='del'){ if(rm){ dropRem(t); rch=true; } o.t.splice(i,1); tidy(sel); }
+  else if(b.dataset.a==='bell'){
+    if(rm){ dropRem(t); rch=true; if(window.toast) toast(L('রিমাইন্ডার বাদ দেওয়া হয়েছে','Reminder removed')); }
+    else { var tm=remTime(); if(isPast(sel,tm)){ if(window.toast) toast(L('এই সময় পেরিয়ে গেছে — সময় বদলে নিন','That time has passed — pick a later time')); return; } t.rid=mkRem(t.x,sel,tm); rch=true; if(window.toast) toast(L('অ্যাপের রিমাইন্ডারে সেট হয়েছে','Added to the app Reminders')+' · '+fT(tm)); }
+  }
+  else return;
+  if(rch) refreshApp();
+  saveData(); $('plList').innerHTML=listHtml(sel); render();
+}
+function onEdit(e){
+  var inp=e.target; if(!inp.matches||!inp.matches('.plTx')) return; var row=inp.closest('.plTr'), o=rec(sel); if(!row||!o) return;
+  var i=o.t.findIndex(function(t){ return t.id===row.dataset.id; }); if(i<0) return;
+  var v=inp.value.trim().slice(0,200);
+  var rm=remOf(o.t[i]);
+  if(!v){ if(rm) dropRem(o.t[i]); o.t.splice(i,1); } else { o.t[i].x=v; if(rm) rm.title=v; }
+  if(rm) refreshApp();
+  tidy(sel); saveData(); $('plList').innerHTML=listHtml(sel); render();
+}
+/* ---------- copy / paste the whole month plan ---------- */
+function clip(){ var c=data&&data.plannerClip; return (c&&typeof c==='object'&&c.days&&typeof c.days==='object'&&typeof c.y==='number'&&Object.keys(c.days).length)?c:null; }
+function copyMonth(){
+  var days={}, n=dim(), tc=0, dc=0;
+  for(var d=1;d<=n;d++){ var k=V.y+'-'+p2(V.m+1)+'-'+p2(d), ts=tasksOf(k), nt=noteOf(k); if(!ts.length&&!nt) continue; days[d]={t:ts.map(function(t){ return {x:t.x}; }),n:nt}; tc+=ts.length; dc++; }
+  if(!dc){ if(window.toast) toast(L('এই মাসে কপি করার মতো প্ল্যান নেই','This month has no plan to copy')); return false; }
+  data.plannerClip={y:V.y,m:V.m,days:days,at:Date.now()}; saveData();
+  var b=$('plCopy'); b.classList.add('ok'); b.innerHTML=IC.check; setTimeout(function(){ b.classList.remove('ok'); b.innerHTML=IC.copy; },1400);
+  try{ if(navigator.vibrate) navigator.vibrate(12); }catch(e){}
+  if(window.toast) toast(L(monthLabel()+'-এর প্ল্যান কপি হয়েছে ('+num(dc)+' দিন, '+num(tc)+' কাজ) — অন্য মাসে গিয়ে পেস্ট করুন','Copied the plan of '+monthLabel()+' ('+num(dc)+' days, '+num(tc)+' tasks) — open another month and paste'));
+  render(); return true;
+}
+function pasteMonth(){
+  var c=clip(); if(!c){ if(window.toast) toast(L('আগে কোনো মাসের প্ল্যান কপি করুন','Copy a month plan first')); return false; }
+  var snap=JSON.stringify(P()), n=dim(), added=0, touched=0, skipped=0;
+  Object.keys(c.days).forEach(function(ds){
+    var d=+ds, src=c.days[ds]; if(!(d>=1)||!src) return;
+    if(d>n){ skipped++; return; }
+    var k=V.y+'-'+p2(V.m+1)+'-'+p2(d), o=ensure(k), have={}, ch=0;
+    o.t.forEach(function(t){ have[String(t.x).trim().toLowerCase()]=1; });
+    (src.t||[]).forEach(function(t){ var x=String(t&&t.x||'').trim().slice(0,200), kx=x.toLowerCase(); if(!x||have[kx]) return; have[kx]=1; o.t.push({id:uid(),x:x,d:0}); ch++; added++; });
+    var nt=String(src.n||'').slice(0,1000);
+    if(nt&&o.n.indexOf(nt)<0){ o.n=o.n?(o.n+'\n'+nt).slice(0,1000):nt; ch++; }
+    if(ch) touched++; tidy(k);
+  });
+  render();
+  if(!added&&!touched){ if(window.toast) toast(L('নতুন কিছু যোগ হয়নি — প্ল্যান আগে থেকেই আছে','Nothing new to add — the plan is already here')); return false; }
+  saveData();
+  var msg=L(num(added)+' কাজ, '+num(touched)+' দিনে পেস্ট হয়েছে'+(skipped?' · '+num(skipped)+'টি দিন এই মাসে নেই':''),'Pasted '+num(added)+' tasks into '+num(touched)+' days'+(skipped?' · '+num(skipped)+' day(s) don\'t exist this month':''));
+  if(window.toast) toast(msg,L('আনডু','Undo'),function(){ data.planner=JSON.parse(snap); saveData(); render(); if($('plSheet').classList.contains('on')) sheetFill(); });
+  return true;
+}
+function askPaste(){
+  var c=clip(); if(!c){ pasteMonth(); return; }
+  var n=dim(), dc=0, tc=0, sk=0;
+  Object.keys(c.days).forEach(function(ds){ var d=+ds, src=c.days[ds]; if(!(d>=1)) return; if(d>n){ sk++; return; } dc++; tc+=((src&&src.t)||[]).length; });
+  var from=new Date(c.y,c.m,1).toLocaleDateString(LOC(),{month:'long',year:'numeric'}), to=monthLabel();
+  var old=$('plCf'); if(old) old.remove();
+  var ov=document.createElement('div'); ov.id='plCf';
+  ov.innerHTML='<div class="plCfBx" role="alertdialog"><div class="plCfIc"><svg viewBox="0 0 24 24"><rect x="6" y="5" width="12" height="16" rx="2.5"/><path d="M9 5V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1M9.5 12h5M9.5 16h3"/></svg></div><b>'+L('প্ল্যান পেস্ট করবেন?','Paste this plan?')+'</b><p>'
+    +L(E(from)+'-এর '+num(dc)+' দিনের '+num(tc)+'টি কাজ ও নোট '+E(to)+'-এ যোগ হবে। আগের কাজ মুছবে না, আর পেস্টের পর আনডু করতে পারবেন।'+(sk?' '+num(sk)+'টি দিন এই মাসে নেই, তাই বাদ যাবে।':''),
+       'The plan from '+E(from)+' ('+num(dc)+' days, '+num(tc)+' tasks) will be added to '+E(to)+'. Existing tasks stay, and you can undo after pasting.'+(sk?' '+num(sk)+' day(s) don\'t exist this month and will be skipped.':''))
+    +'</p><div class="plCfBt"><button type="button" data-c="0">'+L('বাতিল','Cancel')+'</button><button type="button" data-c="1" class="ok">'+L('পেস্ট করুন','Paste')+'</button></div></div>';
+  $('ftPlanner').appendChild(ov);
+  ov.onclick=function(e){ if(e.target===ov){ ov.remove(); return; } var b=e.target.closest('[data-c]'); if(!b) return; ov.remove(); if(b.dataset.c==='1') pasteMonth(); };
+}
+/* ---------- open / close / wiring ---------- */
+function build(){
+  if(build.done) return; build.done=true;
+  $('plBack').onclick=close;
+  $('plPrev').onclick=function(){ setView(V.y,V.m-1); sel=''; picked=false; render(); };
+  $('plNext').onclick=function(){ setView(V.y,V.m+1); sel=''; picked=false; render(); };
+  $('plMonth').onclick=function(){ var n=new Date(); setView(n.getFullYear(),n.getMonth()); sel=today(); picked=false; render(); };
+  $('plCopy').onclick=copyMonth; $('plPaste').onclick=askPaste;
+  $('plGrid').onclick=function(e){ var b=e.target.closest('.plc[data-k]'); if(!b) return; sel=b.dataset.k; picked=true; render(); try{ $('plBoxT').scrollIntoView({block:'nearest',behavior:'smooth'}); }catch(x){} };
+  $('plPen').onclick=function(){ openSheet(sel,'task'); };
+  $('plBoxT').onclick=function(){ openSheet(sel,'task'); }; $('plBoxN').onclick=function(){ openSheet(sel,'note'); };
+  $('plBd').onclick=closeSheet; $('plShX').onclick=closeSheet;
+  $('plDPrev').onclick=function(){ gotoDay(-1); }; $('plDNext').onclick=function(){ gotoDay(1); };
+  try{ $('plRT').value=localStorage.getItem('ftPlRemT_v1')||'09:00'; }catch(e){ $('plRT').value='09:00'; }
+  $('plRT').addEventListener('change',function(){ try{ localStorage.setItem('ftPlRemT_v1',remTime()); }catch(e){} });
+  $('plRemB').onclick=function(){ remOn=!remOn; sheetFill(); };
+  $('plAddB').onclick=doAdd; $('plIn').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); doAdd(); } });
+  $('plRep').onclick=function(e){ var b=e.target.closest('[data-r]'); if(!b) return; rep=+b.dataset.r; $('plRep').innerHTML=repHtml(); };
+  $('plList').addEventListener('click',onList); $('plList').addEventListener('change',onEdit);
+  $('plList').addEventListener('keydown',function(e){ if(e.key==='Enter'&&e.target.matches&&e.target.matches('.plTx')){ e.preventDefault(); e.target.blur(); } });
+  $('plNote').addEventListener('input',function(){ noteDirty=true; clearTimeout(noteT); noteT=setTimeout(flushNote,500); });
+  /* swipe left / right on the calendar = next / previous month */
+  var sx=0, sy=0, g=$('plGrid');
+  g.addEventListener('touchstart',function(e){ var t=e.touches[0]; sx=t.clientX; sy=t.clientY; },{passive:true});
+  g.addEventListener('touchend',function(e){ var t=e.changedTouches[0], dx=t.clientX-sx, dy=t.clientY-sy; if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.6){ setView(V.y,V.m+(dx<0?1:-1)); sel=''; picked=false; render(); } },{passive:true});
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&$('ftPlanner').classList.contains('on')){ if($('plCf')){ $('plCf').remove(); return; } if($('plSheet').classList.contains('on')) closeSheet(); else close(); } });
+}
+function open(){
+  build(); var n=new Date(); setView(n.getFullYear(),n.getMonth()); sel=today(); rep=0; picked=false;
+  var o=$('ftPlanner'); o.classList.add('on'); o.setAttribute('aria-hidden','false'); document.body.classList.add('ftPlOpen');
+  $('plSheet').classList.remove('on'); render(); $('plScroll').scrollTop=0;
+  if(!pushed){ try{ history.pushState({ftPl:1},''); pushed=true; }catch(e){} }
+}
+function close(fromPop){ try{ flushNote(); }catch(e){} var cf=$('plCf'); if(cf) cf.remove(); $('plSheet').classList.remove('on'); var o=$('ftPlanner'); o.classList.remove('on'); o.setAttribute('aria-hidden','true'); document.body.classList.remove('ftPlOpen');
+  if(pushed){ pushed=false; if(fromPop!==true){ try{ history.back(); }catch(e){} } }
+}
+/* phone back button: closes the open dialog / sheet first, then the planner */
+window.addEventListener('popstate',function(){
+  if(!pushed||!$('ftPlanner').classList.contains('on')) return; pushed=false;
+  var cf=$('plCf'), sh=$('plSheet').classList.contains('on');
+  if(cf||sh){ if(cf) cf.remove(); if(sh) closeSheet(); try{ history.pushState({ftPl:1},''); pushed=true; }catch(e){} return; }
+  close(true);
+});
+window.ftPlannerOpen=open; window.ftPlannerClose=close;
+window.ftPlanner={open:open,close:close,_t:{askPaste:askPaste,P:P,addTask:addTask,copyMonth:copyMonth,pasteMonth:pasteMonth,setView:setView,tasksOf:tasksOf,noteOf:noteOf,ensure:ensure,render:render,V:V,clip:clip}};
+})();
+</script>
+
 <style id="ftFeedCss">
 /* ===== Goal challenges (Challenge tab) + FinTrack Feeds ===== */
 #fgBox{margin:0 0 14px;}
