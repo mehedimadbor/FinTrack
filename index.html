@@ -12102,7 +12102,7 @@ const TABS=[
  ['everyday','প্রতিদিন','Everyday',[['dash','হোম','Home','home','#6366f1'],['add','যোগ করুন','Add entry','plus','#10b981'],['tx','লেনদেন','Transactions','svg:cg-txswap','#0ea5e9'],['hist','হিস্ট্রি','History','clock','#f59e0b'],['acc','একাউন্ট','Accounts','wallet','#14b8a6']]],
  ['money','অর্থ ও লক্ষ্য','Money & goals',[['loan','লোন','Loans','bank','#ef4444'],['challenge','চ্যালেঞ্জ','Challenges','svg:cg-trophy','#f59e0b'],['zakat','যাকাত','Zakat','coin','#22c55e']]],
  ['insight','ইনসাইট','Insights',[['report','রিপোর্ট','Reports','bars','#6366f1'],['chat','AI চ্যাট','AI Chat','bot','#8b5cf6']]],
- ['social','কমিউনিটি ও যোগাযোগ','Community & contact',[['friends','বন্ধু','Friends','user','#0ea5e9'],['@inbox','মেসেজ','Messages','message','#10b981'],['profile','প্রোফাইল','Profile','user','#ec4899'],['@search','ইউজার খুঁজুন','Find users','search','#0ea5e9'],['@blood','ইমারজেন্সি হেল্প','Emergency help','drop','#e11d48']]],
+ ['social','কমিউনিটি ও যোগাযোগ','Community & contact',[['friends','বন্ধু','Friends','user','#0ea5e9'],['@inbox','মেসেজ','Messages','message','#10b981'],['profile','প্রোফাইল','Profile','user','#ec4899'],['@search','ইউজার খুঁজুন','Find users','search','#0ea5e9'],['@blood','ইমারজেন্সি হেল্প','Emergency help','drop','#e11d48'],['@homies','হোমি খুঁজুন','Find Homies','svg:hm-users','#f97316']]],
  ['tools','টুলস','Tools',[['@tour','ট্যুর বাজেট','Tour budget','bus','#f59e0b'],['notes','নোট ও টাস্ক','Notes & tasks','clipboard','#a78bfa'],['@planner','ক্যালেন্ডার','Calendar','svg:cg-cal','#14b8a6']]]
 ];
 const icon=n=>n.indexOf('svg:')===0?'<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#'+n.slice(4)+'"/></svg>':'<i class="mi" style="--m:var(--ic-'+n+')"></i>';
@@ -12115,9 +12115,9 @@ function scSet(a){ try{ localStorage.setItem(SCK,JSON.stringify(a)); }catch(e){}
 function scItems(){
   const out=[], seen={}, add=o=>{ if(!seen[o.id]){ seen[o.id]=1; out.push(o); } };
   TABS.forEach(g=>g[3].forEach(x=>{
-    const k=x[0], ok=k==='@search'?!!window.ppGoSearch:k==='@blood'?!!window.ftBlood:k==='@inbox'?!!window.ftOpenInbox:k==='@tour'?!!window.ftTour:k==='@planner'?!!window.ftPlannerOpen:(!!$('sec-'+k)||k==='tx');
+    const k=x[0], ok=k==='@search'?!!window.ppGoSearch:k==='@blood'?!!window.ftBlood:k==='@inbox'?!!window.ftOpenInbox:k==='@tour'?!!window.ftTour:k==='@planner'?!!window.ftPlannerOpen:k==='@homies'?!!window.ftHomies:(!!$('sec-'+k)||k==='tx');
     if(!ok) return;
-    const a=k==='@search'?'search':k==='@blood'?'blood':k==='@inbox'?'inbox':k==='@tour'?'tour':k==='@planner'?'planner':'tab';
+    const a=k==='@search'?'search':k==='@blood'?'blood':k==='@inbox'?'inbox':k==='@tour'?'tour':k==='@planner'?'planner':k==='@homies'?'homies':'tab';
     add({id:'f:'+k,g:'f',a:a,k:k,c:x[4],ic:icon(x[3]),lb:L(x[1],x[2])});
   }));
   [['expense','খরচ যোগ করুন','Add expense','arrow-out','#ef4444',()=>!!window.quickAdd],['deposit','জমা যোগ করুন','Add income','arrow-in','#22c55e',()=>!!window.quickAdd],['calc','ক্যালকুলেটর','Calculator','sheet','#f59e0b',()=>!!window.calcOpen]].forEach(x=>{
@@ -12167,7 +12167,7 @@ function fillMenu(){
   const mv=dets().filter(isMoved).map(d=>{ const ch=chipOf(d), k=kOf(d); return R('mset',k,ch.c,ch.i,titleHtml(d),det&&det===k); });
   TABS.forEach(g=>{
     if(g[0]==='everyday') return;
-    const rows=g[3].filter(x=>x[0]==='@search'?!!window.ppGoSearch:x[0]==='@blood'?!!window.ftBlood:x[0]==='@inbox'?!!window.ftOpenInbox:x[0]==='@tour'?!!window.ftTour:x[0]==='@planner'?!!window.ftPlannerOpen:(!!$('sec-'+x[0])||x[0]==='tx')).map(x=>R(x[0]==='@search'?'search':x[0]==='@blood'?'blood':x[0]==='@inbox'?'inbox':x[0]==='@tour'?'tour':x[0]==='@planner'?'planner':'tab',x[0],x[4],icon(x[3]),L(x[1],x[2]),x[0]===c&&c!=='settings'));
+    const rows=g[3].filter(x=>x[0]==='@search'?!!window.ppGoSearch:x[0]==='@blood'?!!window.ftBlood:x[0]==='@inbox'?!!window.ftOpenInbox:x[0]==='@tour'?!!window.ftTour:x[0]==='@planner'?!!window.ftPlannerOpen:x[0]==='@homies'?!!window.ftHomies:(!!$('sec-'+x[0])||x[0]==='tx')).map(x=>R(x[0]==='@search'?'search':x[0]==='@blood'?'blood':x[0]==='@inbox'?'inbox':x[0]==='@tour'?'tour':x[0]==='@planner'?'planner':x[0]==='@homies'?'homies':'tab',x[0],x[4],icon(x[3]),L(x[1],x[2]),x[0]===c&&c!=='settings'));
     h+=sect(L(g[1],g[2]),g[0]==='money'?rows.concat(mv):rows);
   });
   h+='<div class="mnCard" style="margin-top:16px">'+R('tab','settings','#64748b',icon('settings'),L('সেটিংস','Settings'),c==='settings'&&!det)+'</div>';
@@ -12194,6 +12194,7 @@ function onMenu(e){
     else if(a==='inbox'&&window.ftOpenInbox) window.ftOpenInbox();
     else if(a==='tour'&&window.ftTour) window.ftTour.open();
     else if(a==='planner'&&window.ftPlannerOpen) window.ftPlannerOpen();
+    else if(a==='homies'&&window.ftHomies) window.ftHomies.open();
  else if(a==='fn'){ if(k==='expense'&&window.quickAdd) quickAdd('expense'); else if(k==='deposit'&&window.quickAdd) quickAdd('deposit'); else if(k==='calc'&&window.calcOpen) calcOpen(); }
     else if(a==='about'&&window.ftAbout) window.ftAbout();
     else if(a==='install'&&window.ftInstall) window.ftInstall.open();
@@ -19032,5 +19033,579 @@ function init(){check();hook()}
 if(document.readyState==='complete')setTimeout(init,300);else window.addEventListener('load',function(){setTimeout(init,300)});
 })();
 </script>
+<!-- ===== Find Homies (share rides, rooms & costs) ===== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="hm-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.4"/><path d="M2.8 19c.5-3.3 3-5.2 6.2-5.2s5.7 1.9 6.2 5.2"/><circle cx="17.2" cy="9.5" r="2.5"/><path d="M17 14.2c2.4.1 4 1.6 4.4 4"/></symbol></svg>
+<style id="hmCss">
+:root{--hmStar:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2.6l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.2 1.2-6.5L2.5 9.5l6.6-.9z'/%3E%3C/svg%3E")}
+#hmPage{position:fixed;inset:0;z-index:99990;background:var(--bg);color:var(--text);display:none;flex-direction:column;padding-top:env(safe-area-inset-top,0)}
+#hmPage.on{display:flex;animation:hmIn .22s ease}
+@keyframes hmIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+#hmPage *{box-sizing:border-box}
+#hmPage button{font:inherit}
+.hmHd{position:relative;flex:none;padding:14px 16px 12px;color:#fff;background:var(--grad);border-radius:0 0 26px 26px;box-shadow:0 14px 30px -18px var(--primary)}
+.hmHdRow{display:flex;align-items:center;gap:10px}
+.hmBack,.hmPlus{width:40px;height:40px;border-radius:14px;border:0;background:rgba(255,255,255,.24);color:#fff;cursor:pointer;flex:none;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.55)}
+.hmBack svg,.hmPlus svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.hmHdT{flex:1;min-width:0}
+.hmHdT b{display:block;font-size:19px;font-weight:900}
+.hmHdT small{display:block;opacity:.92;font-size:12px;margin-top:2px}
+.hmTabs{display:flex;gap:6px;margin-top:12px;padding:4px;border-radius:16px;background:rgba(255,255,255,.18)}
+.hmTabs button{flex:1;border:0;background:transparent;color:#fff;border-radius:12px;padding:9px 6px;font-weight:800;font-size:13.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.hmTabs button.on{background:#fff;color:var(--primary)}
+.hmTabs em{font-style:normal;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#ef4444;color:#fff;font-size:11px;font-weight:800;display:none;align-items:center;justify-content:center}
+.hmBody{flex:1;overflow-y:auto;padding:14px 14px 100px;-webkit-overflow-scrolling:touch}
+.hmChips{display:flex;gap:7px;overflow-x:auto;padding:0 0 12px;scrollbar-width:none}
+.hmChips::-webkit-scrollbar{display:none}
+.hmChip{flex:none;border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:20px;padding:7px 13px;font-weight:700;font-size:12.5px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.hmChip svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hmChip.on{background:var(--grad);color:#fff;border-color:transparent}
+.hmCard{border:1px solid var(--border);background:var(--card);border-radius:20px;padding:13px;margin-bottom:12px;box-shadow:0 6px 18px -12px rgba(0,0,0,.35)}
+.hmTop{display:flex;align-items:center;gap:10px}
+.hmAv{width:42px;height:42px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:17px;cursor:pointer}
+.hmWho{flex:1;min-width:0}
+.hmNmRow{display:flex;align-items:center;flex-wrap:wrap;gap:5px}
+.hmNm{font-size:14.5px;font-weight:800;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hmWho small{display:block;color:var(--muted);font-size:11.5px;margin-top:2px}
+.hmTr{display:inline-flex;align-items:center;gap:3px;padding:1px 7px 1px 4px;border-radius:10px;background:color-mix(in srgb,var(--green) 15%,transparent);color:var(--green);font-size:10.5px;font-weight:800}
+.hmTr svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.hmStars{display:inline-flex;align-items:center;gap:1px}
+.hmStars em{font-style:normal;font-size:11px;font-weight:800;color:var(--muted);margin-left:4px}
+.hmSt{width:13px;height:13px;display:inline-block;background:linear-gradient(90deg,#f59e0b var(--f),color-mix(in srgb,var(--muted) 35%,transparent) var(--f));-webkit-mask:var(--hmStar) center/contain no-repeat;mask:var(--hmStar) center/contain no-repeat}
+.hmLk{font-size:11px;color:var(--muted);display:inline-flex;align-items:center;gap:3px;margin-left:4px}
+.hmLk .mi{width:12px;height:12px}
+.hmLk .dn{display:inline-flex;transform:scaleY(-1)}
+.hmTag{flex:none;display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:12px;font-size:11.5px;font-weight:800;color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent)}
+.hmTag svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hmRoute{margin:11px 0 6px;font-size:16px;font-weight:900;line-height:1.35;word-break:break-word}
+.hmMeta{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--muted);font-size:12.5px;font-weight:600}
+.hmMeta span{display:inline-flex;align-items:center;gap:5px}
+.hmMeta svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hmNote{margin:9px 0 0;font-size:13px;line-height:1.5;color:var(--text);opacity:.85;word-break:break-word}
+.hmMoney{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:11px 0 0}
+.hmMoney div{padding:8px 6px;border-radius:13px;background:var(--bg);text-align:center}
+.hmMoney small{display:block;color:var(--muted);font-size:10.5px;font-weight:700}
+.hmMoney b{display:block;font-size:14px;font-weight:900;margin-top:2px}
+.hmMoney b.g{color:var(--green)}
+.hmAct{display:flex;gap:8px;margin-top:12px;align-items:center}
+.hmGo{flex:1;border:0;border-radius:14px;padding:11px 12px;font-weight:800;font-size:13.5px;color:#fff;background:var(--grad);cursor:pointer;box-shadow:0 8px 18px -8px var(--primary)}
+.hmGo:disabled{opacity:.55;box-shadow:none}
+.hmGo.sec{background:transparent;color:var(--text);border:1px solid var(--border);box-shadow:none}
+.hmGo.red{background:transparent;color:var(--red);border:1px solid color-mix(in srgb,var(--red) 40%,transparent);box-shadow:none}
+.hmIc{width:42px;height:42px;flex:none;border-radius:14px;border:1px solid var(--border);background:transparent;color:var(--primary);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.hmIc svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hmSt2{flex:1;text-align:center;padding:10px;border-radius:14px;font-size:13px;font-weight:800;background:color-mix(in srgb,var(--muted) 12%,transparent);color:var(--muted)}
+.hmSt2.ok{background:color-mix(in srgb,var(--green) 15%,transparent);color:var(--green)}
+.hmSt2.bad{background:color-mix(in srgb,var(--red) 12%,transparent);color:var(--red)}
+.hmEmpty{padding:34px 18px;text-align:center;color:var(--muted);font-size:13.5px;line-height:1.6}
+.hmEmpty b{display:block;color:var(--text);font-size:15.5px;margin-bottom:4px}
+.hmEmpty .hmGo{display:inline-block;margin-top:12px;flex:none;padding:11px 22px}
+.hmSec{font-size:12px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:var(--primary);margin:6px 2px 9px}
+.hmRq{display:flex;align-items:center;gap:9px;padding:10px;border-radius:14px;background:var(--bg);margin-top:8px;flex-wrap:wrap}
+.hmRq .hmAv{width:34px;height:34px;font-size:14px}
+.hmRq .hmWho{min-width:110px}
+.hmRq .hmAct{margin:0;flex:none}
+.hmRq .hmGo{flex:none;padding:8px 12px;font-size:12.5px;border-radius:12px}
+.hmChip2{display:inline-block;padding:2px 8px;border-radius:9px;font-size:10.5px;font-weight:800;background:color-mix(in srgb,var(--amber) 18%,transparent);color:var(--amber)}
+.hmChip2.ok{background:color-mix(in srgb,var(--green) 16%,transparent);color:var(--green)}
+.hmChip2.bad{background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red)}
+.hmRate{display:inline-flex;gap:6px;align-items:center}
+.hmV{width:38px;height:34px;border-radius:11px;border:1px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.hmV .mi{width:17px;height:17px}
+.hmV.dn .mi{transform:scaleY(-1)}
+.hmV.up.on{background:color-mix(in srgb,var(--green) 18%,transparent);color:var(--green);border-color:var(--green)}
+.hmV.dn.on{background:color-mix(in srgb,var(--red) 16%,transparent);color:var(--red);border-color:var(--red)}
+.hmRL{font-size:12px;color:var(--muted);font-weight:700}
+#hmSheet{position:absolute;inset:0;z-index:5;display:none;align-items:flex-end;background:rgba(0,0,0,.5)}
+#hmSheet.on{display:flex}
+.hmSh{width:100%;max-height:92%;overflow-y:auto;background:var(--card);border-radius:26px 26px 0 0;padding:14px 16px calc(18px + env(safe-area-inset-bottom,0px));animation:hmUp .22s ease}
+@keyframes hmUp{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+.hmGrab{width:42px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 12px}
+.hmShT{display:flex;align-items:center;justify-content:space-between;font-size:17px;font-weight:900;margin-bottom:12px}
+.hmShT button{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:22px;line-height:1}
+.hmLb{display:block;font-size:12px;font-weight:800;color:var(--muted);margin:10px 2px 5px}
+.hmIn{display:block;width:100%;border-radius:14px;border:1px solid var(--border);padding:12px 13px;font-size:15px;font-family:inherit;background:var(--bg);color:var(--text)}
+textarea.hmIn{resize:none;min-height:64px}
+.hmRow2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hmStep{display:flex;align-items:center;gap:12px}
+.hmStep button{width:40px;height:40px;border-radius:13px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:20px;font-weight:800;cursor:pointer}
+.hmStep b{min-width:28px;text-align:center;font-size:18px}
+.hmPrev{margin-top:10px;padding:10px 12px;border-radius:14px;background:color-mix(in srgb,var(--green) 12%,transparent);color:var(--green);font-weight:800;font-size:13px;line-height:1.5}
+.hmErr{color:var(--red);font-size:12.5px;font-weight:700;min-height:16px;margin-top:8px}
+/* SMS card inside the chat inbox */
+.hmCh{margin-top:8px;padding:10px 11px;border-radius:14px;background:var(--card);color:var(--text);border:1px solid var(--border);text-align:left;font-size:13px;line-height:1.45}
+.hmCh .hmChT{display:flex;align-items:center;gap:6px;font-weight:900;color:var(--primary);margin-bottom:4px}
+.hmCh .hmChT svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.hmCh .hmChS{opacity:.9}
+.hmCh .hmChS b{font-weight:800}
+.hmCh .hmChB{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px;align-items:center}
+.hmCh button.hb{border:0;border-radius:11px;padding:8px 13px;font-weight:800;font-size:12.5px;cursor:pointer;color:#fff;background:var(--grad)}
+.hmCh button.hb.sec{background:transparent;color:var(--text);border:1px solid var(--border)}
+.hmCh button.hb.red{background:transparent;color:var(--red);border:1px solid color-mix(in srgb,var(--red) 40%,transparent)}
+.hmCh button.hb:disabled{opacity:.5}
+.hmCh .hmV{width:36px;height:32px}
+</style>
+<script id="hmJs">
+(function(){
+'use strict';
+var LS=localStorage, J={'Content-Type':'application/json'};
+var UIDRE=/^[A-Za-z0-9_-]{6,64}$/, PIDRE=/^[A-Za-z0-9_-]{8,40}$/;
+var MARK=/\s*#hm:([A-Za-z0-9_-]{8,40}):([A-Za-z0-9_-]{6,64})/;
+function $(i){ return document.getElementById(i); }
+function bn(){ return document.documentElement.lang!=='en'; }
+function tx(b,e){ return bn()?b:e; }
+function nb(n){ n=String(n); return bn()?n.replace(/\d/g,function(d){ return '০১২৩৪৫৬৭৮৯'.charAt(d); }):n; }
+function esc(v){ return String(v==null?'':v).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function ls(k){ try{ return LS.getItem(k)||''; }catch(e){ return ''; } }
+function lset(k,v){ try{ LS.setItem(k,v); }catch(e){} }
+function R(){ try{ return window.ftCloud&&ftCloud._raw?ftCloud._raw():null; }catch(e){ return null; } }
+function ses(){ var r=R(); try{ return r&&r.ok()&&r.ses()?r.ses():null; }catch(e){ return null; } }
+function me(){ var s=ses(); return s?s.uid:''; }
+function myName(){ return (ls('myName_v1')||ls('myUsername_v1').replace(/^@/,'')||'User').slice(0,40); }
+function myUn(){ return ls('myUsername_v1').replace(/^@/,'').slice(0,30); }
+function toast(m){ try{ if(window.toast) window.toast(m); }catch(e){} }
+function money(n){ n=Math.round(+n||0); try{ if(window.ftReqApi&&ftReqApi.F) return ftReqApi.F(n); }catch(e){} return '৳'+nb(n); }
+async function db(path,opt,qs){
+  var r=R(); if(!r||!r.ok()||!r.ses()) throw new Error('LOGIN');
+  var base=String(r.CFG.dbUrl).replace(/\/+$/,''), tk=await r.token();
+  var res=await r.call(base+'/'+path+'.json?auth='+encodeURIComponent(tk)+(qs?'&'+qs:''),opt);
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  return res.json();
+}
+function errText(e){ var m=String(e&&e.message||e); return m==='LOGIN'?tx('আগে ক্লাউড অ্যাকাউন্টে লগইন করুন','Log in to your cloud account first'):/HTTP 40[13]/.test(m)?tx('ডাটাবেস রুলস-এ "homies" যোগ করা নেই','Database rules for "homies" are missing'):tx('নেটওয়ার্ক সমস্যা, আবার চেষ্টা করুন','Network problem, try again'); }
+
+/* ---------- categories ---------- */
+var SV={
+ bike:'<circle cx="6" cy="16" r="3.4"/><circle cx="18" cy="16" r="3.4"/><path d="M6 16l3.6-7H14l4 7M9.6 9H8M14 9l-2.2 7"/>',
+ car:'<path d="M4 15l1.6-5.2A2 2 0 0 1 7.5 8.4h9a2 2 0 0 1 1.9 1.4L20 15v4h-2.4v-1.6H6.4V19H4z"/><path d="M7.5 13h.01M16.5 13h.01"/>',
+ cng:'<path d="M3 17V9.5A2 2 0 0 1 5 7.5h8l4 4h3.5V17"/><circle cx="7" cy="17.5" r="2"/><circle cx="17" cy="17.5" r="2"/>',
+ room:'<path d="M3 11.5 12 4l9 7.5V20H3z"/><path d="M9.5 20v-6h5v6"/>',
+ other:'<path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v8"/>'
+};
+var CATS=[
+ {k:'bike',bn:'বাইক রাইড',en:'Bike ride',c:'#f97316',ride:1},
+ {k:'car',bn:'কার রাইড',en:'Car ride',c:'#2563eb',ride:1},
+ {k:'cng',bn:'সিএনজি / অটো',en:'CNG / Auto',c:'#16a34a',ride:1},
+ {k:'room',bn:'রুম',en:'Room',c:'#8b5cf6',ride:0},
+ {k:'other',bn:'অন্যান্য',en:'Other',c:'#0ea5e9',ride:0}
+];
+function catOf(k){ for(var i=0;i<CATS.length;i++) if(CATS[i].k===k) return CATS[i]; return null; }
+function catLb(c){ return tx(c.bn,c.en); }
+function svg(k,cls){ return '<svg viewBox="0 0 24 24"'+(cls?' class="'+cls+'"':'')+' aria-hidden="true">'+(SV[k]||'')+'</svg>'; }
+var SV_CLK='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>';
+var SV_SEAT='<svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19c.5-3.2 2.9-5 6-5s5.5 1.8 6 5M17.5 8v6M14.5 11h6"/></svg>';
+var SV_MSG='<svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/><path d="M8.5 11h7M8.5 14h4"/></svg>';
+var SV_BACK='<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>';
+var SV_PLUS='<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>';
+var SV_USERS='<svg viewBox="0 0 24 24"><use href="#hm-users"/></svg>';
+var SV_TRASH='<svg viewBox="0 0 24 24"><path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></svg>';
+var TRUST='<span class="hmTr" title="'+'Trusted'+'"><svg viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.6-3.1 8-7.5 9.5-4.4-1.5-7.5-4.9-7.5-9.5V6z"/><path d="m8.8 12.2 2.3 2.3 4.2-4.6"/></svg><span>__T__</span></span>';
+function ic(n){ return '<i class="mi" style="--m:var(--ic-'+n+')"></i>'; }
+
+/* ---------- state ---------- */
+var ST={tab:'feed',cat:'all',posts:[],at:0,err:'',inc:{},incAt:0}, REP={}, CH={}, F=null;
+var SENT=(function(){ try{ var o=JSON.parse(ls('ftHmSent_v1')||'{}'); return o&&typeof o==='object'?o:{}; }catch(e){ return {}; } })();
+function saveSent(){ var ks=Object.keys(SENT); if(ks.length>40){ ks.sort(function(a,b){ return (SENT[a].t||0)-(SENT[b].t||0); }); ks.slice(0,ks.length-40).forEach(function(k){ delete SENT[k]; }); } lset('ftHmSent_v1',JSON.stringify(SENT)); }
+
+/* ---------- reputation: 3-star scale from likes / dislikes ---------- */
+function rep(u){ return REP[u]||{l:0,d:0,my:0}; }
+function starVal(r){ var t=r.l+r.d; return t?Math.round(r.l/t*6)/2:0; }
+function trusted(r){ return r.l>=100&&r.d<=5; }
+function starsHtml(r){
+  var v=starVal(r), h='';
+  for(var i=0;i<3;i++){ var f=Math.max(0,Math.min(1,v-i)); h+='<i class="hmSt" style="--f:'+Math.round(f*100)+'%"></i>'; }
+  var t=r.l+r.d;
+  return '<span class="hmStars" title="'+nb(v.toFixed(1))+' / '+nb(3)+'">'+h+'<em>'+(t?nb(v.toFixed(1)):tx('নতুন','New'))+'</em></span>'
+    +(t?'<span class="hmLk">'+ic('thumb')+nb(r.l)+'</span><span class="hmLk"><span class="dn">'+ic('thumb')+'</span>'+nb(r.d)+'</span>':'');
+}
+function nameHtml(name,u){ var r=rep(u); return '<b class="hmNm">'+esc(name||'User')+'</b>'+(trusted(r)?TRUST.replace('__T__',tx('বিশ্বস্ত','Trusted')):'')+starsHtml(r); }
+async function loadRep(uids,force){
+  var m=me(), list=uids.filter(function(u,i,a){ return UIDRE.test(String(u))&&a.indexOf(u)===i&&(force||!REP[u]||Date.now()-REP[u].at>45000); }).slice(0,40);
+  await Promise.all(list.map(async function(u){
+    try{
+      var o=await db('homies/votes/'+u), l=0, d=0, my=0;
+      Object.keys(o||{}).forEach(function(k){ var v=o[k]&&o[k].v; if(v===1) l++; else if(v===-1) d++; else return; if(k===m) my=v; });
+      REP[u]={l:l,d:d,my:my,at:Date.now()};
+    }catch(e){ if(!REP[u]) REP[u]={l:0,d:0,my:0,at:Date.now()-30000}; }
+  }));
+}
+async function vote(target,v,pid){
+  var s=ses(); if(!s){ toast(errText('LOGIN')); return; } if(!UIDRE.test(target)||target===s.uid) return;
+  try{
+    await db('homies/votes/'+target+'/'+s.uid,{method:'PUT',headers:J,body:JSON.stringify({v:v,p:String(pid||'').slice(0,40),t:Date.now()})});
+    var r=rep(target), n={l:r.l,d:r.d,my:v,at:Date.now()};
+    if(r.my===1) n.l--; else if(r.my===-1) n.d--; if(v===1) n.l++; else n.d++;
+    n.l=Math.max(0,n.l); n.d=Math.max(0,n.d); REP[target]=n;
+    toast(v===1?tx('লাইক দেওয়া হয়েছে','Liked'):tx('ডিসলাইক দেওয়া হয়েছে','Disliked'));
+    render(); paintCards();
+  }catch(e){ toast(errText(e)); }
+}
+function rateHtml(target,pid){
+  var r=rep(target);
+  return '<span class="hmRate"><button type="button" class="hmV up'+(r.my===1?' on':'')+'" data-hm="vote" data-v="1" data-t="'+esc(target)+'" data-pid="'+esc(pid)+'" aria-label="Like">'+ic('thumb')+'</button>'
+    +'<button type="button" class="hmV dn'+(r.my===-1?' on':'')+'" data-hm="vote" data-v="-1" data-t="'+esc(target)+'" data-pid="'+esc(pid)+'" aria-label="Dislike">'+ic('thumb')+'</button></span>';
+}
+
+/* ---------- posts ---------- */
+function clean(id,v){
+  if(!v||typeof v!=='object'||!PIDRE.test(id)||!UIDRE.test(String(v.u||''))) return null;
+  var c=catOf(v.cat); if(!c) return null;
+  var fr=typeof v.fr==='string'?v.fr.slice(0,80):''; if(!fr) return null;
+  var tk={}, n=0; if(v.taken&&typeof v.taken==='object') Object.keys(v.taken).forEach(function(k){ if(UIDRE.test(k)){ tk[k]=1; n++; } });
+  return {id:id,u:v.u,n:typeof v.n==='string'?v.n.slice(0,40):'',un:typeof v.un==='string'?v.un.slice(0,30):'',cat:c.k,fr:fr,to:typeof v.to==='string'?v.to.slice(0,80):'',
+    wh:+v.wh||0,sc:Math.max(1,Math.min(8,parseInt(v.sc,10)||1)),cost:Math.max(0,Math.min(1e7,+v.cost||0)),nt:typeof v.nt==='string'?v.nt.slice(0,200):'',t:+v.t||0,tk:tk,tkn:n};
+}
+function ttl(p){ return p.cat==='room'?(p.fr+(p.to?' · '+p.to:'')):(p.to?p.fr+' → '+p.to:p.fr); }
+function alive(p){ var lim=p.cat==='room'?30*864e5:6*36e5; return !p.wh||p.wh+lim>Date.now(); }
+function perHead(p){ return p.cost>0?Math.ceil(p.cost/(p.sc+1)):0; }
+function find(id){ for(var i=0;i<ST.posts.length;i++) if(ST.posts[i].id===id) return ST.posts[i]; return null; }
+function myState(p){
+  var m=me(); if(p.u===m) return 'own'; if(p.tk[m]) return 'joined';
+  var s=SENT[p.id]; if(s){ if(s.s==='pending') return 'pending'; if(s.s==='confirmed') return 'joined'; if(s.s==='declined') return 'declined'; }
+  if(p.tkn>=p.sc) return 'full'; return 'open';
+}
+function visible(p){
+  if(!alive(p)) return false; var st=myState(p); if(st==='own') return false;
+  if(st==='full') return false;
+  return ST.cat==='all'||p.cat===ST.cat;
+}
+async function loadPosts(force){
+  if(!force&&ST.at&&Date.now()-ST.at<15000) return;
+  try{
+    var o=await db('homies/posts',undefined,'orderBy='+encodeURIComponent('"$key"')+'&limitToLast=80'), rows=[];
+    Object.keys(o||{}).forEach(function(k){ var p=clean(k,o[k]); if(p) rows.push(p); });
+    rows.sort(function(a,b){ return b.t-a.t; }); ST.posts=rows; ST.err='';
+  }catch(e){ var m=String(e&&e.message||e); ST.err=m==='LOGIN'?'login':/HTTP 40[13]/.test(m)?'rules':'net'; }
+  ST.at=Date.now();
+}
+async function loadIncoming(){
+  var m=me(); if(!m) return; var mine=ST.posts.filter(function(p){ return p.u===m; }).slice(0,15), uids=[];
+  await Promise.all(mine.map(async function(p){
+    try{ var o=await db('homies/req/'+p.id); var c={}; Object.keys(o||{}).forEach(function(u){ var r=o[u]; if(UIDRE.test(u)&&r&&typeof r==='object'&&['pending','confirmed','declined','cancelled'].indexOf(r.s)>-1){ c[u]={f:String(r.f||'').slice(0,40),fu:String(r.fu||'').slice(0,30),s:r.s,t:+r.t||0}; uids.push(u); } }); ST.inc[p.id]=c; }catch(e){}
+  }));
+  ST.incAt=Date.now(); await loadRep(uids);
+}
+async function refreshSent(){
+  var m=me(); if(!m) return; var ks=Object.keys(SENT).filter(function(k){ return SENT[k].s==='pending'; }).slice(0,15), chg=false;
+  await Promise.all(ks.map(async function(k){
+    try{ var r=await db('homies/req/'+k+'/'+m); if(!r){ delete SENT[k]; chg=true; } else if(r.s&&r.s!==SENT[k].s){ SENT[k].s=r.s; chg=true; } }catch(e){}
+  }));
+  if(chg) saveSent();
+}
+function pendingIn(){ var n=0; Object.keys(ST.inc).forEach(function(p){ Object.keys(ST.inc[p]).forEach(function(u){ if(ST.inc[p][u].s==='pending') n++; }); }); return n; }
+
+/* ---------- request / SMS / confirm ---------- */
+function openChat(uid,name,un,text){
+  try{ var m=JSON.parse(ls('ftReqLink_v1')||'{}')||{}; m[uid]={name:name||'',email:'',un:un||''}; lset('ftReqLink_v1',JSON.stringify(m)); }catch(e){}
+  closePage();
+  if(!window.ftChatOpen){ if(text) direct(uid,text); else toast(tx('মেসেজ সুবিধা পাওয়া যাচ্ছে না','Messaging is unavailable')); return; }
+  setTimeout(function(){
+    try{ window.ftChatOpen([uid]); }catch(e){}
+    if(!text) return;
+    var n=0, iv=setInterval(function(){
+      var inp=$('fcInput'), snd=$('fcSend'), pane=$('ftFrPane'); n++;
+      if(inp&&snd&&pane&&pane.getAttribute('data-cur')===uid){ clearInterval(iv); inp.value=text; try{ inp.dispatchEvent(new Event('input',{bubbles:true})); }catch(e){} setTimeout(function(){ snd.click(); },120); }
+      else if(n>40){ clearInterval(iv); direct(uid,text); }
+    },150);
+  },150);
+}
+async function direct(uid,text){
+  var s=ses(); if(!s) return;
+  try{ await db('chat/'+uid,{method:'POST',headers:J,body:JSON.stringify({fromUid:s.uid,fromName:myName(),fromUn:myUn(),text:String(text).slice(0,1000),ts:Date.now()})}); toast(tx('SMS পাঠানো হয়েছে','SMS sent')); }catch(e){ toast(errText(e)); }
+}
+async function request(pid,btn){
+  var s=ses(); if(!s){ toast(errText('LOGIN')); return; }
+  var p=find(pid); if(!p||myState(p)!=='open'){ render(); return; }
+  if(btn) btn.disabled=true;
+  try{
+    var ex=await db('homies/req/'+pid+'/'+s.uid);
+    if(ex&&ex.s&&ex.s!=='cancelled'){ SENT[pid]={o:p.u,on:p.n,s:ex.s,t:ex.t||Date.now(),ti:ttl(p)}; saveSent(); toast(tx('এই পোস্টে আপনার রিকোয়েস্ট আগেই আছে','You already have a request on this post')); render(); return; }
+    var rec={o:p.u,f:myName(),fu:myUn(),s:'pending',t:Date.now()};
+    await db('homies/req/'+pid+'/'+s.uid,{method:'PUT',headers:J,body:JSON.stringify(rec)});
+    SENT[pid]={o:p.u,on:p.n,s:'pending',t:rec.t,ti:ttl(p)}; saveSent();
+    var c=catOf(p.cat), sh=perHead(p);
+    var text=tx('Find Homies: আমি আপনার "'+ttl(p)+'" ('+catLb(c)+') শেয়ার করতে চাই।'+(sh?' জনপ্রতি '+money(sh)+'।':'')+' কথা বলে কনফার্ম করি।',
+      'Find Homies: I would like to share your "'+ttl(p)+'" ('+catLb(c)+').'+(sh?' '+money(sh)+' per person.':'')+' Let us talk and confirm.')+' #hm:'+pid+':'+s.uid;
+    openChat(p.u,p.n,p.un,text);
+  }catch(e){ toast(errText(e)); if(btn) btn.disabled=false; }
+}
+async function setReqStatus(pid,uid,patch){
+  await db('homies/req/'+pid+'/'+uid,{method:'PATCH',headers:J,body:JSON.stringify(patch)});
+}
+async function confirmReq(pid){
+  var s=ses(); if(!s){ toast(errText('LOGIN')); return; }
+  try{
+    var p=await db('homies/posts/'+pid);
+    if(!p){ toast(tx('পোস্টটি আর নেই','This post is no longer available')); try{ await setReqStatus(pid,s.uid,{s:'cancelled'}); }catch(e){} delete SENT[pid]; saveSent(); render(); fetchCard(pid,s.uid,true); return; }
+    var tk=p.taken&&typeof p.taken==='object'?p.taken:{}, cnt=Object.keys(tk).length, sc=Math.max(1,Math.min(8,parseInt(p.sc,10)||1));
+    if(cnt>=sc&&!tk[s.uid]){ toast(tx('সিট আর খালি নেই','No seats left')); return; }
+    await setReqStatus(pid,s.uid,{s:'confirmed',c:Date.now()});
+    var t=SENT[pid]||{o:p.u,on:p.n,t:Date.now(),ti:ttl(clean(pid,p)||{fr:'',to:'',cat:'other'})}; t.s='confirmed'; SENT[pid]=t; saveSent();
+    try{ await db('homies/posts/'+pid+'/taken/'+s.uid,{method:'PUT',headers:J,body:String(Date.now())}); }catch(e){}
+    ST.at=0; toast(tx('শেয়ার কনফার্ম হয়েছে','Share confirmed'));
+    await loadPosts(true); render(); fetchCard(pid,s.uid,true);
+  }catch(e){ toast(errText(e)); }
+}
+async function cancelReq(pid){
+  var s=ses(); if(!s) return;
+  try{ await setReqStatus(pid,s.uid,{s:'cancelled'}); delete SENT[pid]; saveSent(); toast(tx('রিকোয়েস্ট বাতিল হয়েছে','Request cancelled')); render(); fetchCard(pid,s.uid,true); }catch(e){ toast(errText(e)); }
+}
+async function declineReq(pid,uid){
+  try{ await setReqStatus(pid,uid,{s:'declined'}); if(ST.inc[pid]&&ST.inc[pid][uid]) ST.inc[pid][uid].s='declined'; toast(tx('প্রত্যাখ্যান করা হয়েছে','Declined')); render(); fetchCard(pid,uid,true); }catch(e){ toast(errText(e)); }
+}
+async function delPost(pid){
+  if(!confirm(tx('এই পোস্টটি মুছে ফেলবেন?','Delete this post?'))) return;
+  try{ try{ await db('homies/req/'+pid,{method:'DELETE'}); }catch(e){} await db('homies/posts/'+pid,{method:'DELETE'}); ST.posts=ST.posts.filter(function(p){ return p.id!==pid; }); delete ST.inc[pid]; toast(tx('পোস্ট মুছে ফেলা হয়েছে','Post deleted')); render(); }catch(e){ toast(errText(e)); }
+}
+
+/* ---------- SMS card inside the Messages inbox ---------- */
+function chHtml(pid,uid){
+  var c=CH[pid+':'+uid], m=me(), head='<div class="hmChT">'+SV_USERS+'<span>Find Homies</span></div>';
+  if(!c||!c.at) return head+'<div class="hmChS">'+tx('লোড হচ্ছে…','Loading…')+'</div>';
+  if(c.err||!c.r) return head+'<div class="hmChS">'+tx('রিকোয়েস্ট দেখা যাচ্ছে না (লগইন করুন বা পরে চেষ্টা করুন)','Request not available (log in or try later)')+'</div>';
+  var p=c.p?clean(pid,c.p):null, isReq=uid===m, s=c.r.s, owner=String(c.r.o||(p&&p.u)||''), target=isReq?owner:uid;
+  var who=isReq?(p&&p.n)||tx('পোস্টদাতা','the poster'):String(c.r.f||'User'), t=p?ttl(p):'', b='', st='';
+  if(t) head+='<div class="hmChS"><b>'+esc(t)+'</b></div>';
+  var ba='data-hmc-pid="'+esc(pid)+'" data-hmc-uid="'+esc(uid)+'"';
+  if(s==='pending'){
+    if(isReq){ st=tx('আপনি রিকোয়েস্ট পাঠিয়েছেন। কথা বলে নিশ্চিত হলে কনফার্ম করুন।','You sent this request. Talk it over, then confirm.'); b='<button type="button" class="hb" data-hmc="confirm" '+ba+'>'+tx('কনফার্ম করুন','Confirm')+'</button><button type="button" class="hb sec" data-hmc="cancel" '+ba+'>'+tx('বাতিল','Cancel')+'</button>'; }
+    else if(owner===m){ st=tx('<b>'+esc(who)+'</b> শেয়ার করতে চান। তাঁর কনফার্মেশনের অপেক্ষায়।','<b>'+esc(who)+'</b> wants to share. Waiting for them to confirm.'); b='<button type="button" class="hb red" data-hmc="decline" '+ba+'>'+tx('প্রত্যাখ্যান','Decline')+'</button>'; }
+  }else if(s==='confirmed'){
+    st=tx('শেয়ার কনফার্ম হয়েছে। রেটিং দিন: <b>'+esc(who)+'</b>','Share confirmed. Rate <b>'+esc(who)+'</b>');
+    if(UIDRE.test(target)&&target!==m) b=rateHtml(target,pid).replace(/data-hm="vote"/g,'data-hmc="vote"');
+  }else if(s==='declined') st=tx('রিকোয়েস্ট প্রত্যাখ্যাত হয়েছে।','This request was declined.');
+  else st=tx('রিকোয়েস্ট বাতিল হয়েছে।','This request was cancelled.');
+  return head+'<div class="hmChS">'+st+'</div>'+(b?'<div class="hmChB">'+b+'</div>':'');
+}
+async function fetchCard(pid,uid,force){
+  var k=pid+':'+uid, c=CH[k]; if(c&&c.busy) return; if(c&&!force&&c.at&&Date.now()-c.at<15000) return;
+  c=CH[k]=c||{}; c.busy=true;
+  try{
+    var r=await db('homies/req/'+pid+'/'+uid), p=null; try{ p=await db('homies/posts/'+pid); }catch(e){}
+    var o=String((r&&r.o)||(p&&p.u)||''), tg=uid===me()?o:uid; if(UIDRE.test(tg)) await loadRep([tg],true);
+    c.r=r; c.p=p; c.err=0;
+  }catch(e){ c.err=1; }
+  c.at=Date.now(); c.busy=false; paintCards();
+}
+var running=false, obs=null, tmr=0;
+function paintCards(){
+  var pane=$('ftFrPane'); if(!pane) return; running=true;
+  Array.prototype.forEach.call(pane.querySelectorAll('.hmCh'),function(d){ d.innerHTML=chHtml(d.getAttribute('data-pid'),d.getAttribute('data-uid')); });
+  running=false; if(obs) obs.takeRecords();
+}
+function strip(root){
+  var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null), n, list=[];
+  while((n=w.nextNode())) if(n.nodeValue.indexOf('#hm:')>-1) list.push(n);
+  list.forEach(function(t){ t.nodeValue=t.nodeValue.replace(new RegExp(MARK.source,'g'),''); });
+}
+function decorate(){
+  var pane=$('ftFrPane'); if(!pane||pane.textContent.indexOf('#hm:')<0) return;
+  running=true;
+  try{
+    Array.prototype.forEach.call(pane.querySelectorAll('.fcMsg'),function(el){
+      if(el.querySelector('.hmCh')) return;
+      var m=MARK.exec(el.textContent); if(!m) return;
+      strip(el);
+      var d=document.createElement('div'); d.className='hmCh'; d.setAttribute('data-pid',m[1]); d.setAttribute('data-uid',m[2]); d.innerHTML=chHtml(m[1],m[2]);
+      var sm=null; for(var i=0;i<el.children.length;i++) if(el.children[i].tagName==='SMALL') sm=el.children[i];
+      if(sm) el.insertBefore(d,sm); else el.appendChild(d);
+      fetchCard(m[1],m[2]);
+    });
+    strip(pane);
+  }catch(e){}
+  running=false; if(obs) obs.takeRecords();
+}
+function hookChat(){
+  var pane=$('ftFrPane'); if(!pane){ setTimeout(hookChat,900); return; }
+  obs=new MutationObserver(function(){ if(running) return; clearTimeout(tmr); tmr=setTimeout(decorate,40); });
+  obs.observe(pane,{childList:true,subtree:true}); decorate();
+  new MutationObserver(function(ms){ ms.forEach(function(m){ Array.prototype.forEach.call(m.addedNodes,function(n){ if(n.nodeType===1&&n.id==='ftMsgPop') strip(n); }); }); }).observe(document.body,{childList:true});
+}
+setInterval(function(){
+  if(document.visibilityState!=='visible'||!ses()) return; var pane=$('ftFrPane'); if(!pane) return;
+  Array.prototype.forEach.call(pane.querySelectorAll('.hmCh'),function(d){ var c=CH[d.getAttribute('data-pid')+':'+d.getAttribute('data-uid')]; if(!c||!c.r||c.r.s==='pending') fetchCard(d.getAttribute('data-pid'),d.getAttribute('data-uid'),true); });
+},15000);
+document.addEventListener('click',function(e){
+  var b=e.target&&e.target.closest?e.target.closest('[data-hmc]'):null; if(!b) return;
+  e.preventDefault(); e.stopPropagation();
+  var a=b.getAttribute('data-hmc'), pid=b.getAttribute('data-hmc-pid')||b.getAttribute('data-pid'), uid=b.getAttribute('data-hmc-uid');
+  if(a==='confirm') confirmReq(pid); else if(a==='cancel') cancelReq(pid); else if(a==='decline') declineReq(pid,uid);
+  else if(a==='vote'){ var p2=b.closest('.hmCh'); vote(b.getAttribute('data-t'),parseInt(b.getAttribute('data-v'),10),pid||(p2&&p2.getAttribute('data-pid'))); }
+},true);
+
+/* ---------- page ---------- */
+function ago(t){ var m=Math.max(0,Math.floor((Date.now()-t)/60000)); if(m<1) return tx('এইমাত্র','just now'); if(m<60) return bn()?nb(m)+' মিনিট আগে':m+' min ago'; if(m<1440){ var h=Math.floor(m/60); return bn()?nb(h)+' ঘণ্টা আগে':h+' h ago'; } var d=Math.floor(m/1440); return bn()?nb(d)+' দিন আগে':d+' d ago'; }
+function when(ts){ if(!ts) return ''; return new Date(ts).toLocaleString(bn()?'bn-BD':'en-GB',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}); }
+function hue(s){ var h=0; for(var i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))%360; return 'hsl('+h+',55%,46%)'; }
+function av(u,n){ return '<div class="hmAv" data-hm="prof" data-uid="'+esc(u)+'" style="background:'+hue(u)+'">'+esc((n||'U').trim().charAt(0).toUpperCase())+'</div>'; }
+function chips(){
+  var h='<div class="hmChips"><button type="button" class="hmChip'+(ST.cat==='all'?' on':'')+'" data-hm="cat" data-c="all">'+tx('সব','All')+'</button>';
+  CATS.forEach(function(c){ h+='<button type="button" class="hmChip'+(ST.cat===c.k?' on':'')+'" data-hm="cat" data-c="'+c.k+'">'+svg(c.k)+catLb(c)+'</button>'; });
+  return h+'</div>';
+}
+function errHtml(){
+  if(ST.err==='login') return '<div class="hmEmpty"><b>'+tx('লগইন প্রয়োজন','Login required')+'</b>'+tx('Find Homies ব্যবহার করতে ক্লাউড অ্যাকাউন্টে লগইন করুন (সেটিংস → অ্যাকাউন্ট)।','Log in to your cloud account to use Find Homies (Settings → Account).')+'</div>';
+  if(ST.err==='rules') return '<div class="hmEmpty"><b>'+tx('ডাটাবেস রুলস নেই','Database rules are missing')+'</b>'+tx('Firebase Rules-এ "homies" অংশটি যোগ করুন।','Add the "homies" part to your Firebase Rules.')+'</div>';
+  return '<div class="hmEmpty"><b>'+tx('লোড করা যায়নি','Could not load')+'</b>'+tx('ইন্টারনেট দেখে আবার চেষ্টা করুন।','Check your connection and try again.')+'<br><button type="button" class="hmGo" data-hm="reload">'+tx('আবার চেষ্টা','Retry')+'</button></div>';
+}
+function actHtml(p){
+  var st=myState(p), msg='<button type="button" class="hmIc" data-hm="msg" data-uid="'+esc(p.u)+'" data-n="'+esc(p.n)+'" data-un="'+esc(p.un)+'" aria-label="Message">'+SV_MSG+'</button>';
+  if(st==='open') return '<button type="button" class="hmGo" data-hm="req" data-pid="'+esc(p.id)+'">'+tx('শেয়ার রিকোয়েস্ট','Request to share')+'</button>'+msg;
+  if(st==='pending') return '<div class="hmSt2">'+tx('রিকোয়েস্ট পাঠানো হয়েছে','Requested')+'</div>'+msg;
+  if(st==='joined') return '<div class="hmSt2 ok">'+tx('আপনি যুক্ত হয়েছেন','You joined')+'</div>'+msg;
+  if(st==='declined') return '<div class="hmSt2 bad">'+tx('প্রত্যাখ্যাত','Declined')+'</div>';
+  return '<div class="hmSt2">'+tx('সিট পূর্ণ','Full')+'</div>';
+}
+function cardHtml(p){
+  var c=catOf(p.cat), left=Math.max(0,p.sc-p.tkn), sh=perHead(p);
+  return '<div class="hmCard"><div class="hmTop">'+av(p.u,p.n)+'<div class="hmWho"><div class="hmNmRow">'+nameHtml(p.n||p.un,p.u)+'</div><small>'+(p.un?'@'+esc(p.un)+' · ':'')+ago(p.t)+'</small></div>'
+    +'<span class="hmTag" style="--c:'+c.c+'">'+svg(c.k)+esc(catLb(c))+'</span></div>'
+    +'<div class="hmRoute">'+esc(ttl(p))+'</div>'
+    +'<div class="hmMeta"><span>'+SV_CLK+esc(when(p.wh))+'</span><span>'+SV_SEAT+nb(left)+' / '+nb(p.sc)+' '+(p.cat==='room'?tx('জন লাগবে','needed'):tx('সিট খালি','seats free'))+'</span></div>'
+    +(p.nt?'<p class="hmNote">'+esc(p.nt)+'</p>':'')
+    +(p.cost>0?'<div class="hmMoney"><div><small>'+tx('মোট','Total')+'</small><b>'+money(p.cost)+'</b></div><div><small>'+tx('জনপ্রতি','Per person')+'</small><b class="g">'+money(sh)+'</b></div><div><small>'+tx('সাশ্রয়','You save')+'</small><b>'+money(p.cost-sh)+'</b></div></div>':'')
+    +'<div class="hmAct">'+actHtml(p)+'</div></div>';
+}
+function feedHtml(){
+  var h=chips(); if(ST.err) return h+errHtml(); if(!ST.at) return h+'<div class="hmEmpty">'+tx('লোড হচ্ছে…','Loading…')+'</div>';
+  var rows=ST.posts.filter(visible);
+  if(!rows.length) return h+'<div class="hmEmpty"><b>'+tx('এখনো কোনো পোস্ট নেই','No posts yet')+'</b>'+tx('আপনার রাইড বা রুম পোস্ট করে খরচ শেয়ার করুন।','Post your ride or room and share the cost.')+'<br><button type="button" class="hmGo" data-hm="new">'+tx('পোস্ট করুন','Create a post')+'</button></div>';
+  return h+rows.map(cardHtml).join('');
+}
+function statusChip(s){ var m={pending:[tx('অপেক্ষমান','Pending'),''],confirmed:[tx('কনফার্মড','Confirmed'),'ok'],declined:[tx('প্রত্যাখ্যাত','Declined'),'bad'],cancelled:[tx('বাতিল','Cancelled'),'bad']}[s]||['',''];
+  return '<span class="hmChip2 '+m[1]+'">'+m[0]+'</span>'; }
+function mineHtml(){
+  if(ST.err) return errHtml(); var m=me(), h='', sk=Object.keys(SENT).sort(function(a,b){ return (SENT[b].t||0)-(SENT[a].t||0); });
+  h+='<div class="hmSec">'+tx('আমার পাঠানো রিকোয়েস্ট','Requests I sent')+'</div>';
+  if(!sk.length) h+='<div class="hmEmpty" style="padding:14px">'+tx('এখনো কোনো রিকোয়েস্ট পাঠাননি।','You have not sent any request yet.')+'</div>';
+  sk.forEach(function(k){
+    var r=SENT[k], p=find(k), ti=p?ttl(p):(r.ti||''), o=r.o; if(!UIDRE.test(String(o||''))) return;
+    var b='';
+    if(r.s==='pending') b='<button type="button" class="hmGo" data-hm="confirm" data-pid="'+esc(k)+'">'+tx('কনফার্ম করুন','Confirm')+'</button><button type="button" class="hmGo sec" data-hm="cancel" data-pid="'+esc(k)+'">'+tx('বাতিল','Cancel')+'</button>';
+    else if(r.s==='confirmed') b='<span class="hmRL">'+tx('রেটিং দিন','Rate')+'</span>'+rateHtml(o,k);
+    h+='<div class="hmCard"><div class="hmTop">'+av(o,r.on)+'<div class="hmWho"><div class="hmNmRow">'+nameHtml(r.on||'User',o)+'</div><small>'+esc(ti)+'</small></div>'+statusChip(r.s)+'</div>'
+      +'<div class="hmAct">'+b+'<button type="button" class="hmIc" data-hm="msg" data-uid="'+esc(o)+'" data-n="'+esc(r.on||'')+'" data-un="" aria-label="Message">'+SV_MSG+'</button></div></div>';
+  });
+  var mine=ST.posts.filter(function(p){ return p.u===m; });
+  h+='<div class="hmSec" style="margin-top:16px">'+tx('আমার পোস্ট','My posts')+'</div>';
+  if(!mine.length) h+='<div class="hmEmpty" style="padding:14px">'+tx('আপনি এখনো কিছু পোস্ট করেননি।','You have not posted anything yet.')+'<br><button type="button" class="hmGo" data-hm="new">'+tx('পোস্ট করুন','Create a post')+'</button></div>';
+  mine.forEach(function(p){
+    var c=catOf(p.cat), inc=ST.inc[p.id]||{}, ks=Object.keys(inc).sort(function(a,b){ return (inc[b].t||0)-(inc[a].t||0); });
+    h+='<div class="hmCard"><div class="hmTop"><div class="hmWho"><div class="hmRoute" style="margin:0">'+esc(ttl(p))+'</div><small>'+esc(when(p.wh))+' · '+nb(p.tkn)+' / '+nb(p.sc)+' '+tx('জন যুক্ত','joined')+'</small></div><span class="hmTag" style="--c:'+c.c+'">'+svg(c.k)+esc(catLb(c))+'</span></div>';
+    ks.forEach(function(u){
+      var r=inc[u], b='';
+      if(r.s==='pending') b='<button type="button" class="hmGo red" data-hm="decline" data-pid="'+esc(p.id)+'" data-uid="'+esc(u)+'">'+tx('প্রত্যাখ্যান','Decline')+'</button>';
+      else if(r.s==='confirmed') b=rateHtml(u,p.id);
+      h+='<div class="hmRq">'+av(u,r.f)+'<div class="hmWho"><div class="hmNmRow">'+nameHtml(r.f||r.fu,u)+'</div><small>'+ago(r.t)+'</small></div>'+statusChip(r.s)
+        +'<div class="hmAct">'+b+'<button type="button" class="hmIc" data-hm="msg" data-uid="'+esc(u)+'" data-n="'+esc(r.f)+'" data-un="'+esc(r.fu)+'" aria-label="Message" style="width:36px;height:36px">'+SV_MSG+'</button></div></div>';
+    });
+    h+='<div class="hmAct"><button type="button" class="hmGo red" data-hm="del" data-pid="'+esc(p.id)+'">'+tx('পোস্ট মুছুন','Delete post')+'</button></div></div>';
+  });
+  return h;
+}
+function render(){
+  var p=$('hmPage'); if(!p||!p.classList.contains('on')) return; var b=$('hmBody'), top=b.scrollTop;
+  b.innerHTML=ST.tab==='mine'?mineHtml():feedHtml(); b.scrollTop=top;
+  Array.prototype.forEach.call(p.querySelectorAll('.hmTabs button'),function(x){ x.classList.toggle('on',x.getAttribute('data-t')===ST.tab); });
+  var n=pendingIn(), e=$('hmBdg'); if(e){ e.textContent=nb(n); e.style.display=n?'flex':'none'; }
+}
+async function refresh(force){
+  var p=$('hmPage'); if(!p||!p.classList.contains('on')) return;
+  if(!ses()){ ST.err='login'; ST.at=Date.now(); render(); return; }
+  await loadPosts(force); render();
+  var owners=ST.posts.filter(function(x){ return visible(x)||x.u===me(); }).map(function(x){ return x.u; });
+  await loadRep(owners); render();
+  await Promise.all([loadIncoming(),refreshSent()]); render();
+  var o2=Object.keys(SENT).map(function(k){ return SENT[k].o; }); await loadRep(o2); render();
+}
+function ensure(){
+  var e=$('hmPage'); if(e) return e;
+  e=document.createElement('div'); e.id='hmPage'; e.setAttribute('role','dialog'); e.setAttribute('aria-label','Find Homies');
+  e.innerHTML='<div class="hmHd"><div class="hmHdRow"><button class="hmBack" type="button" data-hm="close" aria-label="Back">'+SV_BACK+'</button><div class="hmHdT"><b>Find Homies</b><small>'+tx('রাইড, রুম বা খরচ শেয়ার করুন','Share rides, rooms & costs')+'</small></div><button class="hmPlus" type="button" data-hm="new" aria-label="New post">'+SV_PLUS+'</button></div>'
+    +'<div class="hmTabs"><button type="button" data-hm="tab" data-t="feed" class="on">'+tx('ফিড','Feed')+'</button><button type="button" data-hm="tab" data-t="mine">'+tx('আমার শেয়ার','My shares')+'<em id="hmBdg"></em></button></div></div>'
+    +'<div class="hmBody" id="hmBody"></div><div id="hmSheet"></div>';
+  e.addEventListener('click',onClick); e.addEventListener('input',onInput); document.body.appendChild(e); return e;
+}
+function openPage(){ var e=ensure(); e.classList.add('on'); document.documentElement.style.overflow='hidden'; render(); refresh(true); clearInterval(openPage.t); openPage.t=setInterval(function(){ if(document.visibilityState==='visible') refresh(); },25000); }
+function closePage(){ var e=$('hmPage'); if(e) e.classList.remove('on'); document.documentElement.style.overflow=''; clearInterval(openPage.t); closeSheet(); }
+document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ var s=$('hmSheet'); if(s&&s.classList.contains('on')) closeSheet(); else closePage(); } });
+
+/* ---------- new post sheet ---------- */
+function pad(n){ return (n<10?'0':'')+n; }
+function dtLocal(ts){ var d=new Date(ts); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes()); }
+function openSheet(){
+  if(!ses()){ toast(errText('LOGIN')); return; }
+  F=F||{cat:'bike',sc:1,fr:'',to:'',wh:dtLocal(Date.now()+36e5),cost:'',nt:''}; paintSheet(); $('hmSheet').classList.add('on');
+}
+function closeSheet(){ var s=$('hmSheet'); if(s) s.classList.remove('on'); }
+function prevHtml(){
+  var cost=parseFloat(F.cost)||0; if(cost<=0) return tx('মোট খরচ দিলে জনপ্রতি কত পড়বে তা দেখাবে।','Enter the total cost to see the per-person share.');
+  var sh=Math.ceil(cost/(F.sc+1));
+  return tx('জনপ্রতি '+money(sh)+' · আপনার সাশ্রয় '+money(cost-sh),'Per person '+money(sh)+' · you save '+money(cost-sh));
+}
+function paintSheet(){
+  var c=catOf(F.cat), ride=c.ride, room=F.cat==='room';
+  var lFr=ride?tx('কোথা থেকে','From'):room?tx('এলাকা / লোকেশন','Area / location'):tx('কী শেয়ার করবেন','What to share');
+  var lTo=ride?tx('কোথায় যাবেন','To'):room?tx('রুমের বিবরণ (ঐচ্ছিক)','Room details (optional)'):tx('কোথায় (ঐচ্ছিক)','Where (optional)');
+  var lWh=room?tx('কবে থেকে','Available from'):tx('তারিখ ও সময়','Date & time');
+  var lCost=room?tx('মোট ভাড়া (মাসে)','Total rent (per month)'):tx('মোট খরচ','Total cost');
+  var lSc=room?tx('কতজন রুমমেট লাগবে','Roommates needed'):tx('আর কতজন শেয়ার করতে পারবে','How many can share with you');
+  var h='<div class="hmSh"><div class="hmGrab"></div><div class="hmShT"><span>'+tx('নতুন পোস্ট','New post')+'</span><button type="button" data-hm="sclose" aria-label="Close">×</button></div>'
+   +'<div class="hmChips" style="padding-bottom:4px">'+CATS.map(function(x){ return '<button type="button" class="hmChip'+(F.cat===x.k?' on':'')+'" data-hm="fcat" data-c="'+x.k+'">'+svg(x.k)+esc(catLb(x))+'</button>'; }).join('')+'</div>'
+   +'<label class="hmLb">'+lFr+'</label><input class="hmIn" id="hmFr" maxlength="70" value="'+esc(F.fr)+'" autocomplete="off">'
+   +'<label class="hmLb">'+lTo+'</label><input class="hmIn" id="hmTo" maxlength="70" value="'+esc(F.to)+'" autocomplete="off">'
+   +'<div class="hmRow2"><div><label class="hmLb">'+lWh+'</label><input class="hmIn" id="hmWh" type="datetime-local" value="'+esc(F.wh)+'"></div><div><label class="hmLb">'+lCost+'</label><input class="hmIn" id="hmCost" type="number" inputmode="decimal" min="0" placeholder="0" value="'+esc(F.cost)+'"></div></div>'
+   +'<label class="hmLb">'+lSc+'</label><div class="hmStep"><button type="button" data-hm="seat" data-d="-1">−</button><b id="hmSc">'+nb(F.sc)+'</b><button type="button" data-hm="seat" data-d="1">+</button></div>'
+   +'<div class="hmPrev" id="hmPrev">'+prevHtml()+'</div>'
+   +'<label class="hmLb">'+tx('নোট (ঐচ্ছিক)','Note (optional)')+'</label><textarea class="hmIn" id="hmNt" maxlength="200">'+esc(F.nt)+'</textarea>'
+   +'<div class="hmErr" id="hmErr"></div><button type="button" class="hmGo" id="hmPost" data-hm="post" style="width:100%;margin-top:6px">'+tx('পোস্ট করুন','Post')+'</button></div>';
+  $('hmSheet').innerHTML=h;
+}
+async function submitPost(){
+  var s=ses(), er=$('hmErr'), bt=$('hmPost'); if(!s){ toast(errText('LOGIN')); return; }
+  var c=catOf(F.cat), fr=F.fr.trim(), to=F.to.trim(), wh=Date.parse(F.wh), cost=Math.round(parseFloat(F.cost)||0), nt=F.nt.trim().slice(0,200);
+  if(!fr){ er.textContent=tx('প্রয়োজনীয় তথ্য লিখুন','Please fill in the required details'); return; }
+  if(c.ride&&!to){ er.textContent=tx('গন্তব্য লিখুন','Enter the destination'); return; }
+  if(!wh){ er.textContent=tx('তারিখ ও সময় দিন','Pick the date and time'); return; }
+  if(cost<0||cost>1e7){ er.textContent=tx('সঠিক খরচ দিন','Enter a valid cost'); return; }
+  var mineN=ST.posts.filter(function(p){ return p.u===s.uid&&alive(p); }).length; if(mineN>=6){ er.textContent=tx('একসাথে সর্বোচ্চ ৬টি সক্রিয় পোস্ট রাখা যাবে','You can keep up to 6 active posts'); return; }
+  bt.disabled=true; er.textContent='';
+  try{
+    var body={u:s.uid,n:myName(),un:myUn(),cat:F.cat,fr:fr.slice(0,70),to:to.slice(0,70),wh:wh,sc:F.sc,cost:cost,nt:nt,t:Date.now()};
+    await db('homies/posts',{method:'POST',headers:J,body:JSON.stringify(body)});
+    F=null; closeSheet(); ST.at=0; ST.tab='mine'; toast(tx('পোস্ট করা হয়েছে','Posted')); await refresh(true);
+  }catch(e){ er.textContent=errText(e); bt.disabled=false; }
+}
+function onInput(e){
+  if(!F) return; var t=e.target, id=t&&t.id;
+  if(id==='hmFr') F.fr=t.value; else if(id==='hmTo') F.to=t.value; else if(id==='hmWh') F.wh=t.value; else if(id==='hmNt') F.nt=t.value;
+  else if(id==='hmCost'){ F.cost=t.value; var p=$('hmPrev'); if(p) p.textContent=prevHtml(); }
+}
+function onClick(e){
+  var t=e.target; if(t===$('hmSheet')){ closeSheet(); return; }
+  var b=t.closest?t.closest('[data-hm]'):null; if(!b) return; var a=b.getAttribute('data-hm'), pid=b.getAttribute('data-pid'), uid=b.getAttribute('data-uid');
+  if(a==='close') closePage();
+  else if(a==='tab'){ ST.tab=b.getAttribute('data-t'); render(); if(ST.tab==='mine') Promise.all([loadIncoming(),refreshSent()]).then(render); }
+  else if(a==='cat'){ ST.cat=b.getAttribute('data-c'); render(); }
+  else if(a==='reload'){ ST.at=0; ST.err=''; render(); refresh(true); }
+  else if(a==='new') openSheet();
+  else if(a==='sclose') closeSheet();
+  else if(a==='fcat'){ F.cat=b.getAttribute('data-c'); paintSheet(); }
+  else if(a==='seat'){ F.sc=Math.max(1,Math.min(8,F.sc+parseInt(b.getAttribute('data-d'),10))); $('hmSc').textContent=nb(F.sc); $('hmPrev').textContent=prevHtml(); }
+  else if(a==='post') submitPost();
+  else if(a==='req') request(pid,b);
+  else if(a==='confirm') confirmReq(pid);
+  else if(a==='cancel') cancelReq(pid);
+  else if(a==='decline') declineReq(pid,uid);
+  else if(a==='del') delPost(pid);
+  else if(a==='vote') vote(b.getAttribute('data-t'),parseInt(b.getAttribute('data-v'),10),pid);
+  else if(a==='msg') openChat(uid,b.getAttribute('data-n'),b.getAttribute('data-un'),'');
+  else if(a==='prof'){ closePage(); setTimeout(function(){ if(window.ppView) window.ppView(uid); },120); }
+}
+
+window.ftHomies={open:openPage,close:closePage};
+hookChat();
+})();
+</script>
+
 </body>
 </html>
