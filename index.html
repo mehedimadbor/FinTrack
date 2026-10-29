@@ -9,11 +9,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="FinTrack">
+<meta name="apple-mobile-web-app-title" content="Finverse">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
-<title>FinTrack</title>
+<title>Finverse</title>
 <script>window.__ftIP=null;window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__ftIP=e;try{window.dispatchEvent(new Event('ftInstallReady'));}catch(_){}});</script>
 <script>try{var d=document.documentElement;if(localStorage.getItem("loginDone_v1")==="true")d.classList.add("hasUser");var th=localStorage.getItem("appTheme_v1");if(th)d.setAttribute("data-theme",th);d.classList.add("booting");setTimeout(function(){d.classList.remove("booting")},2500)}catch(e){}</script>
 <script>try{var L=localStorage,D=document.documentElement;if(L.getItem("loginDone_v1")==="true"&&(L.getItem("appPinEnabled_v1")==="true"||(L.getItem("appLockEnabled_v1")==="true"&&L.getItem("appLockCredId_v1")&&window.PublicKeyCredential&&navigator.credentials)))D.classList.add("locked")}catch(e){}</script>
@@ -49,7 +49,21 @@ function mi(n){return '<i class="mi" style="--m:var(--ic-'+n+')"></i>';}
 function noteFmt(n){n=String(n||'');var R='\u{1F501}';if(n.indexOf(R)===0){return mi('repeat')+' '+esc(n.slice(R.length).trim());}return esc(n);}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&family=Caveat:wght@500;600&family=Unbounded:wght@700;800;900&display=swap" rel="stylesheet">
+<style id="mvBrand">
+.loginBrand,.lkBrandName,.wgBrand,#mnName,.setVer,header.top h1 [data-i18n="app_title"],#sec-feed .fdTitle h2,.bpFh h2{font-family:'Unbounded','Poppins','Montserrat','Segoe UI',system-ui,sans-serif !important;font-weight:800 !important;letter-spacing:-.03em !important}
+.loginBrand{font-size:30px !important}
+.lkBrandName{font-size:17px !important}
+.wgBrand{font-size:15px !important}
+#mnName{font-size:19px !important}
+.setVer{font-size:10px !important}
+header.top h1 [data-i18n="app_title"]{font-size:26px !important;font-weight:900 !important;line-height:1.1}
+#sec-feed .fdTitle h2{font-size:18px !important}
+.bpFh h2{font-size:16px !important}
+#headerLogoEl,#loginLogoEl,#lockLogoEl,#mnLogo,.mnLogo,.loginLogo,.lkLogo{display:none !important}
+.lgBrandRow{justify-content:center}
+</style>
+
 <style>
 :root{
   --bg:#f4f5f7; --card:#ffffff; --text:#1a1c1e; --muted:#6b7280; --border:#e5e7eb;
@@ -312,7 +326,7 @@ details.gsetup summary::-webkit-details-marker{display:none;}
     color:#1a1c1e; background:transparent;
     font-family:'Segoe UI','Noto Sans Bengali','Hind Siliguri','Nirmala UI',system-ui,Arial,sans-serif; font-size:10pt; line-height:1.45;
   }
-  /* FinTrack pad pieces (repeat on every page) */
+  /* Finverse pad pieces (repeat on every page) */
   #printArea .pd-topbar{position:fixed; left:0; right:0; top:0; height:3.2mm; background:var(--grad); z-index:2;}
   #printArea .pd-botbar{position:fixed; left:0; right:0; bottom:0; height:3.2mm; background:var(--grad); z-index:2;}
   #printArea .pd-wm{position:fixed; right:-22mm; bottom:22mm; width:125mm; height:125mm; color:var(--pc,#2563eb); opacity:.07; transform:rotate(-12deg); z-index:0;}
@@ -389,7 +403,7 @@ details.gsetup summary::-webkit-details-marker{display:none;}
 .askCard .row2{margin-top:12px;}
 .loanPayBtn{padding:4px 10px; font-size:11.5px; margin-left:8px; border-radius:20px;}
 
-/* ===== FinTrack Smart UI layer (visual only, no logic changes) ===== */
+/* ===== Finverse Smart UI layer (visual only, no logic changes) ===== */
 :root{--r:18px; --sh:0 1px 2px rgba(15,23,42,.05),0 8px 24px rgba(15,23,42,.06); --grad:linear-gradient(135deg,var(--primary),var(--primary-d));}
 :root[data-theme="red-black"],:root[data-theme="neo-blue-black"]{--sh:0 1px 0 rgba(255,255,255,.04) inset,0 10px 28px rgba(0,0,0,.45);}
 @media (prefers-color-scheme: dark){:root:not([data-theme]){--sh:0 1px 0 rgba(255,255,255,.04) inset,0 10px 28px rgba(0,0,0,.4);}}
@@ -528,7 +542,7 @@ details.gsetup summary{font-weight:700;}
 #lockPinToggle{margin-top:6px; font-weight:600; text-decoration:none !important; padding:8px 16px; border-radius:20px; background:color-mix(in srgb,var(--primary) 10%,transparent);}
 #lockErrorMsg{min-height:18px; font-weight:600;}
 
-/* ===== FinTrack v3 — smarter UI layer ===== */
+/* ===== Finverse v3 — smarter UI layer ===== */
 html[lang="en"] .bn{display:none !important;} html:not([lang="en"]) .en{display:none !important;}
 :root{--r:22px;}
 body{background-image:radial-gradient(130% 55% at 50% -12%,color-mix(in srgb,var(--primary) 20%,transparent),transparent 62%),radial-gradient(60% 40% at 100% 30%,color-mix(in srgb,var(--primary) 7%,transparent),transparent 70%);}
@@ -1266,7 +1280,7 @@ html body .loginScreen .loginBox input.lgIn:-webkit-autofill,html body .loginScr
 <div class="loginScreen" id="loginScreen">
   <div class="lgCard">
   <div class="lgHero"><i class="lgBlob b1"></i><i class="lgBlob b2"></i>
-    <div class="lgBrandRow"><div class="loginLogo" id="loginLogoEl"><i class="mi" style="--m:var(--ic-wallet)"></i></div><div class="loginBrand">FinTrack</div></div>
+    <div class="lgBrandRow"><div class="loginLogo" id="loginLogoEl"><i class="mi" style="--m:var(--ic-wallet)"></i></div><div class="loginBrand">Finverse</div></div>
     <h2 class="lgTitle"><span data-m="up"><span class="bn">অ্যাকাউন্ট খুলুন</span><span class="en">Create an account</span></span><span data-m="in"><span class="bn">আবার স্বাগতম</span><span class="en">Welcome back</span></span></h2>
     <div class="loginTag" data-i18n="login_tag">আপনার আর্থিক হিসাবের সঙ্গী</div>
   </div>
@@ -1311,7 +1325,7 @@ html body .loginScreen .loginBox input.lgIn:-webkit-autofill,html body .loginScr
   <div class="lockBg" id="lockBg"></div>
   <div class="lockWall" id="lockWall"></div><div class="lockDim" id="lockDim"></div>
   <div class="lkOrb lkOrb1"></div><div class="lkOrb lkOrb2"></div>
-  <div class="lkBrand"><span class="lkLogo" id="lockLogoEl"><i class="mi" style="--m:var(--ic-wallet)"></i></span><span class="lkBrandName">FinTrack</span><span class="lkShield"><i class="mi" style="--m:var(--ic-shield)"></i></span></div>
+  <div class="lkBrand"><span class="lkLogo" id="lockLogoEl"><i class="mi" style="--m:var(--ic-wallet)"></i></span><span class="lkBrandName">Finverse</span><span class="lkShield"><i class="mi" style="--m:var(--ic-shield)"></i></span></div>
   <div class="lkClock"><div class="lkTime" id="lkTime">--:--</div><div class="lkDate" id="lkDate"></div></div>
   <div class="lockAvatarWrap">
     <span id="lockAvatarEmoji">U</span>
@@ -1339,7 +1353,7 @@ html body .loginScreen .loginBox input.lgIn:-webkit-autofill,html body .loginScr
     </div>
     <span class="lkHeart"><i class="mi" style="--m:var(--ic-check-circle)"></i></span>
   </div>
-  <div class="lkFoot"><span class="bn">FinTrack লক দিয়ে সুরক্ষিত</span><span class="en">Protected by FinTrack Lock</span></div>
+  <div class="lkFoot"><span class="bn">Finverse লক দিয়ে সুরক্ষিত</span><span class="en">Protected by Finverse Lock</span></div>
 </div>
 <script>(function(){try{var g=function(k){return localStorage.getItem(k)||''},$=function(i){return document.getElementById(i)},en=g('appLang_v1')==='en',n=g('myName_v1'),u=g('myUsername_v1'),pic=g('myProfilePic_v1'),d=new Date();
 var tm=new Intl.DateTimeFormat(en?'en-US':'bn-BD',{timeZone:'Asia/Dhaka',hour:'numeric',minute:'2-digit',hour12:true}).format(d),dt=new Intl.DateTimeFormat(en?'en-GB':'bn-BD',{timeZone:'Asia/Dhaka',weekday:'long',day:'numeric',month:'long'}).format(d);
@@ -2349,7 +2363,7 @@ var FT_FIREBASE = { apiKey: 'AIzaSyDRzfG4StEnCRy6ote3fuNrlu6_LPexWXY', dbUrl: 'h
 </div>
 <div id="printArea"></div>
 <div class="wrap">
-<header class="top"><h1 style="user-select:none;"><span id="headerLogoEl"><i class="mi" style="--m:var(--ic-wallet)"></i></span> <span data-i18n="app_title">FinTrack</span></h1>
+<header class="top"><h1 style="user-select:none;"><span id="headerLogoEl"><i class="mi" style="--m:var(--ic-wallet)"></i></span> <span data-i18n="app_title">Finverse</span></h1>
   <div class="pfStage" id="pfStage" data-state="profile">
   <div class="profileBar" id="homeProfile" onclick="activateTab('profile')">
     <div class="pfAvatar"><span id="homeAvatarTxt">U</span><img id="homeAvatarImg" alt=""></div>
@@ -3068,7 +3082,7 @@ html[data-theme*="yellow"] .cPad button.op{color:#000}
   <div class="setHero">
     <div class="setAv"><span id="setAvTxt">U</span><img id="setAvImg" alt=""></div>
     <div class="setInfo"><div class="setName" id="setName"></div><div class="setSub" id="setSub"></div></div>
-    <div class="setVer">FinTrack</div>
+    <div class="setVer">Finverse</div>
   </div>
   <div class="box">
     <h3 data-i18n="settings_theme">থিম</h3>
@@ -3159,7 +3173,7 @@ html[data-theme*="yellow"] .cPad button.op{color:#000}
   </div>
   <div class="box" id="installBox">
     <h3><span class="bn">অ্যাপ ইনস্টল করুন</span><span class="en">Install the app</span></h3>
-    <p style="font-size:12.5px; color:var(--muted); margin:0 0 10px;"><span class="bn">হোম স্ক্রিনে অ্যাপ হিসেবে যোগ করুন — এক ট্যাপে ইনস্টল, দ্রুত খোলে, ফুল-স্ক্রিনে চলে।</span><span class="en">Add FinTrack to your home screen as an app. One tap to install, opens fast, runs full screen.</span></p>
+    <p style="font-size:12.5px; color:var(--muted); margin:0 0 10px;"><span class="bn">হোম স্ক্রিনে অ্যাপ হিসেবে যোগ করুন — এক ট্যাপে ইনস্টল, দ্রুত খোলে, ফুল-স্ক্রিনে চলে।</span><span class="en">Add Finverse to your home screen as an app. One tap to install, opens fast, runs full screen.</span></p>
     <div id="ftInSt" class="invHint" style="display:block; margin-bottom:10px;"></div>
     <button type="button" class="typebtn sel" id="ftInBtn" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="ftInstall.open()"><i class="mi" style="--m:var(--ic-download); width:18px; height:18px; flex:none;"></i><span class="bn">এখনই ইনস্টল করুন</span><span class="en">Install now</span></button>
   </div>
@@ -3427,7 +3441,7 @@ html[data-theme*="yellow"] .cPad button.op{color:#000}
 <script>
 const I18N = {
   bn:{
-    app_title:'FinTrack', lbl_total_balance:'মোট ব্যালেন্স', lbl_total_expense:'মোট খরচ',
+    app_title:'Finverse', lbl_total_balance:'মোট ব্যালেন্স', lbl_total_expense:'মোট খরচ',
     tab_dash:'ড্যাশবোর্ড', tab_add:'যোগ করুন', tab_acc:'একাউন্ট', tab_loan:'লোন', tab_hist:'হিস্ট্রি', tab_settings:'সেটিংস',
     dash_cat_heading:'খাত অনুযায়ী খরচ', dash_recent_heading:'সাম্প্রতিক লেনদেন',
     empty_no_expense:'এখনো কোনো খরচ নেই', empty_no_tx:'কোনো লেনদেন নেই', empty_no_account:'কোনো একাউন্ট নেই', empty_no_one:'কেউ নেই',
@@ -3553,7 +3567,7 @@ const I18N = {
     chat_fallback:'দুঃখিত, এটা বুঝতে পারিনি। "ব্যালেন্স", "খরচ", "লোন", "খাত", "হিস্ট্রি" জিজ্ঞাসা করুন, অথবা সরাসরি লিখুন — যেমন "৫০০ টাকা জমা হলো" বা "রহিমের কাছ থেকে ২০০ টাকা ধার নিলাম"।'
   },
   en:{
-    app_title:'FinTrack', lbl_total_balance:'Total Balance', lbl_total_expense:'Total Expense',
+    app_title:'Finverse', lbl_total_balance:'Total Balance', lbl_total_expense:'Total Expense',
     tab_dash:'Dashboard', tab_add:'Add', tab_acc:'Accounts', tab_loan:'Loan', tab_hist:'History', tab_settings:'Settings',
     dash_cat_heading:'Expense by Category', dash_recent_heading:'Recent Transactions',
     empty_no_expense:'No expenses yet', empty_no_tx:'No transactions', empty_no_account:'No accounts', empty_no_one:'No one',
@@ -4582,7 +4596,7 @@ function exportCSV(){
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `fintrack_transactions_${todayStr()}.csv`;
+  a.download = `finverse_transactions_${todayStr()}.csv`;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -4694,7 +4708,7 @@ function esc(s){
   return String(s ?? '').replace(/[&<>"'`]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'}[c]));
 }
 
-// ---- FinTrack custom print pad ----
+// ---- Finverse custom print pad ----
 // থিমের রঙ, অ্যাপের লোগো (বা আপনার বসানো কাস্টম লোগো), প্রোফাইলের নাম/ফোন নিয়ে নিজে থেকে পেজ সাজায়।
 const PRINT_WALLET_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10V7a2 2 0 0 1 2-2h11"/><path d="M16 14h5"/></svg>';
 function printWithLetterhead(bodyHtml){
@@ -4703,7 +4717,7 @@ function printWithLetterhead(bodyHtml){
   const pd = (root.getPropertyValue('--primary-d')||'').trim() || pc;
   let logo = ''; let name = '', phone = '';
   try{ logo = safeImgUrl(localStorage.getItem('customLogo_v1')||''); name = localStorage.getItem('myName_v1')||''; phone = localStorage.getItem('myPhone_v1')||''; }catch(e){}
-  const appName = t('app_title') || 'FinTrack';
+  const appName = t('app_title') || 'Finverse';
   const tile = logo ? `<img src="${esc(logo)}" alt="">` : PRINT_WALLET_SVG;
   const wm = logo ? `<img src="${esc(logo)}" alt="">` : PRINT_WALLET_SVG;
   const who = (name||phone) ? `<div class="pd-who">${name?`<b>${esc(name)}</b>`:''}${phone?esc(phone):''}</div>` : '';
@@ -5039,8 +5053,8 @@ async function setupBiometric(){
     const cred = await navigator.credentials.create({
       publicKey:{
         challenge: challenge,
-        rp:{ name:'FinTrack' },
-        user:{ id:userId, name:'user', displayName:'FinTrack' },
+        rp:{ name:'Finverse' },
+        user:{ id:userId, name:'user', displayName:'Finverse' },
         pubKeyCredParams:[{type:'public-key', alg:-7},{type:'public-key', alg:-257}],
         authenticatorSelection:{ authenticatorAttachment:'platform', userVerification:'required' },
         timeout:60000
@@ -6312,7 +6326,7 @@ if(devUnlocked){
 }
 </script>
 <script>
-/* ===== FinTrack v3 additions (no changes to existing logic) ===== */
+/* ===== Finverse v3 additions (no changes to existing logic) ===== */
 (function(){
   const bnLang=()=>currentLang==='bn';
   // ---- hero carousel ----
@@ -6454,7 +6468,7 @@ if(devUnlocked){
 </script>
 
 <script>
-/* ===== FinTrack v4: fixes + new features ===== */
+/* ===== Finverse v4: fixes + new features ===== */
 (function(){
   const $=id=>document.getElementById(id), bn=()=>currentLang==='bn';
   const refreshAll=()=>{ renderDash(); renderAccounts(); renderLoans(); renderHistory(); populatePersonList(); };
@@ -6591,8 +6605,8 @@ if(devUnlocked){
   const pb=document.querySelector('button[onclick="printReport()"]'), sb=document.createElement('button');
   sb.className='typebtn'; sb.style.cssText='width:100%;margin-top:8px;'; sb.innerHTML='<span class="bn">'+mi('share')+' রিপোর্ট শেয়ার করুন</span><span class="en">'+mi('share')+' Share report</span>';
   sb.onclick=async()=>{
-    const txt='FinTrack — '+($('reportMonth').value||'')+'\n\n'+$('reportBody').innerText.replace(/\n{3,}/g,'\n\n');
-    try{ if(navigator.share) await navigator.share({title:'FinTrack',text:txt}); else{ await navigator.clipboard.writeText(txt); toast(bn()?'কপি হয়েছে':'Copied'); } }catch(e){}
+    const txt='Finverse — '+($('reportMonth').value||'')+'\n\n'+$('reportBody').innerText.replace(/\n{3,}/g,'\n\n');
+    try{ if(navigator.share) await navigator.share({title:'Finverse',text:txt}); else{ await navigator.clipboard.writeText(txt); toast(bn()?'কপি হয়েছে':'Copied'); } }catch(e){}
   };
   pb.after(sb);
 
@@ -6608,7 +6622,7 @@ if(devUnlocked){
 </script>
 
 <script>
-/* ===== FinTrack v5: faster entry features ===== */
+/* ===== Finverse v5: faster entry features ===== */
 (function(){
   const $=id=>document.getElementById(id), bn=()=>currentLang==='bn';
 
@@ -6686,7 +6700,7 @@ if(devUnlocked){
 </script>
 
 <script>
-/* ===== FinTrack v6: smarter UI ===== */
+/* ===== Finverse v6: smarter UI ===== */
 (function(){
   const $=id=>document.getElementById(id), bn=()=>currentLang==='bn';
 
@@ -7023,7 +7037,7 @@ if(devUnlocked){
 })();
 </script>
 <script>
-/* ===== FinTrack v6: smart lock + security/preferences settings ===== */
+/* ===== Finverse v6: smart lock + security/preferences settings ===== */
 (function(){
 const $=id=>document.getElementById(id), bn=()=>currentLang==='bn', de=document.documentElement, ov=$('lockOverlay');
 const ls=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}};
@@ -7199,7 +7213,7 @@ setTimeout(nudge,2500);
 })();
 </script>
 <script>
-/* ===== FinTrack v8: popup reminders (bill / loan / anything) ===== */
+/* ===== Finverse v8: popup reminders (bill / loan / anything) ===== */
 (function(){
 const $=id=>document.getElementById(id), bn=()=>currentLang==='bn';
 const ls=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}};
@@ -7480,7 +7494,7 @@ setTimeout(()=>{
 })();
 </script>
 <script>
-/* ===== FinTrack v8b: payment details + "send payment request" (SMS is the default) ===== */
+/* ===== Finverse v8b: payment details + "send payment request" (SMS is the default) ===== */
 (function(){
 const $=id=>document.getElementById(id), bn=()=>currentLang==='bn';
 const ls=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}};
@@ -7667,7 +7681,7 @@ window.openLoanSend=function(name,amt){
 })();
 </script>
 <script>
-/* ===== FinTrack v7: easy-accounting helpers + developer tools ===== */
+/* ===== Finverse v7: easy-accounting helpers + developer tools ===== */
 (function(){
 const $=id=>document.getElementById(id), bn=()=>currentLang==='bn';
 const ls=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}};
@@ -7869,7 +7883,7 @@ qaRender(); week();
 })();
 </script>
 <script>
-/* ===== FinTrack: spending period setting (custom month start / custom dates) ===== */
+/* ===== Finverse: spending period setting (custom month start / custom dates) ===== */
 (function(){
 const $=id=>document.getElementById(id), bn=()=>currentLang==='bn', L=(b,e)=>bn()?b:e;
 function cfg(){ return Object.assign({mode:'month',sd:1,from:'',to:''},data.spendPeriod||{}); }
@@ -7913,7 +7927,7 @@ render(); setTimeout(render,600);
 })();
 </script>
 <script>
-/* ===== FinTrack: Savings planner (monthly savings -> daily spending limit) ===== */
+/* ===== Finverse: Savings planner (monthly savings -> daily spending limit) ===== */
 (function(){
 const $=id=>document.getElementById(id), bn=()=>currentLang==='bn';
 const L=(b,e)=>bn()?b:e;
@@ -8068,7 +8082,7 @@ renderSP(); renderSet();
 })();
 </script>
 <script>
-/* ===== FinTrack: Widget (home-screen style quick view: today's plan + quick expense) ===== */
+/* ===== Finverse: Widget (home-screen style quick view: today's plan + quick expense) ===== */
 (function(){
 const $=id=>document.getElementById(id), bn=()=>currentLang==='bn', L=(b,e)=>bn()?b:e;
 const KEY='wgCfg_v1';
@@ -8127,7 +8141,7 @@ function renderWidget(){
   const r=window.spCalc?window.spCalc(data.savePlan):null;
   const ok=r&&r.inc>0&&r.avail>=0;
   const wantPlan=cfg.limit||cfg.spent||cfg.tomorrow||cfg.month;
-  let h=`<div class="wgIn"><div class="wgTop"><div><div class="wgBrand">FinTrack</div><div class="wgDate">${esc(dt)}</div></div><div class="wgBtns"><button type="button" onclick="wgCustomise()" aria-label="customise"><i class="mi" style="--m:var(--ic-settings)"></i></button><button type="button" onclick="closeWidget()" aria-label="close"><i class="mi" style="--m:var(--ic-x)"></i></button></div></div>`;
+  let h=`<div class="wgIn"><div class="wgTop"><div><div class="wgBrand">Finverse</div><div class="wgDate">${esc(dt)}</div></div><div class="wgBtns"><button type="button" onclick="wgCustomise()" aria-label="customise"><i class="mi" style="--m:var(--ic-settings)"></i></button><button type="button" onclick="closeWidget()" aria-label="close"><i class="mi" style="--m:var(--ic-x)"></i></button></div></div>`;
   if(wantPlan){
     if(!ok){
       let msg;
@@ -8234,7 +8248,7 @@ if(cfg.on&&(cfg.start||location.hash==='#widget')) openWidget();
 })();
 </script>
 <script>
-/* ===== FinTrack: Arrange home dashboard (move sections & cards up/down, on/off switch) ===== */
+/* ===== Finverse: Arrange home dashboard (move sections & cards up/down, on/off switch) ===== */
 (function(){
 const $=id=>document.getElementById(id), bn=()=>currentLang==='bn', L=(b,e)=>bn()?b:e;
 const sec=$('sec-dash'), track=$('heroTrack');
@@ -8370,7 +8384,7 @@ applyAll(); render();
 })();
 </script>
 <script>
-/* ===== FinTrack: more theme colors + custom accent color ===== */
+/* ===== Finverse: more theme colors + custom accent color ===== */
 (function(){
 const $=id=>document.getElementById(id), bn=()=>currentLang==='bn', L=(b,e)=>bn()?b:e;
 const row=$('themeRow'); if(!row) return;
@@ -8565,7 +8579,7 @@ setInterval(()=>{ if(!box.classList.contains('devOn')||!cd||!window._devUntil) r
 #bottomNav .bnbtn[data-bn="tx"] .lbl{font-size:9.5px}
 </style>
 <script>
-/* ===== FinTrack: Transactions tab in bottom navigation (transactions only) ===== */
+/* ===== Finverse: Transactions tab in bottom navigation (transactions only) ===== */
 (function(){
 const $=id=>document.getElementById(id), bn=()=>currentLang==='bn', L=(b,e)=>bn()?b:e;
 const FILT=[['all','সব','All'],['in','আয়','Income'],['out','খরচ','Expense'],['loan','লোন','Loan'],['sav','সঞ্চয়','Savings']];
@@ -8611,7 +8625,7 @@ render();
 .zkHd{font-size:12.5px;line-height:1.7;color:var(--muted)}.zkHd p{margin:0 0 7px}
 </style>
 <script>
-/* ===== FinTrack: Zakat + feature on/off switches ===== */
+/* ===== Finverse: Zakat + feature on/off switches ===== */
 (function(){
 const $=id=>document.getElementById(id), bn=()=>currentLang==='bn';
 const bl=(b,e)=>'<span class="bn">'+b+'</span><span class="en">'+e+'</span>';
@@ -9093,7 +9107,7 @@ async function send(){
   try{
     try{ await register(); }catch(e){}
     var to=await find(q);
-    if(!to){ msg(tx('এই ইউজারনেমে কোনো FinTrack ইউজার পাওয়া যায়নি','No FinTrack user found with that username'),true); }
+    if(!to){ msg(tx('এই ইউজারনেমে কোনো Finverse ইউজার পাওয়া যায়নি','No Finverse user found with that username'),true); }
     else if(to.uid===s.uid){ msg(tx('নিজেকে অনুরোধ পাঠানো যাবে না','You cannot send a request to yourself'),true); }
     else{
       var nm=nm0||linkName(to.uid)||'';
@@ -9971,7 +9985,7 @@ function decorate(){
   f.insertBefore(d,f.firstChild);
 }
 async function sendStatement(){
-  var q=Q(), b=balFor(cur), s=stats(cur), F=q.F, p=[tx('FinTrack স্টেটমেন্ট','FinTrack statement')];
+  var q=Q(), b=balFor(cur), s=stats(cur), F=q.F, p=[tx('Finverse স্টেটমেন্ট','Finverse statement')];
   if(b.get>0) p.push(tx('আপনার কাছে আমার পাওনা ','You owe me ')+F(b.get));
   if(b.owe>0) p.push(tx('আমার কাছে আপনার পাওনা ','I owe you ')+F(b.owe));
   if(b.get>0&&b.owe>0){ var n=b.get-b.owe; p.push(tx('নিট ','Net ')+(n>=0?tx('আপনি দেবেন ','you pay '):tx('আমি দেব ','I pay '))+F(Math.abs(n))); }
@@ -10286,7 +10300,7 @@ function receipt(id){
   var r=x.r, th=load().th[cur]||{}, who=th.name||th.un||th.email||'?', me=myName()||tx('আমি','Me'), kd=r.kind;
   var lender=(x.me&&kd==='loan')||(!x.me&&kd==='ask'), payer=(kd==='repay'||kd==='gift'||kd==='other')?x.me:kd==='recv'?!x.me:null;
   var from=payer!==null?(payer?me:who):(lender?me:who), to=payer!==null?(payer?who:me):(lender?who:me);
-  var t=''+tx('FinTrack রসিদ','FinTrack receipt')+'\n'+q.kindLbl(kd)+': '+from+' → '+to+'\n'+tx('পরিমাণ: ','Amount: ')+q.F(r.amount)+'\n'+tx('তারিখ: ','Date: ')+new Date(r.ts||Date.now()).toLocaleDateString(bnL()?'bn-BD':'en-GB',{day:'numeric',month:'long',year:'numeric'})+(r.due?'\n'+tx('ফেরতের তারিখ: ','Due: ')+r.due:'')+(r.note?'\n'+tx('নোট: ','Note: ')+r.note:'')+'\n'+tx('স্ট্যাটাস: গ্রহণ করা হয়েছে ','Status: accepted ');
+  var t=''+tx('Finverse রসিদ','Finverse receipt')+'\n'+q.kindLbl(kd)+': '+from+' → '+to+'\n'+tx('পরিমাণ: ','Amount: ')+q.F(r.amount)+'\n'+tx('তারিখ: ','Date: ')+new Date(r.ts||Date.now()).toLocaleDateString(bnL()?'bn-BD':'en-GB',{day:'numeric',month:'long',year:'numeric'})+(r.due?'\n'+tx('ফেরতের তারিখ: ','Due: ')+r.due:'')+(r.note?'\n'+tx('নোট: ','Note: ')+r.note:'')+'\n'+tx('স্ট্যাটাস: গ্রহণ করা হয়েছে ','Status: accepted ');
   copyText(t).then(function(ok){ toast(ok?tx('রসিদ কপি হয়েছে','Receipt copied'):tx('কপি করা গেল না','Could not copy')); });
 }
 /* ---------- navigation + events ---------- */
@@ -10432,7 +10446,7 @@ async function startChat(){
   try{
     try{ await register(); }catch(e){}
     var to=await find(q);
-    if(!to) fcMsg(tx('এই ইউজারনেমে কোনো FinTrack ইউজার পাওয়া যায়নি','No FinTrack user found with that username'));
+    if(!to) fcMsg(tx('এই ইউজারনেমে কোনো Finverse ইউজার পাওয়া যায়নি','No Finverse user found with that username'));
     else if(to.uid===s.uid) fcMsg(tx('নিজেকে মেসেজ পাঠানো যাবে না','You cannot message yourself'));
     else{
       if(blocked(to.uid)){ var bo=lsj('ftChatBlock_v1'); delete bo[to.uid]; lss('ftChatBlock_v1',bo); }
@@ -10613,7 +10627,7 @@ function capture(){
 function banner(){
   var b=$('lgInvite'); if(!b) return; var p=pend(); if(!p){ b.style.display='none'; return; }
   var n=E(p.n||'');
-  b.innerHTML=n?('<i class="mi" style="--m:var(--ic-sparkle)"></i> <b>'+n+'</b> '+tx('আপনাকে FinTrack-এ আমন্ত্রণ জানিয়েছেন।','invited you to FinTrack.')):('<i class="mi" style="--m:var(--ic-sparkle)"></i> '+tx('একজন বন্ধু আপনাকে FinTrack-এ আমন্ত্রণ জানিয়েছেন।','A friend invited you to FinTrack.'));
+  b.innerHTML=n?('<i class="mi" style="--m:var(--ic-sparkle)"></i> <b>'+n+'</b> '+tx('আপনাকে Finverse-এ আমন্ত্রণ জানিয়েছেন।','invited you to Finverse.')):('<i class="mi" style="--m:var(--ic-sparkle)"></i> '+tx('একজন বন্ধু আপনাকে Finverse-এ আমন্ত্রণ জানিয়েছেন।','A friend invited you to Finverse.'));
   b.innerHTML+='<br>'+tx('Google দিয়ে অ্যাকাউন্ট খুললেই চ্যাটে নিজে থেকে যুক্ত হয়ে যাবেন।','Sign up with Google and you will be added to their chat automatically.');
   b.style.display='';
 }
@@ -10626,7 +10640,7 @@ async function process(){
   busy=true;
   try{
     var nm=p.n||tx('ইনভাইটকারী','Inviter');
-    var r=await api.welcome(p.u,nm,tx('হাই! আপনার ইনভাইট লিংক দিয়ে আমি FinTrack-এ যোগ দিলাম।','Hi! I joined FinTrack through your invite link.'));
+    var r=await api.welcome(p.u,nm,tx('হাই! আপনার ইনভাইট লিংক দিয়ে আমি Finverse-এ যোগ দিলাম।','Hi! I joined Finverse through your invite link.'));
     if(r==='retry'){ fails++; nextAt=Date.now()+20000; if(fails>=5) nextAt=Date.now()+36e5; }
     else{ clear(); if(r==='ok') toast(tx(''+nm+' আপনার চ্যাটে যুক্ত হয়েছেন',''+nm+' was added to your chat')); }
   }catch(e){ fails++; nextAt=Date.now()+20000; }
@@ -10638,7 +10652,7 @@ function need(){
   var fe=$('pfe'); if(fe){ var dt=fe.closest('details'); if(dt) dt.open=true; setTimeout(function(){ try{ fe.scrollIntoView({behavior:'smooth',block:'center'}); fe.focus(); }catch(e){} },80); }
   return null;
 }
-function msgText(){ var n=myName(); return tx((n?n+' তোমাকে ':'')+'FinTrack-এ ইনভাইট করছে — হিসাব রাখার সহজ অ্যাপ। এই লিংকে Google দিয়ে অ্যাকাউন্ট খুললে আমার সাথে চ্যাটে যুক্ত হবে:','Join me on FinTrack, an easy money-tracking app. Sign up with Google through this link and we will be connected in chat:'); }
+function msgText(){ var n=myName(); return tx((n?n+' তোমাকে ':'')+'Finverse-এ ইনভাইট করছে — হিসাব রাখার সহজ অ্যাপ। এই লিংকে Google দিয়ে অ্যাকাউন্ট খুললে আমার সাথে চ্যাটে যুক্ত হবে:','Join me on Finverse, an easy money-tracking app. Sign up with Google through this link and we will be connected in chat:'); }
 function copyTxt(t){
   function fb(){ try{ var a=document.createElement('textarea'); a.value=t; a.style.cssText='position:fixed;opacity:0'; document.body.appendChild(a); a.select(); var ok=document.execCommand('copy'); a.remove(); return ok; }catch(e){ return false; } }
   var done=function(ok){ toast(ok?tx('লিংক কপি হয়েছে','Link copied'):tx('কপি করা যায়নি, লিংকটি চেপে ধরে কপি করুন','Could not copy, long-press the link to copy')); };
@@ -10647,7 +10661,7 @@ function copyTxt(t){
 }
 window.ftInvite={
   share:function(){ if(!need()) return; var u=link();
-    if(navigator.share){ navigator.share({title:'FinTrack',text:msgText(),url:u}).catch(function(e){ if(!e||e.name!=='AbortError') copyTxt(u); }); } else copyTxt(u); },
+    if(navigator.share){ navigator.share({title:'Finverse',text:msgText(),url:u}).catch(function(e){ if(!e||e.name!=='AbortError') copyTxt(u); }); } else copyTxt(u); },
   url:function(){ return link()||BASE; },
   copy:function(){ if(!need()) return; copyTxt(link()); },
   wa:function(){ if(!need()) return; window.open('https://wa.me/?text='+encodeURIComponent(msgText()+' '+link()),'_blank','noopener'); }
@@ -10702,7 +10716,7 @@ setInterval(function(){ try{ render(); process(); }catch(e){} },2500);
    BROADCAST MODE (ADMIN_EMAIL + ADMIN_CHAT filled): the admin's app relays bot messages to Firebase (/notices), every app reads them.
    If both are empty the old single-phone mode is used (this phone polls the bot directly). */
 (function(){
-var ADMIN_EMAIL='misalia88test@gmail.com';   /* admin's FinTrack login email (the app logged in with this email relays the bot messages to everyone) */
+var ADMIN_EMAIL='misalia88test@gmail.com';   /* admin's Finverse login email (the app logged in with this email relays the bot messages to everyone) */
 var ADMIN_CHAT='1543116871';    /* admin's Telegram Chat ID (digits) - only messages from this chat are accepted. get it from @userinfobot */
 var P=['RVVpVVh0MC1z','Wkg5OUZqVzBa','bXpjYzBBU2VB','WEJxMFRIQUE6','MjMyMjQ5Nzgy','Nw=='];
 var AUTO_MS=30000, EXP=7*864e5, PULL_MS=15000;
@@ -10927,7 +10941,7 @@ show(); arm(); pull(); diag();
 })();
 </script>
 <script>
-/* ===== FinTrack: advanced financial analysis ===== */
+/* ===== Finverse: advanced financial analysis ===== */
 (function(){
 const $=id=>document.getElementById(id), bn=()=>currentLang==='bn', Lg=(b,e)=>bn()?b:e, ic=n=>'<i class="mi" style="--m:var(--ic-'+n+')"></i>';
 const sum=l=>l.reduce((a,x)=>a+(+x.amount||0),0), pos=o=>Object.values(o).filter(v=>v>0).reduce((a,b)=>a+b,0);
@@ -11048,7 +11062,7 @@ try{adv();}catch(e){}
 })();
 </script>
 <script>
-/* ===== FinTrack: advanced login/signup UX ===== */
+/* ===== Finverse: advanced login/signup UX ===== */
 (function(){
 const $=id=>document.getElementById(id), sc=$('loginScreen'); if(!sc) return;
 const bn=()=>document.documentElement.lang!=='en', L=(b,e)=>bn()?b:e;
@@ -11088,7 +11102,7 @@ new MutationObserver(()=>{ const s=$('lgStatus'); if(s&&s.classList.contains('ba
 })();
 </script>
 <script>
-/* ===== FinTrack: notifications (messages, requests, reminders) ===== */
+/* ===== Finverse: notifications (messages, requests, reminders) ===== */
 (function(){
 const $=id=>document.getElementById(id), bn=()=>currentLang==='bn', L=(b,e)=>bn()?b:e, ic=n=>'<i class="mi" style="--m:var(--ic-'+n+')"></i>';
 const PK='ftNotifPref_v1', LK='ftNotifLog_v1', SK='ftNotifSeen_v1', IK='ftNotifInit_v1';
@@ -12177,7 +12191,7 @@ function fillMenu(){
 }
 const ov=document.createElement('div'); ov.id='ftMnOv';
 const mn=document.createElement('aside'); mn.id='ftMn'; mn.setAttribute('role','dialog'); mn.setAttribute('aria-modal','true'); mn.setAttribute('aria-hidden','true');
-mn.innerHTML='<div class="mnHd"><span class="mnLogo" id="mnLogo"></span><b id="mnName">FinTrack</b><button type="button" class="mnIc" id="mnBell" aria-label="Notifications"><i class="mi" style="--m:var(--ic-bell)"></i></button><button type="button" class="mnIc" id="mnX" aria-label="Close"><svg viewBox="0 0 24 24"><path d="m6.5 6.5 11 11M17.5 6.5l-11 11"/></svg></button></div><div class="mnBody" id="mnBody"></div><div class="mnFt" id="mnFt"></div>';
+mn.innerHTML='<div class="mnHd"><span class="mnLogo" id="mnLogo"></span><b id="mnName">Finverse</b><button type="button" class="mnIc" id="mnBell" aria-label="Notifications"><i class="mi" style="--m:var(--ic-bell)"></i></button><button type="button" class="mnIc" id="mnX" aria-label="Close"><svg viewBox="0 0 24 24"><path d="m6.5 6.5 11 11M17.5 6.5l-11 11"/></svg></button></div><div class="mnBody" id="mnBody"></div><div class="mnFt" id="mnFt"></div>';
 document.body.appendChild(ov); document.body.appendChild(mn);
 function openMenu(){ fillMenu(); ov.classList.add('on'); mn.classList.add('on'); mn.setAttribute('aria-hidden','false'); }
 function closeMenu(){ ov.classList.remove('on'); mn.classList.remove('on'); mn.setAttribute('aria-hidden','true'); }
@@ -12416,7 +12430,7 @@ x:'<svg viewBox="0 0 24 24"><path d="m6.5 6.5 11 11M17.5 6.5l-11 11"/></svg>',
  send:'<svg viewBox="0 0 24 24"><path d="M21 3 10.2 13.8"/><path d="M21 3l-6.6 18-4.2-7.2L3 9.6z"/></svg>'
 };
 const row=(c,i,t,d)=>'<div class="abRow"><span class="abIc" style="--c:'+c+'">'+ic[i]+'</span><div><b>'+t+'</b><p>'+d+'</p></div></div>';
-const appName=()=>{ const n=document.querySelector('[data-i18n="app_title"]'); return (n&&n.textContent.trim())||'FinTrack'; };
+const appName=()=>{ const n=document.querySelector('[data-i18n="app_title"]'); return (n&&n.textContent.trim())||'Finverse'; };
 const logoHtml=()=>{ const l=document.getElementById('headerLogoEl'); const h=l?l.innerHTML.trim():''; return h||'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10V7a2 2 0 0 1 2-2h11"/><path d="M16 14h5"/></svg>'; };
 function html(){
   return '<div class="abCard" role="dialog" aria-modal="true"><button type="button" class="abX" aria-label="Close" onclick="ftAboutClose()">'+ic.x+'</button>'
@@ -12449,7 +12463,7 @@ window.ftAboutRestore=function(){
 })();
 </script>
 <script>
-/* ===== FinTrack add-on: everything lands in the notification inbox + smarter Friends UI ===== */
+/* ===== Finverse add-on: everything lands in the notification inbox + smarter Friends UI ===== */
 (function(){
 var bn=function(){try{return currentLang==='bn';}catch(e){return true;}}, L=function(b,e){return bn()?b:e;};
 function jg(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v;}catch(e){return d;}}
@@ -13073,7 +13087,7 @@ setTimeout(function(){try{paint();}catch(e){}},400);
 })();
 </script>
 <style id="ftStab">
-/* ===== FinTrack stability fix v2: mobile GPU/compositing glitches (Chrome/Brave Android) ===== */
+/* ===== Finverse stability fix v2: mobile GPU/compositing glitches (Chrome/Brave Android) ===== */
 /* 1) body height:100% made sticky bars + backgrounds stop after one screen -> let page grow */
 html{height:auto !important; min-height:100%; max-width:100%;}
 body{height:auto !important; min-height:100vh; min-height:100dvh; max-width:100%; overflow-x:clip;}
@@ -13157,7 +13171,7 @@ html:not(.locked) .lockOverlay .lkOrb,html:not(.locked) .lockOverlay .lockBg{dis
   function fallbackManifest(){
     try{
       var base=location.href.split('#')[0].split('?')[0].replace(/[^\/]*$/,'');
-      var m={name:'FinTrack',short_name:'FinTrack',id:base,start_url:base,scope:base,display:'standalone',orientation:'portrait',background_color:'#f4f5f7',theme_color:'#2563eb',
+      var m={name:'Finverse',short_name:'Finverse',id:base,start_url:base,scope:base,display:'standalone',orientation:'portrait',background_color:'#f4f5f7',theme_color:'#2563eb',
         icons:[{src:iconData(192),sizes:'192x192',type:'image/png',purpose:'any'},{src:iconData(512),sizes:'512x512',type:'image/png',purpose:'any'}]};
       var u=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/manifest+json'}));
       var l=document.querySelector('link[rel="manifest"]'); if(!l){ l=document.createElement('link'); l.rel='manifest'; document.head.appendChild(l); }
@@ -13562,7 +13576,7 @@ function loadImg(src){ return new Promise(function(res){ if(!/^data:image\/(png|
 async function cardBlob(){
   var F='"Noto Sans Bengali","Segoe UI",Arial,sans-serif';
   try{ if(document.fonts){ await Promise.all([document.fonts.load('800 60px "Noto Sans Bengali"'),document.fonts.load('500 30px "Noto Sans Bengali"')]); } }catch(e){}
-  var n=g('myName_v1')||L('FinTrack ব্যবহারকারী','FinTrack user'), un=g('myUsername_v1').replace(/^@/,''), bio=g('myBio_v1'), job=g('myJob_v1'), city=g('myCity_v1'), pic=g('myProfilePic_v1');
+  var n=g('myName_v1')||L('Finverse ব্যবহারকারী','Finverse user'), un=g('myUsername_v1').replace(/^@/,''), bio=g('myBio_v1'), job=g('myJob_v1'), city=g('myCity_v1'), pic=g('myProfilePic_v1');
   var acc=g('myAccent_v1'); if(!/^#[0-9a-f]{6}$/i.test(acc)){ try{ acc=getComputedStyle(document.documentElement).getPropertyValue('--primary').trim(); }catch(e){ acc=''; } }
   var rgb=hexRgb(acc), W=1080, H=620, cv=document.createElement('canvas'); cv.width=W; cv.height=H; var c=cv.getContext('2d');
   var gr=c.createLinearGradient(0,0,W,H); gr.addColorStop(0,rgbS(rgb,1.08)); gr.addColorStop(1,rgbS(rgb,.58));
@@ -13572,7 +13586,7 @@ async function cardBlob(){
   /* brand */
   rr(c,64,56,72,72,22); c.fillStyle='rgba(255,255,255,.95)'; c.fill();
   c.strokeStyle=rgbS(rgb,.95); c.lineWidth=6; c.lineJoin='round'; rr(c,80,76,40,32,9); c.stroke(); c.beginPath(); c.moveTo(80,89); c.lineTo(120,89); c.stroke(); c.beginPath(); c.arc(106,98,3.2,0,7); c.fillStyle=rgbS(rgb,.95); c.fill();
-  c.fillStyle='#fff'; c.font='800 46px '+F; c.textBaseline='middle'; c.fillText('FinTrack',156,94);
+  c.fillStyle='#fff'; c.font='900 38px Unbounded, '+F; c.textBaseline='middle'; c.fillText('Finverse',156,94);
   /* avatar */
   var ax=64, ay=190, ad=210; c.save(); c.beginPath(); c.arc(ax+ad/2,ay+ad/2,ad/2+9,0,7); c.fillStyle='rgba(255,255,255,.9)'; c.fill(); c.beginPath(); c.arc(ax+ad/2,ay+ad/2,ad/2,0,7); c.clip();
   var im=await loadImg(pic);
@@ -13588,24 +13602,24 @@ async function cardBlob(){
   if(meta){ c.font='500 30px '+F; c.fillStyle='rgba(255,255,255,.85)'; c.fillText(meta,tx0,y); y+=46; }
   if(bio){ c.font='500 30px '+F; c.fillStyle='rgba(255,255,255,.8)'; wrapTxt(c,bio,mw,2).forEach(function(l){ c.fillText(l,tx0,y); y+=42; }); }
   /* call to action */
-  var cta=L('আমার সাথে FinTrack-এ যোগ দিন','Join me on FinTrack'); c.font='700 34px '+F; var cw=c.measureText(cta).width+64;
+  var cta=L('আমার সাথে Finverse-এ যোগ দিন','Join me on Finverse'); c.font='700 34px '+F; var cw=c.measureText(cta).width+64;
   rr(c,64,H-124,cw,76,38); c.fillStyle='#fff'; c.fill(); c.fillStyle=rgbS(rgb,.8); c.textBaseline='middle'; c.fillText(cta,96,H-86);
   return await new Promise(function(r){ cv.toBlob(r,'image/png'); });
 }
 async function share(){
   var n=g('myName_v1'), link=shareUrl();
   var hasRef=/[?&]ref=/.test(link);
-  var intro=L((n?n+' ':'')+'আপনাকে FinTrack-এ ইনভাইট করছে — হিসাব রাখার সহজ অ্যাপ। এই লিংকে খুলে Google দিয়ে অ্যাকাউন্ট খুললে আমার সাথে চ্যাটে যুক্ত হবেন:','Join '+(n||'me')+' on FinTrack, an easy money-tracking app. Open this link and sign up with Google to connect with me in chat:');
+  var intro=L((n?n+' ':'')+'আপনাকে Finverse-এ ইনভাইট করছে — হিসাব রাখার সহজ অ্যাপ। এই লিংকে খুলে Google দিয়ে অ্যাকাউন্ট খুললে আমার সাথে চ্যাটে যুক্ত হবেন:','Join '+(n||'me')+' on Finverse, an easy money-tracking app. Open this link and sign up with Google to connect with me in chat:');
   if(!hasRef) toast(L('রেফারেল লিংক পেতে আগে লগইন করুন (এখন শুধু অ্যাপের লিংক যাবে)','Log in to include your referral (sharing app link for now)'));
-  var file=null; try{ var b=await cardBlob(); if(b) file=new File([b],'fintrack-profile.png',{type:'image/png'}); }catch(e){}
+  var file=null; try{ var b=await cardBlob(); if(b) file=new File([b],'finverse-profile.png',{type:'image/png'}); }catch(e){}
   if(navigator.share){
     try{
-      if(file&&navigator.canShare&&navigator.canShare({files:[file]})){ await navigator.share({files:[file],title:'FinTrack',text:intro+'\n'+link}); }
-      else { await navigator.share({title:'FinTrack',text:intro,url:link}); }
-    }catch(e){ if(e&&e.name==='AbortError') return; try{ await navigator.share({title:'FinTrack',text:intro,url:link}); }catch(x){} }
+      if(file&&navigator.canShare&&navigator.canShare({files:[file]})){ await navigator.share({files:[file],title:'Finverse',text:intro+'\n'+link}); }
+      else { await navigator.share({title:'Finverse',text:intro,url:link}); }
+    }catch(e){ if(e&&e.name==='AbortError') return; try{ await navigator.share({title:'Finverse',text:intro,url:link}); }catch(x){} }
     return;
   }
-  if(file){ try{ var a=document.createElement('a'); a.href=URL.createObjectURL(file); a.download='fintrack-profile.png'; document.body.appendChild(a); a.click(); setTimeout(function(){ a.remove(); URL.revokeObjectURL(a.href); },1500); }catch(e){} }
+  if(file){ try{ var a=document.createElement('a'); a.href=URL.createObjectURL(file); a.download='finverse-profile.png'; document.body.appendChild(a); a.click(); setTimeout(function(){ a.remove(); URL.revokeObjectURL(a.href); },1500); }catch(e){} }
   if(navigator.clipboard){ navigator.clipboard.writeText(intro+'\n'+link).then(function(){ toast(L('কার্ড সেভ ও লিংক কপি হয়েছে','Card saved & link copied')); },function(){}); }
 }
 function mount(){
@@ -14901,7 +14915,7 @@ function openReq(){
     if(!g) return bad(tx('রক্তের গ্রুপ বেছে নিন','Select a blood group'));
     if(!pl) return bad(tx('স্থানের নাম লিখুন','Enter the place'));
     if(ph&&!phOk(ph)) return bad(tx('সঠিক মোবাইল নম্বর দিন','Enter a valid mobile number'));
-    var t=tx('জরুরি রক্ত প্রয়োজন','Urgent blood needed')+'\n'+tx('রক্তের গ্রুপ: ','Blood group: ')+g+'\n'+tx('স্থান: ','Place: ')+pl+(nt?'\n'+tx('নোট: ','Note: ')+nt:'')+(ph?'\n'+tx('যোগাযোগ: ','Contact: ')+ph:'')+'\n\n'+tx('FinTrack → ইমারজেন্সি হেল্প','FinTrack → Emergency help');
+    var t=tx('জরুরি রক্ত প্রয়োজন','Urgent blood needed')+'\n'+tx('রক্তের গ্রুপ: ','Blood group: ')+g+'\n'+tx('স্থান: ','Place: ')+pl+(nt?'\n'+tx('নোট: ','Note: ')+nt:'')+(ph?'\n'+tx('যোগাযোগ: ','Contact: ')+ph:'')+'\n\n'+tx('Finverse → ইমারজেন্সি হেল্প','Finverse → Emergency help');
     var copy=function(){ try{ navigator.clipboard.writeText(t); toast(tx('অনুরোধ কপি হয়েছে — যেকোনো জায়গায় পেস্ট করুন','Request copied — paste it anywhere')); }catch(e){ toast(tx('কপি করা যায়নি','Could not copy')); } };
     if(navigator.share){ navigator.share({text:t}).then(function(){ closeSheet(false); }).catch(function(err){ if(err&&err.name!=='AbortError') copy(); }); }
     else{ copy(); closeSheet(false); }
@@ -15062,7 +15076,7 @@ function alarm(k,x){const title=k==='n'?(x.t||x.b||'Note'):x.t;
   d.remove()});
  toastHost().appendChild(d);
  try{if(navigator.vibrate)navigator.vibrate([200,100,200])}catch(e){}
- try{if('Notification' in window&&Notification.permission==='granted')new Notification('\u23f0 '+title,{body:'FinTrack reminder'})}catch(e){}}
+ try{if('Notification' in window&&Notification.permission==='granted')new Notification('\u23f0 '+title,{body:'Finverse reminder'})}catch(e){}}
 function tick(){if(isLocked())return;if(!$('sec-notes').classList.contains('on'))fresh();const now=Date.now();let f=[];
  D.notes.forEach(x=>{if(x.r&&!x.rf&&x.r<=now){x.rf=1;f.push(['n',x])}});
  D.tasks.forEach(x=>{if(x.r&&!x.rf&&x.r<=now&&!x.d){x.rf=1;f.push(['t',x])}});
@@ -15639,8 +15653,8 @@ function copyText(t){
 }
 function copyTheme(){ copyText(link()).then(function(){ say(L('থিম লিংক কপি হয়েছে','Theme link copied')); },function(){ try{ prompt(L('লিংকটি কপি করুন','Copy this link'),link()); }catch(e){} }); }
 function nativeShare(){
-  var u=link(), nm=titleOf(cur()), txt=L('আমার FinTrack থিমটি ব্যবহার করে দেখুন: ','Try my FinTrack theme: ')+nm;
-  if(navigator.share){ navigator.share({title:'FinTrack — '+nm,text:txt,url:u}).catch(function(e){ if(e&&e.name==='AbortError') return; copyTheme(); }); }
+  var u=link(), nm=titleOf(cur()), txt=L('আমার Finverse থিমটি ব্যবহার করে দেখুন: ','Try my Finverse theme: ')+nm;
+  if(navigator.share){ navigator.share({title:'Finverse — '+nm,text:txt,url:u}).catch(function(e){ if(e&&e.name==='AbortError') return; copyTheme(); }); }
   else copyText(txt+'\n'+u).then(function(){ say(L('থিম লিংক কপি হয়েছে, এখন পাঠিয়ে দিন','Theme link copied — now send it')); },function(){ copyTheme(); });
 }
 
@@ -15676,7 +15690,7 @@ function openSend(fr){
     else if(a==='send'){
       var sel=[].map.call(ov.querySelectorAll('.gsList input:checked'),function(i){ return i.value; }); if(!sel.length) return;
       go.disabled=true; go.textContent=L('পাঠানো হচ্ছে…','Sending…');
-      var text=L('আমার FinTrack থিমটি ব্যবহার করে দেখুন: ','Try my FinTrack theme: ')+titleOf(cur())+'\n'+link(), okN=0;
+      var text=L('আমার Finverse থিমটি ব্যবহার করে দেখুন: ','Try my Finverse theme: ')+titleOf(cur())+'\n'+link(), okN=0;
       (async function(){ for(var i=0;i<sel.length;i++){ try{ if(await window.ftChatApi.sendTo(sel[i],text)) okN++; }catch(e){} }
         closeSend();
         say(okN?L('থিম '+okN+' জনকে পাঠানো হয়েছে','Theme sent to '+okN+' friend'+(okN>1?'s':'')):L('পাঠানো যায়নি, আবার চেষ্টা করুন','Could not send, try again')); })();
@@ -16887,7 +16901,7 @@ document.addEventListener('click',()=>setTimeout(upd,50),true);
       var mLine=proj>allow
         ? T('এই মাসে এখন পর্যন্ত '+F(mSpent)+' খরচ হবে। এই হারে চললে মাস শেষে প্রায় '+F(proj)+' লাগবে, অথচ মাসের হিসাব '+F(allow)+' — মাস চালাতে কষ্ট হয়ে যাবে।','This month you will have spent '+F(mSpent)+'. At this pace you will need about '+F(proj)+' by month end against a budget of '+F(allow)+' — the month will get hard.')
         : T('আজকের বাড়তি খরচ মাসের শেষ দিকে টান ফেলতে পারে।','Today\u2019s extra spending can leave you short at the end of the month.');
-      box.innerHTML='<div class="ftWarnIc">'+WARN+'</div><h4>FinTrack says</h4>'
+      box.innerHTML='<div class="ftWarnIc">'+WARN+'</div><h4>Finverse says</h4>'
         +'<div class="ftSg"><div class="n"><small>'+T('আজ (এটিসহ)','Today (with this)')+'</small><b>'+F(after)+'</b></div><div class="n"><small>'+T('দৈনিক সীমা','Daily limit')+'</small><b>'+F(lim)+'</b></div><div><small>'+T('বেশি','Over')+'</small><b>'+F(after-lim)+'</b></div></div>'
         +'<p class="ftSgP">'+mLine+'</p>'
         +'<p class="ftSgAsk">'+T('দয়া করে এই খরচটা না করার অনুরোধ রইল।','Please try not to make this expense.')+'</p>'
@@ -17593,7 +17607,7 @@ window.ftTxBanner={show:show,hide:hide,_arm:armDiff};
 </script>
 
 <style id="ftFeedCss">
-/* ===== Goal challenges (Challenge tab) + FinTrack Feeds ===== */
+/* ===== Goal challenges (Challenge tab) + Finverse Feeds ===== */
 #fgBox{margin:0 0 14px;}
 .fgHd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 10px;}
 .fgHd b{font-size:16px;font-weight:800;color:var(--text);}
@@ -18204,7 +18218,7 @@ const box=document.createElement('div'); box.id='fgBox';
 let RT='feed'; let FG=''; const CH={},MO={},DX={},RP={},EDT={},MF={},MN={}; let CMM=null;
 const featG=gs=>gs.find(x=>x.uid===FG)||gs.find(x=>!x.done)||gs[0];
 const RTI={spy:IC.cctv,rep:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',top:'<path d="M4 20V11M10 20V4M16 20v-7M22 20H2"/>',ms:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/>'};
-const RTABS=[['feed','FinTrack Feeds','ফিনট্র্যাক ফিডস'],['spy','Spy Eye','স্পাই আই'],['rep','Reply','রিপ্লাই'],['top','Leaderboard','লিডারবোর্ড'],['ms','Mission','মিশন']]; let FN=10;
+const RTABS=[['feed','Finverse Feeds','ফিনভার্স ফিডস'],['spy','Spy Eye','স্পাই আই'],['rep','Reply','রিপ্লাই'],['top','Leaderboard','লিডারবোর্ড'],['ms','Mission','মিশন']]; let FN=10;
 function heroH(gs){
   const g=featG(gs); let nR=0,nP=0; let nm=''; try{ nm=myN()||myU()||''; }catch(e){}
   const who=()=>'<div class="rhWho"><b>'+E(nm||L('আপনি','You'))+'</b><button type="button" class="rhPlus" data-a="new" aria-label="'+L('নতুন রেস','New race')+'">'+S(IC.plus)+'</button></div>'; try{ nR=new Set(posts.map(p=>p.uid)).size; nP=posts.length; }catch(e){}
@@ -18234,7 +18248,7 @@ function bpBanner(gs){
     +'<div class="bpStat"><div><small>'+L('রেসের মোট ব্যালেন্স','Races balance')+'</small><b>'+nb(fm(sv))+'</b><small>'+L('টার্গেট: ','Target goal: ')+nb(fm(tg))+'</small></div>'+bpRing(pct,56)+'</div></div>';
 }
 function bpFh(){
-  return '<div class="bpFh"><div><h2>FinTrack Feed</h2><p>'+L('কমিউনিটির সেভিংস রেস','Savings races from the community')+'</p></div><span class="bpBadge">'+nb(posts.length)+' '+L('রেস','Active')+'</span></div>';
+  return '<div class="bpFh"><div><h2>Finverse Feed</h2><p>'+L('কমিউনিটির সেভিংস রেস','Savings races from the community')+'</p></div><span class="bpBadge">'+nb(posts.length)+' '+L('রেস','Active')+'</span></div>';
 }
 function tabsH(){
   let dot=0; try{ dot=repUnread(); }catch(e){}
@@ -18343,7 +18357,7 @@ function toggleShare(g){
   if(g.share){ g.share=false; saveData(); if(me()) del('feed/'+g.uid).catch(()=>{}); paintGoals(); tt(L('ফিড থেকে সরানো হয়েছে','Removed from the feed')); return; }
   if(!me()){ tt(L('শেয়ার করতে আগে অ্যাকাউন্টে লগইন করুন','Sign in first to share')); return; }
   g.share=true; saveData(); paintGoals();
-  pushGoal(g).then(()=>tt(L('FinTrack Feeds-এ শেয়ার হয়েছে','Shared on FinTrack Feeds'))).catch(e=>{ g.share=false; saveData(); paintGoals(); tt(e&&e.status===401||e&&e.status===403?L('ফিডের রুলস সেট করা নেই — ফিড পেজ দেখুন','Feed rules are not set — see the Feed page'):L('শেয়ার করা যায়নি','Could not share')); });
+  pushGoal(g).then(()=>tt(L('Finverse Feeds-এ শেয়ার হয়েছে','Shared on Finverse Feeds'))).catch(e=>{ g.share=false; saveData(); paintGoals(); tt(e&&e.status===401||e&&e.status===403?L('ফিডের রুলস সেট করা নেই — ফিড পেজ দেখুন','Feed rules are not set — see the Feed page'):L('শেয়ার করা যায়নি','Could not share')); });
 }
 const chSec=$('sec-challenge');
 if(chSec){
@@ -18366,7 +18380,7 @@ function openForm(){
     +st(4,L('কোন একাউন্টে জমা হবে?','Which account will hold the savings?'),accs.length?'<select id="bpAc">'+accs.map(a=>'<option value="'+E(a)+'">'+E(a)+' — '+nb(fm(bal[a]||0))+'</option>').join('')+'</select>':'<div class="fgEmpty">'+L('কোনো একাউন্ট নেই — আগে "একাউন্ট" ট্যাবে যোগ করুন।','No account yet — add one in the Accounts tab first.')+'</div>')
     +st(5,L('কোন খরচের ক্যাটাগরি এড়াবেন?','Which spending categories will you skip?'),'<details class="fgDd" id="bpCats"><summary id="bpCatS">'+L('ক্যাটাগরি বেছে নিন','Select categories')+'</summary>'+cats.map(c=>'<label class="fgCk"><input type="checkbox" data-cat="'+E(c)+'"><span>'+E(c)+'</span></label>').join('')+'</details>')
     +st(6,L('পপআপ SMS','Popup SMS'),sw('bpSms',L('পপআপ SMS চালু','Enable Popup SMS'),L('অগ্রগতি বাড়লে নোটিফিকেশন পাবেন','Get notified when your progress grows'),true))
-    +st(7,L('FinTrack Feed-এ দেখাবেন?','Show in FinTrack Feed?'),sw('bpShare',L('ফিডে দেখান','Visible in the feed'),L('বন্ধ করলে রেসটি শুধু আপনি দেখবেন','Turn off to keep the Race hidden'),true))
+    +st(7,L('Finverse Feed-এ দেখাবেন?','Show in Finverse Feed?'),sw('bpShare',L('ফিডে দেখান','Visible in the feed'),L('বন্ধ করলে রেসটি শুধু আপনি দেখবেন','Turn off to keep the Race hidden'),true))
     +st(8,L('বেনামি রেস','Anonymous Race'),sw('bpAnon',L('বেনামে পাবলিশ করুন','Publish anonymously'),L('আপনার নাম ও ছবি লুকানো থাকবে','Your name and picture stay hidden'),false)+'<div id="bpAliW" style="display:none"><label class="bpLb">'+L('বেনামি পরিচয় বেছে নিন','Choose an anonymous identity')+'</label><select id="bpAli">'+ALI.map(a=>'<option>'+a+'</option>').join('')+'</select></div>')
     +st(9,L('Spy Eye','Spy Eye'),sw('bpNoSpy',L('Spy Eye বন্ধ রাখুন','Disable Spy Eye'),L('বন্ধ করলে অন্যরা আপনার Spy Eye Feed দেখতে পাবে না','Others will not see your Spy Eye Feed'),false))
     +st(10,L('পাবলিশ','Publish'),'<div class="fgEr bpEr"></div><button type="button" class="bpPub" data-y="1">'+L('রেস পাবলিশ করুন','Publish Race')+'</button>')
@@ -18539,7 +18553,7 @@ function spyTxt(e){
 }
 function spyH(){
   const l=spyList();
-  let h='<div class="spyH"><i>'+S(IC.cctv)+'</i><div><b>FinTrack SPY EYE</b><small>'+L('রেসারদের আজকের অগ্রগতির স্বয়ংক্রিয় আপডেট','Automatic progress updates from racers today')+'</small></div></div>';
+  let h='<div class="spyH"><i>'+S(IC.cctv)+'</i><div><b>Finverse SPY EYE</b><small>'+L('রেসারদের আজকের অগ্রগতির স্বয়ংক্রিয় আপডেট','Automatic progress updates from racers today')+'</small></div></div>';
   if(!l.length) return h+'<div class="fdMsg" style="padding:16px">'+L('আজ এখনো কোনো আপডেট নেই — কেউ সেভ করলে বা খরচ ছাড়া দিন কাটালে এখানে আসবে।','No updates yet today — saves and no-spend days show up here.')+'</div>';
   return h+l.map((o,i)=>'<div class="spy" data-a="prof" data-u="'+E(o.p.uid)+'"><span class="spN">#'+nb(i+1)+'</span><div class="spB"><div class="spT1"><span class="spU">'+(o.p.u?'@'+E(o.p.u):E(o.p.n||'?'))+'</span><small>'+agoS(o.t)+'</small></div><div class="spT2">'+spyTxt(o.e)+'</div></div></div>').join('');
 }
@@ -18585,7 +18599,7 @@ function spyListH(){
   return h+ord.map(k=>spyCardH(map[k])).join('');
 }
 function spyTabBody(){
-  return '<div class=\"spxHead\"><div class=\"spxEye\">'+S(IC.cctv)+'</div><div><b>FinTrack Spy Eye</b></div><span class=\"spxLive\"><u></u>LIVE</span></div><div id=\"spyList\">'+spyListH()+'</div>';
+  return '<div class=\"spxHead\"><div class=\"spxEye\">'+S(IC.cctv)+'</div><div><b>Finverse Spy Eye</b></div><span class=\"spxLive\"><u></u>LIVE</span></div><div id=\"spyList\">'+spyListH()+'</div>';
 }
 function paintSpyList(){ const el=$('spyList'); if(!el) return; el.innerHTML=spyListH(); try{ loadPics(el); }catch(e){} }
 async function loadSpyVotes(){
@@ -18648,7 +18662,7 @@ function dashH(){
 }
 function render(){
   const act=document.activeElement; if(act&&act.closest&&act.closest('#sec-feed')&&act.tagName==='INPUT') return;
-  let h='<div class="fdTitle"><div><h2>FinTrack Feeds</h2><small>'+L('বন্ধুদের লক্ষ্য চ্যালেঞ্জ ও অগ্রগতি','Goal challenges & progress from everyone')+'</small></div><button type="button" class="fgIcB" data-a="reload" aria-label="Refresh">'+S(IC.refresh)+'</button></div>';
+  let h='<div class="fdTitle"><div><h2>Finverse Feeds</h2><small>'+L('বন্ধুদের লক্ষ্য চ্যালেঞ্জ ও অগ্রগতি','Goal challenges & progress from everyone')+'</small></div><button type="button" class="fgIcB" data-a="reload" aria-label="Refresh">'+S(IC.refresh)+'</button></div>';
   if(FS.err==='LOGIN') h+='<div class="fdMsg">'+L('ফিড দেখতে ও মন্তব্য করতে অ্যাকাউন্টে লগইন করুন।','Sign in to see the feed and comment.')+'</div>';
   else if(FS.err==='RULES') h+=rulesMsg();
   else if(FS.err==='NET') h+='<div class="fdMsg">'+L('ইন্টারনেট সংযোগ পাওয়া যায়নি।','No internet connection.')+'</div>';
@@ -18778,14 +18792,14 @@ async function cardBlob(o){
   g.addColorStop(1,'#0f172a'); x.fillStyle=g; x.fillRect(0,0,W,H);
   x.fillStyle='rgba(255,255,255,.07)'; x.beginPath(); x.arc(W-110,150,250,0,7); x.fill(); x.beginPath(); x.arc(90,H-90,290,0,7); x.fill();
   x.textBaseline='alphabetic'; x.textAlign='left';
-  x.fillStyle='#fff'; x.font='800 54px '+ff; x.fillText('FinTrack',80,140);
+  x.fillStyle='#fff'; x.font='900 44px Unbounded, '+ff; x.fillText('Finverse',80,140);
   x.fillStyle='rgba(255,255,255,.75)'; x.font='600 30px '+ff; x.fillText(L('সঞ্চয় চ্যালেঞ্জ','Savings challenge'),80,190);
   const cx=70,cy=250,cw=W-140,ch=880;
   x.save(); x.shadowColor='rgba(0,0,0,.28)'; x.shadowBlur=50; x.shadowOffsetY=18; rrect(x,cx,cy,cw,ch,52); x.fillStyle='#fff'; x.fill(); x.restore();
   const who=o.n||o.u||'';
   x.fillStyle=pri; x.beginPath(); x.arc(cx+90,cy+100,48,0,7); x.fill();
   x.fillStyle='#fff'; x.font='800 48px '+ff; x.textAlign='center'; x.fillText((String(who||'F').trim()[0]||'F').toUpperCase(),cx+90,cy+118); x.textAlign='left';
-  x.fillStyle='#0f172a'; x.font='800 40px '+ff; x.fillText(String(who||'FinTrack').slice(0,26),cx+170,cy+98);
+  x.fillStyle='#0f172a'; x.font='800 40px '+ff; x.fillText(String(who||'Finverse').slice(0,26),cx+170,cy+98);
   if(o.u){ x.fillStyle='#64748b'; x.font='600 29px '+ff; x.fillText('@'+o.u,cx+170,cy+140); }
   x.fillStyle='#64748b'; x.font='700 28px '+ff; x.fillText(L('চ্যালেঞ্জ','CHALLENGE'),cx+60,cy+250);
   x.fillStyle='#0f172a'; x.font='800 66px '+ff;
@@ -18797,7 +18811,7 @@ async function cardBlob(o){
   const fw=Math.max(34,bw*Math.min(100,o.p)/100); if(o.p>0||true){ rrect(x,bx,byy,o.p>0?fw:0.01,34,17); x.fillStyle=o.d?'#16a34a':pri; if(o.p>0) x.fill(); }
   x.fillStyle='#64748b'; x.font='700 30px '+ff; x.fillText(o.d?L('বাজেট পূর্ণ','Budget completed'):L('জমেছে ','Saved ')+(o.d?'':nb(fm(o.sv))),bx,byy+92);
   x.textAlign='right'; x.fillStyle=o.d?'#16a34a':pri; x.font='800 44px '+ff; x.fillText(nb(o.p)+'% '+L('সম্পন্ন','done'),bx+bw,byy+94); x.textAlign='left';
-  x.fillStyle='rgba(255,255,255,.9)'; x.font='700 34px '+ff; x.textAlign='center'; x.fillText(L('FinTrack-এ নিজের চ্যালেঞ্জ শুরু করুন','Start your own challenge on FinTrack'),W/2,H-110); x.textAlign='left';
+  x.fillStyle='rgba(255,255,255,.9)'; x.font='700 34px '+ff; x.textAlign='center'; x.fillText(L('Finverse-এ নিজের চ্যালেঞ্জ শুরু করুন','Start your own challenge on Finverse'),W/2,H-110); x.textAlign='left';
   return await new Promise(res=>{ try{ c.toBlob(b=>res(b),'image/png'); }catch(e){ res(null); } });
 }
 let shBusy=false;
@@ -18805,9 +18819,9 @@ async function sharePhone(o){
   if(!o||shBusy) return; shBusy=true;
   try{
     const who=o.n||o.u||'', url=/^https?:$/i.test(location.protocol)?location.href.split('#')[0]:'';
-    const text=L((who||'একজন ইউজার')+' "'+o.s+'"-এর জন্য '+nb(fm(o.a))+' বাজেটের চ্যালেঞ্জ নিয়েছে — '+nb(o.p)+'% পূরণ হয়েছে।\nFinTrack-এ নিজের চ্যালেঞ্জ শুরু করুন।',(who||'Someone')+' took a '+fm(o.a)+' challenge for "'+o.s+'" — '+o.p+'% done.\nStart your own on FinTrack.');
+    const text=L((who||'একজন ইউজার')+' "'+o.s+'"-এর জন্য '+nb(fm(o.a))+' বাজেটের চ্যালেঞ্জ নিয়েছে — '+nb(o.p)+'% পূরণ হয়েছে।\nFinverse-এ নিজের চ্যালেঞ্জ শুরু করুন।',(who||'Someone')+' took a '+fm(o.a)+' challenge for "'+o.s+'" — '+o.p+'% done.\nStart your own on Finverse.');
     const full=text+(url?'\n'+url:'');
-    let files=null; try{ const bl=await cardBlob(o); if(bl) files=[new File([bl],'fintrack-challenge.png',{type:'image/png'})]; }catch(e){}
+    let files=null; try{ const bl=await cardBlob(o); if(bl) files=[new File([bl],'finverse-challenge.png',{type:'image/png'})]; }catch(e){}
     if(navigator.share){
       const tries=[]; try{ if(files&&navigator.canShare&&navigator.canShare({files})) tries.push({files:files,text:full}); }catch(e){}
       tries.push({text:full});
@@ -19607,5 +19621,38 @@ hookChat();
 })();
 </script>
 
+<style id="mvMenu">
+/* ===== Side menu: tidy layout (fixes clashes with later generic .mnR/.mnHd rules) ===== */
+#ftMn .mnHd{border-top:0 !important;margin-top:0 !important;justify-content:flex-start !important;align-items:center !important;gap:10px;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 10px}
+#ftMn .mnHd #mnName{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ftMn .mnBody{padding:6px 14px calc(28px + env(safe-area-inset-bottom,0px))}
+#ftMn .mnPro{margin:4px 0 12px;padding:13px 14px;border-radius:22px;box-shadow:var(--sh);transition:transform .12s}
+#ftMn .mnPro:active{transform:scale(.985)}
+#ftMn .mnBody .bkLive{margin:0 0 6px;border-radius:20px}
+/* section headings with a hairline */
+#ftMn .mnSec{display:flex;align-items:center;gap:10px;margin:24px 6px 10px !important;padding:0;border:0;font-size:11.5px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--muted)}
+#ftMn .mnSec::before{content:"";width:4px;height:14px;border-radius:3px;background:var(--primary);flex:none}
+#ftMn .mnSec::after{content:"";flex:1;height:1px;background:var(--border)}
+/* grouped cards */
+#ftMn .mnCard{border-radius:22px;box-shadow:var(--sh);padding:4px 0;background:var(--card);border:1px solid var(--border)}
+#ftMn .mnR{border-top:0 !important;margin:0 !important;padding:10px 14px !important;gap:14px !important;min-height:60px;width:100%;transition:background .15s,transform .12s}
+#ftMn .mnR+.mnR::before{left:70px !important;right:14px !important;height:1px;background:color-mix(in srgb,var(--border) 70%,transparent)}
+#ftMn .mnR:active{background:color-mix(in srgb,var(--primary) 9%,transparent);transform:scale(.99)}
+#ftMn .mnR.on{background:color-mix(in srgb,var(--primary) 10%,transparent)}
+#ftMn .mnR.on::after{content:"";position:absolute;left:0;top:14px;bottom:14px;width:4px;border-radius:0 4px 4px 0;background:var(--primary)}
+#ftMn .mnR .mnI{width:40px;height:40px;border-radius:13px;box-shadow:0 6px 12px -7px var(--c)}
+#ftMn .mnR .mnI.g svg,#ftMn .mnR .mnI.g .mi{width:21px;height:21px}
+#ftMn .mnR .mnL{font-size:15px !important;font-weight:650;line-height:1.3;white-space:normal !important;display:-webkit-box !important;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#ftMn .mnR>svg{width:17px;height:17px;opacity:.55}
+#ftMn .mnAddR .mnI{box-shadow:none}
+#ftMn .mnCard+.mnCard{margin-top:14px}
+@media (prefers-reduced-motion:no-preference){
+  #ftMn.on .mnBody>*{animation:mvMnIn .35s cubic-bezier(.2,.8,.3,1) both}
+  #ftMn.on .mnBody>*:nth-child(2){animation-delay:.03s}#ftMn.on .mnBody>*:nth-child(3){animation-delay:.06s}
+  #ftMn.on .mnBody>*:nth-child(4){animation-delay:.09s}#ftMn.on .mnBody>*:nth-child(5){animation-delay:.12s}
+  #ftMn.on .mnBody>*:nth-child(n+6){animation-delay:.15s}
+}
+@keyframes mvMnIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+</style>
 </body>
 </html>
